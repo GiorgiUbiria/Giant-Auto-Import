@@ -20,8 +20,14 @@ export default async function Page() {
     <>
       <h1>Create an account</h1>
       <Form action={signup}>
-        <label htmlFor="username">Username</label>
-        <input name="username" id="username" />
+        <label htmlFor="name">Full Name</label>
+        <input name="name" id="name" />
+        <br />
+        <label htmlFor="email">Email</label>
+        <input name="email" id="email" />
+        <br />
+        <label htmlFor="phone">Phone Number</label>
+        <input name="phone" id="phone" />
         <br />
         <label htmlFor="password">Password</label>
         <input type="password" name="password" id="password" />
@@ -35,7 +41,7 @@ export default async function Page() {
 
 async function signup(_: any, formData: FormData): Promise<ActionResult> {
   "use server";
-  const username = formData.get("username");
+  const username = formData.get("name");
   // username must be between 4 ~ 31 characters, and only consists of lowercase letters, 0-9, -, and _
   // keep in mind some database (e.g. mysql) are case insensitive
   if (
@@ -48,6 +54,10 @@ async function signup(_: any, formData: FormData): Promise<ActionResult> {
       error: "Invalid username",
     };
   }
+  
+  const email = formData.get("email");
+  const phone = formData.get("phone");
+
   const password = formData.get("password");
   if (
     typeof password !== "string" ||
@@ -63,9 +73,11 @@ async function signup(_: any, formData: FormData): Promise<ActionResult> {
   const userId = generateId(15);
 
   try {
-    db.prepare("INSERT INTO user (id, username, password) VALUES(?, ?, ?)").run(
+    db.prepare("INSERT INTO user (id, name, email, phone, password) VALUES(?, ?, ?)").run(
       userId,
       username,
+      email,
+      phone,
       hashedPassword,
     );
 
@@ -79,7 +91,7 @@ async function signup(_: any, formData: FormData): Promise<ActionResult> {
   } catch (e) {
     if (e instanceof SqliteError && e.code === "SQLITE_CONSTRAINT_UNIQUE") {
       return {
-        error: "Username already used",
+        error: "Email or Phone number already used",
       };
     }
     return {

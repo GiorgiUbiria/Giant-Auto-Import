@@ -19,8 +19,8 @@ export default async function Page() {
     <>
       <h1>Sign in</h1>
       <Form action={login}>
-        <label htmlFor="username">Username</label>
-        <input name="username" id="username" />
+        <label htmlFor="email">Email</label>
+        <input name="email" id="email" />
         <br />
         <label htmlFor="password">Password</label>
         <input type="password" name="password" id="password" />
@@ -34,17 +34,7 @@ export default async function Page() {
 
 async function login(_: any, formData: FormData): Promise<ActionResult> {
   "use server";
-  const username = formData.get("username");
-  if (
-    typeof username !== "string" ||
-    username.length < 3 ||
-    username.length > 31 ||
-    !/^[a-z0-9_-]+$/.test(username)
-  ) {
-    return {
-      error: "Invalid username",
-    };
-  }
+  const email = formData.get("email");
   const password = formData.get("password");
   if (
     typeof password !== "string" ||
@@ -57,11 +47,11 @@ async function login(_: any, formData: FormData): Promise<ActionResult> {
   }
 
   const existingUser = db
-    .prepare("SELECT * FROM user WHERE username = ?")
-    .get(username) as DatabaseUser | undefined;
+    .prepare("SELECT * FROM user WHERE email = ?")
+    .get(email) as DatabaseUser | undefined;
   if (!existingUser) {
     return {
-      error: "Incorrect username or password",
+      error: "Incorrect email or password",
     };
   }
 
@@ -71,7 +61,7 @@ async function login(_: any, formData: FormData): Promise<ActionResult> {
   );
   if (!validPassword) {
     return {
-      error: "Incorrect username or password",
+      error: "Incorrect email or password",
     };
   }
 

@@ -19,6 +19,8 @@ db.exec(`CREATE TABLE IF NOT EXISTS session (
 
 export interface DatabaseUser {
   id: string;
+  name: string;
   email: string;
+  phone: string;
   password: string;
 }

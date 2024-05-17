@@ -60,7 +60,7 @@ async function signup(_: any, formData: FormData): Promise<ActionResult> {
   const userId = generateId(15);
 
   try {
-    db.prepare("INSERT INTO user (id, name, email, phone, password) VALUES(?, ?, ?)").run(
+    db.prepare("INSERT INTO user (id, name, email, phone, password) VALUES(?, ?, ?, ?, ?)").run(
       userId,
       name,
       email,
@@ -82,7 +82,7 @@ async function signup(_: any, formData: FormData): Promise<ActionResult> {
       };
     }
     return {
-      error: "An unknown error occurred",
+      error: JSON.stringify(e),
     };
   }
   return redirect("/");

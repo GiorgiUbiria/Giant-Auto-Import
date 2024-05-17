@@ -12,7 +12,7 @@ export default async function Page() {
   }
   return (
     <>
-      <h1>Hi, {user.username}!</h1>
+      <h1>Hi, {user.email}!</h1>
       <p>Your user ID is {user.id}.</p>
       <Form action={logout}>
         <button>Sign out</button>

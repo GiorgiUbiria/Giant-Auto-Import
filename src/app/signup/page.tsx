@@ -41,20 +41,7 @@ export default async function Page() {
 
 async function signup(_: any, formData: FormData): Promise<ActionResult> {
   "use server";
-  const username = formData.get("name");
-  // username must be between 4 ~ 31 characters, and only consists of lowercase letters, 0-9, -, and _
-  // keep in mind some database (e.g. mysql) are case insensitive
-  if (
-    typeof username !== "string" ||
-    username.length < 3 ||
-    username.length > 31 ||
-    !/^[a-z0-9_-]+$/.test(username)
-  ) {
-    return {
-      error: "Invalid username",
-    };
-  }
-  
+  const name = formData.get("name");
   const email = formData.get("email");
   const phone = formData.get("phone");
 
@@ -75,7 +62,7 @@ async function signup(_: any, formData: FormData): Promise<ActionResult> {
   try {
     db.prepare("INSERT INTO user (id, name, email, phone, password) VALUES(?, ?, ?)").run(
       userId,
-      username,
+      name,
       email,
       phone,
       hashedPassword,

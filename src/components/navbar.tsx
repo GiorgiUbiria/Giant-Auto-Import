@@ -16,6 +16,7 @@ import { cookies } from "next/headers";
 import { Form, type ActionResult } from "@/lib/form";
 import { redirect } from "next/navigation";
 import { lucia, validateRequest } from "@/lib/auth";
+import Avatar from "./avatar";
 
 const Navbar = () => {
   return (
@@ -116,49 +117,10 @@ const Navbar = () => {
             />
           </div>
         </form>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="secondary" size="icon" className="rounded-full">
-              <CircleUser className="h-5 w-5" />
-              <span className="sr-only">Toggle user menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuItem>Support</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Form action={logout}>
-                <button>Sign out</button>
-              </Form>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Avatar />
       </div>
     </header>
   );
 };
-
-async function logout(): Promise<ActionResult> {
-  "use server";
-  const { session } = await validateRequest();
-  if (!session) {
-    return {
-      error: "Unauthorized",
-    };
-  }
-
-  await lucia.invalidateSession(session.id);
-
-  const sessionCookie = lucia.createBlankSessionCookie();
-  cookies().set(
-    sessionCookie.name,
-    sessionCookie.value,
-    sessionCookie.attributes,
-  );
-  return redirect("/login");
-}
 
 export default Navbar;

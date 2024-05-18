@@ -10,6 +10,7 @@ import { generateId } from "lucia";
 import { SqliteError } from "better-sqlite3";
 
 import type { ActionResult } from "@/lib/form";
+import { RegisterForm } from "@/components/register-form";
 
 export default async function Page() {
   const { user } = await validateRequest();
@@ -18,23 +19,9 @@ export default async function Page() {
   }
   return (
     <>
-      <h1>Create an account</h1>
       <Form action={signup}>
-        <label htmlFor="name">Full Name</label>
-        <input name="name" id="name" />
-        <br />
-        <label htmlFor="email">Email</label>
-        <input name="email" id="email" />
-        <br />
-        <label htmlFor="phone">Phone Number</label>
-        <input name="phone" id="phone" />
-        <br />
-        <label htmlFor="password">Password</label>
-        <input type="password" name="password" id="password" />
-        <br />
-        <button>Continue</button>
+        <RegisterForm />
       </Form>
-      <Link href="/login">Sign in</Link>
     </>
   );
 }

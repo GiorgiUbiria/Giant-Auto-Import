@@ -1,3 +1,5 @@
+"use client";
+
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -6,16 +8,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { lucia, validateRequest } from "@/lib/auth";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CircleUser } from "lucide-react";
 import { ActionResult, Form } from "@/lib/form";
+import type { User } from "lucia";
 
-const Avatar = async () => {
-  const { session } = await validateRequest();
+interface AvatarProps {
+  user: User | null;
+  logout: () => Promise<ActionResult>;
+}
 
+const Avatar: React.FC<AvatarProps> = ({ user, logout }) => {
+  console.log(user);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -29,7 +33,7 @@ const Avatar = async () => {
         <DropdownMenuSeparator />
         <DropdownMenuItem>Settings</DropdownMenuItem>
         <DropdownMenuItem>Support</DropdownMenuItem>
-        {session !== null ?? (
+        {user ? (
           <>
             {" "}
             <DropdownMenuSeparator />
@@ -39,30 +43,12 @@ const Avatar = async () => {
               </Form>
             </DropdownMenuItem>
           </>
+        ) : (
+          <></>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
 };
-
-async function logout(): Promise<ActionResult> {
-  "use server";
-  const { session } = await validateRequest();
-  if (!session) {
-    return {
-      error: "Unauthorized",
-    };
-  }
-
-  await lucia.invalidateSession(session.id);
-
-  const sessionCookie = lucia.createBlankSessionCookie();
-  cookies().set(
-    sessionCookie.name,
-    sessionCookie.value,
-    sessionCookie.attributes,
-  );
-  return redirect("/login");
-}
 
 export default Avatar;

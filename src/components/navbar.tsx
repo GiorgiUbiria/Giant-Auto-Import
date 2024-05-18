@@ -1,24 +1,17 @@
-import { CircleUser, Menu, Package2, Search } from "lucide-react";
+import { Menu, Package2, Search } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { cookies } from "next/headers";
-
-import { Form, type ActionResult } from "@/lib/form";
-import { redirect } from "next/navigation";
 import { lucia, validateRequest } from "@/lib/auth";
 import Avatar from "./avatar";
+import { ActionResult } from "@/lib/form";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-const Navbar = () => {
+const Navbar = async () => {
+  const { user } = await validateRequest();
+
   return (
     <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
       <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
@@ -117,10 +110,30 @@ const Navbar = () => {
             />
           </div>
         </form>
-        <Avatar />
+        <Avatar user={user} logout={logout} />
       </div>
     </header>
   );
 };
+
+async function logout(): Promise<ActionResult> {
+  "use server";
+  const { session } = await validateRequest();
+  if (!session) {
+    return {
+      error: "Unauthorized",
+    };
+  }
+
+  await lucia.invalidateSession(session.id);
+
+  const sessionCookie = lucia.createBlankSessionCookie();
+  cookies().set(
+    sessionCookie.name,
+    sessionCookie.value,
+    sessionCookie.attributes,
+  );
+  return redirect("/login");
+}
 
 export default Navbar;

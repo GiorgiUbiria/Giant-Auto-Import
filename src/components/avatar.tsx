@@ -19,7 +19,6 @@ interface AvatarProps {
 }
 
 const Avatar: React.FC<AvatarProps> = ({ user, logout }) => {
-  console.log(user);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

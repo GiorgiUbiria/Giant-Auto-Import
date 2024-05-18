@@ -50,17 +50,23 @@ async function signup(_: any, formData: FormData): Promise<ActionResult> {
   email === "ubiriagiorgi8@gmail.com" ? (roleId = 2) : (roleId = 1);
 
   try {
-    db.prepare(
-      "INSERT INTO user (id, name, email, phone, password, role_id) VALUES(?, ?, ?, ?, ?, ?)",
-    ).run(userId, name, email, phone, hashedPassword, roleId);
+    if (user?.role_id === 1) {
+      db.prepare(
+        "INSERT INTO user (id, name, email, phone, password, role_id) VALUES(?, ?, ?, ?, ?, ?)",
+      ).run(userId, name, email, phone, hashedPassword, roleId);
 
-    const session = await lucia.createSession(userId, {});
-    const sessionCookie = lucia.createSessionCookie(session.id);
-    cookies().set(
-      sessionCookie.name,
-      sessionCookie.value,
-      sessionCookie.attributes,
-    );
+      const session = await lucia.createSession(userId, {});
+      const sessionCookie = lucia.createSessionCookie(session.id);
+      cookies().set(
+        sessionCookie.name,
+        sessionCookie.value,
+        sessionCookie.attributes,
+      );
+    } else {
+      db.prepare(
+        "INSERT INTO user (id, name, email, phone, password, role_id) VALUES(?, ?, ?, ?, ?, ?)",
+      ).run(userId, name, email, phone, hashedPassword, roleId);
+    }
   } catch (e) {
     if (e instanceof SqliteError && e.code === "SQLITE_CONSTRAINT_UNIQUE") {
       return {

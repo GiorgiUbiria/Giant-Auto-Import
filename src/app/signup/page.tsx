@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { db } from "@/lib/db";
 import { Argon2id } from "oslo/password";
 import { cookies } from "next/headers";
@@ -14,7 +12,7 @@ import { RegisterForm } from "@/components/register-form";
 
 export default async function Page() {
   const { user } = await validateRequest();
-  if (user) {
+  if (user && user.role_id !== 2) {
     return redirect("/");
   }
   return (
@@ -28,6 +26,7 @@ export default async function Page() {
 
 async function signup(_: any, formData: FormData): Promise<ActionResult> {
   "use server";
+  const { user } = await validateRequest();
   const name = formData.get("name");
   const email = formData.get("email");
   const phone = formData.get("phone");
@@ -71,6 +70,10 @@ async function signup(_: any, formData: FormData): Promise<ActionResult> {
     return {
       error: JSON.stringify(e),
     };
+  }
+
+  if (user?.role_id === 2) {
+    return redirect("/admin");
   }
   return redirect("/");
 }

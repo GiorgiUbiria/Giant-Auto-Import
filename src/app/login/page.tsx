@@ -9,6 +9,7 @@ import { Form } from "@/lib/form";
 
 import type { DatabaseUser } from "@/lib/db";
 import type { ActionResult } from "@/lib/form";
+import { LoginForm } from "@/components/login-form";
 
 export default async function Page() {
   const { user } = await validateRequest();
@@ -17,17 +18,9 @@ export default async function Page() {
   }
   return (
     <>
-      <h1>Sign in</h1>
       <Form action={login}>
-        <label htmlFor="email">Email</label>
-        <input name="email" id="email" />
-        <br />
-        <label htmlFor="password">Password</label>
-        <input type="password" name="password" id="password" />
-        <br />
-        <button>Continue</button>
+        <LoginForm />
       </Form>
-      <Link href="/signup">Create an account</Link>
     </>
   );
 }

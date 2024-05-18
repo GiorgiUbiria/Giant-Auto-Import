@@ -59,14 +59,14 @@ async function signup(_: any, formData: FormData): Promise<ActionResult> {
   const hashedPassword = await new Argon2id().hash(password);
   const userId = generateId(15);
 
+  let roleId = 1;
+
+  email === "ubiriagiorgi8@gmail.com" ? (roleId = 2) : (roleId = 1);
+
   try {
-    db.prepare("INSERT INTO user (id, name, email, phone, password) VALUES(?, ?, ?, ?, ?)").run(
-      userId,
-      name,
-      email,
-      phone,
-      hashedPassword,
-    );
+    db.prepare(
+      "INSERT INTO user (id, name, email, phone, password, role_id) VALUES(?, ?, ?, ?, ?, ?)",
+    ).run(userId, name, email, phone, hashedPassword, roleId);
 
     const session = await lucia.createSession(userId, {});
     const sessionCookie = lucia.createSessionCookie(session.id);

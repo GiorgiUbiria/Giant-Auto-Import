@@ -2,12 +2,22 @@ import sqlite from "better-sqlite3";
 
 export const db = sqlite("main.db");
 
+db.exec(`CREATE TABLE IF NOT EXISTS roles (
+    id INTEGER NOT NULL PRIMARY KEY,
+    role_name TEXT NOT NULL UNIQUE 
+)`);
+
+db.exec(`INSERT OR IGNORE INTO roles (role_name) VALUES ('user')`);
+db.exec(`INSERT OR IGNORE INTO roles (role_name) VALUES ('admin')`);
+
 db.exec(`CREATE TABLE IF NOT EXISTS user (
     id TEXT NOT NULL PRIMARY KEY,
     name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     phone TEXT NOT NULL UNIQUE,
-    password TEXT NOT NULL
+    password TEXT NOT NULL,
+    role_id INTEGER NOT NULL,
+    FOREIGN KEY (role_id) REFERENCES roles(id)
 )`);
 
 db.exec(`CREATE TABLE IF NOT EXISTS session (
@@ -23,4 +33,6 @@ export interface DatabaseUser {
   email: string;
   phone: string;
   password: string;
+  role_id: number;
 }
+

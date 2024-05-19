@@ -1,5 +1,7 @@
 "use server";
 
+import { CarResponse } from "@/lib/interfaces";
+
 let token: string | null = null;
 let tokenExpiry: number | null = null;
 
@@ -18,13 +20,11 @@ async function fetchToken(): Promise<void> {
 
     const data = await res.json();
 
-    if (data.success) {
-      token = data.token;
+    if (data.accessToken) {
+      token = data.accessToken as string;
 
-      if (token) {
-        const tokenPayload = JSON.parse(atob(token.split(".")[1]));
-        tokenExpiry = tokenPayload.exp * 1000;
-      }
+      const tokenPayload = JSON.parse(atob(token.split(".")[1]));
+      tokenExpiry = tokenPayload.exp * 1000;
     } else {
       throw new Error("Failed to fetch token");
     }
@@ -39,7 +39,7 @@ async function ensureToken(): Promise<void> {
   }
 }
 
-export async function getCars() {
+export async function getCars(): Promise<CarResponse | undefined> {
   try {
     await ensureToken();
 
@@ -58,7 +58,7 @@ export async function getCars() {
       throw new Error("Failed to fetch cars");
     }
 
-    const data = await res.json();
+    const data: CarResponse | undefined = await res.json();
     return data;
   } catch (error) {
     console.error("Error fetching cars:", error);

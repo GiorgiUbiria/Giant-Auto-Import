@@ -30,6 +30,7 @@ async function signup(_: any, formData: FormData): Promise<ActionResult> {
   const name = formData.get("name");
   const email = formData.get("email");
   const phone = formData.get("phone");
+  const adminEmail = process.env.ADMIN_EMAIL!;
 
   const password = formData.get("password");
   if (
@@ -47,7 +48,7 @@ async function signup(_: any, formData: FormData): Promise<ActionResult> {
 
   let roleId = 1;
 
-  email === "ubiriagiorgi8@gmail.com" ? (roleId = 2) : (roleId = 1);
+  email === adminEmail ? (roleId = 2) : (roleId = 1);
 
   try {
     if (user?.role_id === 1) {

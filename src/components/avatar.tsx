@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { CircleUser } from "lucide-react";
 import { ActionResult, Form } from "@/lib/form";
 import type { User } from "lucia";
+import Link from "next/link";
 
 interface AvatarProps {
   user: User | null;
@@ -19,6 +20,12 @@ interface AvatarProps {
 }
 
 const Avatar: React.FC<AvatarProps> = ({ user, logout }) => {
+  const userMenuItem = user ? (
+    <DropdownMenuItem>
+      {user.role_id === 1 ? "Personal Cabinet" : "Admin Panel"}
+    </DropdownMenuItem>
+  ) : null;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -30,8 +37,7 @@ const Avatar: React.FC<AvatarProps> = ({ user, logout }) => {
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Settings</DropdownMenuItem>
-        <DropdownMenuItem>Support</DropdownMenuItem>
+        {userMenuItem}
         {user ? (
           <>
             {" "}
@@ -43,7 +49,9 @@ const Avatar: React.FC<AvatarProps> = ({ user, logout }) => {
             </DropdownMenuItem>
           </>
         ) : (
-          <></>
+          <DropdownMenuItem>
+            <Link href="/login"> Sign In </Link>
+          </DropdownMenuItem>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

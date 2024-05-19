@@ -8,6 +8,7 @@ import Avatar from "./avatar";
 import { ActionResult } from "@/lib/form";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { ModeToggle } from "./theme-toggle";
 
 const Navbar = async () => {
   const { user } = await validateRequest();
@@ -110,6 +111,7 @@ const Navbar = async () => {
             />
           </div>
         </form>
+        <ModeToggle />
         <Avatar user={user} logout={logout} />
       </div>
     </header>

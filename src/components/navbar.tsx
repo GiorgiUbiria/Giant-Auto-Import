@@ -38,7 +38,7 @@ const Navbar = async () => {
   }
 
   return (
-    <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+    <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background z-10 px-4 md:px-6">
       <NavigationLinks links={navigationLinks} />
       <Sheet>
         <SheetTrigger asChild>

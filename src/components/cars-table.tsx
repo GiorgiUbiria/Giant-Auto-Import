@@ -1,5 +1,5 @@
 import Image from "next/image";
-import PlaceholderImage from "../../public/Mark-Elias-Photo_How_To_Shoot_Cars_Story-006-scaled-1.webp"
+import PlaceholderImage from "../../public/Mark-Elias-Photo_How_To_Shoot_Cars_Story-006-scaled-1.webp";
 import { MoreHorizontal } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 import { CarResponse } from "@/lib/interfaces";
 
 export default function CarsTable({ cars }: { cars: CarResponse | undefined }) {
@@ -112,9 +121,22 @@ export default function CarsTable({ cars }: { cars: CarResponse | undefined }) {
         </Table>
       </CardContent>
       <CardFooter>
-        <div className="text-xs text-muted-foreground">
-          Showing <strong>1-10</strong> of <strong>32</strong> cars
-        </div>
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious href="#" />
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink href="#">1</PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationEllipsis />
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext href="#" />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </CardFooter>
     </Card>
   );

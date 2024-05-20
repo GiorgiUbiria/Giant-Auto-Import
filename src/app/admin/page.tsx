@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 export default async function Page() {
   const { user } = await validateRequest();
-  if (user?.role_id !== 2) {
+  if (!user || user?.role_id !== 2) {
     return redirect("/");
   }
   return (

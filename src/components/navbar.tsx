@@ -30,13 +30,6 @@ const Navbar = async () => {
     },
   ];
 
-  if (user?.role_id === 2) {
-    navigationLinks.push({
-      href: "/admin",
-      label: "Admin",
-    });
-  }
-
   return (
     <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background z-10 px-4 md:px-6">
       <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">

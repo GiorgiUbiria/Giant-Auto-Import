@@ -1,5 +1,6 @@
 "use server";
 
+import { DatabaseUser, db } from "@/lib/db";
 import { CarResponse } from "@/lib/interfaces";
 
 let token: string | null = null;
@@ -62,5 +63,20 @@ export async function getCars(): Promise<CarResponse | undefined> {
     return data;
   } catch (error) {
     console.error("Error fetching cars:", error);
+  }
+}
+
+export async function getUsers(): Promise<any> {
+  try {
+    const users = db.prepare("SELECT * FROM user WHERE role_id = 1").get() as
+      | DatabaseUser[]
+      | undefined;
+    if (!users) {
+      throw new Error("No users found");
+    }
+
+    return users;
+  } catch (error) {
+    console.error("Error fetching users:", error);
   }
 }

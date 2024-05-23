@@ -1,3 +1,4 @@
+import Hero from "@/components/hero";
 import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
@@ -7,5 +8,5 @@ export default async function Page() {
     return redirect("/login");
   }
 
-  return <div>Landing Page</div>;
+  return <Hero />;
 }

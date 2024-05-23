@@ -10,7 +10,6 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ModeToggle } from "./theme-toggle";
 import NavigationLinks from "./navigation-links";
-import SearchInput from "./search-input";
 
 const Navbar = async () => {
   const { user } = await validateRequest();
@@ -22,14 +21,17 @@ const Navbar = async () => {
       icon: <HomeIcon className="h-6 w-6" />,
     },
     {
-      href: "/dashboard",
-      label: "Dashboard",
-    },
-    {
       href: "/contact",
       label: "Contact",
     },
   ];
+
+  user && navigationLinks.push(
+    {
+      href: "/dashboard",
+      label: "Dashboard",
+    },
+  )
 
   return (
     <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background z-10 px-4 md:px-6">

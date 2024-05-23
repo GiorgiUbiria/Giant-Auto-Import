@@ -7,7 +7,7 @@ const Hero = () => {
     <>
       <Container className="flex flex-wrap ">
         <div className="flex items-center w-full lg:w-1/2">
-          <div className="max-w-2xl mb-8">
+          <div className="max-w-2xl mb-8 animate-fade-in-right">
             <h1 className="text-4xl font-bold leading-snug tracking-tight text-gray-800 lg:text-3xl lg:leading-tight xl:text-5xl xl:leading-tight dark:text-white">
               Welcome to Giant Auto Import
             </h1>
@@ -53,7 +53,7 @@ const Hero = () => {
               src={heroImg}
               width="616"
               height="617"
-              className={"object-cover"}
+              className="object-cover animate-float"
               alt="Hero Illustration"
               loading="eager"
               placeholder="blur"

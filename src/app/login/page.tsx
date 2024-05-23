@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { db } from "@/lib/db";
 import { Argon2id } from "oslo/password";
 import { cookies } from "next/headers";

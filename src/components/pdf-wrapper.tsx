@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import PSPDFKit from "pspdfkit";
 
 interface PdfDataInterface {
@@ -10,15 +11,25 @@ interface PdfDataInterface {
 interface PSPDFKitWrapperProps {
   documentPath: string;
   data: PdfDataInterface;
+  token: string;
 }
 
 const PSPDFKitWrapper: React.FC<PSPDFKitWrapperProps> = ({
   documentPath,
   data,
+  token,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
+    const pdfToken = searchParams.get("token");
+    if (!pdfToken || pdfToken !== token) {
+      router.push("/");
+      return;
+    }
+
     const loadAndProcessPdf = async () => {
       const container = containerRef.current;
 

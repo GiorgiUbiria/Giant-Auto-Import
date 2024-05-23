@@ -1,4 +1,6 @@
+import { validateRequest } from '@/lib/auth';
 import dynamic from 'next/dynamic';
+import { redirect } from 'next/navigation';
 
 const PSPDFKitWrapper = dynamic(() => import("@/components/pdf-wrapper"), {
   loading: () => <p>Loading your invoice...</p>,
@@ -6,6 +8,11 @@ const PSPDFKitWrapper = dynamic(() => import("@/components/pdf-wrapper"), {
 });
 
 const Page: React.FC = async () => {
+  const { user } = await validateRequest();
+  if (!user) {
+    return redirect("/");
+  }
+
   const data = {
     billedTo: "Giorgi Ubiria",
     paymentDate: new Date().toDateString(),
@@ -13,7 +20,7 @@ const Page: React.FC = async () => {
 
   return (
     <div>
-      <PSPDFKitWrapper documentPath="/document.pdf" data={data} />
+      <PSPDFKitWrapper documentPath="/document.pdf" data={data} token={user.pdf_token} />
     </div>
   );
 };

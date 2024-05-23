@@ -12,6 +12,6 @@ export default async function Page() {
 
   const cars = await getCars();
 
-  return <CarsTable cars={cars} />;
+  return <CarsTable cars={cars} pdfToken={user.pdf_token} />;
 }
 

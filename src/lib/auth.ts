@@ -3,7 +3,7 @@ import { BetterSqlite3Adapter } from "@lucia-auth/adapter-sqlite";
 import { db } from "./db";
 import { cookies } from "next/headers";
 import { cache } from "react";
-import { randomBytes } from 'crypto';
+import { randomBytes } from "crypto";
 
 import type { Session, User } from "lucia";
 import type { DatabaseUser } from "./db";
@@ -16,9 +16,7 @@ const adapter = new BetterSqlite3Adapter(db, {
   session: "session",
 });
 
-const generateToken = () => {
-  return randomBytes(32).toString('hex');
-};
+const generateToken = randomBytes(32).toString("hex");
 
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
@@ -30,7 +28,7 @@ export const lucia = new Lucia(adapter, {
     return {
       email: attributes.email,
       role_id: attributes.role_id,
-      pdf_token: generateToken()
+      pdf_token: generateToken,
     };
   },
 });

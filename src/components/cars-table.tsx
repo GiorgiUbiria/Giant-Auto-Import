@@ -35,10 +35,18 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination"
+} from "@/components/ui/pagination";
 import { CarResponse } from "@/lib/interfaces";
+import Link from "next/link";
 
-export default function CarsTable({ cars }: { cars: CarResponse | undefined }) {
+export default function CarsTable({
+  cars,
+  pdfToken,
+}: {
+  cars: CarResponse | undefined;
+  pdfToken: string;
+}) {
+  console.log(pdfToken)
   return (
     <Card>
       <CardHeader>
@@ -110,7 +118,11 @@ export default function CarsTable({ cars }: { cars: CarResponse | undefined }) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Invoice</DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Link href={`/pdf?token=${pdfToken}`}>
+                            Invoice
+                          </Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem>Download</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

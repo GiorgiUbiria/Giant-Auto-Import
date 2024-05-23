@@ -21,10 +21,10 @@ const PSPDFKitWrapper: React.FC<PSPDFKitWrapperProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const searchParams = useSearchParams();
+  const pdfToken = searchParams.get("token");
   const router = useRouter();
 
   useEffect(() => {
-    const pdfToken = searchParams.get("token");
     if (!pdfToken || pdfToken !== token) {
       router.push("/");
       return;
@@ -39,6 +39,10 @@ const PSPDFKitWrapper: React.FC<PSPDFKitWrapperProps> = ({
       }
 
       try {
+        if (PSPDFKit) {
+          PSPDFKit.unload(container);
+        }
+
         const instance = await PSPDFKit.load({
           container,
           document: documentPath,
@@ -96,7 +100,14 @@ const PSPDFKitWrapper: React.FC<PSPDFKitWrapperProps> = ({
     };
 
     loadAndProcessPdf();
-  }, [data.paymentDate, data.billedTo, documentPath]);
+
+    return () => {
+      const container = containerRef.current;
+      if (container) {
+        PSPDFKit.unload(container);
+      }
+    };
+  }, [data.paymentDate, data.billedTo, pdfToken, token, router, documentPath]);
 
   return <div ref={containerRef} id="pspdfkit" style={{ height: "100vh" }} />;
 };

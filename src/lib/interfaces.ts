@@ -71,7 +71,7 @@ interface Additional {
   keys01: string;
 }
 
-interface CarData {
+export interface CarData {
   id: string;
   vin: string;
   location: string;

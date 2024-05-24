@@ -1,6 +1,6 @@
 import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { fetchCars } from "../actions";
+import { getCarsFromDatabase } from "../actions";
 
 import CarsTable from "@/components/cars-table";
 
@@ -10,8 +10,7 @@ export default async function Page() {
     return redirect("/");
   }
 
-  const cars = await fetchCars();
+  const cars = await getCarsFromDatabase();
 
   return <CarsTable cars={cars} pdfToken={user.pdf_token} />;
 }
-

@@ -36,17 +36,15 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { CarResponse } from "@/lib/interfaces";
 import Link from "next/link";
 
 export default function CarsTable({
   cars,
   pdfToken,
 }: {
-  cars: CarResponse | undefined;
+  cars: any | undefined;
   pdfToken: string;
 }) {
-  console.log(pdfToken)
   return (
     <Card>
       <CardHeader>
@@ -74,7 +72,7 @@ export default function CarsTable({
           </TableHeader>
           <TableBody>
             {cars &&
-              cars.data.map((car) => (
+              cars.map((car: any) => (
                 <TableRow key={car.id}>
                   <TableCell className="hidden sm:table-cell">
                     <Image
@@ -86,23 +84,23 @@ export default function CarsTable({
                     />
                   </TableCell>
                   <TableCell className="font-medium">
-                    {car.specifications.year} {car.specifications.make}{" "}
-                    {car.specifications.model}
+                    {car.year} {car.make}{" "}
+                    {car.model}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{car.parkingDetails.status}</Badge>
+                    <Badge variant="outline">{car.fuelType ? car.fuelType : "Badge"}</Badge>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
-                    {car.specifications.titleState}
+                    {car.titleNumber}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
-                    {car.parkingDetails.parkingDate}
+                    {car.manufacturer}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
-                    {car.notes.mtlNotes}
+                    {car.engineType}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
-                    {car.shipping.name}
+                    {car.location}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>

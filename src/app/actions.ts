@@ -1,7 +1,7 @@
 "use server";
 
 import { DatabaseUser, db } from "@/lib/db";
-import { CarData, CarResponse } from "@/lib/interfaces";
+import { CarResponse } from "@/lib/interfaces";
 
 let token: string | null = null;
 let tokenExpiry: number | null = null;
@@ -78,5 +78,95 @@ export async function getUsers(): Promise<any> {
     return users;
   } catch (error) {
     console.error("Error fetching users:", error);
+  }
+}
+
+export async function getCarsFromDatabase(): Promise<any> {
+  try {
+    const cars = db.prepare(`
+      SELECT 
+        c.*, 
+        s.year, 
+        s.make, 
+        s.model, 
+        s.trim,
+        s.manufacturer,
+        s.country,
+        s.titleNumber,
+        s.engineType,
+        s.fuelType
+      FROM 
+        car c
+      JOIN 
+        specifications s ON c.specifications_id = s.id
+    `).all();
+
+    if (cars.length === 0) {
+      throw new Error("No cars found");
+    }
+
+    return cars;
+  } catch (error) {
+    console.error("Error fetching cars:", error);
+  }
+}
+
+
+export async function updateLocalDatabaseFromAPI(): Promise<void> {
+  try {
+    const cars: CarResponse | undefined = await fetchCars();
+
+    if (!cars) {
+      console.log("No cars fetched.");
+      return;
+    }
+
+    const specificationsInsert = db.prepare(`
+      INSERT INTO specifications (vin, year, make, model, trim, manufacturer, bodyType, country, engineType, titleNumber, titleState, color, runndrive, fuelType)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    `);
+
+    const carInsert = db.prepare(`
+      INSERT INTO car (vin, location, specifications_id, auction, createdAt)
+      VALUES (?,?,?,?,?)
+    `);
+
+    for (const car of cars.data) {
+      const { vin, specifications } = car;
+
+      const specificationsParams: (string | number | null)[] = [
+        vin,
+        specifications?.year ?? null,
+        specifications?.make ?? null,
+        specifications?.model ?? null,
+        specifications?.trim ?? null,
+        specifications?.manufacturer ?? null,
+        specifications?.bodyType ?? null,
+        specifications?.country ?? null,
+        specifications?.engineType ?? null,
+        specifications?.titleNumber ?? null,
+        specifications?.titleState ?? null,
+        specifications?.color ?? null,
+        specifications?.runndrive ? 1 : 0,
+        specifications?.fuelType ?? null,
+      ];
+
+      let specificationsId: number = specificationsInsert.run(
+        ...specificationsParams,
+      ).lastInsertRowid as number;
+
+      const carParams: (string | number | null)[] = [
+        vin,
+        car?.location ?? null,
+        specificationsId,
+        JSON.stringify(car?.auction) ?? null,
+        "Date",
+      ];
+
+      carInsert.run(...carParams);
+    }
+  } catch (error) {
+    console.error("Error updating local database:", error);
+  } finally {
   }
 }

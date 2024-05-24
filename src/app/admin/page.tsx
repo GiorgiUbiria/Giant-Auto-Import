@@ -1,6 +1,6 @@
 import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { fetchCars, getCars, updateCarsFromAPI } from "../actions";
+import { fetchCars } from "../actions";
 
 import CarsTable from "@/components/cars-table";
 
@@ -11,8 +11,6 @@ export default async function Page() {
   }
 
   const cars = await fetchCars();
-
-  await updateCarsFromAPI();
 
   return <CarsTable cars={cars} pdfToken={user.pdf_token} />;
 }

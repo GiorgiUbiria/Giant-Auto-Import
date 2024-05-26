@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { validateRequest } from "@/lib/auth";
 import {
   Activity,
   ArrowUpRight,
@@ -24,8 +25,14 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function Component() {
+export default async function Component() {
+  const { user } = await validateRequest();
+  if (!user || user.role_id === 2) {
+    return redirect("/");
+  }
+
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">

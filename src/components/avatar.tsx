@@ -22,7 +22,7 @@ interface AvatarProps {
 const Avatar: React.FC<AvatarProps> = ({ user, logout }) => {
   const userMenuItem = user ? (
     <DropdownMenuItem asChild>
-      <Link href={user.role_id === 1 ? "/dashboard" : "/admin"}>
+      <Link href={user.role_id === 1 ? "/dashboard" : "/admin"} className="cursor-pointer">
         {user.role_id === 1 ? "Personal Cabinet" : "Admin Panel"}
       </Link>
     </DropdownMenuItem>

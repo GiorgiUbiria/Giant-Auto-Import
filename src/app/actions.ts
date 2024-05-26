@@ -167,21 +167,27 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
     }
 
     const specificationsInsert = db.prepare(`
-      INSERT INTO specifications (vin, year, make, model, trim, manufacturer, bodyType, country, engineType, titleNumber, titleState, color, runndrive, fuelType)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      INSERT INTO specifications (vin, carfax, year, make, model, trim, manufacturer, bodyType, country, engineType, titleNumber, titleState, color, runndrive, fuelType)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     `);
 
     const carInsert = db.prepare(`
-      INSERT INTO car (vin, location, specifications_id, auction, createdAt)
-      VALUES (?,?,?,?,?)
+      INSERT INTO car (vin, originPort, destinationPort, departureDate, arriavalDate, auction, createdAt, shipping, specifications_id, parking_details_id)
+      VALUES (?,?,?,?,?,?,?,?,?,?)
+    `);
+
+    const parkingDetailsInsert = db.prepare(`
+      INSERT INTO parking_details (fined, arrived, status, parkingDateString)
+      VALUES (?,?,?,?,?,?)
     `);
 
     for (const car of cars.data) {
-      const { vin, specifications } = car;
+      const { vin, specifications, parkingDetails, shipment, shipping, auction, createdAt} = car;
 
       const specificationsParams: (string | number | null)[] = [
         vin,
         specifications?.year ?? null,
+        specifications?.carfax ?? null,
         specifications?.make ?? null,
         specifications?.model ?? null,
         specifications?.trim ?? null,
@@ -200,12 +206,28 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
         ...specificationsParams,
       ).lastInsertRowid as number;
 
+      const parkingDeatailsParams: (string | number | null | boolean)[] = [
+        parkingDetails?.fined ?? null,
+        parkingDetails?.arrived ?? null,
+        parkingDetails?.status ?? null,
+        parkingDetails?.parkingDateString ?? null,
+      ];
+
+      let parkingDetailsId: number = parkingDetailsInsert.run(
+        ...parkingDeatailsParams,
+      ).lastInsertRowid as number;
+
       const carParams: (string | number | null)[] = [
         vin,
-        car?.location ?? null,
+        shipment?.originPort ?? null,
+        shipment?.destinationPort ?? null,
+        shipment?.departureDate ?? null,
+        shipment?.arrivalDate ?? null,
+        JSON.stringify(auction) ?? null,
+        createdAt ?? null,
+        shipping?.name ?? null,
         specificationsId,
-        JSON.stringify(car?.auction) ?? null,
-        "Date",
+        parkingDetailsId,
       ];
 
       carInsert.run(...carParams);
@@ -217,19 +239,22 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
 }
 
 export async function getCarByVinFromAPI() {
-  const vin = "5NPE34AB2JH673039"
+  const vin = "5NPE34AB2JH673039";
   try {
     await ensureToken();
 
     if (!token) {
       throw new Error("No valid token available");
     }
-    const res = await fetch(`https://backend.app.mtlworld.com/api/vehicle/${vin}/assets`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const res = await fetch(
+      `https://backend.app.mtlworld.com/api/vehicle/${vin}/assets`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    );
 
     if (!res.ok) {
       throw new Error("Failed to fetch car");
@@ -238,6 +263,6 @@ export async function getCarByVinFromAPI() {
     const data = await res.json();
     return data;
   } catch (e) {
-    console.error(e)
+    console.error(e);
   }
 }

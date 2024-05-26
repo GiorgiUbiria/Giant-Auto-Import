@@ -30,6 +30,7 @@ db.exec(`CREATE TABLE IF NOT EXISTS session (
 db.exec(`CREATE TABLE IF NOT EXISTS specifications (
     id INTEGER PRIMARY KEY,
     vin TEXT,
+    carfax TEXT,
     year TEXT,
     make TEXT,
     model TEXT,
@@ -45,89 +46,35 @@ db.exec(`CREATE TABLE IF NOT EXISTS specifications (
     fuelType TEXT
 )`);
 
+db.exec(`CREATE TABLE IF NOT EXISTS parking_details (
+    id INTEGER PRIMARY KEY,
+    fined BOOL,
+    arrived BOOL,
+    status TEXT,
+    parkingDateString TEXT
+)`);
+
+db.exec(`CREATE TABLE IF NOT EXISTS car (
+    id INTEGER PRIMARY KEY,
+    vin TEXT,
+    originPort TEXT,
+    destinationPort TEXT,
+    departureDate DATE,
+    arrivalDate DATE,
+    auction TEXT,
+    createdAt DATE,
+    shipping TEXT,
+    specifications_id INTEGER,
+    parking_details_id INTEGER,
+    FOREIGN KEY (specifications_id) REFERENCES specifications(id),
+    FOREIGN KEY (parking_details_id) REFERENCES parking_details(id)
+)`);
 // Assets
 // {
 //   type: 'Image',
 //   source: 'MTL',
 //   value: 'https://media.mtlworld.win/api/content/5NPE34AB2JH673039/Image/0ef9105406d3efe534ab69d7b27788e7c23d5c70.JPG'
 // },
-
-// All cars
-// {
-//   id: '664f13ccf29d5367389c9c05',
-//   vin: '5NPE34AB2JH673039',
-//   location: 'SAVANNAH-MEB',
-//   specifications: {
-//     vin: '5NPE34AB2JH673039',
-//     carfax: '2018 HYUNDAI SONATA SPORT 2.0T; LIMITED 2.0T',
-//     description: '2018 HYUNDAI SONATA SPORT 2.0T; LIMITED 2.0T',
-//     year: '2018',
-//     make: 'Hyundai',
-//     model: 'Sonata',
-//     trim: 'Sport 2.0T; Limited 2.0T',
-//     vehicleClass: 'Mid-size Car',
-//     type: 'Passenger Car',
-//     manufacturer: 'Hyundai-Kia America Technical Center Inc.',
-//     bodyType: '4 Door Sedan',
-//     country: 'UNITED STATES',
-//     engineType: 'L4, 2.0L; Turbo',
-//     titleNumber: '139733605',
-//     titleState: 'FL',
-//     color: null,
-//     runndrive: false,
-//     fuelType: null,
-//     primaryFuelType: null,
-//     secondaryFuelType: null
-//   },
-//   parkingDetails: {
-//     fined: false,
-//     arrived: false,
-//     inspected: false,
-//     status: 'OnHand',
-//     lot: null,
-//     parkingDate: '2024-05-23T09:58:14.000Z',
-//     parkingDateString: 'Thu May 23 2024',
-//     updatedAt: '2024-05-23T10:00:44.547Z'
-//   },
-//   papers: {
-//     title: null,
-//     billOfSale: null,
-//     invoice: null,
-//     inspection: '319255',
-//     inspectionSet: false,
-//     titleSet: false,
-//     billOfSaleSet: false
-//   },
-//   shipment: {
-//     container: null,
-//     name: null,
-//     booking: null,
-//     originPort: 'Savannah',
-//     destinationPort: 'Poti',
-//     waybillOut: null,
-//     masterWaybillOut: null,
-//     carrierOut: null,
-//     vehicleIds: [],
-//     arrivalDate: null,
-//     departureDate: null,
-//     receipt: null
-//   },
-//   notes: { customerNotes: null, mtlNotes: 'MEB' },
-//   shipping: { name: 'Giant Auto Import LLC', presented: true },
-//   auction: null,
-//   additional: { keys01: '1' },
-//   createdAt: '2024-05-23T09:58:14.000Z'
-// }
-
-db.exec(`CREATE TABLE IF NOT EXISTS car (
-    id INTEGER PRIMARY KEY,
-    vin TEXT,
-    location TEXT,
-    specifications_id INTEGER,
-    auction TEXT,
-    createdAt TEXT,
-    FOREIGN KEY (specifications_id) REFERENCES specifications(id)
-)`);
 
 // Single Car
 // {

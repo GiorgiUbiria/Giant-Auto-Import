@@ -119,27 +119,35 @@ export async function getCarsFromDatabase(): Promise<any> {
   const available = await validateUser();
   if (!available) {
     console.error("User is not validated");
+    return;
   }
   try {
     const cars = db
       .prepare(
         `
-      SELECT 
-        c.*, 
-        s.year, 
-        s.make, 
-        s.model, 
-        s.trim,
-        s.manufacturer,
-        s.country,
-        s.titleNumber,
-        s.engineType,
-        s.fuelType
-      FROM 
-        car c
-      JOIN 
-        specifications s ON c.specifications_id = s.id
-    `,
+        SELECT 
+          c.*, 
+          s.year, 
+          s.make, 
+          s.model, 
+          s.trim,
+          s.manufacturer,
+          s.country,
+          s.titleNumber,
+          s.engineType,
+          s.fuelType,
+          s.carfax,  -- New field from specifications
+          p.fined, 
+          p.arrived, 
+          p.status, 
+          p.parkingDateString
+        FROM 
+          car c
+        LEFT JOIN 
+          specifications s ON c.specifications_id = s.id
+        LEFT JOIN 
+          parking_details p ON c.parking_details_id = p.id
+        `
       )
       .all();
 

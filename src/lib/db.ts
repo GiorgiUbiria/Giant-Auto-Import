@@ -69,66 +69,6 @@ db.exec(`CREATE TABLE IF NOT EXISTS car (
     FOREIGN KEY (specifications_id) REFERENCES specifications(id),
     FOREIGN KEY (parking_details_id) REFERENCES parking_details(id)
 )`);
-// Assets
-// {
-//   type: 'Image',
-//   source: 'MTL',
-//   value: 'https://media.mtlworld.win/api/content/5NPE34AB2JH673039/Image/0ef9105406d3efe534ab69d7b27788e7c23d5c70.JPG'
-// },
-
-// Single Car
-// {
-//   data: {
-//     vin: '5NPE34AB2JH673039',
-//     specifications: {
-//       vin: '5NPE34AB2JH673039',
-//       carfax: '2018 HYUNDAI SONATA SPORT 2.0T; LIMITED 2.0T',
-//       description: '2018 HYUNDAI SONATA SPORT 2.0T; LIMITED 2.0T',
-//       year: '2018',
-//       make: 'Hyundai',
-//       model: 'Sonata',
-//       trim: 'Sport 2.0T; Limited 2.0T',
-//       vehicleClass: 'Mid-size Car',
-//       type: 'Passenger Car',
-//       manufacturer: 'Hyundai-Kia America Technical Center Inc.',
-//       bodyType: '4 Door Sedan',
-//       country: 'UNITED STATES',
-//       engineType: 'L4, 2.0L; Turbo',
-//       titleNumber: '139733605',
-//       titleState: 'FL',
-//       color: null,
-//       runndrive: false,
-//       fuelType: null,
-//       primaryFuelType: null,
-//       secondaryFuelType: null
-//     },
-//     parkingDetails: {
-//       fined: false,
-//       arrived: false,
-//       inspected: false,
-//       status: 'OnHand',
-//       lot: null,
-//       parkingDate: '2024-05-23T09:58:14.000Z',
-//       parkingDateString: 'Thu May 23 2024',
-//       updatedAt: '2024-05-23T10:00:44.547Z'
-//     },
-//     shipment: {
-//       container: null,
-//       name: null,
-//       booking: null,
-//       originPort: 'Savannah',
-//       destinationPort: 'Poti',
-//       waybillOut: null,
-//       masterWaybillOut: null,
-//       carrierOut: null,
-//       vehicleIds: [],
-//       arrivalDate: null,
-//       departureDate: null
-//     },
-//     shipping: { name: 'Giant Auto Import LLC', presented: true },
-//     auction: null,
-//     createdAt: '2024-05-23T09:58:14.000Z'
-// }
 
 db.exec(`CREATE TABLE IF NOT EXISTS user_car (
     user_id INTEGER,

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/navbar";
+import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
   title: "Giant Auto Import",
@@ -27,6 +28,7 @@ export default function RootLayout({
             <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
               {children}
             </main>
+            <Footer />
           </div>
         </ThemeProvider>
       </body>

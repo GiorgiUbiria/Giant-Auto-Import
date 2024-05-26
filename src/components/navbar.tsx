@@ -1,7 +1,5 @@
-import { Menu, Package2, Search, HomeIcon } from "lucide-react";
-import Link from "next/link";
+import { Menu, HomeIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { lucia, validateRequest } from "@/lib/auth";
 import Avatar from "./avatar";
@@ -24,14 +22,17 @@ const Navbar = async () => {
       href: "/contact",
       label: "Contact",
     },
+    {
+      href: "/about",
+      label: "About Us",
+    },
   ];
 
-  user && navigationLinks.push(
-    {
+  user &&
+    navigationLinks.push({
       href: "/dashboard",
       label: "Dashboard",
-    },
-  )
+    });
 
   return (
     <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background z-10 px-4 md:px-6">

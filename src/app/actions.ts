@@ -1,12 +1,33 @@
 "use server";
 
+import { validateRequest } from "@/lib/auth";
 import { DatabaseUser, db } from "@/lib/db";
 import { CarResponse } from "@/lib/interfaces";
 
 let token: string | null = null;
 let tokenExpiry: number | null = null;
 
+async function validateAdmin(): Promise<boolean> {
+  const { user } = await validateRequest();
+  if (!user || user?.role_id !== 2) {
+    return false;
+  }
+  return true;
+}
+
+async function validateUser(): Promise<boolean> {
+  const { user } = await validateRequest();
+  if (!user) {
+    return false;
+  }
+  return true;
+}
+
 async function fetchToken(): Promise<void> {
+  const available = await validateUser();
+  if (!available) {
+    console.error("User is not validated");
+  }
   const login = process.env.MTL_USER_LOGIN as string;
   const password = process.env.MTL_USER_PASSWORD as string;
 
@@ -35,12 +56,20 @@ async function fetchToken(): Promise<void> {
 }
 
 async function ensureToken(): Promise<void> {
+  const available = await validateUser();
+  if (!available) {
+    console.error("User is not validated");
+  }
   if (!token || !tokenExpiry || Date.now() >= tokenExpiry - 60000) {
     await fetchToken();
   }
 }
 
 export async function fetchCars(): Promise<CarResponse | undefined> {
+  const available = await validateAdmin();
+  if (!available) {
+    console.error("User is not validated");
+  }
   try {
     await ensureToken();
 
@@ -67,6 +96,10 @@ export async function fetchCars(): Promise<CarResponse | undefined> {
 }
 
 export async function getUsers(): Promise<any> {
+  const available = await validateAdmin();
+  if (!available) {
+    console.error("User is not validated");
+  }
   try {
     const users = db.prepare("SELECT * FROM user WHERE role_id = 1").get() as
       | DatabaseUser[]
@@ -82,8 +115,14 @@ export async function getUsers(): Promise<any> {
 }
 
 export async function getCarsFromDatabase(): Promise<any> {
+  const available = await validateUser();
+  if (!available) {
+    console.error("User is not validated");
+  }
   try {
-    const cars = db.prepare(`
+    const cars = db
+      .prepare(
+        `
       SELECT 
         c.*, 
         s.year, 
@@ -99,7 +138,9 @@ export async function getCarsFromDatabase(): Promise<any> {
         car c
       JOIN 
         specifications s ON c.specifications_id = s.id
-    `).all();
+    `,
+      )
+      .all();
 
     if (cars.length === 0) {
       throw new Error("No cars found");
@@ -111,8 +152,11 @@ export async function getCarsFromDatabase(): Promise<any> {
   }
 }
 
-
 export async function updateLocalDatabaseFromAPI(): Promise<void> {
+  const available = await validateAdmin();
+  if (!available) {
+    console.error("User is not validated");
+  }
   try {
     const cars: CarResponse | undefined = await fetchCars();
 

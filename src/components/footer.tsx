@@ -10,27 +10,11 @@ export default async function Footer() {
           className="h-12 mr-3 sm:h-9"
           alt="Landwind Logo"
         />
-        Giant Auto Import 
+        Giant Auto Import
       </a>
-
       <span className="block text-sm text-center text-gray-500">
-        © 2024 Giant Auto Import™. All Rights Reserved. Built with
-        <a
-          href="https://flowbite.com"
-          className="text-purple-600 hover:underline"
-        >
-          Flowbite
-        </a>{" "}
-        and
-        <a
-          href="https://tailwindcss.com"
-          className="text-purple-600 hover:underline"
-        >
-          Tailwind CSS
-        </a>
-        .
-      </span>
-
+        © 2024 Giant Auto Import™. All Rights Reserved.{" "}
+      </span>{" "}
       <ul className="flex justify-center mt-5 space-x-5">
         <li>
           <a href="#" className="text-gray-500 hover:text-gray-900">

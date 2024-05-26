@@ -1,18 +1,12 @@
 export default async function Page() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
+    <div>
       <div className="mx-auto max-w-3xl px-6 py-12">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-white mb-4">
-            Welcome to the Jungle
+            Welcome to the Giant Auto Import 
           </h1>
-          <p className="text-xl text-white mb-8">Where the adventure begins!</p>
-          <a
-            href="#"
-            className="bg-white text-purple-900 py-2 px-4 rounded-full hover:bg-indigo-500 hover:text-white transition duration-300 ease-in-out"
-          >
-            Get Started
-          </a>
+          <p className="text-xl text-white mb-8">Where your car journey begins!</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-16">
           <div className="bg-white rounded-lg shadow-md p-6">

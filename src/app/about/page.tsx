@@ -3,10 +3,10 @@ export default async function Page() {
     <div>
       <div className="mx-auto max-w-3xl px-6 py-12">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-white mb-4">
+          <h1 className="text-4xl font-bold text-black dark:text-white mb-4">
             Welcome to the Giant Auto Import 
           </h1>
-          <p className="text-xl text-white mb-8">Where your car journey begins!</p>
+          <p className="text-xl dark:text-white text-black mb-8">Where your car journey begins!</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-16">
           <div className="bg-white rounded-lg shadow-md p-6">

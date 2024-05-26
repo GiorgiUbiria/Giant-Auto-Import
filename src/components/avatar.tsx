@@ -49,6 +49,14 @@ const Avatar: React.FC<AvatarProps> = ({ user, logout }) => {
                 <button>Sign out</button>
               </Form>
             </DropdownMenuItem>
+            {user.role_id === 2 && (
+            <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+                <Link href="/signup">Register new user</Link>
+            </DropdownMenuItem>
+            </>
+            )}
           </>
         ) : (
           <DropdownMenuItem>

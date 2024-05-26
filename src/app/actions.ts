@@ -2,7 +2,8 @@
 
 import { validateRequest } from "@/lib/auth";
 import { DatabaseUser, db } from "@/lib/db";
-import { CarResponse } from "@/lib/interfaces";
+import { CarData, CarResponse } from "@/lib/interfaces";
+import { redirect } from "next/navigation";
 
 let token: string | null = null;
 let tokenExpiry: number | null = null;
@@ -212,5 +213,31 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
   } catch (error) {
     console.error("Error updating local database:", error);
   } finally {
+  }
+}
+
+export async function getCarByVinFromAPI() {
+  const vin = "5NPE34AB2JH673039"
+  try {
+    await ensureToken();
+
+    if (!token) {
+      throw new Error("No valid token available");
+    }
+    const res = await fetch(`https://backend.app.mtlworld.com/api/vehicle/${vin}/assets`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch car");
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (e) {
+    console.error(e)
   }
 }

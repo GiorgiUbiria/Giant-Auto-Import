@@ -12,9 +12,10 @@ import { RegisterForm } from "@/components/register-form";
 
 export default async function Page() {
   const { user } = await validateRequest();
-  if (user && user.role_id !== 2) {
+  if (!user || (user && user.role_id !== 2)) {
     return redirect("/");
   }
+
   return (
     <>
       <Form action={signup}>

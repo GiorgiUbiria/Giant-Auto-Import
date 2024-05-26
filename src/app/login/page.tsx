@@ -15,11 +15,11 @@ export default async function Page() {
     return redirect("/");
   }
   return (
-    <>
+    <div className="min-h-max py-16 lg:py-28">
       <Form action={login}>
         <LoginForm />
       </Form>
-    </>
+    </div>
   );
 }
 

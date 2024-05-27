@@ -2,7 +2,7 @@
 
 import { validateRequest } from "@/lib/auth";
 import { DatabaseUser, db } from "@/lib/db";
-import { CarData, CarResponse } from "@/lib/interfaces";
+import { CarData, CarResponse, DbCar } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -116,18 +116,19 @@ export async function getUsers(): Promise<any> {
   }
 }
 
-export async function getCarsFromDatabase(): Promise<any> {
+export async function getCarsFromDatabase(): Promise<DbCar[]> {
   const available = await validateUser();
   if (!available) {
     console.error("User is not validated");
-    return;
+    return [];
   }
   try {
-    const cars = db
+    const cars: DbCar[] = db
       .prepare(
         `
         SELECT 
-          c.*, 
+          c.id,
+          c.vin, 
           s.year, 
           s.make, 
           s.model, 
@@ -141,7 +142,10 @@ export async function getCarsFromDatabase(): Promise<any> {
           p.fined, 
           p.arrived, 
           p.status, 
-          p.parkingDateString
+          p.parkingDateString,
+          c.originPort,
+          c.destinationPort,
+          c.shipping
         FROM 
           car c
         LEFT JOIN 
@@ -150,7 +154,7 @@ export async function getCarsFromDatabase(): Promise<any> {
           parking_details p ON c.parking_details_id = p.id
         `
       )
-      .all();
+      .all() as DbCar[];
 
     if (cars.length === 0) {
       throw new Error("No cars found");
@@ -159,6 +163,7 @@ export async function getCarsFromDatabase(): Promise<any> {
     return cars;
   } catch (error) {
     console.error("Error fetching cars:", error);
+    return [];
   }
 }
 

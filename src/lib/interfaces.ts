@@ -86,6 +86,28 @@ export interface CarData {
   createdAt: string;
 }
 
+export interface DbCar {
+  id: number;
+  vin: string;
+  year: number | null;
+  make: string | null;
+  model: string | null;
+  trim: string | null;
+  manufacturer: string | null;
+  country: string | null;
+  titleNumber: string | null;
+  engineType: string | null;
+  fuelType: string | null;
+  carfax: string | null;
+  fined: boolean | null;
+  arrived: boolean | null;
+  status: string | null;
+  parkingDateString: string | null;
+  originPort: string | null;
+  destinationPort: string | null;
+  shippingCompany: string | null;
+}
+
 export interface CarResponse {
   data: CarData[];
 }

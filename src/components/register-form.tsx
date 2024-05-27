@@ -15,7 +15,7 @@ export function RegisterForm() {
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
-        <CardTitle className="text-xl">Sign Up</CardTitle>
+        <CardTitle className="text-3xl">Sign Up</CardTitle>
         <CardDescription>
           Enter information to create an account
         </CardDescription>

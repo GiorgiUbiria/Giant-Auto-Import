@@ -17,11 +17,11 @@ export default async function Page() {
   }
 
   return (
-    <>
+    <div className="min-h-max py-16 lg:py-28 flex flex-col items-center justify-center gap-2">
       <Form action={signup}>
         <RegisterForm />
       </Form>
-    </>
+    </div>
   );
 }
 

@@ -11,7 +11,7 @@ import AddressIcon from "../../public/icons8-address-50.png";
 
 export default async function Footer() {
   return (
-    <div className="mt-8 bg-muted pt-9">
+    <div className="mt-8 bg-gradient-to-r from-purple-400 to-red-400 pt-9">
       <div className="mx-auto w-full max-w-[1166px] px-4 xl:px-0">
         <div className="flex flex-col justify-between sm:px-[18px] md:flex-row md:px-10">
           <div className="md:w-[316px]">
@@ -182,9 +182,9 @@ export default async function Footer() {
             </div>
           </div>
         </div>
-        <hr className="mt-[30px] text-white" />
+        <hr className="mt-[30px] text-white dark:bg-white bg-black h-1" />
         <div className="flex items-center justify-center pb-8 pt-[9px] md:py-8">
-          <p className="text-[10px] font-normal text-white md:text-[12px]">
+          <p className="text-[12px] font-normal dark:text-white md:text-[14px]">
             © Copyright 2024. Giant Auto Import
           </p>
         </div>

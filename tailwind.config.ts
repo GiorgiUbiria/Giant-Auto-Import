@@ -84,6 +84,26 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        slideLeft: {
+          from: {
+            opacity: "0",
+            transform: "translateX(100%)",
+          },
+          to: {
+            opacity: "1",
+            transform: "translateX(0)",
+          },
+        },
+        slideRight: {
+          from: {
+            opacity: "0",
+            transform: "translateX(-100%)",
+          },
+          to: {
+            opacity: "1",
+            transform: "translateX(0)",
+          },
+        },
         float: {
           "0%": {
             transform: "translateY(0)",
@@ -106,12 +126,12 @@ const config = {
           },
         },
         "zoom-in": {
-          '0%': {
-            transform: 'scale(1)',
+          "0%": {
+            transform: "scale(1)",
           },
-          '100%': {
-            transform: 'scale(1.3)',
-            'transform-origin': 'center center',
+          "100%": {
+            transform: "scale(1.3)",
+            "transform-origin": "center center",
           },
         },
       },
@@ -122,6 +142,8 @@ const config = {
         "fade-in-right": "fade-in-right 0.6s ease-in-out",
         typing: "typing 2s steps(20) alternate, blink .7s infinite",
         zoomIn: "zoom-in 10s ease-in-out forwards infinite",
+        fadeInLeft: "slideLeft 1s ease-out forwards",
+        fadeInRight: "slideRight 1s ease-out forwards",
       },
     },
   },

@@ -136,7 +136,7 @@ export async function getCarsFromDatabase(): Promise<any> {
           s.titleNumber,
           s.engineType,
           s.fuelType,
-          s.carfax,  -- New field from specifications
+          s.carfax,
           p.fined, 
           p.arrived, 
           p.status, 

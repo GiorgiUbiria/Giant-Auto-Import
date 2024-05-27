@@ -48,7 +48,7 @@ export default function CarsTable({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Cars</CardTitle>
+        <CardTitle>Cars - {cars.length}</CardTitle>
         <CardDescription>See cars</CardDescription>
       </CardHeader>
       <CardContent>

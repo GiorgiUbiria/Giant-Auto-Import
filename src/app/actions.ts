@@ -3,6 +3,7 @@
 import { validateRequest } from "@/lib/auth";
 import { DatabaseUser, db } from "@/lib/db";
 import { CarData, CarResponse } from "@/lib/interfaces";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 let token: string | null = null;
@@ -180,13 +181,13 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
     `);
 
     const carInsert = db.prepare(`
-      INSERT INTO car (vin, originPort, destinationPort, departureDate, arriavalDate, auction, createdAt, shipping, specifications_id, parking_details_id)
+      INSERT INTO car (vin, originPort, destinationPort, departureDate, arrivalDate, auction, createdAt, shipping, specifications_id, parking_details_id)
       VALUES (?,?,?,?,?,?,?,?,?,?)
     `);
 
     const parkingDetailsInsert = db.prepare(`
       INSERT INTO parking_details (fined, arrived, status, parkingDateString)
-      VALUES (?,?,?,?,?,?)
+      VALUES (?,?,?,?)
     `);
 
     for (const car of cars.data) {
@@ -215,9 +216,9 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
       ).lastInsertRowid as number;
 
       const parkingDeatailsParams: (string | number | null | boolean)[] = [
-        parkingDetails?.fined ?? null,
-        parkingDetails?.arrived ?? null,
-        parkingDetails?.status ?? null,
+        parkingDetails?.fined?.toString() ?? null,
+        parkingDetails?.arrived?.toString() ?? null,
+        parkingDetails?.status?.toString() ?? null,
         parkingDetails?.parkingDateString ?? null,
       ];
 
@@ -227,19 +228,21 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
 
       const carParams: (string | number | null)[] = [
         vin,
-        shipment?.originPort ?? null,
-        shipment?.destinationPort ?? null,
-        shipment?.departureDate ?? null,
-        shipment?.arrivalDate ?? null,
+        shipment?.originPort?.toString() ?? null,
+        shipment?.destinationPort?.toString() ?? null,
+        shipment?.departureDate?.toString() ?? null,
+        shipment?.arrivalDate?.toString() ?? null,
         JSON.stringify(auction) ?? null,
-        createdAt ?? null,
-        shipping?.name ?? null,
+        createdAt?.toString() ?? null,
+        shipping?.name?.toString() ?? null,
         specificationsId,
         parkingDetailsId,
       ];
 
       carInsert.run(...carParams);
     }
+
+    revalidatePath("/admin")
   } catch (error) {
     console.error("Error updating local database:", error);
   } finally {

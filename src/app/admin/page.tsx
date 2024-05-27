@@ -1,8 +1,9 @@
 import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getCarsFromDatabase } from "../actions";
+import { getCarsFromDatabase, updateLocalDatabaseFromAPI } from "../actions";
 
 import CarsTable from "@/components/cars-table";
+import { Button } from "@/components/ui/button";
 
 export default async function Page() {
   const { user } = await validateRequest();
@@ -12,5 +13,12 @@ export default async function Page() {
 
   const cars = await getCarsFromDatabase();
 
-  return <CarsTable cars={cars} pdfToken={user.pdf_token} />;
+  return (
+    <div className="pt-12">
+      <form action={updateLocalDatabaseFromAPI} className="pb-12">
+        <Button type="submit"> Update database </Button>
+      </form>
+      <CarsTable cars={cars} pdfToken={user.pdf_token} />
+    </div>
+  );
 }

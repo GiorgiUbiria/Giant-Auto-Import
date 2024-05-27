@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Menu, HomeIcon } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { lucia, validateRequest } from "@/lib/auth";
@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import { ModeToggle } from "./theme-toggle";
 import NavigationLinks from "./navigation-links";
 import NavbarLogo from "../../public/logo.png";
+import Link from "next/link";
 
 const Navbar = async () => {
   const { user } = await validateRequest();
@@ -32,7 +33,9 @@ const Navbar = async () => {
   return (
     <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-muted z-10 px-4 md:px-6">
       <nav className="hidden flex-col gap-12 font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
-        <Image src={NavbarLogo} alt="Company logo" className="w-12 h-12" />
+        <Link href="/" className="w-max">
+          <Image src={NavbarLogo} alt="Company logo" className="w-12 h-12" />
+        </Link>
         <NavigationLinks links={navigationLinks} />
       </nav>
       <Sheet>
@@ -47,7 +50,11 @@ const Navbar = async () => {
             <nav className="grid gap-6 text-lg font-medium">
               <NavigationLinks links={navigationLinks} />
             </nav>
-            <Image src={NavbarLogo} alt="Company logo" className="w-20 h-20 self-end" />
+            <Image
+              src={NavbarLogo}
+              alt="Company logo"
+              className="w-20 h-20 self-end"
+            />
           </div>
         </SheetContent>
       </Sheet>

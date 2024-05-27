@@ -77,7 +77,7 @@ export default function CarsTable({
               <TableHead>
                 <span className="hidden md:table-cell">Shipping Company</span>
               </TableHead>
-              <TableHead></TableHead> {/* Empty header for actions column */}
+              <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -99,47 +99,36 @@ export default function CarsTable({
                   <TableCell className="font-medium">{car.date}</TableCell>
                   <TableCell className="font-medium">
                     {car.vehicle || "-"}{" "}
-                    {/* Add empty cell if vehicle field is missing */}
                   </TableCell>
                   <TableCell className="font-medium">
-                    {car.vin || "-"}{" "}
-                    {/* Add empty cell if vin field is missing */}
+                    <Link href={`/car/${car.vin}`} className="hover:text-muted-foreground">{car.vin || "-"} </Link>
                   </TableCell>
                   <TableCell className="font-medium">
                     {car.fuelType || "-"}{" "}
-                    {/* Add empty cell if fuelType field is missing */}
                   </TableCell>
                   <TableCell className="font-medium">
                     {car.container || "-"}{" "}
-                    {/* Add empty cell if container field is missing */}
                   </TableCell>
                   <TableCell className="font-medium">
                     {car.booking || "-"}{" "}
-                    {/* Add empty cell if booking field is missing */}
                   </TableCell>
                   <TableCell className="font-medium">
                     {car.title || "-"}{" "}
-                    {/* Add empty cell if title field is missing */}
                   </TableCell>
                   <TableCell className="font-medium">
                     {car.shipment || "-"}{" "}
-                    {/* Add empty cell if shipment field is missing */}
                   </TableCell>
                   <TableCell className="font-medium">
                     {car.originPort || "-"}{" "}
-                    {/* Add empty cell if originPort field is missing */}
                   </TableCell>
                   <TableCell className="font-medium">
                     {car.destinationPort || "-"}{" "}
-                    {/* Add empty cell if destinationPort field is missing */}
                   </TableCell>
                   <TableCell className="font-medium">
                     {car.lot || "-"}{" "}
-                    {/* Add empty cell if lot field is missing */}
                   </TableCell>
                   <TableCell className="font-medium">
                     {car.shipping || "-"}{" "}
-                    {/* Add empty cell if shipping field is missing */}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>

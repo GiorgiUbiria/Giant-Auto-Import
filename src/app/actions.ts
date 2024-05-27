@@ -4,7 +4,6 @@ import { validateRequest } from "@/lib/auth";
 import { DatabaseUser, db } from "@/lib/db";
 import { CarData, CarResponse, DbCar } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 let token: string | null = null;
 let tokenExpiry: number | null = null;
@@ -26,10 +25,6 @@ async function validateUser(): Promise<boolean> {
 }
 
 async function fetchToken(): Promise<void> {
-  const available = await validateUser();
-  if (!available) {
-    console.error("User is not validated");
-  }
   const login = process.env.MTL_USER_LOGIN as string;
   const password = process.env.MTL_USER_PASSWORD as string;
 
@@ -58,20 +53,12 @@ async function fetchToken(): Promise<void> {
 }
 
 async function ensureToken(): Promise<void> {
-  const available = await validateUser();
-  if (!available) {
-    console.error("User is not validated");
-  }
   if (!token || !tokenExpiry || Date.now() >= tokenExpiry - 60000) {
     await fetchToken();
   }
 }
 
 export async function fetchCars(): Promise<CarResponse | undefined> {
-  const available = await validateAdmin();
-  if (!available) {
-    console.error("User is not validated");
-  }
   try {
     await ensureToken();
 
@@ -97,11 +84,37 @@ export async function fetchCars(): Promise<CarResponse | undefined> {
   }
 }
 
-export async function getUsers(): Promise<any> {
-  const available = await validateAdmin();
-  if (!available) {
-    console.error("User is not validated");
+export async function fetchCar(vin: string): Promise<CarData | undefined> {
+  try {
+    await ensureToken();
+
+    if (!token) {
+      throw new Error("No valid token available");
+    }
+
+    const res = await fetch(
+      `https://backend.app.mtlworld.com/api/vehicle/${vin}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    if (!res.ok) {
+      const errorDetails = await res.text();
+      throw new Error(`Failed to fetch car: ${res.status} - ${res.statusText} - ${errorDetails}`);
+    }
+
+    const data: CarData = await res.json();
+    return data;
+  } catch (e) {
+    console.error(e);
   }
+}
+
+export async function getUsers(): Promise<any> {
   try {
     const users = db.prepare("SELECT * FROM user WHERE role_id = 1").get() as
       | DatabaseUser[]
@@ -117,11 +130,6 @@ export async function getUsers(): Promise<any> {
 }
 
 export async function getCarsFromDatabase(): Promise<DbCar[]> {
-  const available = await validateUser();
-  if (!available) {
-    console.error("User is not validated");
-    return [];
-  }
   try {
     const cars: DbCar[] = db
       .prepare(
@@ -168,10 +176,6 @@ export async function getCarsFromDatabase(): Promise<DbCar[]> {
 }
 
 export async function updateLocalDatabaseFromAPI(): Promise<void> {
-  const available = await validateAdmin();
-  if (!available) {
-    console.error("User is not validated");
-  }
   try {
     const cars: CarResponse | undefined = await fetchCars();
 
@@ -254,8 +258,7 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
   }
 }
 
-export async function getCarByVinFromAPI() {
-  const vin = "5NPE34AB2JH673039";
+export async function getCarByVinFromAPI(vin: string) {
   try {
     await ensureToken();
 

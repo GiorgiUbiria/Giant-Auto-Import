@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import HeroImage from "../../public/hero-image.png"
+import HeroImage from "../../public/hero-image.png";
 
 export default async function Hero() {
   return (
@@ -15,9 +15,11 @@ export default async function Hero() {
       </div>
 
       <div className="relative z-10 flex flex-col justify-center items-center h-full text-center">
-        <h1 className="text-5xl font-bold leading-tight mb-4">
-          Welcome to Giant Auto Import
-        </h1>
+        <div className="w-max">
+          <h1 className="animate-typing overflow-hidden whitespace-nowrap border-r-4 border-r-white pr-5 text-6xl mb-4 text-white font-bold">
+           Giant Auto Import
+          </h1>
+        </div>
         <p className="text-lg text-gray-300 mb-8">
           Discover amazing features and services that await you.
         </p>

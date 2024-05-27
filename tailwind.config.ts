@@ -59,6 +59,23 @@ const config = {
         sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
+        typing: {
+          "0%": {
+            width: "0%",
+            visibility: "hidden",
+          },
+          "100%": {
+            width: "100%",
+          },
+        },
+        blink: {
+          "50%": {
+            borderColor: "transparent",
+          },
+          "100%": {
+            borderColor: "white",
+          },
+        },
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -92,8 +109,9 @@ const config = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "float": "float 1s ease-in-out",
+        float: "float 1s ease-in-out",
         "fade-in-right": "fade-in-right 0.6s ease-in-out",
+        typing: "typing 2s steps(20) alternate, blink .7s infinite",
       },
     },
   },
@@ -101,4 +119,3 @@ const config = {
 } satisfies Config;
 
 export default config;
-

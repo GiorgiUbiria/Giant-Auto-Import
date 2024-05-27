@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 interface LinkProp {
   href: string;
   label: string;
-  icon?: React.ReactNode;
 }
 
 export default function NavigationLinks({ links }: { links: LinkProp[] }) {
@@ -24,8 +23,7 @@ export default function NavigationLinks({ links }: { links: LinkProp[] }) {
               : "text-muted-foreground"
           }`}
         >
-          {link.icon && link.icon}
-          <span className={link.href === "/" ? "sr-only" : ""}>
+          <span>
             {link.label}
           </span>
         </Link>

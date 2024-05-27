@@ -105,6 +105,15 @@ const config = {
             transform: "translateX(0)",
           },
         },
+        "zoom-in": {
+          '0%': {
+            transform: 'scale(1)',
+          },
+          '100%': {
+            transform: 'scale(1.3)',
+            'transform-origin': 'center center',
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -112,6 +121,7 @@ const config = {
         float: "float 1s ease-in-out",
         "fade-in-right": "fade-in-right 0.6s ease-in-out",
         typing: "typing 2s steps(20) alternate, blink .7s infinite",
+        zoomIn: "zoom-in 10s ease-in-out forwards infinite",
       },
     },
   },

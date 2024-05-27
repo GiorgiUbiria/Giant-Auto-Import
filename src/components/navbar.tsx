@@ -18,7 +18,6 @@ const Navbar = async () => {
     {
       href: "/",
       label: "Home",
-      icon: <HomeIcon className="h-6 w-6" />,
     },
     {
       href: "/contact",

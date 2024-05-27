@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,16 +11,16 @@ import { Label } from "@/components/ui/label";
 
 export function LoginForm() {
   return (
-    <Card className="mx-auto max-w-sm">
+    <Card className="mx-auto max-w-sm w-96">
       <CardHeader>
-        <CardTitle className="text-2xl">Login</CardTitle>
+        <CardTitle className="text-3xl">Login</CardTitle>
         <CardDescription>
           Enter your email below to login to your account
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-4">
-          <div className="grid gap-2">
+        <div className="grid gap-6">
+          <div className="grid gap-4">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
@@ -32,7 +30,7 @@ export function LoginForm() {
               required
             />
           </div>
-          <div className="grid gap-2">
+          <div className="grid gap-4">
             <div className="flex items-center">
               <Label htmlFor="password">Password</Label>
             </div>

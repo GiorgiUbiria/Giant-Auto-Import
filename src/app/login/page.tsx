@@ -8,6 +8,8 @@ import { Form } from "@/lib/form";
 import type { DatabaseUser } from "@/lib/db";
 import type { ActionResult } from "@/lib/form";
 import { LoginForm } from "@/components/login-form";
+import Logo from "../../../public/logo.png";
+import Image from "next/image";
 
 export default async function Page() {
   const { user } = await validateRequest();
@@ -15,7 +17,8 @@ export default async function Page() {
     return redirect("/");
   }
   return (
-    <div className="min-h-max py-16 lg:py-28">
+    <div className="min-h-max py-16 lg:py-28 flex flex-col items-center justify-center gap-2">
+      <Image src={Logo} alt="Company Logo" width={150} height={150} />
       <Form action={login}>
         <LoginForm />
       </Form>

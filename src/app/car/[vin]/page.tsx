@@ -14,15 +14,17 @@ export default async function Page({ params }: { params: { vin: string } }) {
     }));
 
   return (
-    <div className="flex flex-row py-12 pl-12">
-      <div className="basis-1/8 flex justify-center">
+    <div className="flex flex-col items-center w-full py-12">
+      <div className="w-[800px]">
         <StatusLine />
       </div>
-      <div className="basis-1/2 flex justify-center">
-        <FeaturedImageGallery data={images} />
-      </div>
-      <div className="basis-1/2 flex justify-center">
-        <CarInfo carData={car!} />
+      <div className="w-full flex flex-row py-12 px-8">
+        <div className="basis-1/2 flex justify-center">
+          <FeaturedImageGallery data={images} />
+        </div>
+        <div className="basis-1/2 flex justify-center">
+          <CarInfo carData={car!} />
+        </div>
       </div>
     </div>
   );

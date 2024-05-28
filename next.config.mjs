@@ -11,6 +11,18 @@ const nextConfig = {
         port: "",
         pathname: "/api/content/**",
       },
+      {
+        protocol: "https",
+        hostname: "admin.app.mtlworld.com",
+        port: "",
+        pathname: "/api/content/**",
+      },
+      {
+        protocol: "https",
+        hostname: "valetapp.pro",
+        port: "",
+        pathname: "/api/v1/s/**",
+      },
     ],
   },
 };

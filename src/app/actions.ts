@@ -175,6 +175,49 @@ export async function getCarsFromDatabase(): Promise<DbCar[]> {
   }
 }
 
+export async function getCarFromDatabase(vin: string): Promise<DbCar | undefined> {
+  try {
+    const car: DbCar = db
+      .prepare(
+        `
+        SELECT 
+          c.id,
+          c.vin, 
+          s.year, 
+          s.make, 
+          s.model, 
+          s.trim,
+          s.manufacturer,
+          s.country,
+          s.titleNumber,
+          s.engineType,
+          s.fuelType,
+          s.carfax,
+          p.fined, 
+          p.arrived, 
+          p.status, 
+          p.parkingDateString,
+          c.originPort,
+          c.destinationPort,
+          c.shipping
+        FROM 
+          car c
+        LEFT JOIN 
+          specifications s ON c.specifications_id = s.id
+        LEFT JOIN 
+          parking_details p ON c.parking_details_id = p.id
+        WHERE 
+          c.vin = ?
+        `
+      )
+      .get(vin) as DbCar;
+
+      return car;
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 export async function updateLocalDatabaseFromAPI(): Promise<void> {
   try {
     const cars: CarResponse | undefined = await fetchCars();

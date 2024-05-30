@@ -1,11 +1,11 @@
-import { getCarByVinFromAPI, getCarFromDatabase } from "@/app/actions";
+import { getImagesByVinFromAPI, getCarFromDatabase } from "@/app/actions";
 import CarInfo from "@/components/car-info";
 import { FeaturedImageGallery } from "@/components/image-gallery";
 import StatusLine from "@/components/status-line";
 
 export default async function Page({ params }: { params: { vin: string } }) {
   const car = await getCarFromDatabase(params.vin);
-  const data = await getCarByVinFromAPI(params.vin);
+  const data = await getImagesByVinFromAPI(params.vin);
 
   const images = data.assets
     .filter((asset: any) => asset.type === "Image")

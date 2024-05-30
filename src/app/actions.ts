@@ -2,7 +2,7 @@
 
 import { validateRequest } from "@/lib/auth";
 import { DatabaseUser, db } from "@/lib/db";
-import { CarData, CarResponse, DbCar } from "@/lib/interfaces";
+import { APIAssetsResponse, CarData, CarResponse, DbCar } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 
 let token: string | null = null;
@@ -311,19 +311,21 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
       let carId: number = carInsert.run(...carParams).lastInsertRowid as number;
 
       const assets = await getImagesByVinFromAPI(vin);
-      const images = assets.assets
+      const images = assets?.assets
         .filter((asset: any) => asset.type === "Image")
         .map((asset: any) => ({
           imageLink: asset.value,
         }));
 
-      for (const image of images) {
-        const link = image.imageLink;
-        const imageParams: (string | number | null)[] = [
-          link?.toString() ?? null,
-          carId,
-        ];
-        imageInsert.run(...imageParams);
+      if (images) {
+        for (const image of images) {
+          const link = image.imageLink;
+          const imageParams: (string | number | null)[] = [
+            link?.toString() ?? null,
+            carId,
+          ];
+          imageInsert.run(...imageParams);
+        }
       }
     }
 
@@ -334,7 +336,10 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
   }
 }
 
-export async function getImagesByVinFromAPI(vin: string) {
+
+export async function getImagesByVinFromAPI(
+  vin: string,
+): Promise<APIAssetsResponse | undefined> {
   try {
     await ensureToken();
 
@@ -355,7 +360,8 @@ export async function getImagesByVinFromAPI(vin: string) {
       throw new Error("Failed to fetch car");
     }
 
-    const data = await res.json();
+    const data: APIAssetsResponse = await res.json();
+    console.log(data);
     return data;
   } catch (e) {
     console.error(e);

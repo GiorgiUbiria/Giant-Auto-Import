@@ -111,3 +111,15 @@ export interface DbCar {
 export interface CarResponse {
   data: CarData[];
 }
+
+export interface APIAssets {
+  type: string;
+  source: string;
+  value: string;
+  name?: string;
+}
+
+export interface APIAssetsResponse {
+  shipping: string;
+  assets: APIAssets[];
+}

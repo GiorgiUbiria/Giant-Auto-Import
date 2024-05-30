@@ -2,12 +2,9 @@
 
 import React, { useRef } from "react";
 import Image from "next/image";
+import { GalleryImage } from "@/lib/interfaces";
 
-type Image = {
-  imgelink: string;
-};
-
-export function FeaturedImageGallery({ data }: { data: Image[] }) {
+export function FeaturedImageGallery({ data }: { data: GalleryImage[] }) {
   const [active, setActive] = React.useState(data.at(0)?.imgelink);
   const dialogRef = useRef(null);
 

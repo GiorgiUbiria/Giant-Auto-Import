@@ -123,3 +123,7 @@ export interface APIAssetsResponse {
   shipping: string;
   assets: APIAssets[];
 }
+
+export interface Image {
+  imgelink: string;
+};

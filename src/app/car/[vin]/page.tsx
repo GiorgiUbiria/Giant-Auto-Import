@@ -3,6 +3,7 @@ import CarInfo from "@/components/car-info";
 import { FeaturedImageGallery } from "@/components/image-gallery";
 import StatusLine from "@/components/status-line";
 import { DbCar, GalleryImage } from "@/lib/interfaces";
+import sharp from "sharp";
 
 export default async function Page({ params }: { params: { vin: string } }) {
   const car: DbCar | undefined = await getCarFromDatabase(params.vin);
@@ -11,9 +12,31 @@ export default async function Page({ params }: { params: { vin: string } }) {
     return <div>Car not found</div>;
   }
 
-  const images: GalleryImage[] = car.images.map((base64Image: string) => ({
-    imgelink: `data:image/jpeg;base64,${base64Image}`,
-  }));
+  const imagesPromise: Promise<GalleryImage>[] = car.images.map(
+    async (base64Image: string) => {
+      try {
+        const buffer = Buffer.from(base64Image, "base64");
+
+        const processedBuffer = await sharp(buffer)
+          .resize({ width: 800 })
+          .jpeg({ quality: 100 })
+          .toBuffer();
+
+        const processedBase64 = processedBuffer.toString("base64");
+
+        return {
+          imgelink: `data:image/jpeg;base64,${processedBase64}`,
+        };
+      } catch (error) {
+        console.error("Error processing image:", error);
+        return {
+          imgelink: "placeholder.jpg",
+        };
+      }
+    },
+  );
+
+  const images: GalleryImage[] = await Promise.all(imagesPromise);
 
   return (
     <div className="flex flex-col items-center w-full py-12">

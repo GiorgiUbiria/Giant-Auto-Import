@@ -70,6 +70,14 @@ db.exec(`CREATE TABLE IF NOT EXISTS car (
     FOREIGN KEY (parking_details_id) REFERENCES parking_details(id)
 )`);
 
+db.exec(`CREATE TABLE IF NOT EXISTS images (
+    id INTEGER PRIMARY KEY,
+    imageLink TEXT,
+    imageBlob BLOB,
+    car_id INTEGER,
+    FOREIGN KEY (car_id) REFERENCES car(id)
+)`);
+
 db.exec(`CREATE TABLE IF NOT EXISTS user_car (
     user_id INTEGER,
     car_id INTEGER,

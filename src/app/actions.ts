@@ -104,7 +104,9 @@ export async function fetchCar(vin: string): Promise<CarData | undefined> {
 
     if (!res.ok) {
       const errorDetails = await res.text();
-      throw new Error(`Failed to fetch car: ${res.status} - ${res.statusText} - ${errorDetails}`);
+      throw new Error(
+        `Failed to fetch car: ${res.status} - ${res.statusText} - ${errorDetails}`,
+      );
     }
 
     const data: CarData = await res.json();
@@ -160,7 +162,7 @@ export async function getCarsFromDatabase(): Promise<DbCar[]> {
           specifications s ON c.specifications_id = s.id
         LEFT JOIN 
           parking_details p ON c.parking_details_id = p.id
-        `
+        `,
       )
       .all() as DbCar[];
 
@@ -175,7 +177,9 @@ export async function getCarsFromDatabase(): Promise<DbCar[]> {
   }
 }
 
-export async function getCarFromDatabase(vin: string): Promise<DbCar | undefined> {
+export async function getCarFromDatabase(
+  vin: string,
+): Promise<DbCar | undefined> {
   try {
     const car: DbCar = db
       .prepare(
@@ -208,11 +212,11 @@ export async function getCarFromDatabase(vin: string): Promise<DbCar | undefined
           parking_details p ON c.parking_details_id = p.id
         WHERE 
           c.vin = ?
-        `
+        `,
       )
       .get(vin) as DbCar;
 
-      return car;
+    return car;
   } catch (e) {
     console.error(e);
   }
@@ -242,8 +246,21 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
       VALUES (?,?,?,?)
     `);
 
+    const imageInsert = db.prepare(`
+      INSERT INTO images (imageLink, car_id)
+      VALUES (?,?)
+    `);
+
     for (const car of cars.data) {
-      const { vin, specifications, parkingDetails, shipment, shipping, auction, createdAt} = car;
+      const {
+        vin,
+        specifications,
+        parkingDetails,
+        shipment,
+        shipping,
+        auction,
+        createdAt,
+      } = car;
 
       const specificationsParams: (string | number | null)[] = [
         vin,
@@ -267,7 +284,7 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
         ...specificationsParams,
       ).lastInsertRowid as number;
 
-      const parkingDeatailsParams: (string | number | null | boolean)[] = [
+      const parkingDetailsParams: (string | number | null | boolean)[] = [
         parkingDetails?.fined?.toString() ?? null,
         parkingDetails?.arrived?.toString() ?? null,
         parkingDetails?.status?.toString() ?? null,
@@ -275,7 +292,7 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
       ];
 
       let parkingDetailsId: number = parkingDetailsInsert.run(
-        ...parkingDeatailsParams,
+        ...parkingDetailsParams,
       ).lastInsertRowid as number;
 
       const carParams: (string | number | null)[] = [
@@ -291,17 +308,33 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
         parkingDetailsId,
       ];
 
-      carInsert.run(...carParams);
+      let carId: number = carInsert.run(...carParams).lastInsertRowid as number;
+
+      const assets = await getImagesByVinFromAPI(vin);
+      const images = assets.assets
+        .filter((asset: any) => asset.type === "Image")
+        .map((asset: any) => ({
+          imageLink: asset.value,
+        }));
+
+      for (const image of images) {
+        const link = image.imageLink;
+        const imageParams: (string | number | null)[] = [
+          link?.toString() ?? null,
+          carId,
+        ];
+        imageInsert.run(...imageParams);
+      }
     }
 
-    revalidatePath("/admin")
+    revalidatePath("/admin");
   } catch (error) {
     console.error("Error updating local database:", error);
   } finally {
   }
 }
 
-export async function getCarByVinFromAPI(vin: string) {
+export async function getImagesByVinFromAPI(vin: string) {
   try {
     await ensureToken();
 

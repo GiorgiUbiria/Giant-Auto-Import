@@ -124,6 +124,6 @@ export interface APIAssetsResponse {
   assets: APIAssets[];
 }
 
-export interface Image {
+export interface GalleryImage {
   imgelink: string;
 };

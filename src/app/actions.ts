@@ -2,7 +2,12 @@
 
 import { validateRequest } from "@/lib/auth";
 import { DatabaseUser, db } from "@/lib/db";
-import { APIAssetsResponse, CarData, CarResponse, DbCar } from "@/lib/interfaces";
+import {
+  APIAssetsResponse,
+  CarData,
+  CarResponse,
+  DbCar,
+} from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 
 let token: string | null = null;
@@ -222,6 +227,15 @@ export async function getCarFromDatabase(
   }
 }
 
+async function fetchImageBuffer(imageUrl: string): Promise<Buffer> {
+  const response = await fetch(imageUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch image from ${imageUrl}`);
+  }
+  const arrayBuffer = await response.arrayBuffer();
+  return Buffer.from(arrayBuffer);
+}
+
 export async function updateLocalDatabaseFromAPI(): Promise<void> {
   try {
     const cars: CarResponse | undefined = await fetchCars();
@@ -247,8 +261,8 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
     `);
 
     const imageInsert = db.prepare(`
-      INSERT INTO images (imageLink, car_id)
-      VALUES (?,?)
+      INSERT INTO images (imageLink, imageBlob, car_id)
+      VALUES (?, ?, ?)
     `);
 
     for (const car of cars.data) {
@@ -264,8 +278,8 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
 
       const specificationsParams: (string | number | null)[] = [
         vin,
-        specifications?.year ?? null,
         specifications?.carfax ?? null,
+        specifications?.year ?? null,
         specifications?.make ?? null,
         specifications?.model ?? null,
         specifications?.trim ?? null,
@@ -320,11 +334,17 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
       if (images) {
         for (const image of images) {
           const link = image.imageLink;
-          const imageParams: (string | number | null)[] = [
-            link?.toString() ?? null,
-            carId,
-          ];
-          imageInsert.run(...imageParams);
+          try {
+            const imageBuffer = await fetchImageBuffer(link);
+            const imageParams: (string | Buffer | number | null)[] = [
+              link?.toString() ?? null,
+              imageBuffer,
+              carId,
+            ];
+            imageInsert.run(...imageParams);
+          } catch (error) {
+            console.error(`Error fetching image from ${link}:`, error);
+          }
         }
       }
     }
@@ -335,7 +355,6 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
   } finally {
   }
 }
-
 
 export async function getImagesByVinFromAPI(
   vin: string,
@@ -361,7 +380,6 @@ export async function getImagesByVinFromAPI(
     }
 
     const data: APIAssetsResponse = await res.json();
-    console.log(data);
     return data;
   } catch (e) {
     console.error(e);

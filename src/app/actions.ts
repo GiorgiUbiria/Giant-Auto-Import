@@ -9,6 +9,7 @@ import {
   DbCar,
 } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
+import sharp from "sharp";
 
 let token: string | null = null;
 let tokenExpiry: number | null = null;
@@ -27,6 +28,15 @@ async function validateUser(): Promise<boolean> {
     return false;
   }
   return true;
+}
+
+async function compressImageBuffer(imageBuffer: Buffer) {
+  const compressedBuffer = await sharp(imageBuffer)
+    .resize({ width: 400 })
+    .jpeg({ quality: 50 })
+    .toBuffer();
+  
+  return compressedBuffer;
 }
 
 async function fetchToken(): Promise<void> {
@@ -221,6 +231,24 @@ export async function getCarFromDatabase(
       )
       .get(vin) as DbCar;
 
+    if (!car) {
+      return undefined;
+    }
+
+    const images = db
+      .prepare(
+        `
+      SELECT imageBlob 
+      FROM images 
+      WHERE car_id = ?
+      `,
+      )
+      .all(car.id) as { imageBlob: Buffer }[];
+
+    car.images = images.map((row: { imageBlob: Buffer }) =>
+      row.imageBlob.toString("base64"),
+    );
+
     return car;
   } catch (e) {
     console.error(e);
@@ -336,9 +364,10 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
           const link = image.imageLink;
           try {
             const imageBuffer = await fetchImageBuffer(link);
+            const compressedImageBuffer = await compressImageBuffer(imageBuffer);
             const imageParams: (string | Buffer | number | null)[] = [
               link?.toString() ?? null,
-              imageBuffer,
+              compressedImageBuffer,
               carId,
             ];
             imageInsert.run(...imageParams);

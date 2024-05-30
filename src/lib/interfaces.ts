@@ -106,6 +106,7 @@ export interface DbCar {
   originPort: string | null;
   destinationPort: string | null;
   shippingCompany: string | null;
+  images: string[];
 }
 
 export interface CarResponse {
@@ -126,4 +127,4 @@ export interface APIAssetsResponse {
 
 export interface GalleryImage {
   imgelink: string;
-};
+}

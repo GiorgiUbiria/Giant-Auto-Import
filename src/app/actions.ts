@@ -131,6 +131,29 @@ export async function fetchCar(vin: string): Promise<CarData | undefined> {
   }
 }
 
+export async function assignCarToUser(vin: string, userId: number): Promise<void> {
+  try {
+    const car: DbCar | undefined = await getCarFromDatabase(vin);
+
+    if (!car) {
+      throw new Error(`Car with VIN ${vin} not found`);
+    }
+
+    const carId: number = car.id;
+
+    db.prepare(`
+      INSERT INTO user_car (user_id, car_id)
+      VALUES (?, ?)
+    `).run(userId, carId);
+
+    console.log(`Car with VIN ${vin} assigned to user with ID ${userId}`);
+  } catch (e) {
+    console.error(e);
+    throw new Error('Failed to assign car to user');
+  }
+}
+
+
 export async function getUsers(): Promise<any> {
   try {
     const users = db.prepare("SELECT * FROM user WHERE role_id = 1").get() as

@@ -153,17 +153,31 @@ export async function assignCarToUser(vin: string, userId: number): Promise<void
   }
 }
 
-
-export async function getUsers(): Promise<any> {
+export async function getUsers(): Promise<DatabaseUser[] | undefined> {
   try {
-    const users = db.prepare("SELECT * FROM user WHERE role_id = 1").get() as
-      | DatabaseUser[]
-      | undefined;
-    if (!users) {
-      throw new Error("No users found");
+    const users = db.prepare("SELECT * FROM user WHERE role_id = 1").all() as DatabaseUser[];
+    
+    if (users.length === 0) {
+      console.warn("No users found");
+      return undefined;
     }
 
     return users;
+  } catch (error) {
+    console.error("Error fetching users:", error);
+  }
+}
+
+export async function getUser(id: string): Promise<DatabaseUser | undefined> {
+  try {
+    const user = db.prepare("SELECT * FROM user WHERE id = ?").get(id) as
+      | DatabaseUser
+      | undefined;
+    if (!user) {
+      throw new Error("No user found");
+    }
+
+    return user;
   } catch (error) {
     console.error("Error fetching users:", error);
   }

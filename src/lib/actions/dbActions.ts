@@ -1,8 +1,7 @@
+"use server";
+
 import { DatabaseUser, db } from "@/lib/db";
-import {
-  DbCar,
-  UserWithCar,
-} from "@/lib/interfaces";
+import { DbCar, UserWithCar } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 
 export async function assignCarToUser(
@@ -27,7 +26,7 @@ export async function assignCarToUser(
     ).run(userId, carId);
 
     console.log(`Car with VIN ${vin} assigned to user with ID ${userId}`);
-    revalidatePath(`/users/${userId}`)
+    revalidatePath(`/users/${userId}`);
   } catch (e) {
     console.error(e);
     throw new Error("Failed to assign car to user");

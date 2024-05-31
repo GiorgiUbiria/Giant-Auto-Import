@@ -1,80 +1,18 @@
 "use server";
 
-import { validateRequest } from "@/lib/auth";
 import { db } from "@/lib/db";
-import {
-  APIAssetsResponse,
-  CarData,
-  CarResponse,
-} from "@/lib/interfaces";
+import { CarData, CarResponse } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
-import sharp from "sharp";
-
-let token: string | null = null;
-let tokenExpiry: number | null = null;
-
-async function validateAdmin(): Promise<boolean> {
-  const { user } = await validateRequest();
-  if (!user || user?.role_id !== 2) {
-    return false;
-  }
-  return true;
-}
-
-async function validateUser(): Promise<boolean> {
-  const { user } = await validateRequest();
-  if (!user) {
-    return false;
-  }
-  return true;
-}
-
-async function compressImageBuffer(imageBuffer: Buffer) {
-  const compressedBuffer = await sharp(imageBuffer)
-    .resize({ width: 400 })
-    .jpeg({ quality: 50 })
-    .toBuffer();
-
-  return compressedBuffer;
-}
-
-async function fetchToken(): Promise<void> {
-  const login = process.env.MTL_USER_LOGIN as string;
-  const password = process.env.MTL_USER_PASSWORD as string;
-
-  try {
-    const res = await fetch("https://backend.app.mtlworld.com/api", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ login, password }),
-    });
-
-    const data = await res.json();
-
-    if (data.accessToken) {
-      token = data.accessToken as string;
-
-      const tokenPayload = JSON.parse(atob(token.split(".")[1]));
-      tokenExpiry = tokenPayload.exp * 1000;
-    } else {
-      throw new Error("Failed to fetch token");
-    }
-  } catch (error) {
-    console.error("Error fetching token:", error);
-  }
-}
-
-async function ensureToken(): Promise<void> {
-  if (!token || !tokenExpiry || Date.now() >= tokenExpiry - 60000) {
-    await fetchToken();
-  }
-}
+import { ensureToken } from "./tokenActions";
+import {
+  fetchImageBuffer,
+  compressImageBuffer,
+  getImagesByVinFromAPI,
+} from "./imageActions";
 
 export async function fetchCars(): Promise<CarResponse | undefined> {
   try {
-    await ensureToken();
+    const token = await ensureToken();
 
     if (!token) {
       throw new Error("No valid token available");
@@ -100,7 +38,7 @@ export async function fetchCars(): Promise<CarResponse | undefined> {
 
 export async function fetchCar(vin: string): Promise<CarData | undefined> {
   try {
-    await ensureToken();
+    const token = await ensureToken();
 
     if (!token) {
       throw new Error("No valid token available");
@@ -128,15 +66,6 @@ export async function fetchCar(vin: string): Promise<CarData | undefined> {
   } catch (e) {
     console.error(e);
   }
-}
-
-async function fetchImageBuffer(imageUrl: string): Promise<Buffer> {
-  const response = await fetch(imageUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch image from ${imageUrl}`);
-  }
-  const arrayBuffer = await response.arrayBuffer();
-  return Buffer.from(arrayBuffer);
 }
 
 export async function updateLocalDatabaseFromAPI(): Promise<void> {
@@ -258,35 +187,5 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
   } catch (error) {
     console.error("Error updating local database:", error);
   } finally {
-  }
-}
-
-export async function getImagesByVinFromAPI(
-  vin: string,
-): Promise<APIAssetsResponse | undefined> {
-  try {
-    await ensureToken();
-
-    if (!token) {
-      throw new Error("No valid token available");
-    }
-    const res = await fetch(
-      `https://backend.app.mtlworld.com/api/vehicle/${vin}/assets`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch car");
-    }
-
-    const data: APIAssetsResponse = await res.json();
-    return data;
-  } catch (e) {
-    console.error(e);
   }
 }

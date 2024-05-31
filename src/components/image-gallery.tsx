@@ -24,6 +24,10 @@ export function FeaturedImageGallery({ data }: { data: GalleryImage[] }) {
     openDialog();
   };
 
+  if  (data.length === 0) {
+    return <div>No images found</div>;
+  }
+
   return (
     <div className="max-w-xl">
       <div className="grid gap-4">

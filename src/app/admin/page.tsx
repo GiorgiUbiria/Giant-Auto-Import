@@ -4,8 +4,9 @@ import { validateRequest } from "@/lib/auth";
 import {  updateLocalDatabaseFromAPI } from "@/lib/actions/actions";
 import { getCarsFromDatabase} from "@/lib/actions/dbActions";
 
-import CarsTable from "@/components/cars-table";
+import { columns } from "./columns";
 import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/data-table";
 
 export default async function Page() {
   const { user } = await validateRequest();
@@ -16,11 +17,11 @@ export default async function Page() {
   const cars = await getCarsFromDatabase();
 
   return (
-    <div className="pt-12">
+   <div className="container-fluid mx-auto py-10">
       <form action={updateLocalDatabaseFromAPI} className="pb-12">
         <Button type="submit"> Update database </Button>
       </form>
-      <CarsTable cars={cars} pdfToken={user.pdf_token} />
+      <DataTable columns={columns} data={cars} />
     </div>
   );
 }

@@ -39,6 +39,7 @@ export const columns: ColumnDef<Omit<DatabaseUser, "passowrd">>[] = [
     },
   },
   {
+    accessorKey: "actions",
     id: "actions",
     cell: async ({ row }) => {
       return <CloseDialog />;

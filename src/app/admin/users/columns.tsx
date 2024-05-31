@@ -2,7 +2,9 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { DatabaseUser } from "@/lib/db";
+
 import Link from "next/link";
+import CloseDialog from "./dialog";
 
 export const columns: ColumnDef<Omit<DatabaseUser, "passowrd">>[] = [
   {
@@ -34,6 +36,12 @@ export const columns: ColumnDef<Omit<DatabaseUser, "passowrd">>[] = [
       const role = role_id === 1 ? "User" : "Admin";
 
       return <div className="text-right font-medium">{role}</div>;
+    },
+  },
+  {
+    id: "actions",
+    cell: async ({ row }) => {
+      return <CloseDialog />;
     },
   },
 ];

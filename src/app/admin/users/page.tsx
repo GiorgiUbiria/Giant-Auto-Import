@@ -8,6 +8,7 @@ export default async function Page() {
 
   return (
    <div className="container mx-auto py-10">
+      <h1 className="text-3xl font-bold pb-8">Users</h1>
       <DataTable columns={columns} data={users!} />
     </div>
   );

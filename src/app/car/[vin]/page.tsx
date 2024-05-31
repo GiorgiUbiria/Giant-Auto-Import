@@ -1,4 +1,4 @@
-import { getCarFromDatabase } from "@/app/actions";
+import { getCarFromDatabase } from "@/lib/actions/dbActions";
 import CarInfo from "@/components/car-info";
 import { FeaturedImageGallery } from "@/components/image-gallery";
 import StatusLine from "@/components/status-line";

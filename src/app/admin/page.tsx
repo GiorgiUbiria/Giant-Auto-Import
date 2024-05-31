@@ -1,6 +1,6 @@
 import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getCarsFromDatabase, updateLocalDatabaseFromAPI } from "../actions";
+import { getCarsFromDatabase, updateLocalDatabaseFromAPI } from "../../lib/actions/actions";
 
 import CarsTable from "@/components/cars-table";
 import { Button } from "@/components/ui/button";

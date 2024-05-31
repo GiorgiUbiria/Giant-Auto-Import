@@ -1,4 +1,4 @@
-import { getUsers } from "@/app/actions";
+import { getUsers } from "@/lib/actions/dbActions";
 import AssignCarForm from "@/components/assign-car-form";
 import { DatabaseUser } from "@/lib/db";
 import Link from "next/link";

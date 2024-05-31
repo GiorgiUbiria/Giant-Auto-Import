@@ -29,7 +29,7 @@ export default async function Page() {
           <p>
             {user.role_id}
           </p>
-          <AssignCarForm vin={"5NPE24AF0KH775981"} userId={user.id} />
+          <AssignCarForm userId={user.id} />
         </div>
       ))}
     </div>

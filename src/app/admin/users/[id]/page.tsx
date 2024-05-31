@@ -7,7 +7,11 @@ export default async function Page({ params }: { params: { id: string } }) {
   return (
     <div>
       <h1>{user?.name}</h1>
-      <p> {user?.vin}</p>
+      <div>
+        <h2>User Cars</h2>
+        <hr />
+        {user?.cars?.map((car) => <p key={car.vin}>{car.vin}</p>)}
+      </div>
     </div>
   );
 }

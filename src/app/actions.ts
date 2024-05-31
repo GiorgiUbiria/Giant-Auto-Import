@@ -36,7 +36,7 @@ async function compressImageBuffer(imageBuffer: Buffer) {
     .resize({ width: 400 })
     .jpeg({ quality: 50 })
     .toBuffer();
-  
+
   return compressedBuffer;
 }
 
@@ -132,7 +132,11 @@ export async function fetchCar(vin: string): Promise<CarData | undefined> {
   }
 }
 
-export async function assignCarToUser(vin: string, userId: string): Promise<void> {
+export async function assignCarToUser(
+  userId: string,
+  formData: FormData,
+): Promise<void> {
+  const vin = formData.get("car_vin") as string;
   try {
     const car: DbCar | undefined = await getCarFromDatabase(vin);
 
@@ -142,22 +146,27 @@ export async function assignCarToUser(vin: string, userId: string): Promise<void
 
     const carId: number = car.id;
 
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO user_car (user_id, car_id)
       VALUES (?, ?)
-    `).run(userId, carId);
+    `,
+    ).run(userId, carId);
 
     console.log(`Car with VIN ${vin} assigned to user with ID ${userId}`);
+    revalidatePath(`/users/${userId}`)
   } catch (e) {
     console.error(e);
-    throw new Error('Failed to assign car to user');
+    throw new Error("Failed to assign car to user");
   }
 }
 
 export async function getUsers(): Promise<DatabaseUser[] | undefined> {
   try {
-    const users = db.prepare("SELECT * FROM user WHERE role_id = 1").all() as DatabaseUser[];
-    
+    const users = db
+      .prepare("SELECT * FROM user WHERE role_id = 1")
+      .all() as DatabaseUser[];
+
     if (users.length === 0) {
       console.warn("No users found");
       return undefined;
@@ -172,21 +181,49 @@ export async function getUsers(): Promise<DatabaseUser[] | undefined> {
 export async function getUser(id: string): Promise<UserWithCar | undefined> {
   try {
     const query = `
-      SELECT u.id, u.name, u.email, u.phone, u.role_id,
+      SELECT u.id, u.name, u.email, u.phone, u.password, u.role_id,
              c.vin, c.arrivalDate, c.destinationPort
       FROM user u
       LEFT JOIN user_car uc ON u.id = uc.user_id
       LEFT JOIN car c ON uc.car_id = c.id
       WHERE u.id = ?
     `;
-    
-    const userWithCar = db.prepare(query).get(id) as UserWithCar | undefined;
-    
-    if (!userWithCar) {
+
+    const rows = db.prepare(query).all(id) as Array<{
+      id: string;
+      name: string;
+      email: string;
+      phone: string;
+      password: string;
+      role_id: number;
+      vin: string;
+      arrivalDate: string;
+      destinationPort: string;
+    }>;
+
+    if (rows.length === 0) {
       throw new Error("No user found");
     }
 
-    return userWithCar;
+    const user: UserWithCar = {
+      id: rows[0].id,
+      name: rows[0].name,
+      email: rows[0].email,
+      phone: rows[0].phone,
+      password: rows[0].password,
+      role_id: rows[0].role_id,
+      cars: rows
+        .filter((row) => row.vin !== null)
+        .map((row) => ({
+          vin: row.vin,
+          arrivalDate: row.arrivalDate,
+          destinationPort: row.destinationPort,
+        })),
+    };
+
+    console.log(user)
+
+    return user;
   } catch (error) {
     console.error("Error fetching user:", error);
     return undefined;
@@ -411,7 +448,8 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
           const link = image.imageLink;
           try {
             const imageBuffer = await fetchImageBuffer(link);
-            const compressedImageBuffer = await compressImageBuffer(imageBuffer);
+            const compressedImageBuffer =
+              await compressImageBuffer(imageBuffer);
             const imageParams: (string | Buffer | number | null)[] = [
               link?.toString() ?? null,
               compressedImageBuffer,

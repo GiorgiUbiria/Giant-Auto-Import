@@ -131,8 +131,12 @@ export interface GalleryImage {
   imgelink: string;
 }
 
-export interface UserWithCar extends DatabaseUser {
+interface ExtendableCar {
   vin: string;
   arrivalDate: string;
   destinationPort: string;
+}
+
+export interface UserWithCar extends DatabaseUser {
+  cars: ExtendableCar[];
 }

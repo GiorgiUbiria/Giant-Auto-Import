@@ -7,6 +7,7 @@ import {
   CarData,
   CarResponse,
   DbCar,
+  UserWithCar,
 } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 import sharp from "sharp";
@@ -131,7 +132,7 @@ export async function fetchCar(vin: string): Promise<CarData | undefined> {
   }
 }
 
-export async function assignCarToUser(vin: string, userId: number): Promise<void> {
+export async function assignCarToUser(vin: string, userId: string): Promise<void> {
   try {
     const car: DbCar | undefined = await getCarFromDatabase(vin);
 
@@ -168,18 +169,27 @@ export async function getUsers(): Promise<DatabaseUser[] | undefined> {
   }
 }
 
-export async function getUser(id: string): Promise<DatabaseUser | undefined> {
+export async function getUser(id: string): Promise<UserWithCar | undefined> {
   try {
-    const user = db.prepare("SELECT * FROM user WHERE id = ?").get(id) as
-      | DatabaseUser
-      | undefined;
-    if (!user) {
+    const query = `
+      SELECT u.id, u.name, u.email, u.phone, u.role_id,
+             c.vin, c.arrivalDate, c.destinationPort
+      FROM user u
+      LEFT JOIN user_car uc ON u.id = uc.user_id
+      LEFT JOIN car c ON uc.car_id = c.id
+      WHERE u.id = ?
+    `;
+    
+    const userWithCar = db.prepare(query).get(id) as UserWithCar | undefined;
+    
+    if (!userWithCar) {
       throw new Error("No user found");
     }
 
-    return user;
+    return userWithCar;
   } catch (error) {
-    console.error("Error fetching users:", error);
+    console.error("Error fetching user:", error);
+    return undefined;
   }
 }
 

@@ -1,5 +1,7 @@
 import { getUsers } from "@/app/actions";
+import AssignCarForm from "@/components/assign-car-form";
 import { DatabaseUser } from "@/lib/db";
+import Link from "next/link";
 
 export default async function Page() {
   const users: DatabaseUser[] | undefined = await getUsers();
@@ -7,14 +9,27 @@ export default async function Page() {
   return (
     <div>
       {users && users?.map((user) => (
-        <div key={user.id}>
-          {user.name}
+        <div key={user.id} className="border border-red-500 w-1/4">
+          <p>
+            {user.name}
+            {" "}
+            <Link href={`/admin/users/${user.id}`}>
+              {user.id}
+            </Link>
+          </p>  
           <br />
-          {user.email}
+          <p>
+            {user.email}
+          </p>
           <br />
-          {user.phone}
+          <p>
+            {user.phone}
+          </p>
           <br />
-          {user.role_id}
+          <p>
+            {user.role_id}
+          </p>
+          <AssignCarForm vin={"5NPE24AF0KH775981"} userId={user.id} />
         </div>
       ))}
     </div>

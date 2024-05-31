@@ -1,3 +1,5 @@
+import { DatabaseUser } from "./db";
+
 interface Specifications {
   vin: string;
   carfax: string;
@@ -127,4 +129,10 @@ export interface APIAssetsResponse {
 
 export interface GalleryImage {
   imgelink: string;
+}
+
+export interface UserWithCar extends DatabaseUser {
+  vin: string;
+  arrivalDate: string;
+  destinationPort: string;
 }

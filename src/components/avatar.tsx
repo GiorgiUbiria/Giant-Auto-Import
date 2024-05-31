@@ -34,7 +34,7 @@ const Avatar: React.FC<AvatarProps> = ({ user, logout }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button variant="outline" size="icon" className="w-14 h-14 rounded-full">
           <CircleUser className="h-5 w-5" />
           <span className="sr-only">Toggle user menu</span>
         </Button>
@@ -52,14 +52,6 @@ const Avatar: React.FC<AvatarProps> = ({ user, logout }) => {
                 <button>Sign out</button>
               </Form>
             </DropdownMenuItem>
-            {user.role_id === 2 && (
-            <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-                <Link href="/signup">Register new user</Link>
-            </DropdownMenuItem>
-            </>
-            )}
           </>
         ) : (
           <DropdownMenuItem>

@@ -17,9 +17,9 @@ export default function NavigationLinks({ links }: { links: LinkProp[] }) {
         <Link
           href={link.href}
           key={link.href}
-          className={`flex items-center text-nowrap text-md transition-colors dark:hover:text-black hover:text-white ${
+          className={`flex items-center text-nowrap text-xl transition-colors dark:hover:text-zinc-500 hover:text-muted-foreground ${
             pathname === link.href
-              ? "font-semibold text-black"
+              ? "font-semibold text-foreground"
               : "text-foreground"
           }`}
         >

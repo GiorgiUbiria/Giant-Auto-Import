@@ -31,10 +31,10 @@ const Navbar = async () => {
   ];
 
   return (
-    <header className="top-0 flex h-16 items-center gap-4 bg-gradient-to-r from-purple-400 to-red-400 z-10 px-4 md:px-6">
+    <header className="top-0 flex h-20 items-center gap-4 bg-muted z-10 px-4 md:px-6 shadow-blac-5">
       <nav className="hidden flex-col gap-12 font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
         <Link href="/" className="w-max">
-          <Image src={NavbarLogo} alt="Company logo" className="w-12 h-12" />
+          <Image src={NavbarLogo} alt="Company logo" className="w-14 h-14" />
         </Link>
         <NavigationLinks links={navigationLinks} />
       </nav>

@@ -15,7 +15,7 @@ import { Truck } from "lucide-react";
 
 export default function CarInfo({ carData }: { carData: DbCar }) {
   return (
-    <Card className="overflow-hidden w-1/2">
+    <Card className="overflow-hidden lg:w-1/2">
       <CardHeader className="flex flex-row items-start bg-muted/50">
         <div className="grid gap-0.5">
           <CardTitle className="group flex items-center gap-2 text-lg">
@@ -46,7 +46,7 @@ export default function CarInfo({ carData }: { carData: DbCar }) {
               <Label htmlFor="car-year"> Year: </Label>
               <Input
                 type="text"
-                value={carData.carfax!}
+                value={carData.year!}
                 readOnly
                 id="car-year"
               />
@@ -56,7 +56,7 @@ export default function CarInfo({ carData }: { carData: DbCar }) {
             <Label htmlFor="car-description"> Description: </Label>
             <Input
               type="text"
-              value={carData.year!}
+              value={carData.carfax!}
               readOnly
               id="car-description"
             />

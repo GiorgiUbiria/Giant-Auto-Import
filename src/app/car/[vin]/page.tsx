@@ -4,7 +4,6 @@ import { getCarFromDatabase } from "@/lib/actions/dbActions";
 import { DbCar, GalleryImage } from "@/lib/interfaces";
 
 import CarInfo from "@/components/car-info";
-import StatusLine from "@/components/status-line";
 import { FeaturedImageGallery } from "@/components/image-gallery";
 
 export default async function Page({ params }: { params: { vin: string } }) {
@@ -42,14 +41,11 @@ export default async function Page({ params }: { params: { vin: string } }) {
 
   return (
     <div className="flex flex-col items-center w-full py-12">
-      <div className="w-[800px]">
-        <StatusLine />
-      </div>
-      <div className="w-full flex flex-row py-12 px-8">
-        <div className="basis-1/2 flex justify-center">
+      <div className="w-full flex flex-col gap-6 lg:flex-row py-12 px-8">
+        <div className="lg:basis-1/2 flex justify-center">
           <FeaturedImageGallery data={images} />
         </div>
-        <div className="basis-1/2 flex justify-center">
+        <div className="lg:basis-1/2 lg:flex lg:justify-center">
           <CarInfo carData={car!} />
         </div>
       </div>

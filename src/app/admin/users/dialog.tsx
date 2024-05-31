@@ -20,7 +20,9 @@ export default function CloseDialog() {
   return (
     <Dialog>
       <DropdownMenu>
-        <DropdownMenuTrigger><DotSquareIcon /></DropdownMenuTrigger>
+        <DropdownMenuTrigger>
+          <DotSquareIcon />
+        </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem>Open</DropdownMenuItem>
           <DropdownMenuItem>Download</DropdownMenuItem>

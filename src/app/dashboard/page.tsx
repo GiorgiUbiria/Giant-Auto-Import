@@ -1,3 +1,8 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+
+import { validateRequest } from "@/lib/auth";
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +20,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { validateRequest } from "@/lib/auth";
 import {
   Activity,
   ArrowUpRight,
@@ -24,8 +28,6 @@ import {
   DollarSign,
   Users,
 } from "lucide-react";
-import Link from "next/link";
-import { redirect } from "next/navigation";
 
 export default async function Component() {
   const { user } = await validateRequest();

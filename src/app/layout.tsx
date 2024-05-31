@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import "./globals.css";
+
 import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
+
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Giant Auto Import",

@@ -1,13 +1,16 @@
-import { db } from "@/lib/db";
 import { Argon2id } from "oslo/password";
-import { cookies } from "next/headers";
-import { lucia, validateRequest } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { Form } from "@/lib/form";
-import { generateId } from "lucia";
 import { SqliteError } from "better-sqlite3";
+import { generateId } from "lucia";
+
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
+import { db } from "@/lib/db";
+import { lucia, validateRequest } from "@/lib/auth";
+import { Form } from "@/lib/form";
 
 import type { ActionResult } from "@/lib/form";
+
 import { RegisterForm } from "@/components/register-form";
 
 export default async function Page() {

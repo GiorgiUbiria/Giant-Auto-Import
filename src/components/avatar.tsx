@@ -1,5 +1,12 @@
 "use client";
 
+import Link from "next/link";
+import type { User } from "lucia";
+
+import { ActionResult, Form } from "@/lib/form";
+
+import { CircleUser } from "lucide-react";
+
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -9,10 +16,6 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { CircleUser } from "lucide-react";
-import { ActionResult, Form } from "@/lib/form";
-import type { User } from "lucia";
-import Link from "next/link";
 
 interface AvatarProps {
   user: User | null;

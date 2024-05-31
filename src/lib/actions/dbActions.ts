@@ -94,8 +94,6 @@ export async function getUser(id: string): Promise<UserWithCar | undefined> {
         })),
     };
 
-    console.log(user)
-
     return user;
   } catch (error) {
     console.error("Error fetching user:", error);

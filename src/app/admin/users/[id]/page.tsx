@@ -1,4 +1,4 @@
-import { getUser } from "@/app/actions";
+import { getUser } from "@/lib/actions/dbActions";
 import { UserWithCar } from "@/lib/interfaces";
 
 export default async function Page({ params }: { params: { id: string } }) {

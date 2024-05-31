@@ -1,6 +1,7 @@
-import { validateRequest } from '@/lib/auth';
 import dynamic from 'next/dynamic';
 import { redirect } from 'next/navigation';
+
+import { validateRequest } from '@/lib/auth';
 
 const PSPDFKitWrapper = dynamic(() => import("@/components/pdf-wrapper"), {
   loading: () => <p>Loading your invoice...</p>,

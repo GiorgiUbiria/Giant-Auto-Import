@@ -1,9 +1,11 @@
-import { getCarFromDatabase } from "@/lib/actions/dbActions";
-import CarInfo from "@/components/car-info";
-import { FeaturedImageGallery } from "@/components/image-gallery";
-import StatusLine from "@/components/status-line";
-import { DbCar, GalleryImage } from "@/lib/interfaces";
 import sharp from "sharp";
+
+import { getCarFromDatabase } from "@/lib/actions/dbActions";
+import { DbCar, GalleryImage } from "@/lib/interfaces";
+
+import CarInfo from "@/components/car-info";
+import StatusLine from "@/components/status-line";
+import { FeaturedImageGallery } from "@/components/image-gallery";
 
 export default async function Page({ params }: { params: { vin: string } }) {
   const car: DbCar | undefined = await getCarFromDatabase(params.vin);

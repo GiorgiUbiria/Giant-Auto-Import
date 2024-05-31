@@ -1,15 +1,18 @@
-import { db } from "@/lib/db";
 import { Argon2id } from "oslo/password";
-import { cookies } from "next/headers";
-import { lucia, validateRequest } from "@/lib/auth";
+import Image from "next/image";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+
+import { db } from "@/lib/db";
+import { lucia, validateRequest } from "@/lib/auth";
 import { Form } from "@/lib/form";
 
 import type { DatabaseUser } from "@/lib/db";
 import type { ActionResult } from "@/lib/form";
+
 import { LoginForm } from "@/components/login-form";
+
 import Logo from "../../../public/logo.png";
-import Image from "next/image";
 
 export default async function Page() {
   const { user } = await validateRequest();

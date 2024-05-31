@@ -1,5 +1,4 @@
-import { Truck } from "lucide-react";
-
+import CopyToClipBoard from "./copy-to-clipboard";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,10 +8,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { DbCar } from "@/lib/interfaces";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import CopyToClipBoard from "./copy-to-clipboard";
+import { DbCar } from "@/lib/interfaces";
+import { Truck } from "lucide-react";
 
 export default function CarInfo({ carData }: { carData: DbCar }) {
   return (

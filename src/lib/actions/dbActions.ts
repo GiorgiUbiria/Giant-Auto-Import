@@ -4,6 +4,111 @@ import { DatabaseUser, db } from "@/lib/db";
 import { DbCar, UserWithCar } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 
+export async function updateCarInDb(
+  id: number,
+  formData: FormData,
+): Promise<void> {
+  try {
+    const convertFormData = (key: string, defaultValue: any = null) => {
+      const value = formData.get(key);
+      switch (typeof defaultValue) {
+        case "boolean":
+          return value === "true" ? 1 : 0;
+        case "string":
+          return value?.toString() ?? defaultValue;
+        default:
+          return value ?? defaultValue;
+      }
+    };
+
+    const fields = [
+      "vin",
+      "carfax",
+      "year",
+      "make",
+      "model",
+      "trim",
+      "manufacturer",
+      "country",
+      "engineType",
+      "fuelType",
+      "titleNumber",
+      "fined",
+      "arrived",
+      "status",
+      "parkingDateString",
+      "originPort",
+      "destinationPort",
+      "shipping",
+    ];
+
+    const carData: { [key: string]: any } = {};
+    for (const field of fields) {
+      carData[field] = convertFormData(field, null);
+    }
+
+    if (!id) {
+      throw new Error("Car ID is required for update.");
+    }
+
+    const specificationsFields = [
+      "vin",
+      "carfax",
+      "year",
+      "make",
+      "model",
+      "trim",
+      "manufacturer",
+      "country",
+      "engineType",
+      "fuelType",
+      "titleNumber",
+    ];
+    const specificationsUpdates = specificationsFields.filter(
+      (field) => carData[field] !== null,
+    );
+    if (specificationsUpdates.length > 0) {
+      const specificationsSql = `UPDATE specifications SET ${specificationsUpdates.map((field) => `${field} = ?`).join(", ")} WHERE id = (SELECT specifications_id FROM car WHERE id = ?)`;
+      const specificationsParams = [
+        ...specificationsUpdates.map((field) => carData[field]),
+        id,
+      ];
+      db.prepare(specificationsSql).run(...specificationsParams);
+    }
+
+    const parkingDetailsFields = [
+      "fined",
+      "arrived",
+      "status",
+      "parkingDateString",
+    ];
+    const parkingDetailsUpdates = parkingDetailsFields.filter(
+      (field) => carData[field] !== null,
+    );
+    if (parkingDetailsUpdates.length > 0) {
+      const parkingDetailsSql = `UPDATE parking_details SET ${parkingDetailsUpdates.map((field) => `${field} = ?`).join(", ")} WHERE id = (SELECT parking_details_id FROM car WHERE id = ?)`;
+      const parkingDetailsParams = [
+        ...parkingDetailsUpdates.map((field) => carData[field]),
+        id,
+      ];
+      db.prepare(parkingDetailsSql).run(...parkingDetailsParams);
+    }
+
+    const carFields = ["vin", "originPort", "destinationPort", "shipping"];
+    const carUpdates = carFields.filter((field) => carData[field] !== null);
+    if (carUpdates.length > 0) {
+      const carSql = `UPDATE car SET ${carUpdates.map((field) => `${field} = ?`).join(", ")} WHERE id = ?`;
+      const carParams = [...carUpdates.map((field) => carData[field]), id];
+      db.prepare(carSql).run(...carParams);
+    }
+
+    console.log(`Car with ID ${id} updated successfully.`);
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to update car in database");
+  }
+}
+
 export async function addCarToDb(formData: FormData): Promise<void> {
   try {
     const convertFormData = (key: string, defaultValue: any = null) => {
@@ -285,6 +390,69 @@ export async function getCarFromDatabase(
         `,
       )
       .get(vin) as DbCar;
+
+    if (!car) {
+      return undefined;
+    }
+
+    const images = db
+      .prepare(
+        `
+      SELECT imageBlob 
+      FROM images 
+      WHERE car_id = ?
+      `,
+      )
+      .all(car.id) as { imageBlob: Buffer }[];
+
+    car.images = images.map((row: { imageBlob: Buffer }) =>
+      row.imageBlob.toString("base64"),
+    );
+
+    return car;
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export async function getCarFromDatabaseByID(
+  id: number,
+): Promise<DbCar | undefined> {
+  try {
+    const car: DbCar = db
+      .prepare(
+        `
+        SELECT 
+          c.id,
+          c.vin, 
+          s.year, 
+          s.make, 
+          s.model, 
+          s.trim,
+          s.manufacturer,
+          s.country,
+          s.titleNumber,
+          s.engineType,
+          s.fuelType,
+          s.carfax,
+          p.fined, 
+          p.arrived, 
+          p.status, 
+          p.parkingDateString,
+          c.originPort,
+          c.destinationPort,
+          c.shipping
+        FROM 
+          car c
+        LEFT JOIN 
+          specifications s ON c.specifications_id = s.id
+        LEFT JOIN 
+          parking_details p ON c.parking_details_id = p.id
+        WHERE 
+          c.id = ?
+        `,
+      )
+      .get(id) as DbCar;
 
     if (!car) {
       return undefined;

@@ -153,6 +153,7 @@ export const columns: ColumnDef<VisibleDbCar>[] = [
               Copy Vin Code
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+            <DropdownMenuItem><Link href={`/admin/edit/${vin}`}>Edit Car </Link></DropdownMenuItem>
             <DropdownMenuItem>View customer</DropdownMenuItem>
             <DropdownMenuItem>View payment details</DropdownMenuItem>
           </DropdownMenuContent>

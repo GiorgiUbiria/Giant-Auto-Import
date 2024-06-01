@@ -5,8 +5,31 @@ import { DatabaseUser } from "@/lib/db";
 
 import Link from "next/link";
 import CloseDialog from "./dialog";
+import { Checkbox } from "@/components/ui/checkbox"
 
 export const columns: ColumnDef<Omit<DatabaseUser, "passowrd">>[] = [
+    {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   {
     accessorKey: "id",
     header: "ID",
@@ -41,7 +64,7 @@ export const columns: ColumnDef<Omit<DatabaseUser, "passowrd">>[] = [
   {
     accessorKey: "actions",
     id: "actions",
-    cell: async ({ row }) => {
+    cell: ({ row }) => {
       return <CloseDialog />;
     },
   },

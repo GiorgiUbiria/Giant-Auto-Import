@@ -26,6 +26,149 @@ type VisibleDbCar = Omit<
   | "images"
 >;
 
+export function getColumns (pdfToken: string): ColumnDef<VisibleDbCar>[] {
+  return [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "id",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            ID
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const id = row.getValue("id") as string;
+        return <p className="text-lg text-center">{id}</p>;
+      },
+    },
+    {
+      accessorKey: "vin",
+      header: "Vin",
+      cell: ({ row }) => {
+        const vin = row.getValue("vin") as string;
+        return <Link href={`/car/${vin}`}>{vin}</Link>;
+      },
+    },
+    {
+      accessorKey: "year",
+      header: "Year",
+    },
+    {
+      accessorKey: "make",
+      header: "Make",
+    },
+    {
+      accessorKey: "model",
+      header: "Model",
+    },
+    {
+      accessorKey: "trim",
+      header: "Trim",
+    },
+    {
+      accessorKey: "country",
+      header: "Country",
+    },
+    {
+      accessorKey: "manufacturer",
+      header: "Manufacturer",
+    },
+    {
+      accessorKey: "titleNumber",
+      header: "Title Number",
+    },
+    {
+      accessorKey: "carfax",
+      header: "Carfax",
+    },
+    {
+      accessorKey: "fuelType",
+      header: "Fuel Type",
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+    },
+    {
+      accessorKey: "parkingDateString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Parking Date
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+    },
+    {
+      accessorKey: "destinationPort",
+      header: "Destination Port",
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const vin = row.getValue("vin") as string;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => navigator.clipboard.writeText(vin)}
+              >
+                Copy Vin Code
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <Link href={`/admin/edit/${vin}`}>Edit Car</Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <Link href={`/pdf?token=${pdfToken}`}>Edit Car</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
+};
+
 export const columns: ColumnDef<VisibleDbCar>[] = [
   {
     id: "select",
@@ -153,7 +296,9 @@ export const columns: ColumnDef<VisibleDbCar>[] = [
               Copy Vin Code
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem><Link href={`/admin/edit/${vin}`}>Edit Car </Link></DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href={`/admin/edit/${vin}`}>Edit Car </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem>View customer</DropdownMenuItem>
             <DropdownMenuItem>View payment details</DropdownMenuItem>
           </DropdownMenuContent>

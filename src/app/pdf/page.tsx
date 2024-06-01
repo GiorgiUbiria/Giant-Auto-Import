@@ -1,7 +1,7 @@
-import dynamic from 'next/dynamic';
-import { redirect } from 'next/navigation';
+import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
 
-import { validateRequest } from '@/lib/auth';
+import { validateRequest } from "@/lib/auth";
 
 const PSPDFKitWrapper = dynamic(() => import("@/components/pdf-wrapper"), {
   loading: () => <p>Loading your invoice...</p>,
@@ -17,14 +17,17 @@ const Page: React.FC = async () => {
   const data = {
     billedTo: "Giorgi Ubiria",
     paymentDate: new Date().toDateString(),
-  }
+  };
 
   return (
     <div>
-      <PSPDFKitWrapper documentPath="/document.pdf" data={data} token={user.pdf_token} />
+      <PSPDFKitWrapper
+        documentPath="/document.pdf"
+        data={data}
+        token={user.pdf_token}
+      />
     </div>
   );
 };
 
 export default Page;
-

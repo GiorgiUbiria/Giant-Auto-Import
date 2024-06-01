@@ -5,6 +5,7 @@ import { updateLocalDatabaseFromAPI } from "@/lib/actions/actions";
 import { getCarsFromDatabase } from "@/lib/actions/dbActions";
 
 import { columns } from "./columns";
+
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/data-table";
 

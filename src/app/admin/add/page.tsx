@@ -8,7 +8,5 @@ export default async function Page() {
     return redirect("/");
   }
 
-  return (
-    <AddCarForm />
-  )
+  return <AddCarForm />;
 }

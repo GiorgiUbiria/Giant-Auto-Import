@@ -16,13 +16,16 @@ export default function AdminLayout({
       <nav className="flex items-center justify-between flex-wrap bg-base-100 p-4">
         <Menubar>
           <MenubarMenu>
-            <MenubarTrigger><Link href="/admin"> Cars </Link></MenubarTrigger>
+            <MenubarTrigger className="text-md"><Link href="/admin"> Cars </Link></MenubarTrigger>
           </MenubarMenu>
           <MenubarMenu>
-            <MenubarTrigger><Link href="/admin/users"> Users </Link></MenubarTrigger>
+            <MenubarTrigger className="text-md"><Link href="/admin/users"> Users </Link></MenubarTrigger>
           </MenubarMenu>
           <MenubarMenu>
-            <MenubarTrigger><Link href="/admin/signup"> Register </Link></MenubarTrigger>
+            <MenubarTrigger className="text-md"><Link href="/admin/signup"> Register </Link></MenubarTrigger>
+          </MenubarMenu>
+          <MenubarMenu>
+            <MenubarTrigger className="text-md"><Link href="/admin/add"> Add a Car </Link></MenubarTrigger>
           </MenubarMenu>
         </Menubar>
       </nav>

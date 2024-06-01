@@ -24,7 +24,7 @@ interface AvatarProps {
 
 const Avatar: React.FC<AvatarProps> = ({ user, logout }) => {
   const userMenuItem = user ? (
-    <DropdownMenuItem asChild>
+    <DropdownMenuItem asChild className="text-md">
       <Link href={user.role_id === 1 ? "/dashboard" : "/admin"} className="cursor-pointer">
         {user.role_id === 1 ? "Personal Cabinet" : "Admin Panel"}
       </Link>
@@ -40,21 +40,21 @@ const Avatar: React.FC<AvatarProps> = ({ user, logout }) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-lg">My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {userMenuItem}
         {user ? (
           <>
             {" "}
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem className="text-md">
               <Form action={logout}>
                 <button>Sign out</button>
               </Form>
             </DropdownMenuItem>
           </>
         ) : (
-          <DropdownMenuItem>
+          <DropdownMenuItem className="text-md">
             <Link href="/login"> Sign In </Link>
           </DropdownMenuItem>
         )}

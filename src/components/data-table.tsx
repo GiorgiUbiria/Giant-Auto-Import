@@ -31,6 +31,17 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import AddCarForm from "./add-car-form";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -47,7 +58,7 @@ export function DataTable<TData, TValue>({
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({})
+  const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
     data,
@@ -72,7 +83,7 @@ export function DataTable<TData, TValue>({
     <div>
       <div className="flex gap-4 pb-4">
         <div className="flex items-center py-4">
-        {/*
+          {/*
           <Input
             placeholder="Filter vin codes..."
             value={(table.getColumn("vin")?.getFilterValue() as string) ?? ""}

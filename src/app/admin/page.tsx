@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
 import { validateRequest } from "@/lib/auth";
-import {  updateLocalDatabaseFromAPI } from "@/lib/actions/actions";
-import { getCarsFromDatabase} from "@/lib/actions/dbActions";
+import { updateLocalDatabaseFromAPI } from "@/lib/actions/actions";
+import { getCarsFromDatabase } from "@/lib/actions/dbActions";
 
 import { columns } from "./columns";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ export default async function Page() {
   const cars = await getCarsFromDatabase();
 
   return (
-   <div className="container-fluid mx-auto py-10">
+    <div className="container-fluid mx-auto py-10">
       <form action={updateLocalDatabaseFromAPI} className="pb-12">
         <Button type="submit"> Update database </Button>
       </form>

@@ -4,6 +4,107 @@ import { DatabaseUser, db } from "@/lib/db";
 import { DbCar, UserWithCar } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 
+export async function addCarToDb(formData: FormData): Promise<void> {
+  try {
+    const convertFormData = (key: string, defaultValue: any = null) => {
+      const value = formData.get(key);
+      switch (typeof defaultValue) {
+        case "boolean":
+          return value === "true" ? 1 : 0;
+        case "string":
+          return value?.toString() ?? defaultValue;
+        default:
+          return value ?? defaultValue;
+      }
+    };
+
+    const vin = convertFormData("vin", null);
+    const carfax = convertFormData("carfax", null);
+    const year = convertFormData("year", null);
+    const make = convertFormData("make", null);
+    const model = convertFormData("model", null);
+    const trim = convertFormData("trim", null);
+    const manufacturer = convertFormData("manufacturer", null);
+    const bodyType = convertFormData("bodyType", null);
+    const country = convertFormData("country", null);
+    const engineType = convertFormData("engineType", null);
+    const titleNumber = convertFormData("titleNumber", null);
+    const titleState = convertFormData("titleState", null);
+    const color = convertFormData("color", null);
+    const fuelType = convertFormData("fuelType", null);
+
+    const fined = convertFormData("fined", false);
+    const arrived = convertFormData("arrived", false);
+    const status = convertFormData("status", null);
+    const parkingDateString = convertFormData("parkingDateString", null);
+
+    const originPort = convertFormData("originPort", null);
+    const destinationPort = convertFormData("destinationPort", null);
+    const departureDate = convertFormData("departureDate", null);
+    const arrivalDate = convertFormData("arrivalDate", null);
+    const auction = convertFormData("auction", null);
+    const createdAt = convertFormData("createdAt", null);
+    const shipping = convertFormData("shipping", null);
+
+    const specificationsSql = `
+      INSERT INTO specifications (
+        vin, carfax, year, make, model, trim, manufacturer, bodyType, country, engineType, titleNumber, titleState, color, fuelType
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    `;
+    const specificationsId = db
+      .prepare(specificationsSql)
+      .run([
+        vin,
+        carfax,
+        year,
+        make,
+        model,
+        trim,
+        manufacturer,
+        bodyType,
+        country,
+        engineType,
+        titleNumber,
+        titleState,
+        color,
+        fuelType,
+      ]).lastInsertRowid as number;
+
+    const parkingDetailsSql = `
+      INSERT INTO parking_details (
+        fined, arrived, status, parkingDateString
+      ) VALUES (?,?,?,?)
+    `;
+    const parkingDetailsId = db
+      .prepare(parkingDetailsSql)
+      .run([fined, arrived, status, parkingDateString])
+      .lastInsertRowid as number;
+
+    const carSql = `
+      INSERT INTO car (
+        vin, originPort, destinationPort, departureDate, arrivalDate, auction, createdAt, shipping, specifications_id, parking_details_id
+      ) VALUES (?,?,?,?,?,?,?,?,?,?)
+    `;
+    db.prepare(carSql).run([
+      vin,
+      originPort,
+      destinationPort,
+      departureDate,
+      arrivalDate,
+      auction,
+      createdAt,
+      shipping,
+      specificationsId,
+      parkingDetailsId,
+    ]);
+
+    console.log(`Car with VIN ${vin} added successfully.`);
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to add car to database");
+  }
+}
+
 export async function assignCarToUser(
   userId: string,
   formData: FormData,

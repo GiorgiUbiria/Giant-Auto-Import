@@ -94,5 +94,5 @@ export interface DatabaseUser {
   email: string;
   phone: string;
   password: string;
-  role_id: number;
+  roleId: number;
 }

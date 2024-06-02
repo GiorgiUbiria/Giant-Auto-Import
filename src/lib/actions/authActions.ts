@@ -3,15 +3,23 @@
 import { Argon2id } from "oslo/password";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { sql } from 'drizzle-orm';
 
 import { generateId } from "lucia";
 
-import { db } from "@/lib/db";
+import { db } from "../drizzle/db";
+import { userTable } from "../drizzle/schema";
 import { lucia, validateRequest } from "@/lib/auth";
 
-import type { DatabaseUser } from "@/lib/db";
 import type { ActionResult } from "@/lib/form";
 import { SqliteError } from "better-sqlite3";
+import { DatabaseUser } from "../db";
+
+type NewUser = typeof userTable.$inferInsert;
+
+const insertUser = async (user: NewUser) => {
+  return db.insert(userTable).values(user);
+};
 
 export async function login(_: any, formData: FormData): Promise<ActionResult> {
   const email = formData.get("email");
@@ -26,9 +34,9 @@ export async function login(_: any, formData: FormData): Promise<ActionResult> {
     };
   }
 
-  const existingUser = db
-    .prepare("SELECT * FROM user WHERE email = ?")
-    .get(email) as DatabaseUser | undefined;
+  const existingUserQuery = await db.select().from(userTable).where(sql`${userTable.email} = ${email}`).limit(1);
+  const existingUser = existingUserQuery[0] as DatabaseUser | undefined;
+
   if (!existingUser) {
     return {
       error: "Incorrect email or password",
@@ -55,11 +63,14 @@ export async function login(_: any, formData: FormData): Promise<ActionResult> {
   return redirect("/");
 }
 
-export async function signup(_: any, formData: FormData): Promise<ActionResult> {
+export async function signup(
+  _: any,
+  formData: FormData,
+): Promise<ActionResult> {
   const { user } = await validateRequest();
-  const name = formData.get("name");
-  const email = formData.get("email");
-  const phone = formData.get("phone");
+  const name = formData.get("name") as string;
+  const email = formData.get("email") as string;
+  const phone = formData.get("phone") as string;
   const adminEmail = process.env.ADMIN_EMAIL!;
 
   const password = formData.get("password");
@@ -73,30 +84,29 @@ export async function signup(_: any, formData: FormData): Promise<ActionResult> 
     };
   }
 
-  const hashedPassword = await new Argon2id().hash(password);
-  const userId = generateId(15);
+  const hashedPassword = (await new Argon2id().hash(password)) as string;
+
+  const userId = generateId(15) as string;
 
   let roleId = 1;
 
   email === adminEmail ? (roleId = 2) : (roleId = 1);
 
   try {
-    if (user?.role_id === 1) {
-      db.prepare(
-        "INSERT INTO user (id, name, email, phone, password, role_id) VALUES(?, ?, ?, ?, ?, ?)",
-      ).run(userId, name, email, phone, hashedPassword, roleId);
-
-      const session = await lucia.createSession(userId, {});
-      const sessionCookie = lucia.createSessionCookie(session.id);
-      cookies().set(
-        sessionCookie.name,
-        sessionCookie.value,
-        sessionCookie.attributes,
-      );
-    } else {
-      db.prepare(
-        "INSERT INTO user (id, name, email, phone, password, role_id) VALUES(?, ?, ?, ?, ?, ?)",
-      ).run(userId, name, email, phone, hashedPassword, roleId);
+    if (user) {
+      if (user?.role_id === 1) {
+        return redirect("/");
+      } else {
+        const user: NewUser = {
+          id: userId,
+          name,
+          email,
+          phone,
+          password: hashedPassword,
+          roleId,
+        };
+        await insertUser(user);
+      }
     }
   } catch (e) {
     if (e instanceof SqliteError && e.code === "SQLITE_CONSTRAINT_UNIQUE") {

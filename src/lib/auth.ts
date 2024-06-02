@@ -1,20 +1,18 @@
 import { Lucia } from "lucia";
-import { BetterSqlite3Adapter } from "@lucia-auth/adapter-sqlite";
-import { db } from "./db";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { randomBytes } from "crypto";
 
 import type { Session, User } from "lucia";
 import type { DatabaseUser } from "./db";
+import { DrizzleSQLiteAdapter } from "@lucia-auth/adapter-drizzle";
+import { db } from "./drizzle/db";
+import { sessionTable, userTable } from "./drizzle/schema";
 
 // import { webcrypto } from "crypto";
 // globalThis.crypto = webcrypto as Crypto;
 
-const adapter = new BetterSqlite3Adapter(db, {
-  user: "user",
-  session: "session",
-});
+const adapter = new DrizzleSQLiteAdapter(db, sessionTable, userTable);
 
 const generateToken = randomBytes(32).toString("hex");
 

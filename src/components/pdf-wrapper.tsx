@@ -52,7 +52,7 @@ const PSPDFKitWrapper: React.FC<PSPDFKitWrapperProps> = ({
         });
 
         let searchQuery = "Company Ltd.";
-        let searchResults = await instance.search(searchQuery);
+        let searchResults = await instance.search(searchQuery) as any;
         let bbox = searchResults.first().rectsOnPage.get(0);
 
         const estimatedWidth = Math.max(bbox.width, data.billedTo.length * 5);

@@ -6,7 +6,7 @@ import { GalleryImage } from "@/lib/interfaces";
 
 export function FeaturedImageGallery({ data }: { data: GalleryImage[] }) {
   const [active, setActive] = React.useState(data.at(0)?.imgelink);
-  const dialogRef = useRef(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   const openDialog = () => {
     if (dialogRef.current) {

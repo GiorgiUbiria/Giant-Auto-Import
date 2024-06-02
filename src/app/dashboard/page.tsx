@@ -126,7 +126,7 @@ export default async function Component() {
                   </TableCell>
                   <TableCell className="hidden xl:table-column">Sale</TableCell>
                   <TableCell className="hidden xl:table-column">
-                    <Badge className="text-xs" variant="outline">
+                    <Badge className="text-xs">
                       Approved
                     </Badge>
                   </TableCell>
@@ -146,7 +146,7 @@ export default async function Component() {
                     Refund
                   </TableCell>
                   <TableCell className="hidden xl:table-column">
-                    <Badge className="text-xs" variant="outline">
+                    <Badge className="text-xs">
                       Declined
                     </Badge>
                   </TableCell>
@@ -166,7 +166,7 @@ export default async function Component() {
                     Subscription
                   </TableCell>
                   <TableCell className="hidden xl:table-column">
-                    <Badge className="text-xs" variant="outline">
+                    <Badge className="text-xs">
                       Approved
                     </Badge>
                   </TableCell>
@@ -184,7 +184,7 @@ export default async function Component() {
                   </TableCell>
                   <TableCell className="hidden xl:table-column">Sale</TableCell>
                   <TableCell className="hidden xl:table-column">
-                    <Badge className="text-xs" variant="outline">
+                    <Badge className="text-xs">
                       Approved
                     </Badge>
                   </TableCell>
@@ -202,7 +202,7 @@ export default async function Component() {
                   </TableCell>
                   <TableCell className="hidden xl:table-column">Sale</TableCell>
                   <TableCell className="hidden xl:table-column">
-                    <Badge className="text-xs" variant="outline">
+                    <Badge className="text-xs">
                       Approved
                     </Badge>
                   </TableCell>

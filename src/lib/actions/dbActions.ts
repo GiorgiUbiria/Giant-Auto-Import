@@ -1,10 +1,6 @@
 "use server";
 
-import {
-  CarData,
-  User,
-  UserWithCarsAndSpecs,
-} from "@/lib/interfaces";
+import { CarData, User, UserWithCarsAndSpecs } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 import { db } from "../drizzle/db";
 import {
@@ -26,16 +22,22 @@ const insertCar = async (car: NewCar) => {
 };
 
 const insertSpecification = async (specification: NewSpecification) => {
-  return db.insert(specificationsTable).values(specification).returning({ specificationsId: specificationsTable.id });
+  return db
+    .insert(specificationsTable)
+    .values(specification)
+    .returning({ specificationsId: specificationsTable.id });
 };
 
 const insertParkingDetails = async (parkingDetails: NewParkingDetails) => {
-  return db.insert(parkingDetailsTable).values(parkingDetails).returning({ parkingDetailsId: parkingDetailsTable.id });
+  return db
+    .insert(parkingDetailsTable)
+    .values(parkingDetails)
+    .returning({ parkingDetailsId: parkingDetailsTable.id });
 };
 
 const insertUserCar = async (userCar: NewUserCar) => {
   return db.insert(userCarTable).values(userCar);
-}
+};
 
 export async function updateCarInDb(
   id: number,
@@ -84,55 +86,67 @@ export async function updateCarInDb(
       throw new Error("Car ID is required for update.");
     }
 
-    const specificationsFields = [
-      "vin",
-      "carfax",
-      "year",
-      "make",
-      "model",
-      "trim",
-      "manufacturer",
-      "country",
-      "engineType",
-      "fuelType",
-      "titleNumber",
-    ];
-    const specificationsUpdates = specificationsFields.filter(
-      (field) => carData[field] !== null,
-    );
-    if (specificationsUpdates.length > 0) {
-      const specificationsSql = `UPDATE specifications SET ${specificationsUpdates.map((field) => `${field} = ?`).join(", ")} WHERE id = (SELECT specifications_id FROM car WHERE id = ?)`;
-      const specificationsParams = [
-        ...specificationsUpdates.map((field) => carData[field]),
-        id,
-      ];
-      db.prepare(specificationsSql).run(...specificationsParams);
+    const carInstance: CarData = (await getCarFromDatabaseByID(id)) as CarData;
+
+    const pdId = carInstance.parking_details?.id;
+    const spId = carInstance.specifications?.id;
+
+    if (!pdId || !spId) {
+      throw new Error("Car ID is required for update.");
     }
 
-    const parkingDetailsFields = [
-      "fined",
-      "arrived",
-      "status",
-      "parkingDateString",
-    ];
-    const parkingDetailsUpdates = parkingDetailsFields.filter(
-      (field) => carData[field] !== null,
-    );
-    if (parkingDetailsUpdates.length > 0) {
-      const parkingDetailsSql = `UPDATE parking_details SET ${parkingDetailsUpdates.map((field) => `${field} = ?`).join(", ")} WHERE id = (SELECT parking_details_id FROM car WHERE id = ?)`;
-      const parkingDetailsParams = [
-        ...parkingDetailsUpdates.map((field) => carData[field]),
-        id,
-      ];
-      db.prepare(parkingDetailsSql).run(...parkingDetailsParams);
+    const specificationsInstance = await db
+      .select()
+      .from(specificationsTable)
+      .where(eq(specificationsTable.id, spId))
+      .limit(1)
+      .get();
+    const parkingDetailsInstance = await db
+      .select()
+      .from(parkingDetailsTable)
+      .where(eq(parkingDetailsTable.id, pdId))
+      .limit(1)
+      .get();
+
+    for (const [key, value] of Object.entries(carData)) {
+      if (["vin", "originPort", "destinationPort", "shipping"].includes(key)) {
+        await db
+          .update(carTable)
+          .set({ [key]: value })
+          .where(eq(carTable.id, id));
+      }
     }
 
-    const carFields = ["vin", "originPort", "destinationPort", "shipping"];
-    const carUpdates = carFields.filter((field) => carData[field] !== null);
-    if (carUpdates.length > 0) {
-      const carSql = `UPDATE car SET ${carUpdates.map((field) => `${field} = ?`).join(", ")} WHERE id = ?`;
-      const carParams = [...carUpdates.map((field) => carData[field]), id];
-      db.prepare(carSql).run(...carParams);
+    for (const [key, value] of Object.entries(carData)) {
+      if (
+        [
+          "vin",
+          "carfax",
+          "year",
+          "make",
+          "model",
+          "trim",
+          "manufacturer",
+          "country",
+          "engineType",
+          "fuelType",
+          "titleNumber",
+        ].includes(key)
+      ) {
+        await db
+          .update(specificationsTable)
+          .set({ [key]: value })
+          .where(eq(specificationsTable.id, spId));
+      }
+    }
+
+    for (const [key, value] of Object.entries(carData)) {
+      if (["fined", "arrived", "status", "parkingDateString"].includes(key)) {
+        await db
+          .update(parkingDetailsTable)
+          .set({ [key]: value })
+          .where(eq(parkingDetailsTable.id, pdId));
+      }
     }
 
     console.log(`Car with ID ${id} updated successfully.`);
@@ -184,7 +198,6 @@ export async function addCarToDb(formData: FormData): Promise<void> {
     const createdAt = convertFormData("createdAt", null);
     const shipping = convertFormData("shipping", null);
 
-
     const specifications: NewSpecification = {
       vin: vin,
       carfax: carfax || null,
@@ -200,8 +213,7 @@ export async function addCarToDb(formData: FormData): Promise<void> {
       titleState: titleState || null,
       color: color || null,
       runndrive: fuelType || null,
-    };  
-
+    };
 
     const parkingDetails: NewParkingDetails = {
       fined: fined ? "true" : fined || null,
@@ -210,7 +222,7 @@ export async function addCarToDb(formData: FormData): Promise<void> {
       parkingDateString: parkingDateString || null,
     };
 
-    const specificationsId = await insertSpecification(specifications); 
+    const specificationsId = await insertSpecification(specifications);
     const parkingDetailsId = await insertParkingDetails(parkingDetails);
 
     const car: NewCar = {
@@ -266,10 +278,7 @@ export async function assignCarToUser(
 
 export async function getUsers(): Promise<User[] | undefined> {
   try {
-    const users: User[] = (await db
-      .select()
-      .from(userTable)
-      .all()) as User[];
+    const users: User[] = (await db.select().from(userTable).all()) as User[];
 
     if (users.length === 0) {
       console.warn("No users found");

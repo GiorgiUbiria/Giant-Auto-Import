@@ -370,62 +370,26 @@ export async function getCarFromDatabase(
 
 export async function getCarFromDatabaseByID(
   id: number,
-): Promise<DbCar | undefined> {
+): Promise<CarData | undefined> {
   try {
-    const car: DbCar = db
-      .prepare(
-        `
-        SELECT 
-          c.id,
-          c.vin, 
-          s.year, 
-          s.make, 
-          s.model, 
-          s.trim,
-          s.manufacturer,
-          s.country,
-          s.titleNumber,
-          s.engineType,
-          s.fuelType,
-          s.carfax,
-          p.fined, 
-          p.arrived, 
-          p.status, 
-          p.parkingDateString,
-          c.originPort,
-          c.destinationPort,
-          c.shipping
-        FROM 
-          car c
-        LEFT JOIN 
-          specifications s ON c.specifications_id = s.id
-        LEFT JOIN 
-          parking_details p ON c.parking_details_id = p.id
-
-        WHERE 
-
-          c.id = ?
-        `,
+    const car: CarData = await drizzleDb
+      .select()
+      .from(carTable)
+      .leftJoin(
+        specificationsTable,
+        eq(carTable.specificationsId, specificationsTable.id),
       )
-      .get(id) as DbCar;
+      .leftJoin(
+        parkingDetailsTable,
+        eq(carTable.parkingDetailsId, parkingDetailsTable.id),
+      )
+      .where(eq(carTable.id, id))
+      .limit(1)
+      .get() as CarData;
 
     if (!car) {
       return undefined;
     }
-
-    const images = db
-      .prepare(
-        `
-      SELECT imageBlob 
-      FROM images 
-      WHERE car_id = ?
-      `,
-      )
-      .all(car.id) as { imageBlob: Buffer }[];
-
-    car.images = images.map((row: { imageBlob: Buffer }) =>
-      row.imageBlob.toString("base64"),
-    );
 
     return car;
   } catch (e) {

@@ -1,13 +1,13 @@
 import { updateCarInDb } from "@/lib/actions/dbActions";
 
-import { DbCar } from "@/lib/interfaces";
+import { CarData } from "@/lib/interfaces";
 
-export default async function EditCarForm({ car }: { car: DbCar }) {
-  const updateCar = updateCarInDb.bind(null, car.id);
+export default async function EditCarForm({ car }: { car: CarData }) {
+  const updateCar = updateCarInDb.bind(null, car.car.id);
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h2 className="text-xl font-bold mb-4">Edit Car with VIN {car.vin}</h2>
+      <h2 className="text-xl font-bold mb-4">Edit Car with VIN {car.car.vin}</h2>
       <form action={updateCar}>
         <fieldset className="border p-4 mb-4">
           <legend className="px-2 text-lg font-semibold">Specifications</legend>
@@ -18,7 +18,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
             <input
               id="vin"
               name="vin"
-              defaultValue={car.vin}
+              defaultValue={car.car.vin!}
               required
               className="col-span-3"
             />
@@ -30,7 +30,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
             <input
               id="carfax"
               name="carfax"
-              defaultValue={car.carfax || ""}
+              defaultValue={car.specifications?.carfax || ""}
               className="col-span-3"
             />
           </div>
@@ -42,7 +42,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
               id="year"
               name="year"
               type="number"
-              defaultValue={car.year?.toString() || ""}
+              defaultValue={car.specifications?.year?.toString() || ""}
               className="col-span-3"
             />
           </div>
@@ -53,7 +53,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
             <input
               id="make"
               name="make"
-              defaultValue={car.make || ""}
+              defaultValue={car.specifications?.make || ""}
               className="col-span-3"
             />
           </div>
@@ -64,7 +64,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
             <input
               id="model"
               name="model"
-              defaultValue={car.model || ""}
+              defaultValue={car.specifications?.model || ""}
               className="col-span-3"
             />
           </div>
@@ -75,7 +75,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
             <input
               id="trim"
               name="trim"
-              defaultValue={car.trim || ""}
+              defaultValue={car.specifications?.trim || ""}
               className="col-span-3"
             />
           </div>
@@ -86,7 +86,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
             <input
               id="manufacturer"
               name="manufacturer"
-              defaultValue={car.manufacturer || ""}
+              defaultValue={car.specifications?.manufacturer || ""}
               className="col-span-3"
             />
           </div>
@@ -97,7 +97,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
             <input
               id="country"
               name="country"
-              defaultValue={car.country || ""}
+              defaultValue={car.specifications?.country || ""}
               className="col-span-3"
             />
           </div>
@@ -108,7 +108,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
             <input
               id="engineType"
               name="engineType"
-              defaultValue={car.engineType || ""}
+              defaultValue={car.specifications?.engineType || ""}
               className="col-span-3"
             />
           </div>
@@ -119,7 +119,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
             <input
               id="titleNumber"
               name="titleNumber"
-              defaultValue={car.titleNumber || ""}
+              defaultValue={car.specifications?.titleNumber || ""}
               className="col-span-3"
             />
           </div>
@@ -130,7 +130,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
             <input
               id="fuelType"
               name="fuelType"
-              defaultValue={car.fuelType || ""}
+              defaultValue={car.specifications?.fuelType || ""}
               className="col-span-3"
             />
           </div>
@@ -147,7 +147,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
             <select
               id="fined"
               name="fined"
-              defaultValue={car.fined ? "true" : "false"}
+              defaultValue={car.parking_details?.fined ? "true" : "false"}
               className="col-span-3"
             >
               <option value="true">Yes</option>
@@ -161,7 +161,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
             <select
               id="arrived"
               name="arrived"
-              defaultValue={car.arrived ? "true" : "false"}
+              defaultValue={car.parking_details?.arrived ? "true" : "false"}
               className="col-span-3"
             >
               <option value="true">Yes</option>
@@ -175,7 +175,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
             <input
               id="status"
               name="status"
-              defaultValue={car.status || ""}
+              defaultValue={car.parking_details?.status || ""}
               className="col-span-3"
             />
           </div>
@@ -187,7 +187,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
               id="parkingDateString"
               name="parkingDateString"
               type="date"
-              defaultValue={car.parkingDateString || ""}
+              defaultValue={car.parking_details?.parkingDateString || ""}
               className="col-span-3"
             />
           </div>
@@ -202,7 +202,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
             <input
               id="originPort"
               name="originPort"
-              defaultValue={car.originPort || ""}
+              defaultValue={car.car?.originPort || ""}
               className="col-span-3"
             />
           </div>
@@ -213,7 +213,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
             <input
               id="destinationPort"
               name="destinationPort"
-              defaultValue={car.destinationPort || ""}
+              defaultValue={car.car?.destinationPort || ""}
               className="col-span-3"
             />
           </div>
@@ -224,7 +224,7 @@ export default async function EditCarForm({ car }: { car: DbCar }) {
             <input
               id="shipping"
               name="shipping"
-              defaultValue={car.shippingCompany || ""}
+              defaultValue={car.car?.shipping || ""}
               className="col-span-3"
             />
           </div>

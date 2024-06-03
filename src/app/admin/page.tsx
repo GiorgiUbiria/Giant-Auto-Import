@@ -15,7 +15,6 @@ export default async function Page() {
     return redirect("/");
   }
 
-
   const cars = await getCarsFromDatabase();
 
   return (

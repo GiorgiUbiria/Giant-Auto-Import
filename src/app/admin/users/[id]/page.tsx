@@ -1,12 +1,12 @@
 import { getUser } from "@/lib/actions/dbActions";
-import { UserWithCar } from "@/lib/interfaces";
+import { UserWithCarsAndSpecs } from "@/lib/interfaces";
 
 export default async function Page({ params }: { params: { id: string } }) {
-  const user: UserWithCar | undefined = await getUser(params.id);
+  const user: UserWithCarsAndSpecs | undefined = await getUser(params.id);
 
   return (
     <div>
-      <h1>{user?.name}</h1>
+      <h1>{user?.user.name}</h1>
       <div>
         <h2>User Cars</h2>
         <hr />

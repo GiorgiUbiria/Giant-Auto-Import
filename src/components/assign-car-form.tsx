@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { db } from "@/lib/drizzle/db";
 import { assignCarToUser } from "@/lib/actions/dbActions";
 
 import {
@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { carTable } from "@/lib/drizzle/schema";
 
 export default async function AssignCarForm({ userId }: { userId: string }) {
   const bindedAction = assignCarToUser.bind(null, userId);
@@ -45,22 +46,16 @@ interface CarVin {
 async function getCarVins(): Promise<CarVin[]> {
   "use server";
   try {
-    const cars: CarVin[] = db
-      .prepare(
-        `
-        SELECT 
-          vin 
-        FROM 
-          car
-        `,
-      )
+    const carVins: CarVin[] = await db
+      .select({ vin: carTable.vin })
+      .from(carTable)
       .all() as CarVin[];
 
-    if (cars.length === 0) {
+    if (carVins.length === 0) {
       throw new Error("No cars found");
     }
 
-    return cars;
+    return carVins;
   } catch (error) {
     console.error("Error fetching cars:", error);
     return [];

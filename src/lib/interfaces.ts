@@ -41,10 +41,30 @@ interface Car {
   parkingDetailsId: number | null;
 }
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  roleId: number;
+}
+
+interface UserCar {
+  carId: number | null;
+  userId: number | null;
+}
+
 export type CarData = {
   car: Car;
   specifications: Specifications | null;
   parking_details: ParkingDetails | null;
+};
+
+export type UserWithCarsAndSpecs = {
+  user: User;
+  user_car?: UserCar; // Marked as optional since it can be null
+  car?: Car; // Also marked as optional since it can be null
 };
 
 export interface DbCar {

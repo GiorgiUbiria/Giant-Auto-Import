@@ -39,7 +39,7 @@ export const specificationsTable = sqliteTable('specifications', {
   titleNumber: text('title_number'),
   titleState: text('title_state'),
   color: text('color'),
-  rundownrive: text('runndrive'),
+  runndrive: text('runndrive'),
   fuelType: text('fuel_type'),
 });
 

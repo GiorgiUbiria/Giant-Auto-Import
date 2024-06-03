@@ -1,6 +1,6 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { db } from "../drizzle/db";
 import { CarData, CarResponse } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 import { ensureToken } from "./tokenActions";
@@ -9,6 +9,27 @@ import {
   compressImageBuffer,
   getImagesByVinFromAPI,
 } from "./imageActions";
+import {
+  carTable,
+  parkingDetailsTable,
+  specificationsTable,
+} from "../drizzle/schema";
+
+type NewCar = typeof carTable.$inferInsert;
+type NewSpecification = typeof specificationsTable.$inferInsert;
+type NewParkingDetails = typeof parkingDetailsTable.$inferInsert;
+
+const insertCar = async (car: NewCar) => {
+  return db.insert(carTable).values(car);
+};
+
+const insertSpecification = async (specification: NewSpecification) => {
+  return db.insert(specificationsTable).values(specification).returning({ specificationsId: specificationsTable.id });
+};
+
+const insertParkingDetails = async (parkingDetails: NewParkingDetails) => {
+  return db.insert(parkingDetailsTable).values(parkingDetails).returning({ parkingDetailsId: parkingDetailsTable.id });
+};
 
 export async function fetchCars(): Promise<CarResponse | undefined> {
   try {
@@ -77,26 +98,6 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
       return;
     }
 
-    const specificationsInsert = db.prepare(`
-      INSERT INTO specifications (vin, carfax, year, make, model, trim, manufacturer, bodyType, country, engineType, titleNumber, titleState, color, runndrive, fuelType)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-    `);
-
-    const carInsert = db.prepare(`
-      INSERT INTO car (vin, originPort, destinationPort, departureDate, arrivalDate, auction, createdAt, shipping, specifications_id, parking_details_id)
-      VALUES (?,?,?,?,?,?,?,?,?,?)
-    `);
-
-    const parkingDetailsInsert = db.prepare(`
-      INSERT INTO parking_details (fined, arrived, status, parkingDateString)
-      VALUES (?,?,?,?)
-    `);
-
-    const imageInsert = db.prepare(`
-      INSERT INTO images (imageLink, imageBlob, car_id)
-      VALUES (?, ?, ?)
-    `);
-
     for (const car of cars.data) {
       const {
         vin,
@@ -108,79 +109,53 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
         createdAt,
       } = car;
 
-      const specificationsParams: (string | number | null)[] = [
-        vin,
-        specifications?.carfax ?? null,
-        specifications?.year ?? null,
-        specifications?.make ?? null,
-        specifications?.model ?? null,
-        specifications?.trim ?? null,
-        specifications?.manufacturer ?? null,
-        specifications?.bodyType ?? null,
-        specifications?.country ?? null,
-        specifications?.engineType ?? null,
-        specifications?.titleNumber ?? null,
-        specifications?.titleState ?? null,
-        specifications?.color ?? null,
-        specifications?.runndrive ? 1 : 0,
-        specifications?.fuelType ?? null,
-      ];
+      const newSpecification: NewSpecification = {
+        vin: specifications.vin || "",
+        carfax: specifications.carfax || null,
+        year: specifications.year || null,
+        make: specifications.make || null,
+        model: specifications.model || null,
+        trim: specifications.trim || null,
+        manufacturer: specifications.manufacturer || null,
+        country: specifications.country || null,
+        titleNumber: specifications.titleNumber || null,
+        titleState: specifications.titleState || null,
+        color: specifications.color || null,
+        runndrive:
+          specifications.runndrive === true
+            ? "true"
+            : specifications.runndrive || null,
+        fuelType: specifications.fuelType || null,
+      };
 
-      let specificationsId: number = specificationsInsert.run(
-        ...specificationsParams,
-      ).lastInsertRowid as number;
+      const newParkingDetails: NewParkingDetails = {
+        fined:
+          parkingDetails.fined === true ? "true" : parkingDetails.fined || null,
+        arrived:
+          parkingDetails.arrived === true
+            ? "true"
+            : parkingDetails.arrived || null,
+        status: parkingDetails.status || null,
+        parkingDateString: parkingDetails.parkingDateString || null,
+      };
 
-      const parkingDetailsParams: (string | number | null | boolean)[] = [
-        parkingDetails?.fined?.toString() ?? null,
-        parkingDetails?.arrived?.toString() ?? null,
-        parkingDetails?.status?.toString() ?? null,
-        parkingDetails?.parkingDateString ?? null,
-      ];
+      const spId = await insertSpecification(newSpecification) 
+      const pdId = await insertParkingDetails(newParkingDetails);
 
-      let parkingDetailsId: number = parkingDetailsInsert.run(
-        ...parkingDetailsParams,
-      ).lastInsertRowid as number;
+      const newCar: NewCar = {
+        vin: specifications.vin || "",
+        originPort: shipment?.originPort?.toString() || null,
+        destinationPort: shipment?.destinationPort?.toString() || null,
+        departureDate: shipment?.departureDate?.toString() || null,
+        arrivalDate: shipment?.arrivalDate?.toString() || null,
+        auction: auction || null,
+        createdAt: createdAt?.toString() || null,
+        shipping: shipping?.name?.toString() || null,
+        specificationsId: pdId[0].parkingDetailsId,
+        parkingDetailsId: spId[0].specificationsId,
+      };
 
-      const carParams: (string | number | null)[] = [
-        vin,
-        shipment?.originPort?.toString() ?? null,
-        shipment?.destinationPort?.toString() ?? null,
-        shipment?.departureDate?.toString() ?? null,
-        shipment?.arrivalDate?.toString() ?? null,
-        JSON.stringify(auction) ?? null,
-        createdAt?.toString() ?? null,
-        shipping?.name?.toString() ?? null,
-        specificationsId,
-        parkingDetailsId,
-      ];
-
-      let carId: number = carInsert.run(...carParams).lastInsertRowid as number;
-
-      const assets = await getImagesByVinFromAPI(vin);
-      const images = assets?.assets
-        .filter((asset: any) => asset.type === "Image")
-        .map((asset: any) => ({
-          imageLink: asset.value,
-        }));
-
-      if (images) {
-        for (const image of images) {
-          const link = image.imageLink;
-          try {
-            const imageBuffer = await fetchImageBuffer(link);
-            const compressedImageBuffer =
-              await compressImageBuffer(imageBuffer);
-            const imageParams: (string | Buffer | number | null)[] = [
-              link?.toString() ?? null,
-              compressedImageBuffer,
-              carId,
-            ];
-            imageInsert.run(...imageParams);
-          } catch (error) {
-            console.error(`Error fetching image from ${link}:`, error);
-          }
-        }
-      }
+      await insertCar(newCar);
     }
 
     revalidatePath("/admin");

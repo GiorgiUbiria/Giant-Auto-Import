@@ -11,7 +11,6 @@ import { DataTable } from "@/components/data-table";
 
 export default async function Page() {
   const { user } = await validateRequest();
-  console.log(user)
   if (!user || user?.role_id !== 2) {
     return redirect("/");
   }

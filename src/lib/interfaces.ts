@@ -1,92 +1,51 @@
 import { DatabaseUser } from "./db";
 
 interface Specifications {
-  vin: string;
-  carfax: string;
-  description: string;
-  year: string;
-  make: string;
-  model: string;
-  trim: string;
-  vehicleClass: string;
-  type: string;
-  manufacturer: string;
-  bodyType: string;
-  country: string;
-  engineType: string;
-  titleNumber: string;
-  titleState: string;
-  color: string | null;
-  runndrive: boolean;
+  id: number;
+  vin: string | null;
+  carfax: string | null; // Allow carfax to be null
+  year: string | null; // Allow year to be null
+  make: string | null; // Allow make to be null
+  model: string | null; // Allow model to be null
+  trim: string | null; // Allow trim to be null
+  manufacturer: string | null; // Allow manufacturer to be null
+  bodyType: string | null; // Allow bodyType to be null
+  country: string | null; // Allow country to be null
+  engineType: string | null; // Allow engineType to be null
+  titleNumber: string | null; // Allow titleNumber to be null
+  titleState: string | null; // Allow titleState to be null
+  color: string | null; // Allow color to be null
+  runndrive: string | null; // Allow runndrive to be null
   fuelType: string | null;
-  primaryFuelType: string | null;
-  secondaryFuelType: string | null;
 }
 
 interface ParkingDetails {
-  fined: boolean;
-  arrived: boolean;
-  inspected: boolean;
-  status: string;
-  lot: string | null;
-  parkingDate: string;
-  parkingDateString: string;
-  updatedAt: string;
+  id: number;
+  fined: string | null;
+  arrived: string | null; // Allow arrived to be null
+  status: string | null;
+  parkingDateString: string | null;
 }
 
-interface Papers {
-  title: string;
-  billOfSale: string | null;
-  invoice: string | null;
-  inspection: string;
-  inspectionSet: boolean;
-  titleSet: boolean;
-  billOfSaleSet: boolean;
-}
-
-interface Shipment {
-  container: string | null;
-  name: string | null;
-  booking: string | null;
-  originPort: string;
-  destinationPort: string;
-  waybillOut: string | null;
-  masterWaybillOut: string | null;
-  carrierOut: string | null;
-  vehicleIds: string[];
-  arrivalDate: string | null;
+interface Car {
+  id: number;
+  vin: string | null;
+  originPort: string | null;
+  destinationPort: string | null;
   departureDate: string | null;
-  receipt: string | null;
-}
-
-interface Notes {
-  customerNotes: string | null;
-  mtlNotes: string;
-}
-
-interface Shipping {
-  name: string;
-  presented: boolean;
-}
-
-interface Additional {
-  keys01: string;
-}
-
-export interface CarData {
-  id: string;
-  vin: string;
-  location: string;
-  specifications: Specifications;
-  parkingDetails: ParkingDetails;
-  papers: Papers;
-  shipment: Shipment;
-  notes: Notes;
-  shipping: Shipping;
+  arrivalDate: string | null;
   auction: string | null;
-  additional: Additional;
-  createdAt: string;
+  createdAt: string | null;
+  shipping: string | null;
+  specificationsId: number | null;
+  parkingDetailsId: number | null;
 }
+
+export type CarData = {
+  car: Car;
+  specifications: Specifications | null;
+  parking_details: ParkingDetails | null;
+};
 
 export interface DbCar {
   id: number;

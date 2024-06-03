@@ -1,8 +1,11 @@
 "use server";
 
 import { DatabaseUser, db } from "@/lib/db";
-import { DbCar, UserWithCar } from "@/lib/interfaces";
+import { CarData, DbCar, UserWithCar } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
+import { db as drizzleDb } from "../drizzle/db";
+import { carTable, specificationsTable, parkingDetailsTable } from "../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 export async function updateCarInDb(
   id: number,
@@ -289,7 +292,7 @@ export async function getUser(id: string): Promise<UserWithCar | undefined> {
       email: rows[0].email,
       phone: rows[0].phone,
       password: rows[0].password,
-      role_id: rows[0].role_id,
+      roleId: rows[0].role_id,
       cars: rows
         .filter((row) => row.vin !== null)
         .map((row) => ({
@@ -306,45 +309,14 @@ export async function getUser(id: string): Promise<UserWithCar | undefined> {
   }
 }
 
-export async function getCarsFromDatabase(): Promise<DbCar[]> {
+export async function getCarsFromDatabase(): Promise<CarData[]> {
   try {
-    const cars: DbCar[] = db
-      .prepare(
-        `
-        SELECT 
-          c.id,
-          c.vin, 
-          s.year, 
-          s.make, 
-          s.model, 
-          s.trim,
-          s.manufacturer,
-          s.country,
-          s.titleNumber,
-          s.engineType,
-          s.fuelType,
-          s.carfax,
-          p.fined, 
-          p.arrived, 
-          p.status, 
-          p.parkingDateString,
-          c.originPort,
-          c.destinationPort,
-          c.shipping
-        FROM 
-          car c
-        LEFT JOIN 
-          specifications s ON c.specifications_id = s.id
-        LEFT JOIN 
-          parking_details p ON c.parking_details_id = p.id
-        `,
-      )
-      .all() as DbCar[];
+    const cars: CarData[] = await drizzleDb.select().from(carTable).leftJoin(specificationsTable, eq(carTable.specificationsId, specificationsTable.id)).leftJoin(parkingDetailsTable, eq(carTable.parkingDetailsId, parkingDetailsTable.id)).all();
 
     if (cars.length === 0) {
       throw new Error("No cars found");
     }
-
+  
     return cars;
   } catch (error) {
     console.error("Error fetching cars:", error);
@@ -448,7 +420,9 @@ export async function getCarFromDatabaseByID(
           specifications s ON c.specifications_id = s.id
         LEFT JOIN 
           parking_details p ON c.parking_details_id = p.id
+
         WHERE 
+
           c.id = ?
         `,
       )

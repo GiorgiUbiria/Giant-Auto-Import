@@ -10,19 +10,19 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { DbCar } from "@/lib/interfaces";
+import { CarData } from "@/lib/interfaces";
 import { Truck } from "lucide-react";
 
-export default function CarInfo({ carData }: { carData: DbCar }) {
+export default function CarInfo({ carData }: { carData: CarData }) {
   return (
     <Card className="overflow-hidden lg:w-1/2">
       <CardHeader className="flex flex-row items-start bg-muted/50">
         <div className="grid gap-0.5">
           <CardTitle className="group flex items-center gap-2 text-lg">
-            VIN - {carData.vin}
-            <CopyToClipBoard text={carData?.vin!} />
+            VIN - {carData.car.vin}
+            <CopyToClipBoard text={carData.car.vin!} />
           </CardTitle>
-          <CardDescription>Date: {carData.parkingDateString}</CardDescription>
+          <CardDescription>Date: {carData.parking_details?.parkingDateString}</CardDescription>
         </div>
         <div className="ml-auto flex items-center gap-1">
           <Button size="sm" variant="outline" className="h-8 gap-1">
@@ -40,13 +40,13 @@ export default function CarInfo({ carData }: { carData: DbCar }) {
           <div className="flex gap-2">
             <div className="flex flex-col align-start gap-2">
               <Label htmlFor="car-make"> Make: </Label>
-              <Input type="text" value={carData.make!} readOnly id="car-make" />
+              <Input type="text" value={carData.specifications?.make!} readOnly id="car-make" />
             </div>
             <div className="flex flex-col align-start gap-2">
               <Label htmlFor="car-year"> Year: </Label>
               <Input
                 type="text"
-                value={carData.year!}
+                value={carData.specifications?.year!}
                 readOnly
                 id="car-year"
               />
@@ -56,7 +56,7 @@ export default function CarInfo({ carData }: { carData: DbCar }) {
             <Label htmlFor="car-description"> Description: </Label>
             <Input
               type="text"
-              value={carData.carfax!}
+              value={carData.specifications?.carfax!}
               readOnly
               id="car-description"
             />
@@ -64,13 +64,13 @@ export default function CarInfo({ carData }: { carData: DbCar }) {
           <div className="flex gap-2">
             <div className="flex flex-col align-start gap-2">
               <Label htmlFor="car-trim"> Trim: </Label>
-              <Input type="text" value={carData.trim!} readOnly id="car-trim" />
+              <Input type="text" value={carData.specifications?.trim!} readOnly id="car-trim" />
             </div>
             <div className="flex flex-col align-start gap-2">
               <Label htmlFor="car-model"> Model: </Label>
               <Input
                 type="text"
-                value={carData.model!}
+                value={carData.specifications?.model!}
                 readOnly
                 id="car-model"
               />
@@ -81,7 +81,7 @@ export default function CarInfo({ carData }: { carData: DbCar }) {
               <Label htmlFor="car-title-number"> Title Number: </Label>
               <Input
                 type="text"
-                value={carData.titleNumber! ? carData.titleNumber! : "-"}
+                value={carData.specifications?.titleNumber! ? carData.specifications?.titleNumber! : "-"}
                 readOnly
                 id="car-title-number"
               />
@@ -90,7 +90,7 @@ export default function CarInfo({ carData }: { carData: DbCar }) {
               <Label htmlFor="car-country"> Country: </Label>
               <Input
                 type="text"
-                value={carData.country!}
+                value={carData.specifications?.country!}
                 readOnly
                 id="car-country"
               />
@@ -100,7 +100,7 @@ export default function CarInfo({ carData }: { carData: DbCar }) {
             <Label htmlFor="car-engine-type"> Engine Type: </Label>
             <Input
               type="text"
-              value={carData.engineType!}
+              value={carData.specifications?.engineType!}
               readOnly
               id="car-engine-type"
             />

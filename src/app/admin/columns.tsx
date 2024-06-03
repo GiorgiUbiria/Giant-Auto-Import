@@ -58,6 +58,10 @@ export const columns: ColumnDef<CarData>[] = [
     accessorKey: "specifications.vin",
     header: "Vin",
     id: "vin",
+    cell: ({ row }) => {
+      const vin = row.getValue("vin") as string;
+      return <Link href={`/car/${vin}`}>{vin}</Link>;
+    },
   },
   {
     accessorKey: "specifications.year",

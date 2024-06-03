@@ -1,15 +1,12 @@
 "use server";
 
-import { DatabaseUser, db } from "@/lib/db";
 import {
   CarData,
-  DbCar,
   User,
-  UserWithCar,
   UserWithCarsAndSpecs,
 } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
-import { db as drizzleDb } from "../drizzle/db";
+import { db } from "../drizzle/db";
 import {
   carTable,
   specificationsTable,
@@ -18,6 +15,27 @@ import {
   userCarTable,
 } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
+
+type NewUserCar = typeof userCarTable.$inferInsert;
+type NewCar = typeof carTable.$inferInsert;
+type NewSpecification = typeof specificationsTable.$inferInsert;
+type NewParkingDetails = typeof parkingDetailsTable.$inferInsert;
+
+const insertCar = async (car: NewCar) => {
+  return db.insert(carTable).values(car);
+};
+
+const insertSpecification = async (specification: NewSpecification) => {
+  return db.insert(specificationsTable).values(specification).returning({ specificationsId: specificationsTable.id });
+};
+
+const insertParkingDetails = async (parkingDetails: NewParkingDetails) => {
+  return db.insert(parkingDetailsTable).values(parkingDetails).returning({ parkingDetailsId: parkingDetailsTable.id });
+};
+
+const insertUserCar = async (userCar: NewUserCar) => {
+  return db.insert(userCarTable).values(userCar);
+}
 
 export async function updateCarInDb(
   id: number,
@@ -166,69 +184,55 @@ export async function addCarToDb(formData: FormData): Promise<void> {
     const createdAt = convertFormData("createdAt", null);
     const shipping = convertFormData("shipping", null);
 
-    const specificationsSql = `
-      INSERT INTO specifications (
-        vin, carfax, year, make, model, trim, manufacturer, bodyType, country, engineType, titleNumber, titleState, color, fuelType
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-    `;
-    const specificationsId = db
-      .prepare(specificationsSql)
-      .run([
-        vin,
-        carfax,
-        year,
-        make,
-        model,
-        trim,
-        manufacturer,
-        bodyType,
-        country,
-        engineType,
-        titleNumber,
-        titleState,
-        color,
-        fuelType,
-      ]).lastInsertRowid as number;
 
-    const parkingDetailsSql = `
-      INSERT INTO parking_details (
-        fined, arrived, status, parkingDateString
-      ) VALUES (?,?,?,?)
-    `;
-    const parkingDetailsId = db
-      .prepare(parkingDetailsSql)
-      .run([fined, arrived, status, parkingDateString])
-      .lastInsertRowid as number;
+    const specifications: NewSpecification = {
+      vin: vin,
+      carfax: carfax || null,
+      year: year || null,
+      make: make || null,
+      model: model || null,
+      trim: trim || null,
+      manufacturer: manufacturer || null,
+      bodyType: bodyType || null,
+      country: country || null,
+      engineType: engineType || null,
+      titleNumber: titleNumber || null,
+      titleState: titleState || null,
+      color: color || null,
+      runndrive: fuelType || null,
+    };  
 
-    const carSql = `
-      INSERT INTO car (
-        vin, originPort, destinationPort, departureDate, arrivalDate, auction, createdAt, shipping, specifications_id, parking_details_id
-      ) VALUES (?,?,?,?,?,?,?,?,?,?)
-    `;
-    db.prepare(carSql).run([
-      vin,
-      originPort,
-      destinationPort,
-      departureDate,
-      arrivalDate,
-      auction,
-      createdAt,
-      shipping,
-      specificationsId,
-      parkingDetailsId,
-    ]);
+
+    const parkingDetails: NewParkingDetails = {
+      fined: fined ? "true" : fined || null,
+      arrived: arrived ? "true" : arrived || null,
+      status: status || null,
+      parkingDateString: parkingDateString || null,
+    };
+
+    const specificationsId = await insertSpecification(specifications); 
+    const parkingDetailsId = await insertParkingDetails(parkingDetails);
+
+    const car: NewCar = {
+      vin: vin,
+      originPort: originPort || null,
+      destinationPort: destinationPort || null,
+      departureDate: departureDate || null,
+      arrivalDate: arrivalDate || null,
+      auction: auction || null,
+      createdAt: createdAt?.toString() || null,
+      shipping: shipping?.name?.toString() || null,
+      specificationsId: specificationsId[0].specificationsId,
+      parkingDetailsId: parkingDetailsId[0].parkingDetailsId,
+    };
+
+    await insertCar(car);
 
     console.log(`Car with VIN ${vin} added successfully.`);
   } catch (error) {
     console.error(error);
     throw new Error("Failed to add car to database");
   }
-}
-
-type NewUserCar = typeof userCarTable.$inferInsert;
-
-const insertUserCar = async (userCar: NewUserCar) => {
-  return drizzleDb.insert(userCarTable).values(userCar);
 }
 
 export async function assignCarToUser(
@@ -262,7 +266,7 @@ export async function assignCarToUser(
 
 export async function getUsers(): Promise<User[] | undefined> {
   try {
-    const users: User[] = (await drizzleDb
+    const users: User[] = (await db
       .select()
       .from(userTable)
       .all()) as User[];
@@ -282,7 +286,7 @@ export async function getUser(
   id: string,
 ): Promise<UserWithCarsAndSpecs | undefined> {
   try {
-    const user: UserWithCarsAndSpecs = (await drizzleDb
+    const user: UserWithCarsAndSpecs = (await db
       .select()
       .from(userTable)
       .leftJoin(userCarTable, eq(userTable.id, userCarTable.userId))
@@ -304,7 +308,7 @@ export async function getUser(
 
 export async function getCarsFromDatabase(): Promise<CarData[]> {
   try {
-    const cars: CarData[] = await drizzleDb
+    const cars: CarData[] = await db
       .select()
       .from(carTable)
       .leftJoin(
@@ -332,7 +336,7 @@ export async function getCarFromDatabase(
   vin: string,
 ): Promise<CarData | undefined> {
   try {
-    const car: CarData = (await drizzleDb
+    const car: CarData = (await db
       .select()
       .from(carTable)
       .leftJoin(
@@ -361,7 +365,7 @@ export async function getCarFromDatabaseByID(
   id: number,
 ): Promise<CarData | undefined> {
   try {
-    const car: CarData = (await drizzleDb
+    const car: CarData = (await db
       .select()
       .from(carTable)
       .leftJoin(

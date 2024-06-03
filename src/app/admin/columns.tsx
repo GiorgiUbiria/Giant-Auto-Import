@@ -57,6 +57,7 @@ export const columns: ColumnDef<CarData>[] = [
   {
     accessorKey: "specifications.vin",
     header: "Vin",
+    id: "vin",
   },
   {
     accessorKey: "specifications.year",
@@ -119,7 +120,7 @@ export const columns: ColumnDef<CarData>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
-      const vin = row.getValue("specifications.vin") as string;
+      const vin = row.getValue("vin") as string;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -1,13 +1,21 @@
 "use server";
 
 import { DatabaseUser, db } from "@/lib/db";
-import { CarData, DbCar, UserWithCar } from "@/lib/interfaces";
+import {
+  CarData,
+  DbCar,
+  User,
+  UserWithCar,
+  UserWithCarsAndSpecs,
+} from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 import { db as drizzleDb } from "../drizzle/db";
 import {
   carTable,
   specificationsTable,
   parkingDetailsTable,
+  userTable,
+  userCarTable,
 } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 
@@ -246,11 +254,12 @@ export async function assignCarToUser(
   }
 }
 
-export async function getUsers(): Promise<DatabaseUser[] | undefined> {
+export async function getUsers(): Promise<User[] | undefined> {
   try {
-    const users = db
-      .prepare("SELECT * FROM user WHERE role_id = 1")
-      .all() as DatabaseUser[];
+    const users: User[] = await drizzleDb 
+      .select()
+      .from(userTable)
+      .all() as User[];
 
     if (users.length === 0) {
       console.warn("No users found");
@@ -263,48 +272,22 @@ export async function getUsers(): Promise<DatabaseUser[] | undefined> {
   }
 }
 
-export async function getUser(id: string): Promise<UserWithCar | undefined> {
+export async function getUser(
+  id: string,
+): Promise<UserWithCarsAndSpecs | undefined> {
   try {
-    const query = `
-      SELECT u.id, u.name, u.email, u.phone, u.password, u.role_id,
-             c.vin, c.arrivalDate, c.destinationPort
-      FROM user u
-      LEFT JOIN user_car uc ON u.id = uc.user_id
-      LEFT JOIN car c ON uc.car_id = c.id
-      WHERE u.id = ?
-    `;
+    const user: UserWithCarsAndSpecs = (await drizzleDb
+      .select()
+      .from(userTable)
+      .leftJoin(userCarTable, eq(userTable.id, userCarTable.userId))
+      .leftJoin(carTable, eq(carTable.id, userCarTable.carId))
+      .where(eq(userTable.id, id))
+      .limit(1)
+      .get()) as UserWithCarsAndSpecs;
 
-    const rows = db.prepare(query).all(id) as Array<{
-      id: string;
-      name: string;
-      email: string;
-      phone: string;
-      password: string;
-      role_id: number;
-      vin: string;
-      arrivalDate: string;
-      destinationPort: string;
-    }>;
-
-    if (rows.length === 0) {
+    if (!user) {
       throw new Error("No user found");
     }
-
-    const user: UserWithCar = {
-      id: rows[0].id,
-      name: rows[0].name,
-      email: rows[0].email,
-      phone: rows[0].phone,
-      password: rows[0].password,
-      roleId: rows[0].role_id,
-      cars: rows
-        .filter((row) => row.vin !== null)
-        .map((row) => ({
-          vin: row.vin,
-          arrivalDate: row.arrivalDate,
-          destinationPort: row.destinationPort,
-        })),
-    };
 
     return user;
   } catch (error) {
@@ -343,7 +326,7 @@ export async function getCarFromDatabase(
   vin: string,
 ): Promise<CarData | undefined> {
   try {
-    const car: CarData = await drizzleDb
+    const car: CarData = (await drizzleDb
       .select()
       .from(carTable)
       .leftJoin(
@@ -356,7 +339,7 @@ export async function getCarFromDatabase(
       )
       .where(eq(carTable.vin, vin))
       .limit(1)
-      .get() as CarData;
+      .get()) as CarData;
 
     if (!car) {
       return undefined;
@@ -372,7 +355,7 @@ export async function getCarFromDatabaseByID(
   id: number,
 ): Promise<CarData | undefined> {
   try {
-    const car: CarData = await drizzleDb
+    const car: CarData = (await drizzleDb
       .select()
       .from(carTable)
       .leftJoin(
@@ -385,7 +368,7 @@ export async function getCarFromDatabaseByID(
       )
       .where(eq(carTable.id, id))
       .limit(1)
-      .get() as CarData;
+      .get()) as CarData;
 
     if (!car) {
       return undefined;

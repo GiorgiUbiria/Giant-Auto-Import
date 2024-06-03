@@ -41,7 +41,7 @@ interface Car {
   parkingDetailsId: number | null;
 }
 
-interface User {
+export interface User {
   id: string;
   name: string;
   email: string;
@@ -63,8 +63,8 @@ export type CarData = {
 
 export type UserWithCarsAndSpecs = {
   user: User;
-  user_car?: UserCar; // Marked as optional since it can be null
-  car?: Car; // Also marked as optional since it can be null
+  user_car?: UserCar;
+  car?: Car;
 };
 
 export interface DbCar {

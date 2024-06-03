@@ -13,7 +13,7 @@ import { lucia, validateRequest } from "@/lib/auth";
 
 import type { ActionResult } from "@/lib/form";
 import { SqliteError } from "better-sqlite3";
-import { DatabaseUser } from "../db";
+import { User } from "../interfaces";
 
 type NewUser = typeof userTable.$inferInsert;
 
@@ -35,7 +35,7 @@ export async function login(_: any, formData: FormData): Promise<ActionResult> {
   }
 
   const existingUserQuery = await db.select().from(userTable).where(sql`${userTable.email} = ${email}`).limit(1);
-  const existingUser = existingUserQuery[0] as DatabaseUser | undefined;
+  const existingUser = existingUserQuery[0] as User | undefined;
 
   if (!existingUser) {
     return {

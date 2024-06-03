@@ -1,13 +1,13 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { DatabaseUser } from "@/lib/db";
+import { User } from "@/lib/interfaces";
 
 import Link from "next/link";
 import CloseDialog from "./dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export const columns: ColumnDef<Omit<DatabaseUser, "passowrd">>[] = [
+export const columns: ColumnDef<Omit<User, "passowrd">>[] = [
   {
     id: "select",
     header: ({ table }) => (

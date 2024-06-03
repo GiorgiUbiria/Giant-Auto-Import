@@ -5,11 +5,6 @@ import { CarData, CarResponse } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 import { ensureToken } from "./tokenActions";
 import {
-  fetchImageBuffer,
-  compressImageBuffer,
-  getImagesByVinFromAPI,
-} from "./imageActions";
-import {
   carTable,
   parkingDetailsTable,
   specificationsTable,
@@ -24,11 +19,17 @@ const insertCar = async (car: NewCar) => {
 };
 
 const insertSpecification = async (specification: NewSpecification) => {
-  return db.insert(specificationsTable).values(specification).returning({ specificationsId: specificationsTable.id });
+  return db
+    .insert(specificationsTable)
+    .values(specification)
+    .returning({ specificationsId: specificationsTable.id });
 };
 
 const insertParkingDetails = async (parkingDetails: NewParkingDetails) => {
-  return db.insert(parkingDetailsTable).values(parkingDetails).returning({ parkingDetailsId: parkingDetailsTable.id });
+  return db
+    .insert(parkingDetailsTable)
+    .values(parkingDetails)
+    .returning({ parkingDetailsId: parkingDetailsTable.id });
 };
 
 export async function fetchCars(): Promise<CarResponse | undefined> {
@@ -98,59 +99,48 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
       return;
     }
 
-    for (const car of cars.data) {
-      const {
-        vin,
-        specifications,
-        parkingDetails,
-        shipment,
-        shipping,
-        auction,
-        createdAt,
-      } = car;
+    for (const data of cars.data) {
+      const { car, specifications, parking_details } = data;
 
       const newSpecification: NewSpecification = {
-        vin: specifications.vin || "",
-        carfax: specifications.carfax || null,
-        year: specifications.year || null,
-        make: specifications.make || null,
-        model: specifications.model || null,
-        trim: specifications.trim || null,
-        manufacturer: specifications.manufacturer || null,
-        country: specifications.country || null,
-        titleNumber: specifications.titleNumber || null,
-        titleState: specifications.titleState || null,
-        color: specifications.color || null,
-        runndrive:
-          specifications.runndrive === true
-            ? "true"
-            : specifications.runndrive || null,
-        fuelType: specifications.fuelType || null,
+        vin: specifications?.vin || "",
+        carfax: specifications?.carfax || null,
+        year: specifications?.year || null,
+        make: specifications?.make || null,
+        model: specifications?.model || null,
+        trim: specifications?.trim || null,
+        manufacturer: specifications?.manufacturer || null,
+        country: specifications?.country || null,
+        titleNumber: specifications?.titleNumber || null,
+        titleState: specifications?.titleState || null,
+        color: specifications?.color || null,
+        runndrive: specifications?.runndrive
+          ? "true"
+          : specifications?.runndrive || null,
+        fuelType: specifications?.fuelType || null,
       };
 
       const newParkingDetails: NewParkingDetails = {
-        fined:
-          parkingDetails.fined === true ? "true" : parkingDetails.fined || null,
-        arrived:
-          parkingDetails.arrived === true
-            ? "true"
-            : parkingDetails.arrived || null,
-        status: parkingDetails.status || null,
-        parkingDateString: parkingDetails.parkingDateString || null,
+        fined: parking_details?.fined ? "true" : parking_details?.fined || null,
+        arrived: parking_details?.arrived
+          ? "true"
+          : parking_details?.arrived || null,
+        status: parking_details?.status || null,
+        parkingDateString: parking_details?.parkingDateString || null,
       };
 
-      const spId = await insertSpecification(newSpecification) 
+      const spId = await insertSpecification(newSpecification);
       const pdId = await insertParkingDetails(newParkingDetails);
 
       const newCar: NewCar = {
-        vin: specifications.vin || "",
-        originPort: shipment?.originPort?.toString() || null,
-        destinationPort: shipment?.destinationPort?.toString() || null,
-        departureDate: shipment?.departureDate?.toString() || null,
-        arrivalDate: shipment?.arrivalDate?.toString() || null,
-        auction: auction || null,
-        createdAt: createdAt?.toString() || null,
-        shipping: shipping?.name?.toString() || null,
+        vin: specifications?.vin || "",
+        originPort: car.originPort?.toString() || null,
+        destinationPort: car?.destinationPort?.toString() || null,
+        departureDate: car?.departureDate?.toString() || null,
+        arrivalDate: car?.arrivalDate?.toString() || null,
+        auction: car?.auction || null,
+        createdAt: car?.toString() || null,
+        shipping: car?.shipping || null,
         specificationsId: pdId[0].parkingDetailsId,
         parkingDetailsId: spId[0].specificationsId,
       };

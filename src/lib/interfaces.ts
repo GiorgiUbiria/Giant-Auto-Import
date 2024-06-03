@@ -1,5 +1,3 @@
-import { DatabaseUser } from "./db";
-
 interface Specifications {
   id: number;
   vin: string | null;
@@ -64,7 +62,7 @@ export type CarData = {
 export type UserWithCarsAndSpecs = {
   user: User;
   user_car?: UserCar;
-  car?: Car;
+  cars?: Car[];
 };
 
 export interface DbCar {
@@ -108,14 +106,4 @@ export interface APIAssetsResponse {
 
 export interface GalleryImage {
   imgelink: string;
-}
-
-interface ExtendableCar {
-  vin: string;
-  arrivalDate: string;
-  destinationPort: string;
-}
-
-export interface UserWithCar extends DatabaseUser {
-  cars: ExtendableCar[];
 }

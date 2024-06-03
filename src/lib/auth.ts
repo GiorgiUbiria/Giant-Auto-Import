@@ -4,7 +4,7 @@ import { cache } from "react";
 import { randomBytes } from "crypto";
 
 import type { Session, User } from "lucia";
-import type { DatabaseUser } from "./db";
+import { DatabaseUser } from "./interfaces";
 import { DrizzleSQLiteAdapter } from "@lucia-auth/adapter-drizzle";
 import { db } from "./drizzle/db";
 import { sessionTable, userTable } from "./drizzle/schema";

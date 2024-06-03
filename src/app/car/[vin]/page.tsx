@@ -1,7 +1,5 @@
-import sharp from "sharp";
-
 import { getCarFromDatabase } from "@/lib/actions/dbActions";
-import { CarData, DbCar, GalleryImage } from "@/lib/interfaces";
+import { CarData } from "@/lib/interfaces";
 
 import CarInfo from "@/components/car-info";
 import { FeaturedImageGallery } from "@/components/image-gallery";

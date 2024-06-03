@@ -4,7 +4,11 @@ import { DatabaseUser, db } from "@/lib/db";
 import { CarData, DbCar, UserWithCar } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 import { db as drizzleDb } from "../drizzle/db";
-import { carTable, specificationsTable, parkingDetailsTable } from "../drizzle/schema";
+import {
+  carTable,
+  specificationsTable,
+  parkingDetailsTable,
+} from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 
 export async function updateCarInDb(
@@ -311,12 +315,23 @@ export async function getUser(id: string): Promise<UserWithCar | undefined> {
 
 export async function getCarsFromDatabase(): Promise<CarData[]> {
   try {
-    const cars: CarData[] = await drizzleDb.select().from(carTable).leftJoin(specificationsTable, eq(carTable.specificationsId, specificationsTable.id)).leftJoin(parkingDetailsTable, eq(carTable.parkingDetailsId, parkingDetailsTable.id)).all();
+    const cars: CarData[] = await drizzleDb
+      .select()
+      .from(carTable)
+      .leftJoin(
+        specificationsTable,
+        eq(carTable.specificationsId, specificationsTable.id),
+      )
+      .leftJoin(
+        parkingDetailsTable,
+        eq(carTable.parkingDetailsId, parkingDetailsTable.id),
+      )
+      .all();
 
     if (cars.length === 0) {
       throw new Error("No cars found");
     }
-  
+
     return cars;
   } catch (error) {
     console.error("Error fetching cars:", error);
@@ -326,60 +341,26 @@ export async function getCarsFromDatabase(): Promise<CarData[]> {
 
 export async function getCarFromDatabase(
   vin: string,
-): Promise<DbCar | undefined> {
+): Promise<CarData | undefined> {
   try {
-    const car: DbCar = db
-      .prepare(
-        `
-        SELECT 
-          c.id,
-          c.vin, 
-          s.year, 
-          s.make, 
-          s.model, 
-          s.trim,
-          s.manufacturer,
-          s.country,
-          s.titleNumber,
-          s.engineType,
-          s.fuelType,
-          s.carfax,
-          p.fined, 
-          p.arrived, 
-          p.status, 
-          p.parkingDateString,
-          c.originPort,
-          c.destinationPort,
-          c.shipping
-        FROM 
-          car c
-        LEFT JOIN 
-          specifications s ON c.specifications_id = s.id
-        LEFT JOIN 
-          parking_details p ON c.parking_details_id = p.id
-        WHERE 
-          c.vin = ?
-        `,
+    const car: CarData = await drizzleDb
+      .select()
+      .from(carTable)
+      .leftJoin(
+        specificationsTable,
+        eq(carTable.specificationsId, specificationsTable.id),
       )
-      .get(vin) as DbCar;
+      .leftJoin(
+        parkingDetailsTable,
+        eq(carTable.parkingDetailsId, parkingDetailsTable.id),
+      )
+      .where(eq(carTable.vin, vin))
+      .limit(1)
+      .get() as CarData;
 
     if (!car) {
       return undefined;
     }
-
-    const images = db
-      .prepare(
-        `
-      SELECT imageBlob 
-      FROM images 
-      WHERE car_id = ?
-      `,
-      )
-      .all(car.id) as { imageBlob: Buffer }[];
-
-    car.images = images.map((row: { imageBlob: Buffer }) =>
-      row.imageBlob.toString("base64"),
-    );
 
     return car;
   } catch (e) {

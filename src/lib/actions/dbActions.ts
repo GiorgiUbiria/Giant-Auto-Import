@@ -225,26 +225,32 @@ export async function addCarToDb(formData: FormData): Promise<void> {
   }
 }
 
+type NewUserCar = typeof userCarTable.$inferInsert;
+
+const insertUserCar = async (userCar: NewUserCar) => {
+  return drizzleDb.insert(userCarTable).values(userCar);
+}
+
 export async function assignCarToUser(
   userId: string,
   formData: FormData,
 ): Promise<void> {
   const vin = formData.get("car_vin") as string;
   try {
-    const car: DbCar | undefined = await getCarFromDatabase(vin);
+    const car: CarData | undefined = await getCarFromDatabase(vin);
 
     if (!car) {
       throw new Error(`Car with VIN ${vin} not found`);
     }
 
-    const carId: number = car.id;
+    const carId: number = car.car.id;
 
-    db.prepare(
-      `
-      INSERT INTO user_car (user_id, car_id)
-      VALUES (?, ?)
-    `,
-    ).run(userId, carId);
+    const userCar: NewUserCar = {
+      carId: carId,
+      userId: userId,
+    };
+
+    await insertUserCar(userCar);
 
     console.log(`Car with VIN ${vin} assigned to user with ID ${userId}`);
     revalidatePath(`/users/${userId}`);
@@ -256,10 +262,10 @@ export async function assignCarToUser(
 
 export async function getUsers(): Promise<User[] | undefined> {
   try {
-    const users: User[] = await drizzleDb 
+    const users: User[] = (await drizzleDb
       .select()
       .from(userTable)
-      .all() as User[];
+      .all()) as User[];
 
     if (users.length === 0) {
       console.warn("No users found");

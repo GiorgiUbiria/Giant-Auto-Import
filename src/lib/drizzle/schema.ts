@@ -67,7 +67,7 @@ export const carTable = sqliteTable('car', {
 
 export const userCarTable = sqliteTable("user_car", {
   carId: integer("car_id"),
-  userId: integer("user_id"),
+  userId: text("user_id"),
 }, (table) => {
   return {
     pk: primaryKey({ columns: [table.carId, table.userId] }),

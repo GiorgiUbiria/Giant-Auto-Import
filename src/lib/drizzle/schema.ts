@@ -65,6 +65,12 @@ export const carTable = sqliteTable('car', {
   parkingDetailsId: integer('parking_details_id').references(() => parkingDetailsTable.id),
 });
 
+export const imageTable = sqliteTable('image', {
+  id: integer('id').primaryKey(),
+  carVin: text('car_vin'),
+  imageUrl: text('image_url'),
+});
+
 export const userCarTable = sqliteTable("user_car", {
   carId: integer("car_id"),
   userId: text("user_id"),

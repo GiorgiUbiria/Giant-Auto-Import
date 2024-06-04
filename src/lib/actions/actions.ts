@@ -1,18 +1,31 @@
 "use server";
 
 import { db } from "../drizzle/db";
-import { CarData, CarResponse } from "@/lib/interfaces";
+import { APIAssetsResponse, CarData, CarResponse } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 import { ensureToken } from "./tokenActions";
 import {
   carTable,
+  imageTable,
   parkingDetailsTable,
   specificationsTable,
 } from "../drizzle/schema";
+import { fetchAssets } from "./imageActions";
+import { APICarResponse, APICar } from "../api-interfaces";
 
 type NewCar = typeof carTable.$inferInsert;
 type NewSpecification = typeof specificationsTable.$inferInsert;
 type NewParkingDetails = typeof parkingDetailsTable.$inferInsert;
+type NewImage = typeof imageTable.$inferInsert;
+
+const insertImage = async (vin: string, imageUrl: string) => {
+  const image: NewImage = {
+    carVin: vin,
+    imageUrl: imageUrl,
+  };
+
+  return db.insert(imageTable).values(image);
+};
 
 const insertCar = async (car: NewCar) => {
   return db.insert(carTable).values(car);
@@ -32,7 +45,7 @@ const insertParkingDetails = async (parkingDetails: NewParkingDetails) => {
     .returning({ parkingDetailsId: parkingDetailsTable.id });
 };
 
-export async function fetchCars(): Promise<CarResponse | undefined> {
+export async function fetchCars(): Promise<APICarResponse | undefined> {
   try {
     const token = await ensureToken();
 
@@ -51,14 +64,14 @@ export async function fetchCars(): Promise<CarResponse | undefined> {
       throw new Error("Failed to fetch cars");
     }
 
-    const data: CarResponse | undefined = await res.json();
+    const data: APICarResponse | undefined = await res.json();
     return data;
   } catch (error) {
     console.error("Error fetching cars:", error);
   }
 }
 
-export async function fetchCar(vin: string): Promise<CarData | undefined> {
+export async function fetchCar(vin: string): Promise<APICar | undefined> {
   try {
     const token = await ensureToken();
 
@@ -83,7 +96,7 @@ export async function fetchCar(vin: string): Promise<CarData | undefined> {
       );
     }
 
-    const data: CarData = await res.json();
+    const data: APICar = await res.json();
     return data;
   } catch (e) {
     console.error(e);
@@ -92,7 +105,7 @@ export async function fetchCar(vin: string): Promise<CarData | undefined> {
 
 export async function updateLocalDatabaseFromAPI(): Promise<void> {
   try {
-    const cars: CarResponse | undefined = await fetchCars();
+    const cars: APICarResponse | undefined = await fetchCars();
 
     if (!cars) {
       console.log("No cars fetched.");
@@ -100,7 +113,14 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
     }
 
     for (const data of cars.data) {
-      const { car, specifications, parking_details } = data;
+      const {
+        specifications,
+        parkingDetails,
+        shipment,
+        auction,
+        createdAt,
+        shipping,
+      } = data;
 
       const newSpecification: NewSpecification = {
         vin: specifications?.vin || "",
@@ -114,19 +134,24 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
         titleNumber: specifications?.titleNumber || null,
         titleState: specifications?.titleState || null,
         color: specifications?.color || null,
-        runndrive: specifications?.runndrive
-          ? "true"
-          : specifications?.runndrive || null,
+        runndrive:
+          specifications?.runndrive === true
+            ? "true"
+            : specifications?.runndrive || null,
         fuelType: specifications?.fuelType || null,
       };
 
       const newParkingDetails: NewParkingDetails = {
-        fined: parking_details?.fined ? "true" : parking_details?.fined || null,
-        arrived: parking_details?.arrived
-          ? "true"
-          : parking_details?.arrived || null,
-        status: parking_details?.status || null,
-        parkingDateString: parking_details?.parkingDateString || null,
+        fined:
+          parkingDetails?.fined === true
+            ? "true"
+            : parkingDetails?.fined || null,
+        arrived:
+          parkingDetails?.arrived === true
+            ? "true"
+            : parkingDetails?.arrived || null,
+        status: parkingDetails?.status || null,
+        parkingDateString: parkingDetails?.parkingDateString || null,
       };
 
       const spId = await insertSpecification(newSpecification);
@@ -134,23 +159,42 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
 
       const newCar: NewCar = {
         vin: specifications?.vin || "",
-        originPort: car.originPort?.toString() || null,
-        destinationPort: car?.destinationPort?.toString() || null,
-        departureDate: car?.departureDate?.toString() || null,
-        arrivalDate: car?.arrivalDate?.toString() || null,
-        auction: car?.auction || null,
-        createdAt: car?.toString() || null,
-        shipping: car?.shipping || null,
-        specificationsId: pdId[0].parkingDetailsId,
-        parkingDetailsId: spId[0].specificationsId,
+        originPort: shipment?.originPort?.toString() || null,
+        destinationPort: shipment?.destinationPort?.toString() || null,
+        departureDate: shipment?.departureDate?.toString() || null,
+        arrivalDate: shipment?.arrivalDate?.toString() || null,
+        auction: auction?.name?.toString() || null,
+        createdAt: createdAt?.toString() || null,
+        shipping: shipping?.name?.toString() || null,
+        specificationsId: spId[0].specificationsId,
+        parkingDetailsId: pdId[0].parkingDetailsId,
       };
 
       await insertCar(newCar);
+
+      if (specifications?.vin) {
+        const assets: APIAssetsResponse | undefined = await fetchAssets(
+          specifications.vin,
+        );
+
+        if (assets) {
+          const images = assets.assets.filter(
+            (asset) => asset.type.toLowerCase() === "image",
+          );
+          if (images.length > 0) {
+            const imageUrl = images[0].value; // Make sure to use the 'value' property for the URL
+            await insertImage(specifications.vin, imageUrl);
+          }
+        } else {
+          console.log(`No assets found for VIN: ${specifications.vin}`);
+        }
+      } else {
+        console.log("VIN is undefined for car:", data);
+      }
     }
 
     revalidatePath("/admin");
   } catch (error) {
     console.error("Error updating local database:", error);
-  } finally {
   }
 }

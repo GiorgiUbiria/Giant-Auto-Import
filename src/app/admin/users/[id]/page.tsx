@@ -1,7 +1,6 @@
 import { getUser } from "@/lib/actions/dbActions";
 import { removeUser } from "@/lib/actions/authActions";
 import { UserWithCarsAndSpecs } from "@/lib/interfaces";
-import { redirect } from "next/navigation";
 
 export default async function Page({ params }: { params: { id: string } }) {
   const userToFind: UserWithCarsAndSpecs | undefined = await getUser(params.id);

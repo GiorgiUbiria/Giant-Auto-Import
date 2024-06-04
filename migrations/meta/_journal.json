@@ -15,6 +15,13 @@
       "when": 1717439341318,
       "tag": "0001_boring_havok",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1717524065008,
+      "tag": "0002_sparkling_aaron_stack",
+      "breakpoints": true
     }
   ]
 }

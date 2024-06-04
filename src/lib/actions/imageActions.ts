@@ -13,7 +13,7 @@ export async function compressImageBuffer(imageBuffer: Buffer) {
   return compressedBuffer;
 }
 
-export async function getImagesByVinFromAPI(
+export async function fetchAssets(
   vin: string,
 ): Promise<APIAssetsResponse | undefined> {
   try {
@@ -37,6 +37,7 @@ export async function getImagesByVinFromAPI(
     }
 
     const data: APIAssetsResponse = await res.json();
+
     return data;
   } catch (e) {
     console.error(e);

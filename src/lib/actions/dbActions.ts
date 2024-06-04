@@ -380,7 +380,7 @@ export async function getCarFromDatabase(
       .get()) as CarData;
 
     if (!car) {
-      return undefined;
+      console.log("No car found");
     }
 
     return car;

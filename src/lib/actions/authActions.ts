@@ -153,3 +153,38 @@ export async function removeUser(id: string): Promise<ActionResult | undefined> 
     };
   }
 }
+
+export async function updateUser(id: string, formData: FormData): Promise<ActionResult | undefined> {
+  try {
+    const user: UserWithCarsAndSpecs | undefined = await getUser(id);
+
+    if (!user) {
+      return {
+        error: "User not found",
+      };
+    }
+
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const phone = formData.get("phone") as string;
+    const password = formData.get("password") as string;
+
+    const newUser: NewUser = {
+      id: user.user.id,
+      name: name,
+      email: email,
+      phone: phone,
+      password: password,
+      roleId: user.user.roleId,
+    }
+
+    await db.update(userTable).set(newUser).where(eq(userTable.id, id));
+
+    console.log(`User with ID ${id} updated successfully.`);
+  } catch (error) {
+    console.error(error);
+    return {
+      error: "Failed to update user in database",
+    };
+  }
+}

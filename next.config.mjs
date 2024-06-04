@@ -2,6 +2,7 @@
 const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["oslo"],
+    esmExternals: false,
   },
   images: {
     remotePatterns: [

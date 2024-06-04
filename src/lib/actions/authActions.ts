@@ -3,7 +3,7 @@
 import { Argon2id } from "oslo/password";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { sql } from 'drizzle-orm';
+import { sql } from "drizzle-orm";
 
 import { generateId } from "lucia";
 
@@ -16,6 +16,7 @@ import { SqliteError } from "better-sqlite3";
 import { User, UserWithCarsAndSpecs } from "../interfaces";
 import { getUser } from "./dbActions";
 import { eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 
 type NewUser = typeof userTable.$inferInsert;
 
@@ -36,7 +37,11 @@ export async function login(_: any, formData: FormData): Promise<ActionResult> {
     };
   }
 
-  const existingUserQuery = await db.select().from(userTable).where(sql`${userTable.email} = ${email}`).limit(1);
+  const existingUserQuery = await db
+    .select()
+    .from(userTable)
+    .where(sql`${userTable.email} = ${email}`)
+    .limit(1);
   const existingUser = existingUserQuery[0] as User | undefined;
 
   if (!existingUser) {
@@ -68,12 +73,11 @@ export async function login(_: any, formData: FormData): Promise<ActionResult> {
 export async function signup(
   _: any,
   formData: FormData,
-): Promise<ActionResult> {
+): Promise<ActionResult | undefined> {
   const { user } = await validateRequest();
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;
   const phone = formData.get("phone") as string;
-  const adminEmail = process.env.ADMIN_EMAIL!;
 
   const password = formData.get("password");
   if (
@@ -90,25 +94,31 @@ export async function signup(
 
   const userId = generateId(15) as string;
 
+  let currentRoleId = user?.role_id;
+
+  if (currentRoleId !== 2) {
+    return {
+      error: "Only admins can register new users.",
+    };
+  }
+
   let roleId = 1;
 
-  email === adminEmail ? (roleId = 2) : (roleId = 1);
-
   try {
-    if (user) {
-      if (user?.role_id === 1) {
-        return redirect("/");
-      } else {
-        const user: NewUser = {
-          id: userId,
-          name,
-          email,
-          phone,
-          password: hashedPassword,
-          roleId,
-        };
-        await insertUser(user);
-      }
+    if (currentRoleId === 2) {
+      const newUser: NewUser = {
+        id: userId,
+        name,
+        email,
+        phone,
+        password: hashedPassword,
+        roleId,
+      };
+      await insertUser(newUser);
+    } else {
+      return {
+        error: "Only admins can register new users.",
+      };
     }
   } catch (e) {
     if (e instanceof SqliteError && e.code === "SQLITE_CONSTRAINT_UNIQUE") {
@@ -121,40 +131,41 @@ export async function signup(
     };
   }
 
-  if (user?.role_id === 2) {
-    return redirect("/admin");
-  }
-  return redirect("/");
+  return redirect("/admin");
 }
 
-export async function removeUser(id: string): Promise<ActionResult | undefined> {
+export async function removeUser(): Promise<ActionResult | undefined> {
+  const id = "";
   try {
     const user: UserWithCarsAndSpecs | undefined = await getUser(id);
 
     if (!user) {
-      return {
-        error: "User not found",
-      };
+      console.log(`User with ID ${id} not found.`);
+      return;
     }
 
-    const userId: { deletedId: string }[] = await db.delete(userTable).where(eq(userTable.id, id)).returning({ deletedId: userTable.id });
+    const userId: { deletedId: string }[] = await db
+      .delete(userTable)
+      .where(eq(userTable.id, id))
+      .returning({ deletedId: userTable.id });
 
     if (!userId[0].deletedId) {
-      return {
-        error: "User ID is required for remove.",
-      };
+      console.log(`User with ID ${id} not found.`);
+      return;
     }
 
     console.log(`User with ID ${userId[0].deletedId} removed successfully.`);
+    revalidatePath("/admin/users");
   } catch (error) {
     console.error(error);
-    return {
-      error: "Failed to remove user from database",
-    };
+    throw new Error("Failed to remove user in database");
   }
 }
 
-export async function updateUser(id: string, formData: FormData): Promise<ActionResult | undefined> {
+export async function updateUser(
+  id: string,
+  formData: FormData,
+): Promise<ActionResult | undefined> {
   try {
     const user: UserWithCarsAndSpecs | undefined = await getUser(id);
 
@@ -176,7 +187,7 @@ export async function updateUser(id: string, formData: FormData): Promise<Action
       phone: phone,
       password: password,
       roleId: user.user.roleId,
-    }
+    };
 
     await db.update(userTable).set(newUser).where(eq(userTable.id, id));
 

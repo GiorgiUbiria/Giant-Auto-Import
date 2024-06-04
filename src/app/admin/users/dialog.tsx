@@ -13,8 +13,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { DotSquareIcon } from "lucide-react";
+import { removeUser } from "@/lib/actions/authActions";
 
 export default function CloseDialog() {
   return (
@@ -43,7 +43,15 @@ export default function CloseDialog() {
         </DialogHeader>
         <DialogContent></DialogContent>
         <DialogFooter>
-          <Button type="submit">Confirm</Button>
+          <button
+            onClick={async () => {
+              const deleted = await removeUserAction();
+              console.log(deleted);
+            }}
+          >
+            {" "}
+            Remove{" "}
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -7,7 +7,7 @@ export function Form({
   action,
 }: {
   children: React.ReactNode;
-  action: (prevState: any, formData: FormData) => Promise<ActionResult>;
+  action: (prevState: any, formData: FormData) => Promise<ActionResult | undefined>;
 }) {
   const [state, formAction] = useFormState(action, {
     error: null,
@@ -15,7 +15,7 @@ export function Form({
   return (
     <form action={formAction}>
       {children}
-      <p>{state.error}</p>
+      <p>{state?.error}</p>
     </form>
   );
 }

@@ -2,8 +2,14 @@ import { getUsers } from "@/lib/actions/dbActions";
 import { User } from "@/lib/interfaces";
 import { UserDataTable } from "@/components/user-data-table";
 import { columns } from "./columns";
+import { redirect } from "next/navigation";
+import { validateRequest } from "@/lib/auth";
 
 export default async function Page() {
+  const { user } = await validateRequest();
+  if (!user || (user && user.role_id !== 2)) {
+    return redirect("/");
+  }
   const users: User[] | undefined = await getUsers();
 
   return (

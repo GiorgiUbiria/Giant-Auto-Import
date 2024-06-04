@@ -4,13 +4,10 @@ import { ColumnDef } from "@tanstack/react-table";
 import { User } from "@/lib/interfaces";
 
 import Link from "next/link";
-import CloseDialog from "./dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { removeUser } from "@/lib/actions/authActions";
 import React from "react";
-import { RemoveForm } from "./form";
 
-export const columns: ColumnDef<Omit<User, "passowrd">>[]  = [
+export const columns: ColumnDef<Omit<User, "passowrd">>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -54,14 +51,15 @@ export const columns: ColumnDef<Omit<User, "passowrd">>[]  = [
     header: "Phone",
   },
   {
-    accessorKey: "role_id",
+    accessorKey: "roleId",
     header: "Role",
+    id: "roleId",
     cell: ({ row }) => {
-      const role_id = row.getValue("role_id") as number;
+      const role_id = row.getValue("roleId") as number;
 
       const role = role_id === 1 ? "User" : "Admin";
 
-      return <div className="text-right font-medium">{role}</div>;
+      return <div className="text-left font-medium">{role}</div>;
     },
   },
 ];

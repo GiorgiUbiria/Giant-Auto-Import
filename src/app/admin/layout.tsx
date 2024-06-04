@@ -1,7 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-
-import { validateRequest } from "@/lib/auth";
 
 import { Menubar, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
 
@@ -10,11 +7,6 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = await validateRequest();
-  if (!user || user?.role_id !== 2) {
-    return redirect("/");
-  }
-
   return (
     <section>
       <nav className="flex items-center justify-between flex-wrap bg-base-100 p-4">

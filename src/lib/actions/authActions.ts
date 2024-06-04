@@ -13,7 +13,9 @@ import { lucia, validateRequest } from "@/lib/auth";
 
 import type { ActionResult } from "@/lib/form";
 import { SqliteError } from "better-sqlite3";
-import { User } from "../interfaces";
+import { User, UserWithCarsAndSpecs } from "../interfaces";
+import { getUser } from "./dbActions";
+import { eq } from "drizzle-orm";
 
 type NewUser = typeof userTable.$inferInsert;
 
@@ -123,4 +125,31 @@ export async function signup(
     return redirect("/admin");
   }
   return redirect("/");
+}
+
+export async function removeUser(id: string): Promise<ActionResult | undefined> {
+  try {
+    const user: UserWithCarsAndSpecs | undefined = await getUser(id);
+
+    if (!user) {
+      return {
+        error: "User not found",
+      };
+    }
+
+    const userId: { deletedId: string }[] = await db.delete(userTable).where(eq(userTable.id, id)).returning({ deletedId: userTable.id });
+
+    if (!userId[0].deletedId) {
+      return {
+        error: "User ID is required for remove.",
+      };
+    }
+
+    console.log(`User with ID ${userId[0].deletedId} removed successfully.`);
+  } catch (error) {
+    console.error(error);
+    return {
+      error: "Failed to remove user from database",
+    };
+  }
 }

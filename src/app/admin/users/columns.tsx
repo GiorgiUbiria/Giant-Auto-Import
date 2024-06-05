@@ -6,8 +6,7 @@ import { User } from "@/lib/interfaces";
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import React from "react";
-import { removeUser } from "@/lib/actions/actions";
-import { logSomething } from "@/lib/actions/actions";
+import { removeUser } from "@/lib/actions/userActions";
 
 export const columns: ColumnDef<Omit<User, "passowrd">>[] = [
   {

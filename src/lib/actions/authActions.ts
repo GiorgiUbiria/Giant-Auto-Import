@@ -16,7 +16,6 @@ import { SqliteError } from "better-sqlite3";
 import { User, UserWithCarsAndSpecs } from "../interfaces";
 import { getUser } from "./dbActions";
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 
 type NewUser = typeof userTable.$inferInsert;
 

@@ -3,7 +3,7 @@
 import { Argon2id } from "oslo/password";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { generateId } from "lucia";
 
@@ -15,7 +15,6 @@ import type { ActionResult } from "@/lib/form";
 import { SqliteError } from "better-sqlite3";
 import { User, UserWithCarsAndSpecs } from "../interfaces";
 import { getUser } from "./dbActions";
-import { eq } from "drizzle-orm";
 
 type NewUser = typeof userTable.$inferInsert;
 
@@ -24,7 +23,7 @@ const insertUser = async (user: NewUser) => {
 };
 
 export async function login(_: any, formData: FormData): Promise<ActionResult> {
-  const email = formData.get("email");
+  const email = formData.get("email") as string;
   const password = formData.get("password");
   if (
     typeof password !== "string" ||
@@ -39,7 +38,7 @@ export async function login(_: any, formData: FormData): Promise<ActionResult> {
   const existingUserQuery = await db
     .select()
     .from(userTable)
-    .where(sql`${userTable.email} = ${email}`)
+    .where(eq(userTable.email, email))
     .limit(1);
   const existingUser = existingUserQuery[0] as User | undefined;
 

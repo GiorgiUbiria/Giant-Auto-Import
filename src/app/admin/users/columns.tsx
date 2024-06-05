@@ -6,6 +6,8 @@ import { User } from "@/lib/interfaces";
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import React from "react";
+import { removeUser } from "@/lib/actions/actions";
+import { logSomething } from "@/lib/actions/actions";
 
 export const columns: ColumnDef<Omit<User, "passowrd">>[] = [
   {
@@ -45,6 +47,7 @@ export const columns: ColumnDef<Omit<User, "passowrd">>[] = [
   {
     accessorKey: "email",
     header: "Email",
+    id: "email",
   },
   {
     accessorKey: "phone",
@@ -60,6 +63,23 @@ export const columns: ColumnDef<Omit<User, "passowrd">>[] = [
       const role = role_id === 1 ? "User" : "Admin";
 
       return <div className="text-left font-medium">{role}</div>;
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const id = row.getValue("id") as string;
+      return (
+        <div className="flex gap-4">
+          <button
+            onClick={async () => {
+              await removeUser(id);
+            }}
+          >
+            Remove User
+          </button>
+        </div>
+      );
     },
   },
 ];

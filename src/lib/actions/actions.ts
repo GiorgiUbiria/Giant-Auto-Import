@@ -103,6 +103,42 @@ export async function fetchCar(vin: string): Promise<APICar | undefined> {
   }
 }
 
+export async function updateLocalDatabaseImages(): Promise<void> {
+  try {
+    const cars: APICarResponse | undefined = await fetchCars();
+
+    if (!cars) {
+      console.log("No cars fetched.");
+      return;
+    }
+
+    for (const data of cars.data) {
+      const { specifications } = data;
+
+      if (specifications?.vin) {
+        const assets: APIAssetsResponse | undefined = await fetchAssets(
+          specifications.vin,
+        );
+
+        if (assets) {
+          const images = assets.assets.filter(
+            (asset) => asset.type.toLowerCase() === "image",
+          );
+          if (images.length > 0) {
+            const imageUrl = images[0].value;
+            await insertImage(specifications.vin, imageUrl);
+          }
+        } else {
+          console.log(`No assets found for VIN: ${specifications.vin}`);
+        }
+      } else {
+        console.log("VIN is undefined for car:", data);
+      }
+    }
+  } catch (error) {
+    console.error("Error updating local database:", error);
+  }
+}
 export async function updateLocalDatabaseFromAPI(): Promise<void> {
   try {
     const cars: APICarResponse | undefined = await fetchCars();
@@ -182,7 +218,7 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
             (asset) => asset.type.toLowerCase() === "image",
           );
           if (images.length > 0) {
-            const imageUrl = images[0].value; // Make sure to use the 'value' property for the URL
+            const imageUrl = images[0].value;
             await insertImage(specifications.vin, imageUrl);
           }
         } else {

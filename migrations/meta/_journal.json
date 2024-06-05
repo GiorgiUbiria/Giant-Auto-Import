@@ -22,6 +22,41 @@
       "when": 1717524065008,
       "tag": "0002_sparkling_aaron_stack",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1717602157231,
+      "tag": "0003_illegal_yellow_claw",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1717602169221,
+      "tag": "0004_organic_lightspeed",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1717602178477,
+      "tag": "0005_wide_forge",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1717602543447,
+      "tag": "0006_lethal_lady_mastermind",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1717602553605,
+      "tag": "0007_mean_nightcrawler",
+      "breakpoints": true
     }
   ]
 }

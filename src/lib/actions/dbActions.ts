@@ -253,14 +253,17 @@ export async function addCarToDb(formData: FormData): Promise<void> {
 
 export async function removeCarFromDb(id: number): Promise<void> {
   try {
-    const carId: { deletedId: number }[] =  await db.delete(carTable).where(eq(carTable.id, id)).returning({ deletedId: carTable.id });
+    const carId: { deletedId: number }[] = await db
+      .delete(carTable)
+      .where(eq(carTable.id, id))
+      .returning({ deletedId: carTable.id });
 
     if (!carId[0].deletedId) {
       throw new Error("Car ID is required for remove.");
     }
 
     console.log(`Car with ID ${carId[0].deletedId} removed successfully.`);
-  } catch (error) { 
+  } catch (error) {
     console.error(error);
     throw new Error("Failed to remove car from database");
   }
@@ -314,20 +317,25 @@ export async function getUser(
   id: string,
 ): Promise<UserWithCarsAndSpecs | undefined> {
   try {
-    const user: UserWithCarsAndSpecs = (await db
+    const user: User = (await db
       .select()
       .from(userTable)
-      .leftJoin(userCarTable, eq(userTable.id, userCarTable.userId))
-      .leftJoin(carTable, eq(carTable.id, userCarTable.carId))
       .where(eq(userTable.id, id))
-      .limit(1)
-      .get()) as UserWithCarsAndSpecs;
+      .get()) as User;
+
 
     if (!user) {
       throw new Error("No user found");
     }
 
-    return user;
+    const cars: CarData[] = await getCarsFromDatabaseForUser(user.id);
+
+    const userWithCarsAndSpecs: UserWithCarsAndSpecs = {
+      user: user,
+      cars: cars,
+    };
+
+    return userWithCarsAndSpecs;
   } catch (error) {
     console.error("Error fetching user:", error);
     return undefined;
@@ -347,6 +355,39 @@ export async function getCarsFromDatabase(): Promise<CarData[]> {
         parkingDetailsTable,
         eq(carTable.parkingDetailsId, parkingDetailsTable.id),
       )
+      .all();
+
+    if (cars.length === 0) {
+      throw new Error("No cars found");
+    }
+
+    return cars;
+  } catch (error) {
+    console.error("Error fetching cars:", error);
+    return [];
+  }
+}
+
+export async function getCarsFromDatabaseForUser(
+  id: string,
+): Promise<CarData[]> {
+  try {
+    const cars: CarData[] = await db
+      .select()
+      .from(userCarTable)
+      .innerJoin(
+        carTable,
+        eq(userCarTable.carId, carTable.id),
+      )
+      .leftJoin(
+        specificationsTable,
+        eq(carTable.specificationsId, specificationsTable.id),
+      )
+      .leftJoin(
+        parkingDetailsTable,
+        eq(carTable.parkingDetailsId, parkingDetailsTable.id),
+      )
+      .where(eq(userCarTable.userId, id))
       .all();
 
     if (cars.length === 0) {

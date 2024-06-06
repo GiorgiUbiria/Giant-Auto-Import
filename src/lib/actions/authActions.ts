@@ -13,10 +13,8 @@ import { lucia, validateRequest } from "@/lib/auth";
 
 import type { ActionResult } from "@/lib/form";
 import { SqliteError } from "better-sqlite3";
-import { UserWithCarsAndSpecs } from "../interfaces";
-import { getUser } from "./dbActions";
 import { isValidPhoneNumber } from 'libphonenumber-js';
-import validator from 'validator';
+import isEmail from 'validator/lib/isEmail'
 
 type NewUser = typeof userTable.$inferInsert;
 
@@ -40,7 +38,7 @@ interface ValidationResult {
 }
 
 async function validateEmail(email: string): Promise<boolean> {
-  return validator.isEmail(email);
+  return isEmail(email);
 }
 
 async function validatePassword(password: string): Promise<boolean> {
@@ -237,31 +235,77 @@ export async function signup(
   return redirect("/admin/users");
 }
 
+async function validateUpdateUser(name: string, email: string, phone: string, password: string): Promise<ValidationResult> {
+  const user = await db
+    .select()
+    .from(userTable)
+    .where(eq(userTable.email, email))
+    .limit(1)
+    .get();
+
+  if (!user) {
+    return {
+      valid: false,
+      error: "User not found",
+    };
+  }
+
+  if (!await validatePassword(password)) {
+    return {
+      valid: false,
+      error: "Invalid password",
+    };
+  }
+
+  if (!await validateName(name)) {
+    return {
+      valid: false,
+      error: "Invalid name",
+    };
+  }
+  if (!await validateEmail(email)) {
+    return {
+      valid: false,
+      error: "Invalid email",
+    };
+  }
+  if (!await validatePhone(phone)) {
+    return {
+      valid: false,
+      error: "Invalid phone",
+    };
+  }
+  return {
+    valid: true,
+    data: user,
+  };
+}
+
 export async function updateUser(
   id: string,
   formData: FormData,
 ): Promise<ActionResult | undefined> {
   try {
-    const user: UserWithCarsAndSpecs | undefined = await getUser(id);
-
-    if (!user) {
-      return {
-        error: "User not found",
-      };
-    }
-
     const name = formData.get("name") as string;
     const email = formData.get("email") as string;
     const phone = formData.get("phone") as string;
     const password = formData.get("password") as string;
 
+    const { valid, error, data } = await validateUpdateUser(name, email, phone, password);
+
+    if (!valid) {
+      return {
+        error: error!,
+      };
+    }
+
     const newUser: NewUser = {
-      id: user.user.id,
+      id: data.user.id,
       name: name,
       email: email,
       phone: phone,
       password: password,
-      roleId: user.user.roleId,
+      roleId: data.user.roleId,
     };
 
     await db.update(userTable).set(newUser).where(eq(userTable.id, id));

@@ -55,7 +55,7 @@ async function validatePhone(phone: string): Promise<boolean> {
   return isValidPhoneNumber(phone, 'GE');
 }
 
-async function validateLogin(email: string, password: string): Promise<ValidationResult> {
+export async function validateLogin(email: string, password: string): Promise<ValidationResult> {
   if (!await validateEmail(email)) {
     return {
       valid: false,

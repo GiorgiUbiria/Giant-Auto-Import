@@ -14,20 +14,17 @@ export function RegisterForm() {
     <Card className="mx-auto max-w-sm">
       <CardHeader>
         <CardTitle className="text-3xl">Sign Up</CardTitle>
-        <CardDescription>
-          Enter information to create an account
-        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" placeholder="Max" name="name" required />
+              <Input id="name" placeholder="Maxim" name="name" pattern="^[a-zA-Z ]+$" required />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" placeholder="551001122" name="phone" required />
+              <Input id="phone" placeholder="+995551001122" name="phone" required />
             </div>
           </div>
           <div className="grid gap-2">
@@ -36,13 +33,13 @@ export function RegisterForm() {
               id="email"
               type="email"
               name="email"
-              placeholder="m@example.com"
+              placeholder="test@example.com"
               required
             />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" name="password" />
+            <Input id="password" type="password" name="password" placeholder="********" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" required />
           </div>
           <Button type="submit" className="w-full">
             Create an account

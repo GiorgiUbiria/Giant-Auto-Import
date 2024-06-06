@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -13,10 +12,7 @@ export function LoginForm() {
   return (
     <Card className="mx-auto max-w-sm w-96">
       <CardHeader>
-        <CardTitle className="text-3xl">Login</CardTitle>
-        <CardDescription>
-          Enter your email below to login to your account
-        </CardDescription>
+        <CardTitle className="text-3xl pb-4">Login</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid gap-6">
@@ -26,7 +22,7 @@ export function LoginForm() {
               id="email"
               type="email"
               name="email"
-              placeholder="m@example.com"
+              placeholder="test@example.com"
               required
             />
           </div>
@@ -34,7 +30,7 @@ export function LoginForm() {
             <div className="flex items-center">
               <Label htmlFor="password">Password</Label>
             </div>
-            <Input id="password" type="password" name="password" required />
+            <Input id="password" type="password" name="password" placeholder="********" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" required />
           </div>
           <Button type="submit" className="w-full">
             Login

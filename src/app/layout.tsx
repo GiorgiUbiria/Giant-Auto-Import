@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 
@@ -31,6 +32,12 @@ export default function RootLayout({
               {children}
             </main>
             <Footer />
+            <Toaster 
+              closeButton={true}
+              invert={true}
+              expand={true}
+              richColors={true}
+            />
           </div>
         </ThemeProvider>
       </body>

@@ -1,7 +1,9 @@
+import { UserCarsTable } from "@/components/user-cars-table";
 import { getUser } from "@/lib/actions/dbActions";
 import { validateRequest } from "@/lib/auth";
 import { UserWithCarsAndSpecs } from "@/lib/interfaces";
 import { redirect } from "next/navigation";
+import { columns } from "./columns";
 
 export default async function Page() {
   const { user } = await validateRequest();
@@ -19,9 +21,7 @@ export default async function Page() {
       <div>
         <h2>User Cars</h2>
         <hr />
-        {userToFind?.cars?.map((data) => (
-          <p key={data.car.vin}>{data.car.vin}</p>
-        ))}
+        <UserCarsTable columns={columns} data={userToFind?.cars!} />
       </div>
     </div>
   );

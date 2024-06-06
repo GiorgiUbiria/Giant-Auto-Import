@@ -13,8 +13,9 @@ import { lucia, validateRequest } from "@/lib/auth";
 
 import type { ActionResult } from "@/lib/form";
 import { SqliteError } from "better-sqlite3";
-import { isValidPhoneNumber } from 'libphonenumber-js';
-import isEmail from 'validator/lib/isEmail'
+import { isValidPhoneNumber } from "libphonenumber-js";
+import isEmail from "validator/lib/isEmail";
+import { User, UserWithCarsAndSpecs } from "../interfaces";
 
 type NewUser = typeof userTable.$inferInsert;
 
@@ -34,7 +35,7 @@ export async function getPdfToken(): Promise<string> {
 interface ValidationResult {
   valid: boolean;
   error?: string;
-  data?: any;
+  data?: User;
 }
 
 async function validateEmail(email: string): Promise<boolean> {
@@ -42,7 +43,8 @@ async function validateEmail(email: string): Promise<boolean> {
 }
 
 async function validatePassword(password: string): Promise<boolean> {
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
   return passwordRegex.test(password);
 }
 
@@ -52,18 +54,21 @@ async function validateName(name: string): Promise<boolean> {
 }
 
 async function validatePhone(phone: string): Promise<boolean> {
-  return isValidPhoneNumber(phone, 'GE');
+  return isValidPhoneNumber(phone, "GE");
 }
 
-export async function validateLogin(email: string, password: string): Promise<ValidationResult> {
-  if (!await validateEmail(email)) {
+export async function validateLogin(
+  email: string,
+  password: string,
+): Promise<ValidationResult> {
+  if (!(await validateEmail(email))) {
     return {
       valid: false,
       error: "Invalid email",
     };
   }
 
-  if (!await validatePassword(password)) {
+  if (!(await validatePassword(password))) {
     return {
       valid: false,
       error: "Invalid password",
@@ -84,10 +89,7 @@ export async function validateLogin(email: string, password: string): Promise<Va
     };
   }
 
-  const validPassword = await new Argon2id().verify(
-    user.password,
-    password
-  );
+  const validPassword = await new Argon2id().verify(user.password, password);
   if (!validPassword) {
     return {
       valid: false,
@@ -105,7 +107,7 @@ export async function login(_: any, formData: FormData): Promise<ActionResult> {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
-  if (!await validateLogin(email, password)) {
+  if (!(await validateLogin(email, password))) {
     return {
       error: "Incorrect email or password",
     };
@@ -119,7 +121,13 @@ export async function login(_: any, formData: FormData): Promise<ActionResult> {
     };
   }
 
-  const session = await lucia.createSession(data.id, {});
+  if (!data) {
+    return {
+      error: "Incorrect email or password",
+    };
+  }
+
+  const session = await lucia.createSession(data?.id!, {});
   const sessionCookie = lucia.createSessionCookie(session.id);
   cookies().set(
     sessionCookie.name,
@@ -130,7 +138,12 @@ export async function login(_: any, formData: FormData): Promise<ActionResult> {
   return redirect("/");
 }
 
-async function validateSignUp(name: string, email: string, phone: string, password: string): Promise<ValidationResult> {
+async function validateSignUp(
+  name: string,
+  email: string,
+  phone: string,
+  password: string,
+): Promise<ValidationResult> {
   const user = await db
     .select()
     .from(userTable)
@@ -145,25 +158,25 @@ async function validateSignUp(name: string, email: string, phone: string, passwo
     };
   }
 
-  if (!await validateName(name)) {
+  if (!(await validateName(name))) {
     return {
       valid: false,
       error: "Invalid name",
     };
   }
-  if (!await validateEmail(email)) {
+  if (!(await validateEmail(email))) {
     return {
       valid: false,
       error: "Invalid email",
     };
   }
-  if (!await validatePhone(phone)) {
+  if (!(await validatePhone(phone))) {
     return {
       valid: false,
       error: "Invalid phone",
     };
   }
-  if (!await validatePassword(password)) {
+  if (!(await validatePassword(password))) {
     return {
       valid: false,
       error: "Invalid password",
@@ -235,7 +248,12 @@ export async function signup(
   return redirect("/admin/users");
 }
 
-async function validateUpdateUser(name: string, email: string, phone: string, password: string): Promise<ValidationResult> {
+async function validateUpdateUser(
+  name: string,
+  email: string,
+  phone: string,
+  password: string,
+): Promise<ValidationResult> {
   const user = await db
     .select()
     .from(userTable)
@@ -250,39 +268,42 @@ async function validateUpdateUser(name: string, email: string, phone: string, pa
     };
   }
 
-  if (!await validatePassword(password)) {
+  if (!(await validatePassword(password))) {
     return {
       valid: false,
       error: "Invalid password",
     };
   }
 
-  if (!await validateName(name)) {
+  if (!(await validateName(name))) {
     return {
       valid: false,
       error: "Invalid name",
     };
   }
-  if (!await validateEmail(email)) {
+
+  if (!(await validateEmail(email))) {
     return {
       valid: false,
       error: "Invalid email",
     };
   }
-  if (!await validatePhone(phone)) {
+
+  if (!(await validatePhone(phone))) {
     return {
       valid: false,
       error: "Invalid phone",
     };
   }
+
   return {
     valid: true,
+    error: "No errors found",
     data: user,
   };
 }
 
 export async function updateUser(
-  id: string,
   formData: FormData,
 ): Promise<ActionResult | undefined> {
   try {
@@ -291,26 +312,47 @@ export async function updateUser(
     const phone = formData.get("phone") as string;
     const password = formData.get("password") as string;
 
-    const { valid, error, data } = await validateUpdateUser(name, email, phone, password);
+    const { valid, error, data } = await validateUpdateUser(
+      name,
+      email,
+      phone,
+      password,
+    );
 
-    if (!valid) {
+    if (!valid || !data) {
       return {
         error: error!,
       };
     }
 
     const newUser: NewUser = {
-      id: data.user.id,
+      id: data.id,
       name: name,
       email: email,
       phone: phone,
       password: password,
-      roleId: data.user.roleId,
+      roleId: data.roleId,
     };
 
-    await db.update(userTable).set(newUser).where(eq(userTable.id, id));
+    const updatedPhone = await db
+      .update(userTable)
+      .set(newUser)
+      .where(eq(userTable.id, data.id))
+      .returning({ updatedPhone: userTable.phone });
 
-    console.log(`User with ID ${id} updated successfully.`);
+    if (updatedPhone.length === 0) {
+      return {
+        error: "Phone number not updated",
+      };
+    }
+
+    console.log(
+      `User with ID ${data.id} updated successfully. with phone number ${updatedPhone[0].updatedPhone}`,
+    );
+
+    return {
+      error: null,
+    };
   } catch (error) {
     console.error(error);
     return {

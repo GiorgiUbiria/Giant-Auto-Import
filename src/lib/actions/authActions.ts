@@ -16,6 +16,7 @@ import { SqliteError } from "better-sqlite3";
 import { UserWithCarsAndSpecs } from "../interfaces";
 import { getUser } from "./dbActions";
 import { isValidPhoneNumber } from 'libphonenumber-js';
+import validator from 'validator';
 
 type NewUser = typeof userTable.$inferInsert;
 
@@ -39,8 +40,7 @@ interface ValidationResult {
 }
 
 async function validateEmail(email: string): Promise<boolean> {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  return validator.isEmail(email);
 }
 
 async function validatePassword(password: string): Promise<boolean> {

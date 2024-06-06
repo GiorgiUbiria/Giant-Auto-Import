@@ -22,6 +22,15 @@ const insertUser = async (user: NewUser) => {
   return db.insert(userTable).values(user);
 };
 
+export async function getPdfToken(): Promise<string> {
+  const { user } = await validateRequest();
+  if (!user) {
+    return "";
+  }
+
+  return user.pdf_token;
+}
+
 export async function login(_: any, formData: FormData): Promise<ActionResult> {
   const email = formData.get("email") as string;
   const password = formData.get("password");

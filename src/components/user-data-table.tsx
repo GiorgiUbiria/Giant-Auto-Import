@@ -73,7 +73,7 @@ export function UserDataTable<TData, TValue>({
       <div className="flex flex-col gap-4">
         <div className="flex items-center">
           <Input
-            placeholder="Filter emails..."
+            placeholder="Filter by name..."
             value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn("name")?.setFilterValue(event.target.value)

@@ -13,8 +13,9 @@ import { lucia, validateRequest } from "@/lib/auth";
 
 import type { ActionResult } from "@/lib/form";
 import { SqliteError } from "better-sqlite3";
-import { User, UserWithCarsAndSpecs } from "../interfaces";
+import { UserWithCarsAndSpecs } from "../interfaces";
 import { getUser } from "./dbActions";
+import { isValidPhoneNumber } from 'libphonenumber-js';
 
 type NewUser = typeof userTable.$inferInsert;
 
@@ -45,6 +46,15 @@ async function validateEmail(email: string): Promise<boolean> {
 async function validatePassword(password: string): Promise<boolean> {
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
   return passwordRegex.test(password);
+}
+
+async function validateName(name: string): Promise<boolean> {
+  const nameRegex = /^[a-zA-Z ]+$/;
+  return nameRegex.test(name);
+}
+
+async function validatePhone(phone: string): Promise<boolean> {
+  return isValidPhoneNumber(phone, 'GE');
 }
 
 async function validateLogin(email: string, password: string): Promise<ValidationResult> {
@@ -120,16 +130,6 @@ export async function login(_: any, formData: FormData): Promise<ActionResult> {
   );
 
   return redirect("/");
-}
-
-async function validateName(name: string): Promise<boolean> {
-  const nameRegex = /^[a-zA-Z ]+$/;
-  return nameRegex.test(name);
-}
-
-async function validatePhone(phone: string): Promise<boolean> {
-  const phoneRegex = /^[0-9]{10}$/;
-  return phoneRegex.test(phone);
 }
 
 async function validateSignUp(name: string, email: string, phone: string, password: string): Promise<ValidationResult> {

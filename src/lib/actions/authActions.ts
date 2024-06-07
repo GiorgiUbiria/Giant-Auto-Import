@@ -248,76 +248,89 @@ export async function signup(
   return redirect("/admin/users");
 }
 
+interface UpdateUserData {
+  name?: string;
+  email?: string;
+  phone?: string;
+  password?: string;
+}
+
 async function validateUpdateUser(
-  name: string,
-  email: string,
-  phone: string,
-  password: string,
+  userData: UpdateUserData,
 ): Promise<ValidationResult> {
-  const user = await db
-    .select()
-    .from(userTable)
-    .where(eq(userTable.email, email))
-    .limit(1)
-    .get();
+  let user;
 
-  if (!user) {
-    return {
-      valid: false,
-      error: "User not found",
-    };
+  if (userData.email) {
+    user = await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.email, userData.email))
+      .limit(1)
+      .get();
+
+    if (!user) {
+      return {
+        valid: false,
+        error: "User not found",
+      };
+    }
   }
 
-  if (!(await validatePassword(password))) {
-    return {
-      valid: false,
-      error: "Invalid password",
-    };
+  const errors: string[] = [];
+
+  if (userData.password && !(await validatePassword(userData.password))) {
+    errors.push("Invalid password");
   }
 
-  if (!(await validateName(name))) {
-    return {
-      valid: false,
-      error: "Invalid name",
-    };
+  if (userData.name && !(await validateName(userData.name))) {
+    errors.push("Invalid name");
   }
 
-  if (!(await validateEmail(email))) {
-    return {
-      valid: false,
-      error: "Invalid email",
-    };
+  if (userData.email && !(await validateEmail(userData.email))) {
+    errors.push("Invalid email");
   }
 
-  if (!(await validatePhone(phone))) {
-    return {
-      valid: false,
-      error: "Invalid phone",
-    };
+  if (userData.phone && !(await validatePhone(userData.phone))) {
+    errors.push("Invalid phone");
   }
+
+  const isValid = errors.length === 0;
 
   return {
-    valid: true,
-    error: "No errors found",
+    valid: isValid,
+    error: isValid ? "No errors found" : errors.join(", "),
     data: user,
   };
 }
 
 export async function updateUser(
+  _: any,
   formData: FormData,
 ): Promise<ActionResult | undefined> {
   try {
-    const name = formData.get("name") as string;
-    const email = formData.get("email") as string;
-    const phone = formData.get("phone") as string;
-    const password = formData.get("password") as string;
+    const updateFields: Partial<Omit<User, "id">> = {};
 
-    const { valid, error, data } = await validateUpdateUser(
-      name,
-      email,
-      phone,
-      password,
-    );
+    if (formData.has("name")) {
+      const name = formData.get("name") as string;
+      updateFields.name = name;
+    }
+
+    if (formData.has("email")) {
+      const email = formData.get("email") as string;
+      updateFields.email = email;
+    }
+
+    if (formData.has("phone")) {
+      const phone = formData.get("phone") as string;
+      updateFields.phone = phone;
+    }
+
+    if (formData.has("password")) {
+      const password = formData.get("password") as string;
+      updateFields.password = password;
+    }
+
+    const { valid, error, data } = await validateUpdateUser(updateFields);
 
     if (!valid || !data) {
       return {
@@ -325,34 +338,23 @@ export async function updateUser(
       };
     }
 
-    const newUser: NewUser = {
-      id: data.id,
-      name: name,
-      email: email,
-      phone: phone,
-      password: password,
-      roleId: data.roleId,
-    };
+    const userId = data.id;
 
-    const updatedPhone = await db
-      .update(userTable)
-      .set(newUser)
-      .where(eq(userTable.id, data.id))
-      .returning({ updatedPhone: userTable.phone });
+    if (Object.keys(updateFields).length > 0) {
+      await db
+        .update(userTable)
+        .set(updateFields)
+        .where(eq(userTable.id, userId));
 
-    if (updatedPhone.length === 0) {
+      console.log(`User with ID ${userId} updated successfully.`);
       return {
-        error: "Phone number not updated",
+        error: null,
+      };
+    } else {
+      return {
+        error: "No fields to update",
       };
     }
-
-    console.log(
-      `User with ID ${data.id} updated successfully. with phone number ${updatedPhone[0].updatedPhone}`,
-    );
-
-    return {
-      error: null,
-    };
   } catch (error) {
     console.error(error);
     return {

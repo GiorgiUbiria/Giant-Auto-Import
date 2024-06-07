@@ -26,7 +26,6 @@ export async function UpdateUserForm({ id }: { id: string }) {
                 placeholder="Maxim"
                 name="name"
                 pattern="^[a-zA-Z ]+$"
-                required
               />
             </div>
             <div className="grid gap-2">
@@ -36,7 +35,6 @@ export async function UpdateUserForm({ id }: { id: string }) {
                 placeholder="+995551001122"
                 defaultValue={userToFind.user.phone}
                 name="phone"
-                required
               />
             </div>
           </div>
@@ -48,7 +46,6 @@ export async function UpdateUserForm({ id }: { id: string }) {
               name="email"
               placeholder="test@example.com"
               defaultValue={userToFind.user.email}
-              required
             />
           </div>
           <div className="grid gap-2">
@@ -59,7 +56,6 @@ export async function UpdateUserForm({ id }: { id: string }) {
               name="password"
               placeholder="********"
               pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
-              required
             />
           </div>
           <Button type="submit" className="w-full">

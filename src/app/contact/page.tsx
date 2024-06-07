@@ -1,6 +1,38 @@
-import { Button } from "@/components/ui/button";
+"use client";
 
-export default async function Page() {
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+
+export default function Page() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const sendEmail = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const { email, name, message } = formData;
+    const subject = `Message from ${name}`;
+    const body = `Name: ${name}%0AEmail: ${email}%0A%0A${message}`;
+
+    const recipientEmail = "ubiriagiorgi8@gmail.com";
+
+    const mailtoLink = `mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    window.location.href = mailtoLink;
+  };
+
   return (
     <>
       <section id="contact">
@@ -78,10 +110,18 @@ export default async function Page() {
                         Contact
                       </h3>
                       <p className="text-gray-600 dark:text-slate-400">
-                        Mobile: +1 (123) 456-7890
+                        WhatsApp:{" "}
+                        <a
+                          href={`https://wa.me/995551002206?text=I'm%20interested%20in%20your%20car%20for%20sale`}
+                        >
+                          +995 551443314
+                        </a>
                       </p>
                       <p className="text-gray-600 dark:text-slate-400">
-                        Mail: tailnext@gmail.com
+                        Mail:{" "}
+                        <a href="mailto:someone@example.com?subject=Meeting%20Request&body=Hi%20there,%0A%0ACan%20we%20schedule%20a%20meeting%20next%20week?%0A%0AThank%20you!&cc=ccperson@example.com&bcc=bccperson@example.com">
+                          giantautoimport@gmail.com
+                        </a>
                       </p>
                     </div>
                   </li>
@@ -121,7 +161,7 @@ export default async function Page() {
                 <h2 className="mb-4 text-2xl font-bold dark:text-white">
                   Ready to Get Started?
                 </h2>
-                <form id="contactForm">
+                <form id="contactForm" onSubmit={sendEmail}>
                   <div className="mb-6">
                     <div className="mx-0 mb-1 sm:mb-4">
                       <div className="mx-0 mb-1 sm:mb-4">
@@ -135,6 +175,8 @@ export default async function Page() {
                           placeholder="Your name"
                           className="mb-2 w-full rounded-md border border-gray-400 py-2 pl-2 pr-4 shadow-md dark:text-gray-300 sm:mb-0"
                           name="name"
+                          value={formData.name}
+                          onChange={handleChange}
                         />
                       </div>
                       <div className="mx-0 mb-1 sm:mb-4">
@@ -148,6 +190,8 @@ export default async function Page() {
                           placeholder="Your email address"
                           className="mb-2 w-full rounded-md border border-gray-400 py-2 pl-2 pr-4 shadow-md dark:text-gray-300 sm:mb-0"
                           name="email"
+                          value={formData.email}
+                          onChange={handleChange}
                         />
                       </div>
                     </div>
@@ -158,19 +202,18 @@ export default async function Page() {
                       ></label>
                       <textarea
                         id="textarea"
-                        name="textarea"
+                        name="message"
                         cols={30}
                         rows={5}
                         placeholder="Write your message..."
                         className="mb-2 w-full rounded-md border border-gray-400 py-2 pl-2 pr-4 shadow-md dark:text-gray-300 sm:mb-0"
+                        value={formData.message}
+                        onChange={handleChange}
                       ></textarea>
                     </div>
                   </div>
                   <div className="text-center">
-                    <Button
-                      type="submit"
-                      className="w-full"
-                    >
+                    <Button type="submit" className="w-full">
                       Send Message
                     </Button>
                   </div>

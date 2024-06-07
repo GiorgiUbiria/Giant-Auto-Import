@@ -24,10 +24,8 @@ export default async function Footer() {
               Giant Auto Import
             </h1>
             <p className="mt-[18px] text-[15px] font-normal dark:text-white/[80%]">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Eos,
-              fugit non. Incidunt dolorum adipisci, tempore asperiores nemo odio
-              facere officiis enim animi placeat eaque nesciunt alias beatae id,
-              at dicta.
+              Website where you can find all the information about cars and
+              their history.
             </p>
             <div className="mt-[18px] flex gap-4">
               <Link className="hover:scale-110" href="/">
@@ -80,7 +78,7 @@ export default async function Footer() {
                   href="tel:+911800123444"
                   className="font-Inter text-[14px] font-medium dark:text-white"
                 >
-                  +91 1800123444
+                  +995 551443314{" "}
                 </a>
                 <p className="font-Inter text-[12px] font-medium dark:text-white">
                   Company Number
@@ -102,7 +100,7 @@ export default async function Footer() {
                   href="mailto:help@lorem.com"
                   className="font-Inter text-[14px] font-medium dark:text-[#fff]"
                 >
-                  help@lorem.com
+                  giantautoimport@gmail.com
                 </a>
                 <p className="font-Inter text-[12px] font-medium dark:text-[#fff]">
                   Company Email
@@ -124,7 +122,7 @@ export default async function Footer() {
                   href="mailto:help@lorem.com"
                   className="font-Inter text-[14px] font-medium dark:text-[#fff]"
                 >
-                  Sub Nerul, Mumbia, India, 123456
+                  Poti, Georgia, 10001, Georgia
                 </a>
                 <p className="font-Inter text-[12px] font-medium dark:text-white">
                   Address

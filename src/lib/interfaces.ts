@@ -57,6 +57,7 @@ export type CarData = {
   car: Car;
   specifications: Specifications | null;
   parking_details: ParkingDetails | null;
+  images?: string[];
 };
 
 export type UserWithCarsAndSpecs = {

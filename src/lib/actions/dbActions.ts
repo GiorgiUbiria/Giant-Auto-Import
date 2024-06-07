@@ -9,6 +9,7 @@ import {
   parkingDetailsTable,
   userTable,
   userCarTable,
+  imageTable,
 } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 
@@ -323,7 +324,6 @@ export async function getUser(
       .where(eq(userTable.id, id))
       .get()) as User;
 
-
     if (!user) {
       throw new Error("No user found");
     }
@@ -344,7 +344,7 @@ export async function getUser(
 
 export async function getCarsFromDatabase(): Promise<CarData[]> {
   try {
-    const cars: CarData[] = await db
+    const cars: CarData[] = (await db
       .select()
       .from(carTable)
       .leftJoin(
@@ -355,7 +355,7 @@ export async function getCarsFromDatabase(): Promise<CarData[]> {
         parkingDetailsTable,
         eq(carTable.parkingDetailsId, parkingDetailsTable.id),
       )
-      .all();
+      .all()) as CarData[];
 
     if (cars.length === 0) {
       throw new Error("No cars found");
@@ -375,10 +375,7 @@ export async function getCarsFromDatabaseForUser(
     const cars: CarData[] = await db
       .select()
       .from(userCarTable)
-      .innerJoin(
-        carTable,
-        eq(userCarTable.carId, carTable.id),
-      )
+      .innerJoin(carTable, eq(userCarTable.carId, carTable.id))
       .leftJoin(
         specificationsTable,
         eq(carTable.specificationsId, specificationsTable.id),
@@ -423,6 +420,20 @@ export async function getCarFromDatabase(
     if (!car) {
       console.log("No car found");
     }
+
+    const images = await db
+      .select()
+      .from(imageTable)
+      .where(eq(imageTable.carVin, vin))
+      .all();
+
+    if (images.length === 0) {
+      console.log(`No images found for VIN: ${vin}`);
+    }
+
+    car.images = images
+      .map((image) => image.imageUrl)
+      .filter((imageUrl): imageUrl is string => imageUrl !== null);
 
     return car;
   } catch (e) {

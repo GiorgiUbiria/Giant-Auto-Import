@@ -29,11 +29,13 @@ export async function fetchToken(): Promise<string | undefined> {
     }
   } catch (error) {
     console.error("Error fetching token:", error);
+    return undefined;
   }
 }
 
 export async function ensureToken(): Promise<string | undefined> {
   if (!token || !tokenExpiry || Date.now() >= tokenExpiry - 60000) {
-    return (await fetchToken()) as string;
+    return await fetchToken();
   }
+  return token;
 }

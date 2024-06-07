@@ -6,7 +6,6 @@ import { revalidatePath } from "next/cache";
 import { ensureToken } from "./tokenActions";
 import {
   carTable,
-  imageTable,
   parkingDetailsTable,
   specificationsTable,
 } from "../drizzle/schema";
@@ -16,16 +15,6 @@ import { APICarResponse, APICar } from "../api-interfaces";
 type NewCar = typeof carTable.$inferInsert;
 type NewSpecification = typeof specificationsTable.$inferInsert;
 type NewParkingDetails = typeof parkingDetailsTable.$inferInsert;
-type NewImage = typeof imageTable.$inferInsert;
-
-const insertImage = async (vin: string, imageUrl: string) => {
-  const image: NewImage = {
-    carVin: vin,
-    imageUrl: imageUrl,
-  };
-
-  return db.insert(imageTable).values(image);
-};
 
 const insertCar = async (car: NewCar) => {
   return db.insert(carTable).values(car);
@@ -103,42 +92,6 @@ export async function fetchCar(vin: string): Promise<APICar | undefined> {
   }
 }
 
-export async function updateLocalDatabaseImages(): Promise<void> {
-  try {
-    const cars: APICarResponse | undefined = await fetchCars();
-
-    if (!cars) {
-      console.log("No cars fetched.");
-      return;
-    }
-
-    for (const data of cars.data) {
-      const { specifications } = data;
-
-      if (specifications?.vin) {
-        const assets: APIAssetsResponse | undefined = await fetchAssets(
-          specifications.vin,
-        );
-
-        if (assets) {
-          const images = assets.assets.filter(
-            (asset) => asset.type.toLowerCase() === "image",
-          );
-          if (images.length > 0) {
-            const imageUrl = images[0].value;
-            await insertImage(specifications.vin, imageUrl);
-          }
-        } else {
-          console.log(`No assets found for VIN: ${specifications.vin}`);
-        }
-      } else {
-        console.log("VIN is undefined for car:", data);
-      }
-    }
-  } catch (error) {
-    console.error("Error updating local database:", error);
-  }
-}
 export async function updateLocalDatabaseFromAPI(): Promise<void> {
   try {
     const cars: APICarResponse | undefined = await fetchCars();

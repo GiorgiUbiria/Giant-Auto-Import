@@ -2,10 +2,9 @@
 
 import React, { useRef } from "react";
 import Image from "next/image";
-import { GalleryImage } from "@/lib/interfaces";
 
-export function FeaturedImageGallery({ data }: { data: GalleryImage[] }) {
-  const [active, setActive] = React.useState(data.at(0)?.imgelink);
+export function FeaturedImageGallery({ data }: { data: string[] }) {
+  const [active, setActive] = React.useState(data.at(0));
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   const openDialog = () => {
@@ -42,7 +41,7 @@ export function FeaturedImageGallery({ data }: { data: GalleryImage[] }) {
           />
         </div>
         <div className="grid grid-cols-5 gap-4">
-          {data.slice(0, 4).map(({ imgelink }, index) => (
+          {data.slice(0, 4).map((imgelink, index) => (
             <div key={index}>
               <Image
                 onClick={() => setActive(imgelink)}
@@ -75,7 +74,7 @@ export function FeaturedImageGallery({ data }: { data: GalleryImage[] }) {
               &times;
             </button>
             <div className="flex overflow-x-scroll space-x-4">
-              {data.map(({ imgelink }, index) => (
+              {data.map((imgelink, index) => (
                 <Image
                   key={index}
                   src={imgelink}

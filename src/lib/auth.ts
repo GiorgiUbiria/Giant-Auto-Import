@@ -7,8 +7,7 @@ import type { Session, User } from "lucia";
 import { User as DatabaseUser } from "./interfaces";
 import { DrizzleSQLiteAdapter } from "@lucia-auth/adapter-drizzle";
 import { db } from "./drizzle/db";
-import { carTable, sessionTable, userCarTable, userTable } from "./drizzle/schema";
-import { eq } from "drizzle-orm";
+import { sessionTable, userTable } from "./drizzle/schema";
 
 // import { webcrypto } from "crypto";
 // globalThis.crypto = webcrypto as Crypto;

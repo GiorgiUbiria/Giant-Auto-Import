@@ -16,6 +16,8 @@ import { SqliteError } from "better-sqlite3";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import isEmail from "validator/lib/isEmail";
 import { User, UserWithCarsAndSpecs } from "../interfaces";
+import { validateAdmin } from "../validation";
+import { revalidatePath } from "next/cache";
 
 type NewUser = typeof userTable.$inferInsert;
 
@@ -191,7 +193,13 @@ export async function signup(
   _: any,
   formData: FormData,
 ): Promise<ActionResult | undefined> {
-  const { user } = await validateRequest();
+  const { user, valid: validAdmin } = await validateAdmin();
+
+  if (!validAdmin) {
+    return {
+      error: "Only admins can register new users.",
+    };
+  }
 
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;
@@ -210,7 +218,7 @@ export async function signup(
 
   const userId = generateId(15) as string;
 
-  let currentRoleId = user?.role_id;
+  let currentRoleId = user?.roleId;
 
   if (currentRoleId !== 2) {
     return {
@@ -308,6 +316,14 @@ export async function updateUser(
   formData: FormData,
 ): Promise<ActionResult | undefined> {
   try {
+    const { valid: validAdmin } = await validateAdmin();
+
+    if (!validAdmin) {
+      return {
+        error: "Only admins can update user information.",
+      };
+    }
+
     const updateFields: Partial<Omit<User, "id">> = {};
 
     if (formData.has("name")) {
@@ -347,8 +363,11 @@ export async function updateUser(
         .where(eq(userTable.id, userId));
 
       console.log(`User with ID ${userId} updated successfully.`);
+
+      revalidatePath("/admin/users/");
       return {
         error: null,
+        success: `User with ID ${userId} updated successfully.`,
       };
     } else {
       return {

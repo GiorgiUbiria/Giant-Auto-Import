@@ -160,26 +160,6 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
       };
 
       await insertCar(newCar);
-
-      if (specifications?.vin) {
-        const assets: APIAssetsResponse | undefined = await fetchAssets(
-          specifications.vin,
-        );
-
-        if (assets) {
-          const images = assets.assets.filter(
-            (asset) => asset.type.toLowerCase() === "image",
-          );
-          if (images.length > 0) {
-            const imageUrl = images[0].value;
-            await insertImage(specifications.vin, imageUrl);
-          }
-        } else {
-          console.log(`No assets found for VIN: ${specifications.vin}`);
-        }
-      } else {
-        console.log("VIN is undefined for car:", data);
-      }
     }
 
     revalidatePath("/admin");

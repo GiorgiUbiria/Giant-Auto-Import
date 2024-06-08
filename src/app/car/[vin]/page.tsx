@@ -2,7 +2,7 @@ import { getCarFromDatabase } from "@/lib/actions/dbActions";
 import { CarData } from "@/lib/interfaces";
 
 import CarInfo from "@/components/car-info";
-import { FeaturedImageGallery } from "@/components/image-gallery";
+import Gallery from "./featured-images";
 
 export default async function Page({ params }: { params: { vin: string } }) {
   const car: CarData | undefined = await getCarFromDatabase(params.vin);
@@ -14,9 +14,7 @@ export default async function Page({ params }: { params: { vin: string } }) {
   return (
     <div className="flex flex-col items-center w-full py-12">
       <div className="w-full flex flex-col gap-6 lg:flex-row py-12 px-8">
-        <div className="lg:basis-1/2 flex justify-center">
-          <FeaturedImageGallery data={car.images ? car.images : []} />
-        </div>
+        <Gallery car={car} />
         <div className="lg:basis-1/2 lg:flex lg:justify-center">
           <CarInfo carData={car} />
         </div>

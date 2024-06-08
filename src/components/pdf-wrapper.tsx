@@ -7,6 +7,7 @@ import PSPDFKit from "pspdfkit";
 interface PdfDataInterface {
   billedTo: string;
   paymentDate: string;
+  vin: string;
 }
 
 interface PSPDFKitWrapperProps {
@@ -26,6 +27,7 @@ const PSPDFKitWrapper: React.FC<PSPDFKitWrapperProps> = ({
   const searchParams = useSearchParams();
   const pdfToken = searchParams.get("token");
   const userId = searchParams.get("userId");
+  const vin = searchParams.get("vin");
   const router = useRouter();
 
   useEffect(() => {
@@ -38,6 +40,13 @@ const PSPDFKitWrapper: React.FC<PSPDFKitWrapperProps> = ({
       router.push("/");
       return;
     }
+
+    if (!vin) {
+      router.push("/");
+      return;
+    }
+
+    data.vin = vin;
 
     const loadAndProcessPdf = async () => {
       const container = containerRef.current;

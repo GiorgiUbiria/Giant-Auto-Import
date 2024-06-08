@@ -17,6 +17,7 @@ const Page: React.FC = async () => {
   const data = {
     billedTo: user.name,
     paymentDate: new Date().toDateString(),
+    vin: "",
   };
 
   return (

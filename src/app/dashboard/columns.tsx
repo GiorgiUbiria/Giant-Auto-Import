@@ -143,7 +143,7 @@ export default function getColumns(pdfToken: string, userId: string): ColumnDef<
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
-                <Link href={`/pdf?token=${pdfToken}&userId=${userId}`}>Invoice</Link>
+                <Link href={`/pdf?token=${pdfToken}&userId=${userId}$vin=${vin}`}>Invoice</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
             </DropdownMenuContent>

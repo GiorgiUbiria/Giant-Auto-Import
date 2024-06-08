@@ -53,11 +53,16 @@ export interface UserCar {
   userId: string | null;
 }
 
+export type Image = {
+  imageUrl: string | null;
+  imageType?: "Arrival" | "Container";
+}
+
 export type CarData = {
   car: Car;
   specifications: Specifications | null;
   parking_details: ParkingDetails | null;
-  images?: string[];
+  images?: Image[];
 };
 
 export type UserWithCarsAndSpecs = {

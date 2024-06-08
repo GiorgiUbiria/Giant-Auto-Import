@@ -69,6 +69,7 @@ export const imageTable = sqliteTable('image', {
   id: integer('id').primaryKey(),
   carVin: text('car_vin'),
   imageUrl: text('image_url'),
+  imageType: text('image_type'),
 });
 
 export const userCarTable = sqliteTable("user_car", {

@@ -12,6 +12,7 @@ import {
   imageTable,
 } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { Image } from "@/lib/interfaces";
 
 type NewUserCar = typeof userCarTable.$inferInsert;
 type NewCar = typeof carTable.$inferInsert;
@@ -398,6 +399,23 @@ export async function getCarsFromDatabaseForUser(
   }
 }
 
+function isValidImage(image: {
+  id: number;
+  carVin: string | null;
+  imageUrl: string | null;
+  imageType: string | null;
+}): image is {
+  id: number;
+  carVin: string | null;
+  imageUrl: string;
+  imageType: "Arrival" | "Container";
+} {
+  return (
+    image.imageUrl !== null &&
+    (image.imageType === "Arrival" || image.imageType === "Container")
+  );
+}
+
 export async function getCarFromDatabase(
   vin: string,
 ): Promise<CarData | undefined> {
@@ -431,9 +449,10 @@ export async function getCarFromDatabase(
       console.log(`No images found for VIN: ${vin}`);
     }
 
-    car.images = images
-      .map((image) => image.imageUrl)
-      .filter((imageUrl): imageUrl is string => imageUrl !== null);
+    car.images = images.filter(isValidImage).map((image) => ({
+      imageUrl: image.imageUrl!,
+      imageType: image.imageType as "Arrival" | "Container",
+    }));
 
     return car;
   } catch (e) {

@@ -15,7 +15,7 @@ const Page: React.FC = async () => {
   }
 
   const data = {
-    billedTo: "Giorgi Ubiria",
+    billedTo: user.name,
     paymentDate: new Date().toDateString(),
   };
 
@@ -25,6 +25,7 @@ const Page: React.FC = async () => {
         documentPath="/document.pdf"
         data={data}
         token={user.pdf_token}
+        id={user.id!}
       />
     </div>
   );

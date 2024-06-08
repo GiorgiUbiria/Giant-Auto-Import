@@ -24,6 +24,7 @@ export const lucia = new Lucia(adapter, {
   },
   getUserAttributes: (attributes) => {
     return {
+      name: attributes.name,
       email: attributes.email,
       role_id: attributes.roleId,
       pdf_token: generateToken,

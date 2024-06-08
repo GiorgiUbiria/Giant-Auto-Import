@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function getColumns(pdfToken: string): ColumnDef<CarData>[] {
+export default function getColumns(pdfToken: string, userId: string): ColumnDef<CarData>[] {
   return [
     {
       id: "select",
@@ -143,7 +143,7 @@ export default function getColumns(pdfToken: string): ColumnDef<CarData>[] {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
-                <Link href={`/pdf?token=${pdfToken}`}>Invoice</Link>
+                <Link href={`/pdf?token=${pdfToken}&userId=${userId}`}>Invoice</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
             </DropdownMenuContent>

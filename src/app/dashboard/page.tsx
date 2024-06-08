@@ -20,7 +20,7 @@ export default async function Page() {
       <div>
         <h2>User Cars</h2>
         <hr />
-        <TableWithColumns data={userToFind.cars!} pdfToken={user.pdf_token} />
+        <TableWithColumns data={userToFind.cars!} pdfToken={user.pdf_token} userId={user.id} />
       </div>
     </div>
   );

@@ -13,20 +13,28 @@ interface PSPDFKitWrapperProps {
   documentPath: string;
   data: PdfDataInterface;
   token: string;
+  id: string;
 }
 
 const PSPDFKitWrapper: React.FC<PSPDFKitWrapperProps> = ({
   documentPath,
   data,
   token,
+  id,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const searchParams = useSearchParams();
   const pdfToken = searchParams.get("token");
+  const userId = searchParams.get("userId");
   const router = useRouter();
 
   useEffect(() => {
     if (!pdfToken || pdfToken !== token) {
+      router.push("/");
+      return;
+    }
+
+    if (!userId || userId !== id) {
       router.push("/");
       return;
     }

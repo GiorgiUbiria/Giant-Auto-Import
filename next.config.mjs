@@ -5,6 +5,12 @@ const nextConfig = {
   },
   images: {
     remotePatterns: [
+       {
+        protocol: "https",
+        hostname: "giantautoimportimages.ec17bb88a597d2c1d369945a578a8403.r2.cloudflarestorage.com",
+        port: "",
+        pathname: "/**",
+      },
       {
         protocol: "https",
         hostname: "media.mtlworld.win",

@@ -15,12 +15,10 @@ export default function Gallery({ car }: { car: CarData }) {
   };
 
   useEffect(() => {
-    console.log("Current Image Type:", imageType);
-    console.log("All Images:", car.images);
     const filteredImages = car?.images?.filter(
       (image) => image.imageType === imageType,
     );
-    console.log("Filtered Images:", filteredImages);
+
     setImages(filteredImages);
   }, [imageType, car.images]);
 

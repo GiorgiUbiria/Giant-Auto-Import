@@ -1,28 +1,53 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+"use server";
 
-const s3Client = new S3Client({
+import {
+  S3,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
+import "dotenv/config";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { ActionResult } from "next/dist/server/app-render/types";
+
+const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
+const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
+const secretAccessKey = process.env.CLOUDFLARE_SECRET_ACCESS_KEY as string;
+const bucketName = process.env.CLOUDFLARE_BUCKET_NAME as string;
+
+const S3Client = new S3({
   region: "auto",
-  endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID!}.r2.cloudflarestorage.com`,
+  endpoint: endpoint,
   credentials: {
-    accessKeyId: process.env.CLOUDFLARE_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY!,
+    accessKeyId: accessKeyId,
+    secretAccessKey: secretAccessKey,
   },
 });
 
-export async function handleUploadImage(type: string, vin: string, formData: FormData): Promise<string> {
-  const file = formData.get("image") as File;
-  const fileExtension = file.name.split(".").pop();
-  const fileName = `${vin}-${type}.${fileExtension}`;
+export async function handleUploadImage(
+  type: string,
+  vin: string,
+  size: number,
+): Promise<ActionResult | undefined> {
+  const fileName = `${vin}/${type}/1.png`;
 
-  const command = new PutObjectCommand({
-    Bucket: process.env.CLOUDFLARE_BUCKET_NAME!,
-    Key: fileName,
-    Body: file,
-    ContentType: file.type,
-  });
+  const url = await getSignedUrl(
+    S3Client,
+    new PutObjectCommand({ Bucket: bucketName, Key: fileName, ContentLength: size, ContentType: "image/png" }),
+    { expiresIn: 3600 }, 
+  );
 
-  const url = await getSignedUrl(s3Client, command)
+  console.log(url)
 
   return url;
 }
+
+// export async function getImageFromBucket() {
+//   const imageUrl = "Screenshot from 2024-05-28 22-22-27.png";
+//
+//   console.log(
+//     await getSignedUrl(
+//       S3,
+//       new GetObjectCommand({ Bucket: bucketName, Key: imageUrl }),
+//       { expiresIn: 3600 },
+//     ),
+//   );
+// }

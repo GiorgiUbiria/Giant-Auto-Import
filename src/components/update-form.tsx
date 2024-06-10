@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getUser } from "@/lib/actions/dbActions";
+import { TogglePassword } from "./toggle-password";
 
 export async function UpdateUserForm({ id }: { id: string }) {
   const userToFind = await getUser(id);
@@ -48,16 +49,7 @@ export async function UpdateUserForm({ id }: { id: string }) {
               defaultValue={userToFind.user.email}
             />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              name="password"
-              placeholder="********"
-              pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
-            />
-          </div>
+          <TogglePassword />
           <Button type="submit" className="w-full">
             Update user information
           </Button>

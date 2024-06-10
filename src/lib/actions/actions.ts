@@ -1,7 +1,6 @@
 "use server";
 
 import { db } from "../drizzle/db";
-import { APIAssetsResponse } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 import { ensureToken } from "./tokenActions";
 import {
@@ -9,7 +8,6 @@ import {
   parkingDetailsTable,
   specificationsTable,
 } from "../drizzle/schema";
-import { fetchAssets } from "./imageActions";
 import { APICarResponse, APICar } from "../api-interfaces";
 
 type NewCar = typeof carTable.$inferInsert;

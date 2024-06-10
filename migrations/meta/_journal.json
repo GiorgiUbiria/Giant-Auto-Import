@@ -64,6 +64,13 @@
       "when": 1717847445387,
       "tag": "0008_misty_mindworm",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1718045561566,
+      "tag": "0009_hard_frog_thor",
+      "breakpoints": true
     }
   ]
 }

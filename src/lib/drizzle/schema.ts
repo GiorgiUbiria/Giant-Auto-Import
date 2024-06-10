@@ -1,4 +1,10 @@
-import { integer, sqliteTable, text, primaryKey } from "drizzle-orm/sqlite-core";
+import {
+  integer,
+  sqliteTable,
+  text,
+  primaryKey,
+  real,
+} from "drizzle-orm/sqlite-core";
 
 export const rolesTable = sqliteTable("roles", {
   id: integer("id").primaryKey(),
@@ -24,59 +30,97 @@ export const sessionTable = sqliteTable("session", {
   expiresAt: integer("expires_at").notNull(),
 });
 
-export const specificationsTable = sqliteTable('specifications', {
-  id: integer('id').primaryKey(),
-  vin: text('vin'),
-  carfax: text('carfax'),
-  year: text('year'),
-  make: text('make'),
-  model: text('model'),
-  trim: text('trim'),
-  manufacturer: text('manufacturer'),
-  bodyType: text('body_type'),
-  country: text('country'),
-  engineType: text('engine_type'),
-  titleNumber: text('title_number'),
-  titleState: text('title_state'),
-  color: text('color'),
-  runndrive: text('runndrive'),
-  fuelType: text('fuel_type'),
+export const specificationsTable = sqliteTable("specifications", {
+  id: integer("id").primaryKey(),
+  vin: text("vin"),
+  carfax: text("carfax"),
+  year: text("year"),
+  make: text("make"),
+  model: text("model"),
+  trim: text("trim"),
+  manufacturer: text("manufacturer"),
+  bodyType: text("body_type"),
+  country: text("country"),
+  engineType: text("engine_type"),
+  titleNumber: text("title_number"),
+  titleState: text("title_state"),
+  color: text("color"),
+  runndrive: text("runndrive"),
+  fuelType: text("fuel_type"),
 });
 
-export const parkingDetailsTable = sqliteTable('parking_details', {
-  id: integer('id').primaryKey(),
-  fined:text('fined'),
-  arrived: text('arrived'),
-  status: text('status'),
-  parkingDateString: text('parking_date_string'),
+export const parkingDetailsTable = sqliteTable("parking_details", {
+  id: integer("id").primaryKey(),
+  fined: text("fined"),
+  arrived: text("arrived"),
+  status: text("status"),
+  parkingDateString: text("parking_date_string"),
 });
 
-export const carTable = sqliteTable('car', {
-  id: integer('id').primaryKey(),
-  vin: text('vin'),
-  originPort: text('origin_port'),
-  destinationPort: text('destination_port'),
-  departureDate: text('departure_date'),
-  arrivalDate: text('arrival_date'),
-  auction: text('auction'),
-  createdAt: text('created_at'),
-  shipping: text('shipping'),
-  specificationsId: integer('specifications_id').references(() => specificationsTable.id),
-  parkingDetailsId: integer('parking_details_id').references(() => parkingDetailsTable.id),
+export const carTable = sqliteTable("car", {
+  id: integer("id").primaryKey(),
+  vin: text("vin"),
+  originPort: text("origin_port"),
+  destinationPort: text("destination_port"),
+  departureDate: text("departure_date"),
+  arrivalDate: text("arrival_date"),
+  auction: text("auction"),
+  createdAt: text("created_at"),
+  shipping: text("shipping"),
+  specificationsId: integer("specifications_id").references(
+    () => specificationsTable.id,
+  ),
+  parkingDetailsId: integer("parking_details_id").references(
+    () => parkingDetailsTable.id,
+  ),
 });
 
-export const imageTable = sqliteTable('image', {
-  id: integer('id').primaryKey(),
-  carVin: text('car_vin'),
-  imageUrl: text('image_url'),
-  imageType: text('image_type'),
+export const imageTable = sqliteTable("image", {
+  id: integer("id").primaryKey(),
+  carVin: text("car_vin"),
+  imageUrl: text("image_url"),
+  imageType: text("image_type"),
 });
 
-export const userCarTable = sqliteTable("user_car", {
-  carId: integer("car_id"),
-  userId: text("user_id"),
-}, (table) => {
-  return {
-    pk: primaryKey({ columns: [table.carId, table.userId] }),
-  };
+export const userCarTable = sqliteTable(
+  "user_car",
+  {
+    carId: integer("car_id"),
+    userId: text("user_id"),
+  },
+  (table) => {
+    return {
+      pk: primaryKey({ columns: [table.carId, table.userId] }),
+    };
+  },
+);
+
+export const priceTable = sqliteTable("price", {
+  id: integer("id").primaryKey(),
+  amount: real("amount"),
+  currencyId: integer("currency_id").references(() => priceCurrencyTable.id),
+  carId: integer("car_id")
+    .references(() => carTable.id, { onDelete: "cascade" }),
+  userId: integer("user_id")
+    .references(() => userTable.id, { onDelete: "cascade" }),
+  paymentDate: text("payment_date"),
+});
+
+export const priceCurrencyTable = sqliteTable("price_currency", {
+  id: integer("id").primaryKey(),
+  currencyCode: text("currency_code").notNull().unique(),
+});
+
+export const transactionTable = sqliteTable("transaction", {
+  id: integer("id").primaryKey(),
+  priceId: integer("price_id").references(() => priceTable.id, {
+    onDelete: "cascade",
+  }),
+  userId: integer("user_id").references(() => userTable.id, {
+    onDelete: "cascade",
+  }),
+  carId: integer("car_id").references(() => carTable.id, {
+    onDelete: "cascade",
+  }),
+  paymentDate: text("payment_date"),
 });

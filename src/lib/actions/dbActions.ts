@@ -12,7 +12,6 @@ import {
   imageTable,
 } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
-import { Image } from "@/lib/interfaces";
 
 type NewUserCar = typeof userCarTable.$inferInsert;
 type NewCar = typeof carTable.$inferInsert;

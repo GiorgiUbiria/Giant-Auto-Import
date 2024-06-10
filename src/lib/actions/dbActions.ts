@@ -301,7 +301,7 @@ export async function assignCarToUser(
 
 export async function getUsers(): Promise<User[] | undefined> {
   try {
-    const users: User[] = (await db.select().from(userTable).all()) as User[];
+    const users: User[] = (await db.select().from(userTable).where(eq(userTable.roleId, 1)).all()) as User[];
 
     if (users.length === 0) {
       console.warn("No users found");

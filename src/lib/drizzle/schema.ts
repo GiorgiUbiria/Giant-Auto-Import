@@ -19,14 +19,14 @@ export const userTable = sqliteTable("user", {
   password: text("password").notNull(),
   roleId: integer("role_id")
     .notNull()
-    .references(() => rolesTable.id),
+    .references(() => rolesTable.id, { onDelete: "cascade" }),
 });
 
 export const sessionTable = sqliteTable("session", {
   id: text("id").notNull().primaryKey(),
   userId: text("user_id")
     .notNull()
-    .references(() => userTable.id),
+    .references(() => userTable.id, { onDelete: "cascade" }),
   expiresAt: integer("expires_at").notNull(),
 });
 
@@ -69,9 +69,11 @@ export const carTable = sqliteTable("car", {
   shipping: text("shipping"),
   specificationsId: integer("specifications_id").references(
     () => specificationsTable.id,
+    { onDelete: "cascade" }
   ),
   parkingDetailsId: integer("parking_details_id").references(
     () => parkingDetailsTable.id,
+    { onDelete: "cascade" }
   ),
 });
 
@@ -85,8 +87,10 @@ export const imageTable = sqliteTable("image", {
 export const userCarTable = sqliteTable(
   "user_car",
   {
-    carId: integer("car_id"),
-    userId: text("user_id"),
+    carId: integer("car_id")
+      .references(() => carTable.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .references(() => userTable.id, { onDelete: "cascade" }),
   },
   (table) => {
     return {
@@ -97,13 +101,12 @@ export const userCarTable = sqliteTable(
 
 export const priceTable = sqliteTable("price", {
   id: integer("id").primaryKey(),
-  amount: real("amount"),
+  totalAmount: real("total_amount"),
   currencyId: integer("currency_id").references(() => priceCurrencyTable.id),
   carId: integer("car_id")
     .references(() => carTable.id, { onDelete: "cascade" }),
   userId: integer("user_id")
     .references(() => userTable.id, { onDelete: "cascade" }),
-  paymentDate: text("payment_date"),
 });
 
 export const priceCurrencyTable = sqliteTable("price_currency", {

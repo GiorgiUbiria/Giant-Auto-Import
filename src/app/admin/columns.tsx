@@ -122,6 +122,18 @@ export const columns: ColumnDef<CarData>[] = [
     header: "Destination Port",
   },
   {
+    accessorKey: "price",
+    header: "Price",
+  },
+  {
+    accessorKey: "price_currency",
+    header: "Currency",
+  },
+  {
+    accessorKey: "transaction",
+    header: "Transaction",
+  },
+  {
     id: "actions",
     cell: ({ row }) => {
       const vin = row.getValue("vin") as string;

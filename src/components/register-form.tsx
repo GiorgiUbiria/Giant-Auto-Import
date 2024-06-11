@@ -19,7 +19,7 @@ export function RegisterForm() {
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" placeholder="Maxim" name="name" pattern="^[a-zA-Z ]+$" required />
+              <Input id="name" placeholder="Maxim" name="name" /* pattern="^[a-zA-Z ]+$" */ required />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="phone">Phone</Label>

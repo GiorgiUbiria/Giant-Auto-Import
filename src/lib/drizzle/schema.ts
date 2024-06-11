@@ -51,9 +51,11 @@ export const specificationsTable = sqliteTable("specifications", {
 
 export const parkingDetailsTable = sqliteTable("parking_details", {
   id: integer("id").primaryKey(),
-  fined: text("fined"),
-  arrived: text("arrived"),
-  status: text("status"),
+  fined: integer("fined", { mode: "boolean" }),
+  arrived: integer("arrived", { mode: "boolean" }),
+  status: text("status", {
+    enum: ["Pending", "OnHand", "Loaded", "InTransit", "Fault"],
+  }),
   parkingDateString: text("parking_date_string"),
 });
 
@@ -62,18 +64,18 @@ export const carTable = sqliteTable("car", {
   vin: text("vin"),
   originPort: text("origin_port"),
   destinationPort: text("destination_port"),
-  departureDate: text("departure_date"),
-  arrivalDate: text("arrival_date"),
+  departureDate: integer("departure_date", { mode: "timestamp" }),
+  arrivalDate: integer("arrival_date", { mode: "timestamp" }),
   auction: text("auction"),
-  createdAt: text("created_at"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }),
   shipping: text("shipping"),
   specificationsId: integer("specifications_id").references(
     () => specificationsTable.id,
-    { onDelete: "cascade" }
+    { onDelete: "cascade" },
   ),
   parkingDetailsId: integer("parking_details_id").references(
     () => parkingDetailsTable.id,
-    { onDelete: "cascade" }
+    { onDelete: "cascade" },
   ),
 });
 
@@ -87,10 +89,12 @@ export const imageTable = sqliteTable("image", {
 export const userCarTable = sqliteTable(
   "user_car",
   {
-    carId: integer("car_id")
-      .references(() => carTable.id, { onDelete: "cascade" }),
-    userId: text("user_id")
-      .references(() => userTable.id, { onDelete: "cascade" }),
+    carId: integer("car_id").references(() => carTable.id, {
+      onDelete: "cascade",
+    }),
+    userId: text("user_id").references(() => userTable.id, {
+      onDelete: "cascade",
+    }),
   },
   (table) => {
     return {
@@ -103,10 +107,12 @@ export const priceTable = sqliteTable("price", {
   id: integer("id").primaryKey(),
   totalAmount: real("total_amount"),
   currencyId: integer("currency_id").references(() => priceCurrencyTable.id),
-  carId: integer("car_id")
-    .references(() => carTable.id, { onDelete: "cascade" }),
-  userId: integer("user_id")
-    .references(() => userTable.id, { onDelete: "cascade" }),
+  carId: integer("car_id").references(() => carTable.id, {
+    onDelete: "cascade",
+  }),
+  userId: integer("user_id").references(() => userTable.id, {
+    onDelete: "cascade",
+  }),
 });
 
 export const priceCurrencyTable = sqliteTable("price_currency", {

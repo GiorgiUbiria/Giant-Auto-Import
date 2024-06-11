@@ -1,6 +1,11 @@
 "use server";
 
-import { CarData, User, UserWithCarsAndSpecs } from "@/lib/interfaces";
+import {
+  CarData,
+  CarStatus,
+  User,
+  UserWithCarsAndSpecs,
+} from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 import { db } from "../drizzle/db";
 import {
@@ -10,6 +15,9 @@ import {
   userTable,
   userCarTable,
   imageTable,
+  priceTable,
+  priceCurrencyTable,
+  transactionTable,
 } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 
@@ -17,9 +25,10 @@ type NewUserCar = typeof userCarTable.$inferInsert;
 type NewCar = typeof carTable.$inferInsert;
 type NewSpecification = typeof specificationsTable.$inferInsert;
 type NewParkingDetails = typeof parkingDetailsTable.$inferInsert;
+type NewPrice = typeof priceTable.$inferInsert;
 
 const insertCar = async (car: NewCar) => {
-  return db.insert(carTable).values(car);
+  return db.insert(carTable).values(car).returning({ carId: carTable.id });
 };
 
 const insertSpecification = async (specification: NewSpecification) => {
@@ -34,6 +43,13 @@ const insertParkingDetails = async (parkingDetails: NewParkingDetails) => {
     .insert(parkingDetailsTable)
     .values(parkingDetails)
     .returning({ parkingDetailsId: parkingDetailsTable.id });
+};
+
+const insertPrice = async (price: NewPrice) => {
+  return db
+    .insert(priceTable)
+    .values(price)
+    .returning({ priceId: priceTable.id });
 };
 
 const insertUserCar = async (userCar: NewUserCar) => {
@@ -165,66 +181,92 @@ export async function addCarToDb(formData: FormData): Promise<void> {
   try {
     const convertFormData = (key: string, defaultValue: any = null) => {
       const value = formData.get(key);
-      switch (typeof defaultValue) {
-        case "boolean":
-          return value === "true" ? 1 : 0;
-        case "string":
-          return value?.toString() ?? defaultValue;
-        default:
-          return value ?? defaultValue;
+
+      if (typeof defaultValue === "boolean") {
+        return value === "true" ? 1 : 0;
+      } else if (typeof defaultValue === "string") {
+        return value?.toString() ?? defaultValue;
+      } else if (defaultValue instanceof Date) {
+        let dateValue: Date | null = null;
+        if (typeof value === "string") {
+          dateValue = new Date(value);
+        }
+
+        if (dateValue !== null && !isNaN(dateValue.getTime())) {
+          return dateValue;
+        } else {
+          return defaultValue;
+        }
+      } else if (typeof defaultValue === "number") {
+        return value ? Number(value) : defaultValue;
+      } else {
+        return value ?? defaultValue;
       }
     };
 
-    const vin = convertFormData("vin", null);
-    const carfax = convertFormData("carfax", null);
-    const year = convertFormData("year", null);
-    const make = convertFormData("make", null);
-    const model = convertFormData("model", null);
-    const trim = convertFormData("trim", null);
-    const manufacturer = convertFormData("manufacturer", null);
-    const bodyType = convertFormData("bodyType", null);
-    const country = convertFormData("country", null);
-    const engineType = convertFormData("engineType", null);
-    const titleNumber = convertFormData("titleNumber", null);
-    const titleState = convertFormData("titleState", null);
-    const color = convertFormData("color", null);
-    const fuelType = convertFormData("fuelType", null);
+    const vin = convertFormData("vin");
+    const carfax = convertFormData("carfax");
+    const year = convertFormData("year", 0);
+    const make = convertFormData("make");
+    const model = convertFormData("model");
+    const trim = convertFormData("trim");
+    const manufacturer = convertFormData("manufacturer");
+    const bodyType = convertFormData("bodyType");
+    const country = convertFormData("country");
+    const engineType = convertFormData("engineType");
+    const titleNumber = convertFormData("titleNumber");
+    const titleState = convertFormData("titleState");
+    const color = convertFormData("color");
+    const fuelType = convertFormData("fuelType");
 
     const fined = convertFormData("fined", false);
     const arrived = convertFormData("arrived", false);
-    const status = convertFormData("status", null);
-    const parkingDateString = convertFormData("parkingDateString", null);
+    const status = convertFormData("status", "Pending" as CarStatus);
+    const parkingDateString = convertFormData("parkingDateString");
 
-    const originPort = convertFormData("originPort", null);
-    const destinationPort = convertFormData("destinationPort", null);
-    const departureDate = convertFormData("departureDate", null);
-    const arrivalDate = convertFormData("arrivalDate", null);
-    const auction = convertFormData("auction", null);
-    const createdAt = convertFormData("createdAt", null);
-    const shipping = convertFormData("shipping", null);
+    const originPort = convertFormData("originPort");
+    const destinationPort = convertFormData("destinationPort");
+    const departureDateValue = formData.get("departureDate");
+    const arrivalDateValue = formData.get("arrivalDate");
+    const createdAtValue = formData.get("createdAt");
+    const auction = convertFormData("auction");
+    const shipping = convertFormData("shipping");
+
+    const price = convertFormData("price", 0);
+    const priceCurrency = convertFormData("priceCurrency", 0);
+
+    const departureDate = typeof departureDateValue === "string"
+      ? new Date(departureDateValue)
+      : null;
+    const arrivalDate = typeof arrivalDateValue === "string"
+      ? new Date(arrivalDateValue)
+      : null;
+    const createdAt = typeof createdAtValue === "string"
+      ? new Date(createdAtValue)
+      : null;
 
     const specifications: NewSpecification = {
       vin: vin,
-      carfax: carfax || null,
-      year: year || null,
-      make: make || null,
-      model: model || null,
-      trim: trim || null,
-      manufacturer: manufacturer || null,
-      bodyType: bodyType || null,
-      country: country || null,
-      engineType: engineType || null,
-      titleNumber: titleNumber || null,
-      titleState: titleState || null,
-      color: color || null,
-      runndrive: fuelType || null,
+      carfax: carfax,
+      year: year,
+      make: make,
+      model: model,
+      trim: trim,
+      manufacturer: manufacturer,
+      bodyType: bodyType,
+      country: country,
+      engineType: engineType,
+      titleNumber: titleNumber,
+      titleState: titleState,
+      color: color,
+      runndrive: fuelType,
     };
 
     const parkingDetails: NewParkingDetails = {
-      fined: fined ? "true" : fined || null,
-      arrived: arrived ? "true" : arrived || null,
-      status: status || null,
-      parkingDateString: parkingDateString || null,
+      fined: fined,
+      arrived: arrived,
+      status: status,
+      parkingDateString: parkingDateString,
     };
 
     const specificationsId = await insertSpecification(specifications);
@@ -232,18 +274,26 @@ export async function addCarToDb(formData: FormData): Promise<void> {
 
     const car: NewCar = {
       vin: vin,
-      originPort: originPort || null,
-      destinationPort: destinationPort || null,
-      departureDate: departureDate || null,
-      arrivalDate: arrivalDate || null,
-      auction: auction || null,
-      createdAt: createdAt?.toString() || null,
-      shipping: shipping?.name?.toString() || null,
+      originPort: originPort,
+      destinationPort: destinationPort,
+      departureDate: departureDate,
+      arrivalDate: arrivalDate,
+      createdAt: createdAt,
+      auction: auction,
+      shipping: shipping,
       specificationsId: specificationsId[0].specificationsId,
       parkingDetailsId: parkingDetailsId[0].parkingDetailsId,
     };
 
-    await insertCar(car);
+    const carId = await insertCar(car);
+
+    const newPrice: NewPrice = {
+      totalAmount: price as number,
+      currencyId: priceCurrency as number,
+      carId: carId[0].carId,
+    };
+
+    await insertPrice(newPrice);
 
     console.log(`Car with VIN ${vin} added successfully.`);
   } catch (error) {
@@ -301,7 +351,11 @@ export async function assignCarToUser(
 
 export async function getUsers(): Promise<User[] | undefined> {
   try {
-    const users: User[] = (await db.select().from(userTable).where(eq(userTable.roleId, 1)).all()) as User[];
+    const users: User[] = (await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.roleId, 1))
+      .all()) as User[];
 
     if (users.length === 0) {
       console.warn("No users found");
@@ -344,7 +398,7 @@ export async function getUser(
 
 export async function getCarsFromDatabase(): Promise<CarData[]> {
   try {
-    const cars: CarData[] = (await db
+    const cars = (await db
       .select()
       .from(carTable)
       .leftJoin(
@@ -355,6 +409,12 @@ export async function getCarsFromDatabase(): Promise<CarData[]> {
         parkingDetailsTable,
         eq(carTable.parkingDetailsId, parkingDetailsTable.id),
       )
+      .leftJoin(priceTable, eq(carTable.id, priceTable.carId))
+      .leftJoin(
+        priceCurrencyTable,
+        eq(priceTable.currencyId, priceCurrencyTable.id),
+      )
+      .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
       .all()) as CarData[];
 
     if (cars.length === 0) {
@@ -372,7 +432,7 @@ export async function getCarsFromDatabaseForUser(
   id: string,
 ): Promise<CarData[]> {
   try {
-    const cars: CarData[] = await db
+    const cars: CarData[] = (await db
       .select()
       .from(userCarTable)
       .innerJoin(carTable, eq(userCarTable.carId, carTable.id))
@@ -385,7 +445,7 @@ export async function getCarsFromDatabaseForUser(
         eq(carTable.parkingDetailsId, parkingDetailsTable.id),
       )
       .where(eq(userCarTable.userId, id))
-      .all();
+      .all()) as CarData[];
 
     if (cars.length === 0) {
       throw new Error("No cars found");

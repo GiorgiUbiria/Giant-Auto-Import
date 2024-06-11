@@ -9,6 +9,7 @@ import {
   specificationsTable,
 } from "../drizzle/schema";
 import { APICarResponse, APICar } from "../api-interfaces";
+import { CarStatus } from "../interfaces";
 
 type NewCar = typeof carTable.$inferInsert;
 type NewSpecification = typeof specificationsTable.$inferInsert;
@@ -129,15 +130,11 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
       };
 
       const newParkingDetails: NewParkingDetails = {
-        fined:
-          parkingDetails?.fined === true
-            ? "true"
-            : parkingDetails?.fined || null,
-        arrived:
-          parkingDetails?.arrived === true
-            ? "true"
-            : parkingDetails?.arrived || null,
-        status: parkingDetails?.status || null,
+        fined: parkingDetails?.fined === true ? true : false,
+        arrived: parkingDetails?.arrived === true ? true : false,
+        status: parkingDetails?.status
+          ? (parkingDetails?.status as CarStatus)
+          : null,
         parkingDateString: parkingDetails?.parkingDateString || null,
       };
 
@@ -148,10 +145,10 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
         vin: specifications?.vin || "",
         originPort: shipment?.originPort?.toString() || null,
         destinationPort: shipment?.destinationPort?.toString() || null,
-        departureDate: shipment?.departureDate?.toString() || null,
-        arrivalDate: shipment?.arrivalDate?.toString() || null,
+        departureDate: shipment?.departureDate ?  new Date(shipment?.departureDate!) : new Date(),
+        arrivalDate: shipment?.arrivalDate ?  new Date(shipment?.arrivalDate!) : new Date(),
         auction: auction?.name?.toString() || null,
-        createdAt: createdAt?.toString() || null,
+        createdAt: createdAt ?  new Date(createdAt) : null,
         shipping: shipping?.name?.toString() || null,
         specificationsId: spId[0].specificationsId,
         parkingDetailsId: pdId[0].parkingDetailsId,

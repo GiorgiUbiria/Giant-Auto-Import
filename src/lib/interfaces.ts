@@ -1,26 +1,26 @@
 interface Specifications {
   id: number;
   vin: string | null;
-  carfax: string | null; // Allow carfax to be null
-  year: string | null; // Allow year to be null
-  make: string | null; // Allow make to be null
-  model: string | null; // Allow model to be null
-  trim: string | null; // Allow trim to be null
-  manufacturer: string | null; // Allow manufacturer to be null
-  bodyType: string | null; // Allow bodyType to be null
-  country: string | null; // Allow country to be null
-  engineType: string | null; // Allow engineType to be null
-  titleNumber: string | null; // Allow titleNumber to be null
-  titleState: string | null; // Allow titleState to be null
-  color: string | null; // Allow color to be null
-  runndrive: string | null; // Allow runndrive to be null
+  carfax: string | null;
+  year: string | null;
+  make: string | null;
+  model: string | null;
+  trim: string | null;
+  manufacturer: string | null;
+  bodyType: string | null;
+  country: string | null;
+  engineType: string | null;
+  titleNumber: string | null;
+  titleState: string | null;
+  color: string | null;
+  runndrive: string | null;
   fuelType: string | null;
 }
 
 interface ParkingDetails {
   id: number;
   fined: string | null;
-  arrived: string | null; // Allow arrived to be null
+  arrived: string | null;
   status: string | null;
   parkingDateString: string | null;
 }
@@ -58,10 +58,20 @@ export type Image = {
   imageType?: "Arrival" | "Container";
 }
 
+export type Transaction = {
+  priceId: number | null;
+  userId: number | null;
+  carId: number | null;
+  paymentDate: string | null;
+}
+
 export type CarData = {
   car: Car;
   specifications: Specifications | null;
   parking_details: ParkingDetails | null;
+  price?: number | null;
+  price_currency?: string | null;
+  transaction?: Transaction | null;
   images?: Image[];
 };
 
@@ -90,3 +100,7 @@ export interface APIAssetsResponse {
 export interface GalleryImage {
   imgelink: string;
 }
+
+export type CarStatus = "Pending" | "InTransit" | "OnHand" | "Loaded" | "Fault";
+
+export type Currency = "USD" | "EUR" | "GEL"

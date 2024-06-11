@@ -125,7 +125,13 @@ export default async function AddCarForm() {
             <label htmlFor="status" className="text-right">
               Status
             </label>
-            <input id="status" name="status" className="col-span-3" />
+            <select id="status" name="status" className="col-span-3">
+              <option value="Pending">Pending</option>
+              <option value="OnHand">OnHand</option>
+              <option value="Loaded">Loaded</option>
+              <option value="InTransit">InTransit</option>
+              <option value="Fault">Fault</option>
+            </select>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <label htmlFor="parkingDateString" className="text-right">
@@ -202,6 +208,35 @@ export default async function AddCarForm() {
               Shipping
             </label>
             <input id="shipping" name="shipping" className="col-span-3" />
+          </div>
+        </fieldset>
+
+        <fieldset className="border p-4 mb-4">
+          <legend className="px-2 text-lg font-semibold">Price</legend>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="price" className="text-right">
+              Price
+            </label>
+            <input
+              id="price"
+              name="price"
+              className="col-span-3"
+              type="number"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="priceCurrency" className="text-right">
+              Currency
+            </label>
+            <select
+              id="priceCurrency"
+              name="priceCurrency"
+              className="col-span-3"
+            >
+              <option value="1">GEL</option>
+              <option value="2">USD</option>
+              <option value="3">USD</option>
+            </select>
           </div>
         </fieldset>
 

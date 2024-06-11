@@ -1,8 +1,7 @@
 "use server";
 
-import { APIAssetsResponse } from "@/lib/interfaces";
+import { APIAssets } from "@/lib/interfaces";
 import { ensureToken } from "./tokenActions";
-import sharp from "sharp";
 import { APICarResponse } from "../api-interfaces";
 import { fetchCars } from "./actions";
 import { db } from "../drizzle/db";
@@ -38,24 +37,23 @@ export async function updateLocalDatabaseImages(): Promise<void> {
       const { specifications } = data;
 
       if (specifications?.vin) {
-        const assets: APIAssetsResponse | undefined = await fetchAssets(
-          specifications.vin,
-        );
+        const vin = specifications.vin;
+        const assets: APIAssets[] | undefined = await fetchAssets(vin);
 
-        if (assets) {
-          const images = assets.assets.filter(
-            (asset) => asset.type.toLowerCase() === "image",
-          );
+        console.log(assets);
+
+        if (assets && Array.isArray(assets)) {
+          const images = assets.filter((asset: APIAssets) => asset.type.toLowerCase() === "image");
           if (images.length > 0) {
             for (const image of images) {
               const imageUrl = image.value;
-              await insertImage(specifications.vin, imageUrl);
+              await insertImage(vin, imageUrl);
             }
           } else {
-            console.log(`No image assets found for VIN: ${specifications.vin}`);
+            console.log(`No image assets found for VIN: ${vin}`);
           }
         } else {
-          console.log(`No assets found for VIN: ${specifications.vin}`);
+          console.log(`No assets found for VIN: ${vin}`);
         }
       } else {
         console.log("VIN is undefined for car:", data);
@@ -68,7 +66,7 @@ export async function updateLocalDatabaseImages(): Promise<void> {
 
 export async function fetchAssets(
   vin: string,
-): Promise<APIAssetsResponse | undefined> {
+): Promise<APIAssets[] | undefined> {
   try {
     const token = await ensureToken();
 
@@ -92,28 +90,11 @@ export async function fetchAssets(
       );
     }
 
-    const data: APIAssetsResponse = await res.json();
+    const data: APIAssets[] = await res.json();
+
     return data;
   } catch (error) {
     console.error(`Error fetching assets for VIN: ${vin}:`, error);
     return undefined;
   }
-}
-
-export async function compressImageBuffer(imageBuffer: Buffer) {
-  const compressedBuffer = await sharp(imageBuffer)
-    .resize({ width: 400 })
-    .jpeg({ quality: 50 })
-    .toBuffer();
-
-  return compressedBuffer;
-}
-
-export async function fetchImageBuffer(imageUrl: string): Promise<Buffer> {
-  const response = await fetch(imageUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch image from ${imageUrl}`);
-  }
-  const arrayBuffer = await response.arrayBuffer();
-  return Buffer.from(arrayBuffer);
 }

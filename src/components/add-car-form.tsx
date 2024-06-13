@@ -1,10 +1,11 @@
 import { addCarToDb } from "@/lib/actions/dbActions";
+import { Form } from "@/lib/form";
 
 export default async function AddCarForm() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h2 className="text-xl font-bold mb-4">Add New Car</h2>
-      <form action={addCarToDb}>
+      <Form action={addCarToDb}>
         <fieldset className="border p-4 mb-4">
           <legend className="px-2 text-lg font-semibold">Specifications</legend>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -246,7 +247,7 @@ export default async function AddCarForm() {
         >
           Submit
         </button>
-      </form>
+      </Form>
     </div>
   );
 }

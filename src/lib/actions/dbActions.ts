@@ -20,12 +20,22 @@ import {
   transactionTable,
 } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
+import countries from "../../../public/countries.json";
+import { ActionResult } from "next/dist/server/app-render/types";
 
 type NewUserCar = typeof userCarTable.$inferInsert;
 type NewCar = typeof carTable.$inferInsert;
 type NewSpecification = typeof specificationsTable.$inferInsert;
 type NewParkingDetails = typeof parkingDetailsTable.$inferInsert;
 type NewPrice = typeof priceTable.$inferInsert;
+
+enum CarStatusEnum {
+  Pending = "Pending",
+  InTransit = "InTransit",
+  OnHand = "OnHand",
+  Loaded = "Loaded",
+  Fault = "Fault",
+}
 
 const insertCar = async (car: NewCar) => {
   return db.insert(carTable).values(car).returning({ carId: carTable.id });
@@ -177,7 +187,10 @@ export async function updateCarInDb(
   }
 }
 
-export async function addCarToDb(formData: FormData): Promise<void> {
+export async function addCarToDb(
+  _: any,
+  formData: FormData,
+): Promise<ActionResult | undefined> {
   try {
     const convertFormData = (key: string, defaultValue: any = null) => {
       const value = formData.get(key);
@@ -205,45 +218,134 @@ export async function addCarToDb(formData: FormData): Promise<void> {
     };
 
     const vin = convertFormData("vin");
+    if (!vin || !(vin.length < 50 && vin.length > 6)) {
+      return { error: "VIN is required" };
+    }
     const carfax = convertFormData("carfax");
+    if (!carfax || !(carfax.length < 50 && carfax.length > 6)) {
+      return { error: "Carfax is required" };
+    }
     const year = convertFormData("year", 0);
+    if (!year || year < 1900 || year > new Date().getFullYear()) {
+      return {
+        error: "Year is required and must be between 1900 and Current Year",
+      };
+    }
     const make = convertFormData("make");
+    if (!make || !(make.length < 50 && make.length > 6)) {
+      return { error: "Make is required" };
+    }
     const model = convertFormData("model");
+    if (!model || !(model.length < 50 && model.length > 6)) {
+      return { error: "Model is required" };
+    }
     const trim = convertFormData("trim");
+    if (!trim || !(trim.length < 50 && trim.length > 6)) {
+      return { error: "Trim is required" };
+    }
     const manufacturer = convertFormData("manufacturer");
+    if (
+      !manufacturer ||
+      !(manufacturer.length < 50 && manufacturer.length > 6)
+    ) {
+      return { error: "Manufacturer is required" };
+    }
     const bodyType = convertFormData("bodyType");
+    if (!bodyType || !(bodyType.length < 50 && bodyType.length > 6)) {
+      return { error: "Body Type is required" };
+    }
     const country = convertFormData("country");
+    if (!country || !countries.some((c) => c.name === country)) {
+      return { error: "Country is required" };
+    }
     const engineType = convertFormData("engineType");
+    if (!engineType || engineType.length < 50 || engineType.length > 100) {
+      return { error: "Engine Type is required" };
+    }
     const titleNumber = convertFormData("titleNumber");
+    if (!titleNumber || titleNumber.length < 50 || titleNumber.length > 100) {
+      return { error: "Title Number is required" };
+    }
     const titleState = convertFormData("titleState");
+    if (!titleState || titleState.length < 50 || titleState.length > 100) {
+      return { error: "Title State is required" };
+    }
     const color = convertFormData("color");
+    if (!color || color.length < 50 || color.length > 100) {
+      return { error: "Color is required" };
+    }
     const fuelType = convertFormData("fuelType");
+    if (!fuelType || fuelType.length < 50 || fuelType.length > 100) {
+      return { error: "Fuel Type is required" };
+    }
 
     const fined = convertFormData("fined", false);
+    if (!fined) {
+      return { error: "Fined is required" };
+    }
     const arrived = convertFormData("arrived", false);
+    if (!arrived) {
+      return { error: "Arrived is required" };
+    }
     const status = convertFormData("status", "Pending" as CarStatus);
+    if (!status || Object.values(CarStatusEnum).includes(status)) {
+      return { error: "Status is required" };
+    }
     const parkingDateString = convertFormData("parkingDateString");
+    if (!parkingDateString || new Date(parkingDateString).getTime() === 0) {
+      return { error: "Parking Date String is required" };
+    }
 
     const originPort = convertFormData("originPort");
+    if (!originPort || originPort.length < 50 || originPort.length > 100) {
+      return { error: "Origin Port is required" };
+    }
     const destinationPort = convertFormData("destinationPort");
+    if (
+      !destinationPort ||
+      destinationPort.length < 50 ||
+      destinationPort.length > 100
+    ) {
+      return { error: "Destination Port is required" };
+    }
     const departureDateValue = formData.get("departureDate");
+    if (!departureDateValue) {
+      return { error: "Departure Date is required" };
+    }
     const arrivalDateValue = formData.get("arrivalDate");
+    if (!arrivalDateValue) {
+      return { error: "Arrival Date is required" };
+    }
     const createdAtValue = formData.get("createdAt");
+    if (!createdAtValue) {
+      return { error: "Created At is required" };
+    }
     const auction = convertFormData("auction");
+    if (!auction) {
+      return { error: "Auction is required" };
+    }
     const shipping = convertFormData("shipping");
+    if (!shipping) {
+      return { error: "Shipping is required" };
+    }
 
     const price = convertFormData("price", 0);
+    if (!price || price < 0) {
+      return { error: "Price is required" };
+    }
     const priceCurrency = convertFormData("priceCurrency", 0);
+    if (!priceCurrency || priceCurrency < 1 || priceCurrency > 3) {
+      return { error: "Price Currency is required" };
+    }
 
-    const departureDate = typeof departureDateValue === "string"
-      ? new Date(departureDateValue)
-      : null;
-    const arrivalDate = typeof arrivalDateValue === "string"
-      ? new Date(arrivalDateValue)
-      : null;
-    const createdAt = typeof createdAtValue === "string"
-      ? new Date(createdAtValue)
-      : null;
+    const departureDate =
+      typeof departureDateValue === "string"
+        ? new Date(departureDateValue)
+        : null;
+    const arrivalDate =
+      typeof arrivalDateValue === "string" ? new Date(arrivalDateValue) : null;
+    const createdAt =
+      typeof createdAtValue === "string" ? new Date(createdAtValue) : null;
 
     const specifications: NewSpecification = {
       vin: vin,
@@ -296,9 +398,17 @@ export async function addCarToDb(formData: FormData): Promise<void> {
     await insertPrice(newPrice);
 
     console.log(`Car with VIN ${vin} added successfully.`);
+
+    return {
+      error: null,
+      success: "Car added successfully",
+    }
   } catch (error) {
     console.error(error);
-    throw new Error("Failed to add car to database");
+    return {
+      error: "Failed to add car to database",
+      success: null,
+    }
   }
 }
 

@@ -1,57 +1,63 @@
 "use client";
 
 import * as React from "react";
+import { CarData } from "@/lib/interfaces";
 import { useFormState, useFormStatus } from "react-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { addCarToDb } from "@/lib/actions/actions.addCar";
 import { formSchema } from "./formSchema";
 import { toast } from "sonner";
 import { ErrorMessage } from "@hookform/error-message";
 import countries from "../../../public/countries.json";
+import { EditCarPayload, editCarInDb } from "@/lib/actions/actions.editCar";
 
 const initialState = {
   error: null,
   success: null,
 };
 
-type FormValues = z.infer<typeof formSchema>;
+export type FormValues = z.infer<typeof formSchema>;
 
-export default function AddForm() {
+export default function EditForm({ car }: { car: CarData }) {
   const [loading, setTransitioning] = React.useTransition();
-  const [state, formAction] = useFormState(addCarToDb, initialState);
+  const [state, formAction] = useFormState(editCarInDb, initialState);
   const { pending } = useFormStatus();
   const { handleSubmit, register, formState } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      vin: "",
-      fined: false,
-      price: "0",
+      vin: car.car.vin!,
+      fined: car.parking_details?.fined === "true" ? true : false,
+      price: car.price?.toString()!,
       priceCurrency: "1",
-      make: "",
-      model: "",
-      trim: "",
-      manufacturer: "",
-      bodyType: "",
-      country: "",
-      engineType: "",
-      titleNumber: "",
-      titleState: "",
-      color: "",
-      fuelType: "",
-      shipping: "",
-      originPort: "",
-      destinationPort: "",
-      auction: "",
-      status: "",
+      make: car.specifications?.make!,
+      model: car.specifications?.model!,
+      trim: car.specifications?.trim!,
+      manufacturer: car.specifications?.manufacturer!,
+      bodyType: car.specifications?.bodyType!,
+      country: car.specifications?.country!,
+      engineType: car.specifications?.engineType!,
+      titleNumber: car.specifications?.titleNumber!,
+      titleState: car.specifications?.titleState!,
+      color: car.specifications?.color!,
+      fuelType: car.specifications?.fuelType!,
+      shipping: car.car?.shipping!,
+      originPort: car.car?.originPort!,
+      destinationPort: car.car?.destinationPort!,
+      auction: car.car?.auction!,
+      status: car.parking_details?.status!,
+      year: car.specifications?.year!,
+      departureDate: new Date(car.car?.departureDate!),
+      arrivalDate: new Date(car.car?.arrivalDate!),
+      parkingDateString: new Date(car.parking_details?.parkingDateString!),
     },
   });
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     console.log("Submitting form data:", data);
     setTransitioning(async () => {
-      const res = await addCarToDb(state, data);
+      const payload: EditCarPayload = { id: car.car.id, values: data };
+      const res = await editCarInDb(state, payload);
       if (res.error !== null) {
         toast.error(res.error);
         console.error(res.error);
@@ -301,7 +307,7 @@ export default function AddForm() {
       <select
         id="fined"
         {...register("fined", {
-          setValueAs: v => v === "true" ? true : false,
+          setValueAs: (v) => (v === "true" ? true : false),
         })}
         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
       >
@@ -316,7 +322,7 @@ export default function AddForm() {
       <select
         id="arrived"
         {...register("arrived", {
-          setValueAs: v => v === "true" ? true : false,
+          setValueAs: (v) => (v === "true" ? true : false),
         })}
         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
       >
@@ -353,25 +359,37 @@ export default function AddForm() {
         name="priceCurrency"
         render={({ message }) => <p>{message}</p>}
       />
-      <input type="date" id="departureDate" {...register("departureDate", {
-        valueAsDate: true
-      })} />
+      <input
+        type="date"
+        id="departureDate"
+        {...register("departureDate", {
+          valueAsDate: true,
+        })}
+      />
       <ErrorMessage
         errors={formState.errors}
         name="departureDate"
         render={({ message }) => <p>{message}</p>}
       />
-      <input type="date" id="arrivalDate" {...register("arrivalDate", {
-        valueAsDate: true
-      })} />
+      <input
+        type="date"
+        id="arrivalDate"
+        {...register("arrivalDate", {
+          valueAsDate: true,
+        })}
+      />
       <ErrorMessage
         errors={formState.errors}
         name="arrivalDate"
         render={({ message }) => <p>{message}</p>}
       />
-      <input type="date" id="parkingDateString" {...register("parkingDateString", {
-        valueAsDate: true
-      })} />
+      <input
+        type="date"
+        id="parkingDateString"
+        {...register("parkingDateString", {
+          valueAsDate: true,
+        })}
+      />
       <ErrorMessage
         errors={formState.errors}
         name="parkingDateString"

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { validateRequest } from "@/lib/auth";
-import { updateLocalDatabaseFromAPI } from "@/lib/actions/actions";
+import { fetchCars, updateLocalDatabaseFromAPI } from "@/lib/actions/actions";
 import { updateLocalDatabaseImages } from "@/lib/actions/imageActions";
 import { getCarsFromDatabase } from "@/lib/actions/dbActions";
 
@@ -21,8 +21,6 @@ export default async function Page() {
   if (!cars) {
     return <p> No cars fetched. </p>
   }
-
-  console.log(cars[cars.length - 1])
 
   return (
     <div className="container-fluid mx-auto py-10">

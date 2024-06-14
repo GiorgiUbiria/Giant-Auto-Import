@@ -1,4 +1,4 @@
-import EditCarForm from "@/components/edit-car-form";
+import EditCarForm from "@/components/editCar/edit-car-form";
 import { getCarFromDatabase } from "@/lib/actions/dbActions";
 import { CarData } from "@/lib/interfaces";
 import { validateRequest } from "@/lib/auth";

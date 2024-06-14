@@ -53,6 +53,7 @@ export async function fetchCars(): Promise<APICarResponse | undefined> {
     }
 
     const data: APICarResponse | undefined = await res.json();
+
     return data;
   } catch (error) {
     console.error("Error fetching cars:", error);

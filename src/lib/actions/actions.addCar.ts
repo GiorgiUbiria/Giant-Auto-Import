@@ -10,7 +10,8 @@ import {
   specificationsTable,
 } from "../drizzle/schema";
 import { db } from "../drizzle/db";
-import { formSchema2 } from "@/components/addCar/formSchema2";
+import { validateAdmin } from "../validation";
+import { CarStatus } from "../interfaces";
 
 type NewCar = typeof carTable.$inferInsert;
 type NewSpecification = typeof specificationsTable.$inferInsert;
@@ -44,100 +45,100 @@ const insertPrice = async (price: NewPrice) => {
 
 export async function addCarToDb(
   prevState: any,
-  values: z.infer<typeof formSchema2>
+  values: z.infer<typeof formSchema>,
 ): Promise<ActionResult | undefined> {
-  // try {
-  //
-  // console.log(values)
-  // const result = formSchema.safeParse(values);
-  // if (!result.success) {
-  //   return { error: result.error.message };
-  // }
-  //
-  // console.log(result);
-  //
-  // return {
-  //   error: "Something"
-  // }
-  
-  // 
-  // const result = formSchema2.safeParse(formData);
-  // if (!result.success) {
-  //   console.log(result.error.message);
-  //   return { error: result.error.message };
-  // }
+  try {
+    const result = formSchema.safeParse(values);
+    if (!result.success) {
+      return { error: result.error.message };
+    }
 
+    const {
+      vin,
+      year,
+      make,
+      model,
+      manufacturer,
+      country,
+      status,
+      engineType,
+      fuelType,
+      titleNumber,
+      titleState,
+      color,
+      bodyType,
+      trim,
+      destinationPort,
+      originPort,
+      auction,
+      shipping,
+      departureDate,
+      arrivalDate,
+      parkingDateString,
+      fined,
+      arrived,
+      price,
+      priceCurrency,
+    } = result.data;
 
-  const result = formSchema2.safeParse(values);
-  if (!result.success) {
-    return { error: result.error.message };
-  } else {
+    const specifications: NewSpecification = {
+      vin: vin,
+      carfax: year + make + model + manufacturer + country,
+      year: year,
+      make: make,
+      model: model,
+      trim: trim,
+      manufacturer: manufacturer,
+      bodyType: bodyType,
+      country: country,
+      engineType: engineType,
+      titleNumber: titleNumber,
+      titleState: titleState,
+      color: color,
+      runndrive: fuelType,
+    };
+
+    const parkingDetails: NewParkingDetails = {
+      fined: fined,
+      arrived: arrived,
+      status: status as CarStatus,
+      parkingDateString: parkingDateString.toString(),
+    };
+
+    const specificationsId = await insertSpecification(specifications);
+    const parkingDetailsId = await insertParkingDetails(parkingDetails);
+
+    const car: NewCar = {
+      vin: vin,
+      originPort: originPort,
+      destinationPort: destinationPort,
+      departureDate: new Date(departureDate),
+      arrivalDate: new Date(arrivalDate),
+      createdAt: new Date(),
+      auction: auction,
+      shipping: shipping,
+      specificationsId: specificationsId[0].specificationsId,
+      parkingDetailsId: parkingDetailsId[0].parkingDetailsId,
+    };
+
+    const carId = await insertCar(car);
+
+    const newPrice: NewPrice = {
+      totalAmount: Number(price) as number,
+      currencyId: Number(priceCurrency) as number,
+      carId: carId[0].carId,
+    };
+
+    await insertPrice(newPrice);
+
     return {
       error: null,
       success: "Car added successfully",
-    }
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      error: "Failed to add car to database",
+    };
   }
-
-  //   const specifications: NewSpecification = {
-  //     vin: vin,
-  //     carfax: carfax,
-  //     year: year,
-  //     make: make,
-  //     model: model,
-  //     trim: trim,
-  //     manufacturer: manufacturer,
-  //     bodyType: bodyType,
-  //     country: country,
-  //     engineType: engineType,
-  //     titleNumber: titleNumber,
-  //     titleState: titleState,
-  //     color: color,
-  //     runndrive: fuelType,
-  //   };
-  //
-  //   const parkingDetails: NewParkingDetails = {
-  //     fined: fined,
-  //     arrived: arrived,
-  //     status: status,
-  //     parkingDateString: parkingDateString,
-  //   };
-  //
-  //   const specificationsId = await insertSpecification(specifications);
-  //   const parkingDetailsId = await insertParkingDetails(parkingDetails);
-  //
-  //   const car: NewCar = {
-  //     vin: vin,
-  //     originPort: originPort,
-  //     destinationPort: destinationPort,
-  //     departureDate: departureDate,
-  //     arrivalDate: arrivalDate,
-  //     createdAt: createdAt,
-  //     auction: auction,
-  //     shipping: shipping,
-  //     specificationsId: specificationsId[0].specificationsId,
-  //     parkingDetailsId: parkingDetailsId[0].parkingDetailsId,
-  //   };
-  //
-  //   const carId = await insertCar(car);
-  //
-  //   const newPrice: NewPrice = {
-  //     totalAmount: price as number,
-  //     currencyId: priceCurrency as number,
-  //     carId: carId[0].carId,
-  //   };
-  //
-  //   await insertPrice(newPrice);
-  //
-  //   console.log(`Car with VIN ${vin} added successfully.`);
-  //
-  //   return {
-  //     error: null,
-  //     success: "Car added successfully",
-  //   };
-  // } catch (error) {
-  //   console.error(error);
-  //   return {
-  //     error: "Failed to add car to database",
-  //   };
-  // }
 }

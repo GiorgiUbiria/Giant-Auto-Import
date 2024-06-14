@@ -22,6 +22,8 @@ export default async function Page() {
     return <p> No cars fetched. </p>
   }
 
+  console.log(cars[cars.length - 1])
+
   return (
     <div className="container-fluid mx-auto py-10">
       <form action={updateLocalDatabaseFromAPI} className="pb-12">

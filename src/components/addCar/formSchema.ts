@@ -90,13 +90,13 @@ export const formSchema = z.object({
           "Status must be one of the following options: Pending, OnHand, Loaded, InTransit, Fault.",
       },
     ),
-  parkingDateString: z.date(),
   originPort: z.string().min(3).max(50, {
     message: "Origin Port must be between 3 and 50 characters long.",
   }),
   destinationPort: z.string().min(3).max(50, {
     message: "Destination Port must be between 3 and 50 characters long.",
   }),
+  parkingDateString: z.date(),
   departureDate: z.date(),
   arrivalDate: z.date(),
   auction: z.string().min(3).max(50, {
@@ -116,7 +116,7 @@ export const formSchema = z.object({
       message: "Price must be a number between 0 and 150000.",
     },
   ),
-  priceCurrency: z.enum(["GEL", "USD", "EUR"], {
+  priceCurrency: z.enum(["1", "2", "3"], {
     message: "Price Currency must be between 1 and 3.",
   }),
 });

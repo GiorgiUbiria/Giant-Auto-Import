@@ -5,7 +5,7 @@ import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import Link from "next/link";
-import { CarData } from "@/lib/interfaces";
+import { CarData, Currency } from "@/lib/interfaces";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -124,10 +124,20 @@ export const columns: ColumnDef<CarData>[] = [
   {
     accessorKey: "price",
     header: "Price",
+    id: "price",
+    cell: ({ row }) => {
+      const price = row.getValue("price") as { id: number, totalAmount: number, currencyId: number };
+      return <p> {price?.totalAmount} </p>;
+    },
   },
   {
     accessorKey: "price_currency",
     header: "Currency",
+    id: "price_currency",
+    cell: ({ row }) => {
+      const currency = row.getValue("price_currency") as { id: number, currencyCode: Currency };
+      return <p> {currency?.currencyCode}</p>;
+    },
   },
   {
     accessorKey: "transaction",

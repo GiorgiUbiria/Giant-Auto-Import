@@ -10,6 +10,7 @@ import {
   specificationsTable,
 } from "../drizzle/schema";
 import { db } from "../drizzle/db";
+import { formSchema2 } from "@/components/addCar/formSchema2";
 
 type NewCar = typeof carTable.$inferInsert;
 type NewSpecification = typeof specificationsTable.$inferInsert;
@@ -43,7 +44,7 @@ const insertPrice = async (price: NewPrice) => {
 
 export async function addCarToDb(
   prevState: any,
-  formData: FormData
+  values: z.infer<typeof formSchema2>
 ): Promise<ActionResult | undefined> {
   // try {
   //
@@ -59,7 +60,23 @@ export async function addCarToDb(
   //   error: "Something"
   // }
   
-  console.log(formData)
+  // 
+  // const result = formSchema2.safeParse(formData);
+  // if (!result.success) {
+  //   console.log(result.error.message);
+  //   return { error: result.error.message };
+  // }
+
+
+  const result = formSchema2.safeParse(values);
+  if (!result.success) {
+    return { error: result.error.message };
+  } else {
+    return {
+      error: null,
+      success: "Car added successfully",
+    }
+  }
 
   //   const specifications: NewSpecification = {
   //     vin: vin,

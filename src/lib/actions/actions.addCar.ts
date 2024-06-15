@@ -10,8 +10,8 @@ import {
   specificationsTable,
 } from "../drizzle/schema";
 import { db } from "../drizzle/db";
-import { validateAdmin } from "../validation";
 import { CarStatus } from "../interfaces";
+import { revalidatePath } from "next/cache";
 
 type NewCar = typeof carTable.$inferInsert;
 type NewSpecification = typeof specificationsTable.$inferInsert;
@@ -74,7 +74,6 @@ export async function addCarToDb(
       shipping,
       departureDate,
       arrivalDate,
-      parkingDateString,
       fined,
       arrived,
       price,
@@ -102,7 +101,7 @@ export async function addCarToDb(
       fined: fined,
       arrived: arrived,
       status: status as CarStatus,
-      parkingDateString: parkingDateString.toString(),
+      parkingDateString: arrivalDate.toString(),
     };
 
     const specificationsId = await insertSpecification(specifications);
@@ -130,6 +129,8 @@ export async function addCarToDb(
     };
 
     await insertPrice(newPrice);
+
+    revalidatePath("/admin/");
 
     return {
       error: null,

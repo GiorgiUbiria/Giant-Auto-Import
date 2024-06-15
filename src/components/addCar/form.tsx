@@ -371,14 +371,6 @@ export default function AddForm() {
         name="arrivalDate"
         render={({ message }) => <p>{message}</p>}
       />
-      <input type="date" id="parkingDateString" {...register("parkingDateString", {
-        valueAsDate: true
-      })} />
-      <ErrorMessage
-        errors={formState.errors}
-        name="parkingDateString"
-        render={({ message }) => <p>{message}</p>}
-      />
       <button disabled={pending} type="submit">
         Submit
       </button>

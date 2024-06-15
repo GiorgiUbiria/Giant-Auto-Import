@@ -27,15 +27,6 @@ function formatDateToInputValue(date: Date | null): string {
   return `${year}-${month}-${day}`;
 }
 
-function formatDateToYYYYMMDD(dateString: string): string {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 export default function EditForm({ car }: { car: CarData }) {
   console.log(car);
   const [loading, setTransitioning] = React.useTransition();
@@ -351,8 +342,10 @@ export default function EditForm({ car }: { car: CarData }) {
         type="number"
         placeholder="price"
         id="price"
-        defaultValue={car.price?.totalAmount?.toString()}
-        {...register("price")}
+        defaultValue={car.price?.totalAmount}
+        {...register("price", {
+          valueAsNumber: true,
+        })}
       />
       <ErrorMessage
         errors={formState.errors}
@@ -398,23 +391,6 @@ export default function EditForm({ car }: { car: CarData }) {
       <ErrorMessage
         errors={formState.errors}
         name="arrivalDate"
-        render={({ message }) => <p>{message}</p>}
-      />
-      <input
-        type="date"
-        id="parkingDateString"
-        defaultValue={formatDateToYYYYMMDD(
-          car.parking_details?.parkingDateString
-            ? car.parking_details?.parkingDateString
-            : "",
-        )}
-        {...register("parkingDateString", {
-          valueAsDate: true,
-        })}
-      />
-      <ErrorMessage
-        errors={formState.errors}
-        name="parkingDateString"
         render={({ message }) => <p>{message}</p>}
       />
       <button disabled={pending} type="submit">

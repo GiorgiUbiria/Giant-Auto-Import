@@ -1,4 +1,4 @@
-interface Specifications {
+export interface Specifications {
   id: number;
   vin: string | null;
   carfax: string | null;
@@ -17,7 +17,7 @@ interface Specifications {
   fuelType: string | null;
 }
 
-interface ParkingDetails {
+export interface ParkingDetails {
   id: number;
   fined: string | null;
   arrived: string | null;
@@ -25,7 +25,7 @@ interface ParkingDetails {
   parkingDateString: string | null;
 }
 
-interface Car {
+export interface Car {
   id: number;
   vin: string | null;
   originPort: string | null;

@@ -96,7 +96,6 @@ export const formSchema = z.object({
   destinationPort: z.string().min(3).max(50, {
     message: "Destination Port must be between 3 and 50 characters long.",
   }),
-  parkingDateString: z.date(),
   departureDate: z.date(),
   arrivalDate: z.date(),
   auction: z.string().min(3).max(50, {

@@ -30,10 +30,10 @@ interface Car {
   vin: string | null;
   originPort: string | null;
   destinationPort: string | null;
-  departureDate: string | null;
-  arrivalDate: string | null;
+  departureDate: Date | null;
+  arrivalDate: Date | null;
   auction: string | null;
-  createdAt: string | null;
+  createdAt: Date | null;
   shipping: string | null;
   specificationsId: number | null;
   parkingDetailsId: number | null;

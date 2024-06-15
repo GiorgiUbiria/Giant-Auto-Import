@@ -19,7 +19,25 @@ const initialState = {
 
 export type FormValues = z.infer<typeof formSchema>;
 
+function formatDateToInputValue(date: Date | null): string {
+  if (!date) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatDateToYYYYMMDD(dateString: string): string {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export default function EditForm({ car }: { car: CarData }) {
+  console.log(car);
   const [loading, setTransitioning] = React.useTransition();
   const [state, formAction] = useFormState(editCarInDb, initialState);
   const { pending } = useFormStatus();
@@ -28,7 +46,7 @@ export default function EditForm({ car }: { car: CarData }) {
     defaultValues: {
       vin: car.car.vin!,
       fined: car.parking_details?.fined === "true" ? true : false,
-      price: car.price?.toString()!,
+      price: car.price?.toString() || "1500",
       priceCurrency: "1",
       make: car.specifications?.make!,
       model: car.specifications?.model!,
@@ -47,9 +65,6 @@ export default function EditForm({ car }: { car: CarData }) {
       auction: car.car?.auction!,
       status: car.parking_details?.status!,
       year: car.specifications?.year!,
-      departureDate: new Date(car.car?.departureDate!),
-      arrivalDate: new Date(car.car?.arrivalDate!),
-      parkingDateString: new Date(car.parking_details?.parkingDateString!),
     },
   });
 
@@ -362,6 +377,7 @@ export default function EditForm({ car }: { car: CarData }) {
       <input
         type="date"
         id="departureDate"
+        defaultValue={formatDateToInputValue(car.car?.departureDate)}
         {...register("departureDate", {
           valueAsDate: true,
         })}
@@ -374,6 +390,7 @@ export default function EditForm({ car }: { car: CarData }) {
       <input
         type="date"
         id="arrivalDate"
+        defaultValue={formatDateToInputValue(car.car?.arrivalDate)}
         {...register("arrivalDate", {
           valueAsDate: true,
         })}
@@ -386,6 +403,7 @@ export default function EditForm({ car }: { car: CarData }) {
       <input
         type="date"
         id="parkingDateString"
+        defaultValue={formatDateToYYYYMMDD(car.parking_details?.parkingDateString ? car.parking_details?.parkingDateString : "")}
         {...register("parkingDateString", {
           valueAsDate: true,
         })}

@@ -4,6 +4,7 @@ import { formSchema } from "@/components/addCar/formSchema";
 import {
   carTable,
   parkingDetailsTable,
+  priceTable,
   specificationsTable,
 } from "../drizzle/schema";
 import { db } from "../drizzle/db";
@@ -35,26 +36,32 @@ export async function editCarInDb(
     const pdId = carInstance.parking_details?.id;
     const spId = carInstance.specifications?.id;
     if (!pdId || !spId) {
-      throw new Error("Car ID is required for update.");
+      return { error: "Car ID is required for update." };
     }
 
-    // const specificationsInstance = await db
-    //   .select()
-    //   .from(specificationsTable)
-    //   .where(eq(specificationsTable.id, spId))
-    //   .limit(1)
-    //   .get();
-    // const parkingDetailsInstance = await db
-    //   .select()
-    //   .from(parkingDetailsTable)
-    //   .where(eq(parkingDetailsTable.id, pdId))
-    //   .limit(1)
-    //   .get();
-    //
-    // if (!specificationsInstance || !parkingDetailsInstance) {
-    //   throw new Error("Car ID is required for update.");
-    // }
-    //
+    const specificationsInstance = await db
+      .select()
+      .from(specificationsTable)
+      .where(eq(specificationsTable.id, spId))
+      .limit(1)
+      .get();
+    const parkingDetailsInstance = await db
+      .select()
+      .from(parkingDetailsTable)
+      .where(eq(parkingDetailsTable.id, pdId))
+      .limit(1)
+      .get();
+    const priceInstance = await db
+      .select()
+      .from(priceTable)
+      .where(eq(priceTable.carId, id))
+      .limit(1)
+      .get();
+
+    if (!specificationsInstance || !parkingDetailsInstance) {
+      return { error: "Car ID is required for update." };
+    }
+
     // for (const [key, value] of Object.entries(carData)) {
     //   if (["vin", "originPort", "destinationPort", "shipping"].includes(key)) {
     //     await db

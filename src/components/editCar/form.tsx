@@ -37,7 +37,6 @@ function formatDateToYYYYMMDD(dateString: string): string {
 }
 
 export default function EditForm({ car }: { car: CarData }) {
-  console.log(car);
   const [loading, setTransitioning] = React.useTransition();
   const [state, formAction] = useFormState(editCarInDb, initialState);
   const { pending } = useFormStatus();
@@ -72,14 +71,15 @@ export default function EditForm({ car }: { car: CarData }) {
     console.log("Submitting form data:", data);
     setTransitioning(async () => {
       const payload: EditCarPayload = { id: car.car.id, values: data };
-      const res = await editCarInDb(state, payload);
-      if (res.error !== null) {
-        toast.error(res.error);
-        console.error(res.error);
-      } else {
-        toast.success(res.success);
-        console.log(res.success);
-      }
+      console.log(payload)
+      // const res = await editCarInDb(state, payload);
+      // if (res.error !== null) {
+      //   toast.error(res.error);
+      //   console.error(res.error);
+      // } else {
+      //   toast.success(res.success);
+      //   console.log(res.success);
+      // }
     });
   };
 

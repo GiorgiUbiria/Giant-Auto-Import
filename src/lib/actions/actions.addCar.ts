@@ -124,7 +124,7 @@ export async function addCarToDb(
     const carId = await insertCar(car);
 
     const newPrice: NewPrice = {
-      totalAmount: Number(price) as number,
+      totalAmount: price as number,
       currencyId: Number(priceCurrency) as number,
       carId: carId[0].carId,
     };

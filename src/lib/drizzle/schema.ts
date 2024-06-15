@@ -110,9 +110,6 @@ export const priceTable = sqliteTable("price", {
   carId: integer("car_id").references(() => carTable.id, {
     onDelete: "cascade",
   }),
-  userId: integer("user_id").references(() => userTable.id, {
-    onDelete: "cascade",
-  }),
 });
 
 export const priceCurrencyTable = sqliteTable("price_currency", {
@@ -131,5 +128,6 @@ export const transactionTable = sqliteTable("transaction", {
   carId: integer("car_id").references(() => carTable.id, {
     onDelete: "cascade",
   }),
+  amount: real("amount"),
   paymentDate: text("payment_date"),
 });

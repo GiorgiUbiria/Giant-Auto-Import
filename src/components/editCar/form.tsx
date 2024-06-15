@@ -31,12 +31,13 @@ function formatDateToYYYYMMDD(dateString: string): string {
   if (!dateString) return "";
   const date = new Date(dateString);
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
 export default function EditForm({ car }: { car: CarData }) {
+  console.log(car);
   const [loading, setTransitioning] = React.useTransition();
   const [state, formAction] = useFormState(editCarInDb, initialState);
   const { pending } = useFormStatus();
@@ -45,8 +46,6 @@ export default function EditForm({ car }: { car: CarData }) {
     defaultValues: {
       vin: car.car.vin!,
       fined: car.parking_details?.fined === "true" ? true : false,
-      price: car.price?.toString() || "1500",
-      priceCurrency: "1",
       make: car.specifications?.make!,
       model: car.specifications?.model!,
       trim: car.specifications?.trim!,
@@ -57,7 +56,6 @@ export default function EditForm({ car }: { car: CarData }) {
       titleNumber: car.specifications?.titleNumber!,
       titleState: car.specifications?.titleState!,
       color: car.specifications?.color!,
-      fuelType: car.specifications?.fuelType!,
       shipping: car.car?.shipping!,
       originPort: car.car?.originPort!,
       destinationPort: car.car?.destinationPort!,
@@ -71,15 +69,14 @@ export default function EditForm({ car }: { car: CarData }) {
     console.log("Submitting form data:", data);
     setTransitioning(async () => {
       const payload: EditCarPayload = { id: car.car.id, values: data };
-      console.log(payload)
-      // const res = await editCarInDb(state, payload);
-      // if (res.error !== null) {
-      //   toast.error(res.error);
-      //   console.error(res.error);
-      // } else {
-      //   toast.success(res.success);
-      //   console.log(res.success);
-      // }
+      const res = await editCarInDb(state, payload);
+      if (res.error !== null) {
+        toast.error(res.error);
+        console.error(res.error);
+      } else {
+        toast.success(res.success);
+        console.log(res.success);
+      }
     });
   };
 
@@ -185,6 +182,7 @@ export default function EditForm({ car }: { car: CarData }) {
       />
       <select
         id="fuelType"
+        defaultValue={car.specifications?.fuelType!}
         {...register("fuelType")}
         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
       >
@@ -353,6 +351,7 @@ export default function EditForm({ car }: { car: CarData }) {
         type="number"
         placeholder="price"
         id="price"
+        defaultValue={car.price?.totalAmount?.toString()}
         {...register("price")}
       />
       <ErrorMessage
@@ -364,6 +363,7 @@ export default function EditForm({ car }: { car: CarData }) {
         id="priceCurrency"
         {...register("priceCurrency")}
         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+        defaultValue={car.price_currency?.id}
       >
         <option value="1">GEL</option>
         <option value="2">USD</option>
@@ -403,7 +403,11 @@ export default function EditForm({ car }: { car: CarData }) {
       <input
         type="date"
         id="parkingDateString"
-        defaultValue={formatDateToYYYYMMDD(car.parking_details?.parkingDateString ? car.parking_details?.parkingDateString : "")}
+        defaultValue={formatDateToYYYYMMDD(
+          car.parking_details?.parkingDateString
+            ? car.parking_details?.parkingDateString
+            : "",
+        )}
         {...register("parkingDateString", {
           valueAsDate: true,
         })}
@@ -414,7 +418,7 @@ export default function EditForm({ car }: { car: CarData }) {
         render={({ message }) => <p>{message}</p>}
       />
       <button disabled={pending} type="submit">
-        Submit
+        {loading ? "Loading..." : "Submit"}
       </button>
     </form>
   );

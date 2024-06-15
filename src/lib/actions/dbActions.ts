@@ -169,6 +169,12 @@ export async function getCarsFromDatabaseForUser(
         parkingDetailsTable,
         eq(carTable.parkingDetailsId, parkingDetailsTable.id),
       )
+      .leftJoin(priceTable, eq(carTable.id, priceTable.carId))
+      .leftJoin(
+        priceCurrencyTable,
+        eq(priceTable.currencyId, priceCurrencyTable.id),
+      )
+      .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
       .where(eq(userCarTable.userId, id))
       .all()) as CarData[];
 
@@ -215,6 +221,12 @@ export async function getCarFromDatabase(
         parkingDetailsTable,
         eq(carTable.parkingDetailsId, parkingDetailsTable.id),
       )
+      .leftJoin(priceTable, eq(carTable.id, priceTable.carId))
+      .leftJoin(
+        priceCurrencyTable,
+        eq(priceTable.currencyId, priceCurrencyTable.id),
+      )
+      .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
       .where(eq(carTable.vin, vin))
       .limit(1)
       .get()) as CarData;
@@ -259,6 +271,12 @@ export async function getCarFromDatabaseByID(
         parkingDetailsTable,
         eq(carTable.parkingDetailsId, parkingDetailsTable.id),
       )
+      .leftJoin(priceTable, eq(carTable.id, priceTable.carId))
+      .leftJoin(
+        priceCurrencyTable,
+        eq(priceTable.currencyId, priceCurrencyTable.id),
+      )
+      .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
       .where(eq(carTable.id, id))
       .limit(1)
       .get()) as CarData;

@@ -27,7 +27,7 @@ export default function AddForm() {
     defaultValues: {
       vin: "",
       fined: false,
-      price: "0",
+      price: 0,
       priceCurrency: "1",
       make: "",
       model: "",
@@ -332,7 +332,9 @@ export default function AddForm() {
         type="number"
         placeholder="price"
         id="price"
-        {...register("price")}
+        {...register("price", {
+          valueAsNumber: true,
+        })}
       />
       <ErrorMessage
         errors={formState.errors}

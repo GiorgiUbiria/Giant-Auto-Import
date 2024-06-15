@@ -13,19 +13,24 @@ import { getCarFromDatabaseByID } from "./dbActions";
 import { eq } from "drizzle-orm";
 import { FormValues } from "@/components/editCar/form";
 
-export type EditCarPayload = { id: number, values: FormValues };
+export type EditCarPayload = { id: number; values: FormValues };
 
 export async function editCarInDb(
   prevState: any,
   payload: EditCarPayload,
 ): Promise<ActionResult | undefined> {
   try {
-    const { values, id  } = payload;
-    console.log(values)
-    console.log(id)
+    const { values, id } = payload;
+    console.log(values);
+    console.log(id);
 
     if (!id) {
       return { error: "Car ID is required for update." };
+    }
+
+    const result = formSchema.safeParse(values);
+    if (!result.success) {
+      return { error: result.error.message };
     }
 
     const carInstance: CarData = (await getCarFromDatabaseByID(id)) as CarData;
@@ -62,50 +67,79 @@ export async function editCarInDb(
       return { error: "Car ID is required for update." };
     }
 
-    // for (const [key, value] of Object.entries(carData)) {
-    //   if (["vin", "originPort", "destinationPort", "shipping"].includes(key)) {
-    //     await db
-    //       .update(carTable)
-    //       .set({ [key]: value })
-    //       .where(eq(carTable.id, id));
-    //   }
-    // }
-    //
-    // for (const [key, value] of Object.entries(carData)) {
-    //   if (
-    //     [
-    //       "vin",
-    //       "carfax",
-    //       "year",
-    //       "make",
-    //       "model",
-    //       "trim",
-    //       "manufacturer",
-    //       "country",
-    //       "engineType",
-    //       "fuelType",
-    //       "titleNumber",
-    //     ].includes(key)
-    //   ) {
-    //     await db
-    //       .update(specificationsTable)
-    //       .set({ [key]: value })
-    //       .where(eq(specificationsTable.id, spId));
-    //   }
-    // }
-    //
-    // for (const [key, value] of Object.entries(carData)) {
-    //   if (["fined", "arrived", "status", "parkingDateString"].includes(key)) {
-    //     await db
-    //       .update(parkingDetailsTable)
-    //       .set({ [key]: value })
-    //       .where(eq(parkingDetailsTable.id, pdId));
-    //   }
-    // }
-    //
-    // console.log(`Car with ID ${id} updated successfully.`);
+    for (const [key, value] of Object.entries(carInstance)) {
+      if (
+        [
+          "vin",
+          "originPort",
+          "destinationPort",
+          "shipping",
+          "auction",
+          "departureDate",
+          "arrivalDate",
+        ].includes(key)
+      ) {
+        await db
+          .update(carTable)
+          .set({ [key]: value })
+          .where(eq(carTable.id, id));
+      }
+    }
+
+    for (const [key, value] of Object.entries(specificationsInstance)) {
+      if (
+        [
+          "vin",
+          "carfax",
+          "year",
+          "make",
+          "model",
+          "trim",
+          "manufacturer",
+          "country",
+          "engineType",
+          "fuelType",
+          "titleNumber",
+          "titleState",
+          "color",
+          "bodyType",
+        ].includes(key)
+      ) {
+        await db
+          .update(specificationsTable)
+          .set({ [key]: value })
+          .where(eq(specificationsTable.id, spId));
+      }
+    }
+
+    for (const [key, value] of Object.entries(parkingDetailsInstance)) {
+      if (["fined", "arrived", "status", "parkingDateString"].includes(key)) {
+        await db
+          .update(parkingDetailsTable)
+          .set({ [key]: value })
+          .where(eq(parkingDetailsTable.id, pdId));
+      }
+    }
+
+    if (priceInstance) {
+      for (const [key, value] of Object.entries(priceInstance)) {
+        if (["totalAmount", "currencyId"].includes(key)) {
+          await db
+            .update(priceTable)
+            .set({ [key]: value })
+            .where(eq(priceTable.carId, id));
+        }
+      }
+    }
+
+    return {
+      error: null,
+      success: "Car updated successfully",
+    };
   } catch (error) {
     console.error(error);
-    throw new Error("Failed to update car in database");
+    return {
+      error: "Failed to update car in database",
+    };
   }
 }

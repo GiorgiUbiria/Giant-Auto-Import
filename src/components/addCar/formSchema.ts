@@ -105,17 +105,10 @@ export const formSchema = z.object({
   shipping: z.string().min(3).max(50, {
     message: "Shipping must be between 3 and 50 characters long.",
   }),
-  price: z.string().refine(
-    (val) => {
-      const numberValue = parseFloat(val);
-      return (
-        !Number.isNaN(numberValue) && numberValue >= 0 && numberValue <= 150000
-      );
-    },
-    {
-      message: "Price must be a number between 0 and 150000.",
-    },
-  ),
+  price: z
+    .number()
+    .min(0)
+    .max(150000, { message: "Price must be a number between 0 and 150000." }),
   priceCurrency: z.enum(["1", "2", "3"], {
     message: "Price Currency must be between 1 and 3.",
   }),

@@ -7,8 +7,18 @@ import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import React from "react";
 import { removeUser } from "@/lib/actions/userActions";
-import { ArrowUpDown } from "lucide-react"
+import { ArrowUpDown, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export const columns: ColumnDef<Omit<User, "passowrd">>[] = [
   {
@@ -19,6 +29,7 @@ export const columns: ColumnDef<Omit<User, "passowrd">>[] = [
           table.getIsAllPageRowsSelected() ||
           (table.getIsSomePageRowsSelected() && "indeterminate")
         }
+        className="mb-1"
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
       />
@@ -27,6 +38,7 @@ export const columns: ColumnDef<Omit<User, "passowrd">>[] = [
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
+        className="mb-1"
         aria-label="Select row"
       />
     ),
@@ -41,14 +53,21 @@ export const columns: ColumnDef<Omit<User, "passowrd">>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          ID 
+          ID
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => {
       const id = row.getValue("id") as string;
-      return <Link href={`/admin/users/${id}`} className="hover:text-muted-foreground">{id}</Link>;
+      return (
+        <Link
+          href={`/admin/users/${id}`}
+          className="hover:text-muted-foreground"
+        >
+          {id}
+        </Link>
+      );
     },
   },
   {
@@ -82,18 +101,41 @@ export const columns: ColumnDef<Omit<User, "passowrd">>[] = [
   },
   {
     id: "actions",
+    header: "Actions",
     cell: ({ row }) => {
       const id = row.getValue("id") as string;
       return (
-        <div className="flex gap-4">
-          <button
-            onClick={async () => {
-              await removeUser(id);
-            }}
-          >
-            Remove User
-          </button>
-        </div>
+        <Dialog>
+          <DialogTrigger>
+            <p className="text-md border rounded-md border-white p-2 hover:scale-105">Remove User</p>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                Are you sure you want to remove this user?
+              </DialogTitle>
+              <DialogDescription>
+                This action cannot be undone. This will permanently remove the
+                user with the ID - <b>{id}</b> from the database.
+              </DialogDescription>
+            </DialogHeader>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                await removeUser(id);
+              }}
+            >
+              Remove User
+            </Button>
+            <DialogFooter className="sm:justify-start">
+              <DialogClose asChild>
+                <Button type="button" variant="secondary">
+                  <XIcon />
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       );
     },
   },

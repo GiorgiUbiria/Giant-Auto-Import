@@ -19,18 +19,19 @@ export default async function Page() {
   const cars = await getCarsFromDatabase();
 
   if (!cars) {
-    return <p> No cars fetched. </p>
+    return <p> No cars fetched. </p>;
   }
 
   return (
-    <div className="container-fluid mx-auto py-10">
-      <form action={updateLocalDatabaseFromAPI} className="pb-12">
-        <Button type="submit"> Update database </Button>
-      </form>
-      
-      <form action={updateLocalDatabaseImages} className="pb-12">
-        <Button type="submit"> Fetch Images </Button>
-      </form>
+    <div className="py-10">
+      <div className="flex gap-8 mx-auto container">
+        <form action={updateLocalDatabaseFromAPI}>
+          <Button type="submit"> Update database </Button>
+        </form>
+        <form action={updateLocalDatabaseImages}>
+          <Button type="submit"> Fetch Images </Button>
+        </form>
+      </div>
       <DataTable columns={columns} data={cars} />
     </div>
   );

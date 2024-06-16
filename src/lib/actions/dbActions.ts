@@ -27,23 +27,6 @@ const insertUserCar = async (userCar: NewUserCar) => {
 };
 
 
-export async function removeCarFromDb(id: number): Promise<void> {
-  try {
-    const carId: { deletedId: number }[] = await db
-      .delete(carTable)
-      .where(eq(carTable.id, id))
-      .returning({ deletedId: carTable.id });
-
-    if (!carId[0].deletedId) {
-      throw new Error("Car ID is required for remove.");
-    }
-
-    console.log(`Car with ID ${carId[0].deletedId} removed successfully.`);
-  } catch (error) {
-    console.error(error);
-    throw new Error("Failed to remove car from database");
-  }
-}
 
 export async function assignCarToUser(
   userId: string,

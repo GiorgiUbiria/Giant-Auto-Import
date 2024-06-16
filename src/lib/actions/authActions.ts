@@ -234,7 +234,7 @@ export async function signup(
         email,
         phone,
         password: hashedPassword,
-        roleId: 2,
+        roleId: 1,
       };
       await insertUser(newUser);
     } else {

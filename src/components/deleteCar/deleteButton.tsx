@@ -19,8 +19,9 @@ export default function DeleteButton({ carId }: { carId: number }) {
       }
     });
   };
+
   return (
-    <Button onClick={deleteAction} disabled={loading}>
+    <Button onClick={deleteAction} className="w-full text-center" variant="destructive" disabled={loading}>
       Remove Car
     </Button>
   );

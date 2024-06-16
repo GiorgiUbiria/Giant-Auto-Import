@@ -68,7 +68,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div>
+    <div className="mx-auto max-w-screen-2xl container-fluid">
       <div className="flex gap-4 pb-4">
         <div className="flex items-center py-4"></div>
         <DropdownMenu>

@@ -15,11 +15,9 @@ export default async function Page() {
   }
 
   return (
-    <div>
-      <h1>{userToFind?.user.name}</h1>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl pb-12"> Hello {userToFind?.user.name} !</h1>
       <div>
-        <h2>User Cars</h2>
-        <hr />
         <TableWithColumns data={userToFind.cars!} pdfToken={user.pdf_token} userId={user.id} />
       </div>
     </div>

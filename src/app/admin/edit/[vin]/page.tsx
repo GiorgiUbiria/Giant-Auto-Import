@@ -9,6 +9,8 @@ export default async function Page({ params }: { params: { vin: string } }) {
   if (!user || user?.role_id !== 2) {
     return redirect("/");
   }
+
   const car: CarData | undefined = await getCarFromDatabase(params.vin);
+
   return <EditCarForm car={car!} />;
 }

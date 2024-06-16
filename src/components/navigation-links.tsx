@@ -23,9 +23,7 @@ export default function NavigationLinks({ links }: { links: LinkProp[] }) {
               : "text-foreground"
           }`}
         >
-          <span>
-            {link.label}
-          </span>
+          <span>{link.label}</span>
         </Link>
       ))}
     </>

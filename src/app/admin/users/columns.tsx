@@ -107,7 +107,7 @@ export const columns: ColumnDef<Omit<User, "passowrd">>[] = [
       return (
         <Dialog>
           <DialogTrigger>
-            <p className="text-md border rounded-md border-white p-2 hover:scale-105">Remove User</p>
+            <p className="text-md bg-red-500 border rounded-md border-white p-2 hover:bg-red-300">Remove User</p>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>

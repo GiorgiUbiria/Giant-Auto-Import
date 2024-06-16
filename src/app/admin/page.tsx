@@ -24,7 +24,7 @@ export default async function Page() {
 
   return (
     <div className="py-10">
-      <div className="flex gap-8 mx-auto container">
+      <div className="flex gap-4 mx-auto container py-8">
         <form action={updateLocalDatabaseFromAPI}>
           <Button type="submit"> Update database </Button>
         </form>

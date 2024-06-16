@@ -1,4 +1,6 @@
+import { validateRequest } from "@/lib/auth";
 import AddForm from "./form";
+import { redirect } from "next/navigation";
 
 export default async function AddCarForm() {
   const { user } = await validateRequest();
@@ -7,7 +9,7 @@ export default async function AddCarForm() {
   }
 
   return (
-    <div className="max-w-md">
+    <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-4">Add New Car</h1>
       <AddForm />
     </div>

@@ -40,8 +40,8 @@ const Navbar = async () => {
       </nav>
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="shrink-0 md:hidden">
-            <Menu className="h-5 w-5" />
+          <Button variant="outline" size="icon" className="shrink-0 h-14 w-14 md:hidden">
+            <Menu className="h-8 w-8" />
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
         </SheetTrigger>

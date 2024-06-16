@@ -14,7 +14,7 @@ import { EditCarPayload, editCarInDb } from "@/lib/actions/actions.editCar";
 
 const initialState = {
   error: null,
-  success: null,
+  success: undefined,
 };
 
 export type FormValues = z.infer<typeof formSchema>;

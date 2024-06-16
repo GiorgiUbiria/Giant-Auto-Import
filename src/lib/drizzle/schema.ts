@@ -61,7 +61,7 @@ export const parkingDetailsTable = sqliteTable("parking_details", {
 
 export const carTable = sqliteTable("car", {
   id: integer("id").primaryKey(),
-  vin: text("vin"),
+  vin: text("vin").unique(),
   originPort: text("origin_port"),
   destinationPort: text("destination_port"),
   departureDate: integer("departure_date", { mode: "timestamp" }),
@@ -81,7 +81,7 @@ export const carTable = sqliteTable("car", {
 
 export const imageTable = sqliteTable("image", {
   id: integer("id").primaryKey(),
-  carVin: text("car_vin"),
+  carVin: text("car_vin").references(() => carTable.vin, { onDelete: "cascade" }),
   imageUrl: text("image_url"),
   imageType: text("image_type"),
 });
@@ -122,7 +122,7 @@ export const transactionTable = sqliteTable("transaction", {
   priceId: integer("price_id").references(() => priceTable.id, {
     onDelete: "cascade",
   }),
-  userId: integer("user_id").references(() => userTable.id, {
+  userId: text("user_id").references(() => userTable.id, {
     onDelete: "cascade",
   }),
   carId: integer("car_id").references(() => carTable.id, {

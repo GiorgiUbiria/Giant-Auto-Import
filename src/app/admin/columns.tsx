@@ -16,6 +16,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { deleteCarFromDb } from "@/lib/actions/actions.deleteCar";
+import DeleteButton from "@/components/deleteCar/deleteButton";
 
 export const columns: ColumnDef<CarData>[] = [
   {
@@ -42,6 +44,7 @@ export const columns: ColumnDef<CarData>[] = [
   },
   {
     accessorKey: "car.id",
+    id: "car.id",
     header: ({ column }) => {
       return (
         <Button
@@ -126,7 +129,11 @@ export const columns: ColumnDef<CarData>[] = [
     header: "Price",
     id: "price",
     cell: ({ row }) => {
-      const price = row.getValue("price") as { id: number, totalAmount: number, currencyId: number };
+      const price = row.getValue("price") as {
+        id: number;
+        totalAmount: number;
+        currencyId: number;
+      };
       return <p> {price?.totalAmount} </p>;
     },
   },
@@ -135,7 +142,10 @@ export const columns: ColumnDef<CarData>[] = [
     header: "Currency",
     id: "price_currency",
     cell: ({ row }) => {
-      const currency = row.getValue("price_currency") as { id: number, currencyCode: Currency };
+      const currency = row.getValue("price_currency") as {
+        id: number;
+        currencyCode: Currency;
+      };
       return <p> {currency?.currencyCode}</p>;
     },
   },
@@ -147,6 +157,7 @@ export const columns: ColumnDef<CarData>[] = [
     id: "actions",
     cell: ({ row }) => {
       const vin = row.getValue("vin") as string;
+      const carId = row.getValue("car.id") as number;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -167,6 +178,9 @@ export const columns: ColumnDef<CarData>[] = [
               <Link href={`/admin/edit/${vin}`}>Edit Car</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <DeleteButton carId={carId} />
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

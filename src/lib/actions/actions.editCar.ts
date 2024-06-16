@@ -1,3 +1,5 @@
+"use server";
+
 import { formSchema } from "@/components/editCar/formSchema";
 import {
   carTable,
@@ -10,7 +12,6 @@ import { Car, CarData, ParkingDetails, Specifications } from "../interfaces";
 import { getCarFromDatabaseByID } from "./dbActions";
 import { eq } from "drizzle-orm";
 import { FormValues } from "@/components/editCar/form";
-import { revalidatePath } from "next/cache";
 
 export type EditCarPayload = { id: number; values: FormValues };
 
@@ -147,11 +148,9 @@ export async function editCarInDb(
       }
     }
 
-    revalidatePath("/admin/edit");
-
     return { error: null, success: "Car updated successfully" };
   } catch (error) {
-    console.error(error);
+    console.error(error)
     return { error: "Failed to update car in database" };
   }
 }

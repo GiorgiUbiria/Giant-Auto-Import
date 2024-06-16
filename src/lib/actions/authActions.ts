@@ -234,7 +234,7 @@ export async function signup(
         email,
         phone,
         password: hashedPassword,
-        roleId: 1,
+        roleId: 2,
       };
       await insertUser(newUser);
     } else {
@@ -243,6 +243,7 @@ export async function signup(
       };
     }
   } catch (e) {
+    console.error(e);
     if (e instanceof SqliteError && e.code === "SQLITE_CONSTRAINT_UNIQUE") {
       return {
         error: "Email or Phone number already used",

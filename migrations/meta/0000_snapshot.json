@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "81f92fe7-1284-439e-b01a-66111021cad5",
+  "id": "f6e1ae7d-f3c6-454d-808a-cc9fd70983f0",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "car": {
@@ -150,7 +150,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "image_car_vin_car_vin_fk": {
+          "name": "image_car_vin_car_vin_fk",
+          "tableFrom": "image",
+          "tableTo": "car",
+          "columnsFrom": [
+            "car_vin"
+          ],
+          "columnsTo": [
+            "vin"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -259,13 +273,6 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
         }
       },
       "indexes": {},
@@ -289,19 +296,6 @@
           "tableTo": "car",
           "columnsFrom": [
             "car_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "price_user_id_user_id_fk": {
-          "name": "price_user_id_user_id_fk",
-          "tableFrom": "price",
-          "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
           ],
           "columnsTo": [
             "id"
@@ -528,7 +522,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -536,6 +530,13 @@
         "car_id": {
           "name": "car_id",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "amount": {
+          "name": "amount",
+          "type": "real",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false

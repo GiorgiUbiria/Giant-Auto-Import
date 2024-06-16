@@ -9,9 +9,6 @@ import { DrizzleSQLiteAdapter } from "@lucia-auth/adapter-drizzle";
 import { db } from "./drizzle/db";
 import { sessionTable, userTable } from "./drizzle/schema";
 
-// import { webcrypto } from "crypto";
-// globalThis.crypto = webcrypto as Crypto;
-
 const adapter = new DrizzleSQLiteAdapter(db, sessionTable, userTable);
 
 const generateToken = randomBytes(32).toString("hex");

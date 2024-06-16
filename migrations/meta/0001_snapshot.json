@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "6f823c93-cf94-45ac-81c3-82663eddb6b5",
-  "prevId": "81f92fe7-1284-439e-b01a-66111021cad5",
+  "id": "c1f43053-bddc-40b4-a451-eb48769884b3",
+  "prevId": "f6e1ae7d-f3c6-454d-808a-cc9fd70983f0",
   "tables": {
     "car": {
       "name": "car",
@@ -85,7 +85,15 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "car_vin_unique": {
+          "name": "car_vin_unique",
+          "columns": [
+            "vin"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "car_specifications_id_specifications_id_fk": {
           "name": "car_specifications_id_specifications_id_fk",
@@ -150,7 +158,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "image_car_vin_car_vin_fk": {
+          "name": "image_car_vin_car_vin_fk",
+          "tableFrom": "image",
+          "tableTo": "car",
+          "columnsFrom": [
+            "car_vin"
+          ],
+          "columnsTo": [
+            "vin"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -508,7 +530,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false

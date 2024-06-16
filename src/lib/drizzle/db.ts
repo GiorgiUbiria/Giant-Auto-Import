@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import * as schema from "./schema";
 import { LibSQLDatabase, drizzle } from "drizzle-orm/libsql";
-import { createClient } from "@libsql/client/web";
+import { createClient } from "@libsql/client-v6/web";
 
 export function tursoClient(): LibSQLDatabase<typeof schema> {
   const url = process.env.NEXT_PUBLIC_TURSO_DATABASE_URL?.trim();

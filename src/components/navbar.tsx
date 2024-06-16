@@ -11,6 +11,7 @@ import { ModeToggle } from "./theme-toggle";
 import NavigationLinks from "./navigation-links";
 import NavbarLogo from "../../public/logo.png";
 import Link from "next/link";
+import DynamicHeader from "./dynamic-header";
 
 const Navbar = async () => {
   const { user } = await validateRequest();
@@ -31,7 +32,7 @@ const Navbar = async () => {
   ];
 
   return (
-    <header className="top-0 flex h-20 items-center gap-4 bg-muted z-10 px-4 md:px-6 shadow-blac-5">
+    <DynamicHeader>
       <nav className="hidden flex-col gap-12 font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
         <Link href="/" className="w-max">
           <Image src={NavbarLogo} alt="Company logo" className="w-14 h-14" />
@@ -40,7 +41,11 @@ const Navbar = async () => {
       </nav>
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="shrink-0 h-14 w-14 md:hidden">
+          <Button
+            variant="outline"
+            size="icon"
+            className="shrink-0 h-14 w-14 md:hidden"
+          >
             <Menu className="h-8 w-8" />
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
@@ -63,7 +68,7 @@ const Navbar = async () => {
         <ModeToggle />
         <Avatar user={user} logout={logout} />
       </div>
-    </header>
+    </DynamicHeader>
   );
 };
 

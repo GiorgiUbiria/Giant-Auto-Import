@@ -36,30 +36,36 @@ export default function DynamicHeader({
   }, [isScrolledUp, resetScrollTimeout]);
 
   useEffect(() => {
-    let lastScrollY = window.scrollY;
+    if (screen.width <= 640) {
+      let lastScrollY = window.scrollY;
 
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+      const handleScroll = () => {
+        const currentScrollY = window.scrollY;
 
-      if (currentScrollY < lastScrollY) {
-        setIsScrolledUp(true);
-        setIsVisible(true);
-        resetScrollTimeout();
-      } else {
-        setIsScrolledUp(false);
-      }
+        if (currentScrollY < lastScrollY) {
+          setIsScrolledUp(true);
+          setIsVisible(true);
+          resetScrollTimeout();
+        } else {
+          setIsScrolledUp(false);
+        }
 
-      lastScrollY = currentScrollY;
-    };
+        lastScrollY = currentScrollY;
+      };
 
-    window.addEventListener("scroll", handleScroll);
+      window.addEventListener("scroll", handleScroll);
 
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      if (scrollTimer.current !== null) {
-        clearTimeout(scrollTimer.current);
-      }
-    };
+      return () => {
+        window.removeEventListener("scroll", handleScroll);
+        if (scrollTimer.current !== null) {
+          clearTimeout(scrollTimer.current);
+        }
+      };
+    } else {
+      setIsVisible(true);
+      setIsScrolledUp(true);
+      return () => {};
+    }
   }, [resetScrollTimeout]);
 
   return (

@@ -11,10 +11,8 @@ import { ArrowUpDown, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -101,41 +99,44 @@ export const columns: ColumnDef<Omit<User, "passowrd">>[] = [
   },
   {
     id: "actions",
-    header: "Actions",
+    header: ({ column }) => {
+      return (
+        <div className="flex items-center justify-center">
+          <span className="text-center">Actions</span>
+        </div>
+      );
+    },
     cell: ({ row }) => {
       const id = row.getValue("id") as string;
       return (
-        <Dialog>
-          <DialogTrigger>
-            <p className="text-md bg-red-500 border rounded-md border-white p-2 hover:bg-red-300">Remove User</p>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                Are you sure you want to remove this user?
-              </DialogTitle>
-              <DialogDescription>
-                This action cannot be undone. This will permanently remove the
-                user with the ID - <b>{id}</b> from the database.
-              </DialogDescription>
-            </DialogHeader>
-            <Button
-              variant="outline"
-              onClick={async () => {
-                await removeUser(id);
-              }}
-            >
-              Remove User
-            </Button>
-            <DialogFooter className="sm:justify-start">
-              <DialogClose asChild>
-                <Button type="button" variant="secondary">
-                  <XIcon />
-                </Button>
-              </DialogClose>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center justify-center">
+          <Dialog>
+            <DialogTrigger>
+              <p className="text-md bg-red-500 border rounded-md border-white p-2 hover:bg-red-300">
+                Remove User
+              </p>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  Are you sure you want to remove this user?
+                </DialogTitle>
+                <DialogDescription>
+                  This action cannot be undone. This will permanently remove the
+                  user with the ID - <b>{id}</b> from the database.
+                </DialogDescription>
+              </DialogHeader>
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  await removeUser(id);
+                }}
+              >
+                Remove User
+              </Button>
+            </DialogContent>
+          </Dialog>
+        </div>
       );
     },
   },

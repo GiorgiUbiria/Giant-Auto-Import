@@ -146,11 +146,20 @@ export async function editCarInDb(
           .set({ currencyId: Number(values.priceCurrency) })
           .where(eq(priceTable.carId, id));
       }
+    } else {
+      await db.insert(priceTable).values({
+        carId: id,
+        totalAmount: values.price !== undefined ? values.price : null,
+        currencyId:
+          values.priceCurrency !== undefined
+            ? Number(values.priceCurrency)
+            : null,
+      });
     }
 
     return { error: null, success: "Car updated successfully" };
   } catch (error) {
-    console.error(error)
+    console.error(error);
     return { error: "Failed to update car in database" };
   }
 }

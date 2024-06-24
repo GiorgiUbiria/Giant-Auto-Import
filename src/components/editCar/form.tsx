@@ -96,7 +96,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="vin"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -116,7 +118,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="year"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -136,7 +140,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="make"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -156,7 +162,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="model"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -176,7 +184,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="manufacturer"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -196,7 +206,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="trim"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
       </div>
@@ -222,7 +234,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="country"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -246,7 +260,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="status"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -270,7 +286,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="fuelType"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
       </div>
@@ -292,7 +310,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="engineType"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -312,7 +332,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="titleNumber"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -332,7 +354,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="titleState"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -352,7 +376,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="bodyType"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
       </div>
@@ -374,7 +400,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="destinationPort"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -394,7 +422,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="originPort"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
       </div>
@@ -416,7 +446,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="color"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -436,7 +468,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="auction"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -456,7 +490,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="shipping"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
       </div>
@@ -481,7 +517,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="fined"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -504,7 +542,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="arrived"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -527,7 +567,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="price"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -550,7 +592,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="priceCurrency"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
       </div>
@@ -574,7 +618,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="departureDate"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -596,7 +642,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="arrivalDate"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
       </div>

@@ -8,7 +8,6 @@ import {
 } from "@aws-sdk/client-s3";
 import "dotenv/config";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { ActionResult } from "next/dist/server/app-render/types";
 import { Image } from "../interfaces";
 
 const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
@@ -25,27 +24,25 @@ const S3Client = new S3({
   },
 });
 
-export async function handleUploadImage(
-  type: string,
-  vin: string,
-  size: number,
-): Promise<ActionResult | undefined> {
-  const fileName = `${vin}/${type}/1.png`;
+async function getFileCount(prefix: string): Promise<number> {
+  const command = new ListObjectsV2Command({
+    Bucket: bucketName,
+    Prefix: prefix,
+  });
 
-  const url = await getSignedUrl(
-    S3Client,
-    new PutObjectCommand({
-      Bucket: bucketName,
-      Key: fileName,
-      ContentLength: size,
-      ContentType: "image/png",
-    }),
-    { expiresIn: 3600 },
-  );
+  let fileCount = 0;
+  let truncated: boolean = true;
 
-  console.log(url);
+  while (truncated) {
+    const response = await S3Client.send(command);
+    fileCount += response.Contents?.length?? 0;
+    truncated = response.IsTruncated as boolean;
+    if (truncated) {
+      command.input.ContinuationToken = response.NextContinuationToken;
+    }
+  }
 
-  return url;
+  return fileCount;
 }
 
 export async function handleUploadImages(
@@ -53,9 +50,13 @@ export async function handleUploadImages(
   vin: string,
   sizes: number[],
 ): Promise<string[]> {
+  const prefix = `${vin}/${type}/`;
+  const existingFileCount = await getFileCount(prefix);
+
   const urls = await Promise.all(
     sizes.map(async (size, index) => {
-      const fileName = `${vin}/${type}/${index + 1}.png`;
+      const newIndex = existingFileCount + index + 1;
+      const fileName = `${prefix}${newIndex}.png`;
 
       const url = await getSignedUrl(
         S3Client,
@@ -73,18 +74,6 @@ export async function handleUploadImages(
   );
 
   return urls;
-}
-
-export async function getImageFromBucket() {
-  const imageUrl = "Screenshot from 2024-05-28 22-22-27.png";
-
-  console.log(
-    await getSignedUrl(
-      S3Client,
-      new GetObjectCommand({ Bucket: bucketName, Key: imageUrl }),
-      { expiresIn: 3600 },
-    ),
-  );
 }
 
 export async function getImagesFromBucket(vin: string): Promise<Image[]> {

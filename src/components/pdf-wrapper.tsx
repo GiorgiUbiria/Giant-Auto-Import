@@ -125,7 +125,7 @@ const PSPDFKitWrapper: React.FC<PSPDFKitWrapperProps> = ({
         PSPDFKit.unload(container);
       }
     };
-  }, [data.paymentDate, data.billedTo, pdfToken, token, router, documentPath]);
+  }, [data.paymentDate, data.billedTo, pdfToken, token, router, documentPath, userId, id, vin, data]);
 
   return <div ref={containerRef} id="pspdfkit" style={{ height: "100vh" }} />;
 };

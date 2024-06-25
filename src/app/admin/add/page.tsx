@@ -1,4 +1,3 @@
-import UploadImageForm from "@/components/uploadImageForm";
 import AddCarForm from "@/components/addCar/add-car-form";
 import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";

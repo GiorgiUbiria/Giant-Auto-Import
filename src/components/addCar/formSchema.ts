@@ -1,6 +1,14 @@
 import { z } from "zod";
 import countryList from "../../../public/countries.json";
 
+const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpg", "image/jpeg"];
+const MAX_IMAGE_SIZE = 4; //In MegaBytes
+
+const sizeInMB = (sizeInBytes: number, decimalsNum = 2) => {
+  const result = sizeInBytes / (1024 * 1024);
+  return +result.toFixed(decimalsNum);
+};
+
 export const formSchema = z.object({
   vin: z
     .string()
@@ -111,4 +119,16 @@ export const formSchema = z.object({
   priceCurrency: z.enum(["1", "2", "3"], {
     message: "Price Currency must be between 1 and 3.",
   }),
+  images: z
+    .custom<FileList>()
+    .refine((files) => {
+      return Array.from(files ?? []).every(
+        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE
+      );
+    }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
+    .refine((files) => {
+      return Array.from(files ?? []).every((file) =>
+        ACCEPTED_IMAGE_TYPES.includes(file.type)
+      );
+    }, "File type is not supported").optional(),
 });

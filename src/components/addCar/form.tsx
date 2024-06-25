@@ -10,6 +10,7 @@ import { formSchema } from "./formSchema";
 import { toast } from "sonner";
 import { ErrorMessage } from "@hookform/error-message";
 import countries from "../../../public/countries.json";
+import { handleUploadImages } from "@/lib/actions/bucketActions";
 
 const initialState = {
   error: null,
@@ -22,7 +23,7 @@ export default function AddForm() {
   const [loading, setTransitioning] = React.useTransition();
   const [state, formAction] = useFormState(addCarToDb, initialState);
   const { pending } = useFormStatus();
-  const { handleSubmit, register, formState } = useForm<FormValues>({
+  const { handleSubmit, register, formState, getValues } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       vin: "",
@@ -52,12 +53,45 @@ export default function AddForm() {
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     console.log("Submitting form data:", data);
+    const { images, ...formDataWithoutImages } = data;
     setTransitioning(async () => {
-      const res = await addCarToDb(state, data);
+      const res = await addCarToDb(state, formDataWithoutImages);
       if (res.error !== null) {
         toast.error(res.error);
         console.error(res.error);
       } else {
+        if (images !== undefined && images.length > 0) {
+          const fileData = await Promise.all(
+            Array.from(images).map(async (file: File) => {
+              const arrayBuffer = await file.arrayBuffer();
+              return {
+                buffer: new Uint8Array(arrayBuffer),
+                size: file.size,
+                type: file.type,
+                name: file.name,
+              };
+            }),
+          );
+
+          const urls = await handleUploadImages(
+            "Container",
+            getValues("vin"),
+            fileData.map((file) => file.size),
+          );
+
+          await Promise.all(
+            urls.map((url: string, index: number) =>
+              fetch(url, {
+                method: "PUT",
+                headers: {
+                  "Content-Type": images[index].type,
+                },
+                body: fileData[index].buffer,
+              }),
+            ),
+          );
+        }
+
         toast.success(res.success);
         console.log(res.success);
       }
@@ -90,7 +124,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="vin"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -110,7 +146,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="year"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -130,7 +168,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="make"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -150,7 +190,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="model"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -170,7 +212,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="manufacturer"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -190,7 +234,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="trim"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
       </div>
@@ -216,7 +262,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="country"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -240,7 +288,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="status"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -264,7 +314,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="fuelType"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
       </div>
@@ -286,7 +338,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="engineType"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -306,7 +360,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="titleNumber"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -326,7 +382,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="titleState"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -346,7 +404,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="bodyType"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
       </div>
@@ -368,7 +428,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="destinationPort"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -388,7 +450,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="originPort"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
       </div>
@@ -410,7 +474,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="color"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -430,7 +496,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="auction"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -450,7 +518,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="shipping"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
       </div>
@@ -475,7 +545,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="fined"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -498,7 +570,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="arrived"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -520,7 +594,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="price"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -542,7 +618,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="priceCurrency"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
       </div>
@@ -565,7 +643,9 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="departureDate"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
         <div>
@@ -586,9 +666,35 @@ export default function AddForm() {
           <ErrorMessage
             errors={formState.errors}
             name="arrivalDate"
-            render={({ message }) => <p className="text-red-500 text-sm">{message}</p>}
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
           />
         </div>
+      </div>
+      <div>
+        <label
+          htmlFor="images"
+          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+        >
+          Upload Images
+        </label>
+        <input
+          type="file"
+          id="images"
+          multiple
+          {...register("images", {
+            setValueAs: (v) => Array.from(v),
+          })}
+          className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+        />
+        <ErrorMessage
+          errors={formState.errors}
+          name="model"
+          render={({ message }) => (
+            <p className="text-red-500 text-sm">{message}</p>
+          )}
+        />
       </div>
       <div className="grid gap-6 mb-6 md:grid-cols1-1">
         <button

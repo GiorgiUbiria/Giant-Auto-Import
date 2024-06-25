@@ -1,6 +1,7 @@
 import { validateRequest } from "@/lib/auth";
 import AddForm from "./form";
 import { redirect } from "next/navigation";
+import UploadImageForm from "../uploadImageForm";
 
 export default async function AddCarForm() {
   const { user } = await validateRequest();

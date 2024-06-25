@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { handleUploadImages } from "@/lib/actions/bucketActions";
 
-export default function UploadImageForm({vins} : {vins: string[]}) {
+export default function UploadImageForm({vin} : {vin: string}) {
   const [files, setFiles] = useState<File[]>([]);
-  const [vin, setVin] = useState<string>("");
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -13,10 +12,6 @@ export default function UploadImageForm({vins} : {vins: string[]}) {
     } else {
       setFiles([]);
     }
-  };
-
-  const handleChangeVin = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setVin(event.target.value);
   };
 
   const handleUpload = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -68,14 +63,6 @@ export default function UploadImageForm({vins} : {vins: string[]}) {
         onChange={handleChange}
         multiple
       />
-      <select name="vin" id="vin" onChange={handleChangeVin}>
-        <option value="">Select a car</option>
-        {vins.map((vin) => (
-          <option key={vin} value={vin}>
-            {vin}
-          </option>
-        ))}
-      </select>
       <button type="submit">Upload</button>
     </form>
   );

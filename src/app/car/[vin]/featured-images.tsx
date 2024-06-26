@@ -25,7 +25,6 @@ export default function Gallery({ car }: { car: CarData }) {
   return (
     <div className="lg:basis-1/2 flex justify-center">
       <CustomMenuBar
-        options={["Arrival", "Container"]}
         onSelect={handleImageTypeChange}
       />
 

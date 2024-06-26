@@ -24,8 +24,16 @@ export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
     openDialog();
   };
 
-  if  (data.length === 0) {
-    return <div>No images found</div>;
+  if (data.length === 0) {
+    return (
+      <div className="w-[480px]">
+        <div className="grid gap-4">
+          <div className="flex flex-col items-center justify-center h-[480px] w-full max-w-full rounded-lg bg-gray-200">
+            <p className="text-gray-600">No images found</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -75,7 +83,7 @@ export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
               &times;
             </button>
             <div className="flex overflow-x-scroll space-x-4">
-              {data.map(({imageUrl}, index) => (
+              {data.map(({ imageUrl }, index) => (
                 <Image
                   key={index}
                   src={imageUrl!}

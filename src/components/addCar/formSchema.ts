@@ -119,7 +119,19 @@ export const formSchema = z.object({
   priceCurrency: z.enum(["1", "2", "3"], {
     message: "Price Currency must be between 1 and 3.",
   }),
-  images: z
+  arrived_images: z
+    .custom<FileList>()
+    .refine((files) => {
+      return Array.from(files ?? []).every(
+        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE
+      );
+    }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
+    .refine((files) => {
+      return Array.from(files ?? []).every((file) =>
+        ACCEPTED_IMAGE_TYPES.includes(file.type)
+      );
+    }, "File type is not supported").optional(),
+  container_images: z
     .custom<FileList>()
     .refine((files) => {
       return Array.from(files ?? []).every(

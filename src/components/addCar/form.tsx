@@ -54,44 +54,55 @@ export default function AddForm() {
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     console.log("Submitting form data:", data);
-    const { images, ...formDataWithoutImages } = data;
+    const { arrived_images, container_images, ...formDataWithoutImages } = data;
+    const processAndUploadImages = async (
+      images: FileList | undefined,
+      type: string,
+      vin: string,
+    ) => {
+      if (!images || images.length === 0) return;
+
+      const fileData = await Promise.all(
+        Array.from(images).map(async (file: File) => {
+          const arrayBuffer = await file.arrayBuffer();
+          return {
+            buffer: new Uint8Array(arrayBuffer),
+            size: file.size,
+            type: file.type,
+            name: file.name,
+          };
+        }),
+      );
+
+      const urls = await handleUploadImages(
+        type,
+        vin,
+        fileData.map((file) => file.size),
+      );
+
+      await Promise.all(
+        urls.map((url: string, index: number) =>
+          fetch(url, {
+            method: "PUT",
+            headers: {
+              "Content-Type": images[index].type,
+            },
+            body: fileData[index].buffer,
+          }),
+        ),
+      );
+    };
+
     setTransitioning(async () => {
       const res = await addCarToDb(state, formDataWithoutImages);
       if (res.error !== null) {
         toast.error(res.error);
         console.error(res.error);
       } else {
-        if (images !== undefined && images.length > 0) {
-          const fileData = await Promise.all(
-            Array.from(images).map(async (file: File) => {
-              const arrayBuffer = await file.arrayBuffer();
-              return {
-                buffer: new Uint8Array(arrayBuffer),
-                size: file.size,
-                type: file.type,
-                name: file.name,
-              };
-            }),
-          );
+        const vin = getValues("vin");
 
-          const urls = await handleUploadImages(
-            "Container",
-            getValues("vin"),
-            fileData.map((file) => file.size),
-          );
-
-          await Promise.all(
-            urls.map((url: string, index: number) =>
-              fetch(url, {
-                method: "PUT",
-                headers: {
-                  "Content-Type": images[index].type,
-                },
-                body: fileData[index].buffer,
-              }),
-            ),
-          );
-        }
+        await processAndUploadImages(container_images, "Container", vin);
+        await processAndUploadImages(arrived_images, "Arrived", vin);
 
         toast.success(res.success);
         console.log(res.success);
@@ -673,29 +684,55 @@ export default function AddForm() {
           />
         </div>
       </div>
-      <div>
-        <label
-          htmlFor="images"
-          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-        >
-          Upload Images
-        </label>
-        <input
-          type="file"
-          id="images"
-          multiple
-          {...register("images", {
-            setValueAs: (v) => Array.from(v),
-          })}
-          className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-        />
-        <ErrorMessage
-          errors={formState.errors}
-          name="model"
-          render={({ message }) => (
-            <p className="text-red-500 text-sm">{message}</p>
-          )}
-        />
+      <div className="grid gap-6 mb-6 md:grid-cols-2">
+        <div>
+          <label
+            htmlFor="images"
+            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+          >
+            Arrived Images
+          </label>
+          <input
+            type="file"
+            id="arrived_images"
+            multiple
+            {...register("arrived_images", {
+              setValueAs: (v) => Array.from(v),
+            })}
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+          />
+          <ErrorMessage
+            errors={formState.errors}
+            name="model"
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="container_images"
+            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+          >
+            Container Images
+          </label>
+          <input
+            type="file"
+            id="container_images"
+            multiple
+            {...register("container_images", {
+              setValueAs: (v) => Array.from(v),
+            })}
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+          />
+          <ErrorMessage
+            errors={formState.errors}
+            name="model"
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
+          />
+        </div>
       </div>
       <div className="grid gap-6 mb-6 md:grid-cols1-1">
         <button

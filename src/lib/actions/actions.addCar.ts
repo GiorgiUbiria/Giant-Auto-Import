@@ -79,7 +79,6 @@ export async function addCarToDb(
       arrived,
       price,
       priceCurrency,
-      images,
     } = result.data;
 
     const specifications: NewSpecification = {
@@ -131,39 +130,6 @@ export async function addCarToDb(
     };
 
     await insertPrice(newPrice);
-
-    if (images && images.length > 0) {
-      console.log(images);
-      const fileData = await Promise.all(
-        Array.from(images).map(async (file: File) => {
-          const arrayBuffer = await file.arrayBuffer();
-          return {
-            buffer: new Uint8Array(arrayBuffer),
-            size: file.size,
-            type: file.type,
-            name: file.name,
-          };
-        }),
-      );
-
-      const urls = await handleUploadImages(
-        "Container",
-        vin,
-        fileData.map((file) => file.size),
-      );
-
-      await Promise.all(
-        urls.map((url: string, index: number) =>
-          fetch(url, {
-            method: "PUT",
-            headers: {
-              "Content-Type": images[index].type,
-            },
-            body: fileData[index].buffer,
-          }),
-        ),
-      );
-    }
 
     revalidatePath("/admin/");
 

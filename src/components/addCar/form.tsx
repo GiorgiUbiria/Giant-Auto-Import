@@ -12,6 +12,16 @@ import { ErrorMessage } from "@hookform/error-message";
 import countries from "../../../public/countries.json";
 import { handleUploadImages } from "@/lib/actions/bucketActions";
 import Spinner from "../spinner";
+import { colors } from "../../../public/colors";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const initialState = {
   error: null,
@@ -42,7 +52,6 @@ export default function AddForm() {
       engineType: "",
       titleNumber: "",
       titleState: "",
-      color: "",
       fuelType: "Gasoline",
       shipping: "",
       originPort: "",
@@ -129,7 +138,7 @@ export default function AddForm() {
           <input
             type="text"
             id="vin"
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
             {...register("vin")}
             placeholder="vin"
           />
@@ -153,7 +162,7 @@ export default function AddForm() {
             placeholder="year"
             id="year"
             {...register("year")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -175,7 +184,7 @@ export default function AddForm() {
             placeholder="make"
             id="make"
             {...register("make")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -197,7 +206,7 @@ export default function AddForm() {
             placeholder="model"
             id="model"
             {...register("model")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -219,7 +228,7 @@ export default function AddForm() {
             placeholder="manufacturer"
             id="manufacturer"
             {...register("manufacturer")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -241,7 +250,7 @@ export default function AddForm() {
             placeholder="trim"
             id="trim"
             {...register("trim")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -263,7 +272,7 @@ export default function AddForm() {
           <select
             id="country"
             {...register("country")}
-            className="bg-gray text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            className="bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
           >
             {countries.map((country: { name: string; code: string }) => (
               <option key={country.code} value={country.name}>
@@ -289,7 +298,7 @@ export default function AddForm() {
           <select
             id="status"
             {...register("status")}
-            className="bg-gray text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            className="bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
           >
             <option value="Pending">Pending</option>
             <option value="OnHand">On Hand</option>
@@ -315,7 +324,7 @@ export default function AddForm() {
           <select
             id="fuelType"
             {...register("fuelType")}
-            className="bg-gray text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            className="bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
           >
             <option value="Gasoline">Gasoline</option>
             <option value="Diesel">Diesel</option>
@@ -345,7 +354,7 @@ export default function AddForm() {
             placeholder="engine type"
             id="engineType"
             {...register("engineType")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -367,7 +376,7 @@ export default function AddForm() {
             placeholder="title number"
             id="titleNumber"
             {...register("titleNumber")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -389,7 +398,7 @@ export default function AddForm() {
             placeholder="title state"
             id="titleState"
             {...register("titleState")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -411,7 +420,7 @@ export default function AddForm() {
             placeholder="body type"
             id="bodyType"
             {...register("bodyType")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -435,7 +444,7 @@ export default function AddForm() {
             placeholder="destinationPort"
             id="destinationPort"
             {...register("destinationPort")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -457,7 +466,7 @@ export default function AddForm() {
             placeholder="originPort"
             id="originPort"
             {...register("originPort")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -476,13 +485,27 @@ export default function AddForm() {
           >
             Color
           </label>
-          <input
-            type="text"
-            placeholder="color"
-            id="color"
-            {...register("color")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-          />
+          <Select {...register("color")}>
+            <SelectTrigger className="w-full bg-gray-900">
+              <SelectValue placeholder="Select a color" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Colors</SelectLabel>
+                {colors.map((color) => (
+                  <SelectItem key={color.name} value={color.name}>
+                    <div className="flex gap-2">
+                      <div
+                        className="w-6 h-6 rounded-full border-2 border-gray-600"
+                        style={{ backgroundColor: color.hex }}
+                      />
+                      {color.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
           <ErrorMessage
             errors={formState.errors}
             name="color"
@@ -503,7 +526,7 @@ export default function AddForm() {
             placeholder="auction"
             id="auction"
             {...register("auction")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -525,7 +548,7 @@ export default function AddForm() {
             placeholder="shipping"
             id="shipping"
             {...register("shipping")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -549,7 +572,7 @@ export default function AddForm() {
             {...register("fined", {
               setValueAs: (v) => (v === "true" ? true : false),
             })}
-            className="bg-gray text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-2.5 pb-2.5 pt-4 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            className="bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-2.5 pb-2.5 pt-4 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
           >
             <option value="true">Yes</option>
             <option value="false">No</option>
@@ -574,7 +597,7 @@ export default function AddForm() {
             {...register("arrived", {
               setValueAs: (v) => (v === "true" ? true : false),
             })}
-            className="bg-gray text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-2.5 pb-2.5 pt-4 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            className="bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-2.5 pb-2.5 pt-4 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
           >
             <option value="true">Yes</option>
             <option value="false">No</option>
@@ -601,7 +624,7 @@ export default function AddForm() {
             {...register("price", {
               valueAsNumber: true,
             })}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -621,7 +644,7 @@ export default function AddForm() {
           <select
             id="priceCurrency"
             {...register("priceCurrency")}
-            className="bg-gray text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-2.5 pb-2.5 pt-4 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            className="bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-2.5 pb-2.5 pt-4 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
           >
             <option value="1">GEL</option>
             <option value="2">USD</option>
@@ -650,7 +673,7 @@ export default function AddForm() {
             {...register("departureDate", {
               valueAsDate: true,
             })}
-            className="w-full py-2.5 px-5 rounded-lg border border-gray-300 appearance-none dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="w-full py-2.5 px-5 rounded-lg border bg-gray-900 border-gray-300 appearance-none dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -673,7 +696,7 @@ export default function AddForm() {
             {...register("arrivalDate", {
               valueAsDate: true,
             })}
-            className="w-full py-2.5 px-5 rounded-lg border border-gray-300 appearance-none dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="w-full py-2.5 px-5 rounded-lg border bg-gray-900 border-gray-300 appearance-none dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -699,7 +722,7 @@ export default function AddForm() {
             {...register("arrived_images", {
               setValueAs: (v) => Array.from(v),
             })}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -723,7 +746,7 @@ export default function AddForm() {
             {...register("container_images", {
               setValueAs: (v) => Array.from(v),
             })}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -738,7 +761,7 @@ export default function AddForm() {
         <button
           disabled={pending}
           type="submit"
-          className="w-full py-2.5 px-5 me-2 mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+          className="w-full py-2.5 px-5 me-2 mb-2 text-sm font-medium text-black focus:outline-none bg-gray-300 rounded-lg border border-gray-200 hover:bg-gray-900-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-900-800 dark:text-gray-900 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-900-700"
         >
           {pending ? <Spinner /> : "Submit"}
         </button>

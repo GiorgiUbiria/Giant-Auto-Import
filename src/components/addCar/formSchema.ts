@@ -1,8 +1,9 @@
 import { z } from "zod";
 import countryList from "../../../public/countries.json";
+import { colors } from "../../../public/colors";
 
 const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpg", "image/jpeg"];
-const MAX_IMAGE_SIZE = 4; //In MegaBytes
+const MAX_IMAGE_SIZE = 4;
 
 const sizeInMB = (sizeInBytes: number, decimalsNum = 2) => {
   const result = sizeInBytes / (1024 * 1024);
@@ -53,6 +54,11 @@ export const formSchema = z.object({
     .refine((value) => countryList.some((country) => country.name === value), {
       message: "Country must be a real country.",
     }),
+  color: z
+    .string()
+    .refine((value) => colors.some((color) => color.name === value), {
+      message: "Color must be a real color.",
+    }),
   engineType: z.string().min(3).max(50, {
     message: "Engine Type must be between 3 and 50 characters long.",
   }),
@@ -61,9 +67,6 @@ export const formSchema = z.object({
   }),
   titleState: z.string().min(3).max(50, {
     message: "Title State must be between 3 and 50 characters long.",
-  }),
-  color: z.string().min(3).max(50, {
-    message: "Color must be between 3 and 50 characters long.",
   }),
   fuelType: z
     .string()
@@ -123,24 +126,26 @@ export const formSchema = z.object({
     .custom<FileList>()
     .refine((files) => {
       return Array.from(files ?? []).every(
-        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE
+        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE,
       );
     }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
     .refine((files) => {
       return Array.from(files ?? []).every((file) =>
-        ACCEPTED_IMAGE_TYPES.includes(file.type)
+        ACCEPTED_IMAGE_TYPES.includes(file.type),
       );
-    }, "File type is not supported").optional(),
+    }, "File type is not supported")
+    .optional(),
   container_images: z
     .custom<FileList>()
     .refine((files) => {
       return Array.from(files ?? []).every(
-        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE
+        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE,
       );
     }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
     .refine((files) => {
       return Array.from(files ?? []).every((file) =>
-        ACCEPTED_IMAGE_TYPES.includes(file.type)
+        ACCEPTED_IMAGE_TYPES.includes(file.type),
       );
-    }, "File type is not supported").optional(),
+    }, "File type is not supported")
+    .optional(),
 });

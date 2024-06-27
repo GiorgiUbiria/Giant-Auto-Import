@@ -1,5 +1,6 @@
 import { z } from "zod";
 import countryList from "../../../public/countries.json";
+import { colors } from "../../../public/colors";
 
 export const formSchema = z.object({
   vin: z
@@ -89,9 +90,8 @@ export const formSchema = z.object({
     .nullish(),
   color: z
     .string()
-    .min(3)
-    .max(50, {
-      message: "Color must be between 3 and 50 characters long.",
+    .refine((value) => colors.some((color) => color.name === value), {
+      message: "Color must be a real color.",
     })
     .nullish(),
   fuelType: z

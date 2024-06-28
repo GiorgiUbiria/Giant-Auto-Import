@@ -23,11 +23,10 @@ export default function Gallery({ car }: { car: CarData }) {
   }, [imageType, car.images]);
 
   return (
-    <div className="lg:basis-1/2 flex justify-center">
+    <div className="lg:basis-1/2 flex flex-col justify-center place-items-center">
       <CustomMenuBar
         onSelect={handleImageTypeChange}
       />
-
       <FeaturedImageGallery data={images ? images : []} />
     </div>
   );

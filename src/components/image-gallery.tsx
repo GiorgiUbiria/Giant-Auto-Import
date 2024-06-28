@@ -1,28 +1,19 @@
 "use client";
 
-import React, { useRef } from "react";
+import React from "react";
 import Image from "next/image";
 import { Image as ImageType } from "@/lib/interfaces";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "./ui/carousel";
 
 export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
   const [active, setActive] = React.useState(data.at(0)?.imageUrl);
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
-  const openDialog = () => {
-    if (dialogRef.current) {
-      dialogRef.current.showModal();
-    }
-  };
-
-  const closeDialog = () => {
-    if (dialogRef.current) {
-      dialogRef.current.close();
-    }
-  };
-
-  const handleShowAll = () => {
-    openDialog();
-  };
 
   if (data.length === 0) {
     return (
@@ -44,7 +35,6 @@ export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
             className="h-auto w-full max-w-full rounded-lg object-cover object-center md:h-[480px]"
             src={active!}
             alt="car"
-            onClick={openDialog}
             width="400"
             height="400"
           />
@@ -63,39 +53,36 @@ export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
             </div>
           ))}
           {data.length > 4 && (
-            <button
-              onClick={handleShowAll}
-              className="h-20 flex items-center justify-center rounded-lg border border-dashed border-gray-400 text-gray-600 hover:bg-gray-100 cursor-pointer"
-            >
-              Show All
-            </button>
+            <Dialog>
+              <DialogTrigger className="h-20 flex items-center justify-center rounded-lg border border-dashed border-gray-400 text-gray-600 hover:bg-gray-100 cursor-pointer">
+                Show All
+              </DialogTrigger>
+              <DialogContent className="min-w-full p-14">
+                <Carousel>
+                  <CarouselContent className="-ml-1 p-24">
+                    {data.map(({ imageUrl }, index) => (
+                      <CarouselItem
+                        key={index}
+                        className="md:basis-1/2 lg:basis-1/3"
+                      >
+                          <Image
+                            key={index}
+                            src={imageUrl!}
+                            width="500"
+                            height="500"
+                            className="object-cover rounded-lg hover:cursor-pointer"
+                            alt="carousel-image"
+                          />
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious />
+                  <CarouselNext />
+                </Carousel>
+              </DialogContent>
+            </Dialog>
           )}
         </div>
-        <dialog
-          ref={dialogRef}
-          className="relative w-3/4 max-w-4xl p-0 bg-transparent"
-        >
-          <div className="bg-white p-4 rounded-lg max-w-4xl w-full">
-            <button
-              onClick={closeDialog}
-              className="absolute top-2 right-4 text-white text-4xl hover:text-red-500"
-            >
-              &times;
-            </button>
-            <div className="flex overflow-x-scroll space-x-4">
-              {data.map(({ imageUrl }, index) => (
-                <Image
-                  key={index}
-                  src={imageUrl!}
-                  width="400"
-                  height="400"
-                  className="h-80 object-cover rounded-lg"
-                  alt="carousel-image"
-                />
-              ))}
-            </div>
-          </div>
-        </dialog>
       </div>
     </div>
   );

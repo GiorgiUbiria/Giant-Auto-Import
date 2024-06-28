@@ -102,7 +102,10 @@ export async function addCarToDb(
       fined: fined,
       arrived: arrived,
       status: status as CarStatus,
-      parkingDateString: arrivalDate.toString(),
+      parkingDateString:
+        arrivalDate !== null &&
+        arrivalDate !== undefined ? 
+        arrivalDate.toString() : null,
     };
 
     const specificationsId = await insertSpecification(specifications);
@@ -112,8 +115,8 @@ export async function addCarToDb(
       vin: vin,
       originPort: originPort,
       destinationPort: destinationPort,
-      departureDate: new Date(departureDate),
-      arrivalDate: new Date(arrivalDate),
+      departureDate: departureDate !== null && departureDate !== undefined ? new Date(departureDate) : null,
+      arrivalDate:  arrivalDate !== null && arrivalDate !== undefined ? new Date(arrivalDate) : null,
       createdAt: new Date(),
       auction: auction,
       shipping: shipping,

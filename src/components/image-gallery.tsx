@@ -14,6 +14,23 @@ import {
 
 export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
   const [active, setActive] = React.useState(data.at(0)?.imageUrl);
+  const [screenWidth, setScreenWidth] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      setScreenWidth(window.screen.width);
+
+      const handleResize = () => {
+        setScreenWidth(window.screen.width);
+      };
+
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
+    }
+  }, []);
 
   if (data.length === 0) {
     return (
@@ -57,14 +74,21 @@ export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
               <DialogTrigger className="h-20 flex items-center justify-center rounded-lg border border-dashed border-gray-400 text-gray-600 hover:bg-gray-100 cursor-pointer">
                 Show All
               </DialogTrigger>
-              <DialogContent className="min-w-full p-14">
-                <Carousel>
-                  <CarouselContent className="-ml-1 p-24">
+              <DialogContent className="min-w-full p-14 sm:flex sm:justify-center sm:items-center">
+                <Carousel
+                  opts={{
+                    align: "start",
+                  }}
+                  orientation={screenWidth! > 768 ? "horizontal" : "vertical"}
+                  className="md:max-w-full sm:max-w-xs"
+                >
+                  <CarouselContent className="-ml-1 sm:h-[200px] md:p-24">
                     {data.map(({ imageUrl }, index) => (
                       <CarouselItem
                         key={index}
-                        className="md:basis-1/2 lg:basis-1/3"
+                        className="sm:basis-1 md:basis-1/2 lg:basis-1/3"
                       >
+                        <div className="sm:p-1">
                           <Image
                             key={index}
                             src={imageUrl!}
@@ -73,6 +97,7 @@ export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
                             className="object-cover rounded-lg hover:cursor-pointer"
                             alt="carousel-image"
                           />
+                        </div>
                       </CarouselItem>
                     ))}
                   </CarouselContent>

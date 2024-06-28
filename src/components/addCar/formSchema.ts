@@ -50,7 +50,7 @@ export const formSchema = z.object({
     .min(1, { message: "Trim must be at least 1 character long" })
     .max(15, {
       message: "Trim must be at most 15 characters long",
-    }),
+    }).nullish(),
   manufacturer: z
     .string({ message: "Manufacturer must be a string" })
     .min(3, { message: "Manufacturer must be at least 3 characters long" })
@@ -62,7 +62,7 @@ export const formSchema = z.object({
     .min(3, { message: "Body type must be at least 3 characters long" })
     .max(50, {
       message: "Body type must be at most 50 characters long",
-    }),
+    }).nullish(),
   country: z
     .string({ message: "Country must be a string" })
     .refine((value) => countryList.some((country) => country.name === value), {
@@ -72,25 +72,25 @@ export const formSchema = z.object({
     .string({ message: "Color must be a string" })
     .refine((value) => colors.some((color) => color.name === value), {
       message: "Color must be a real color.",
-    }),
+    }).nullish(),
   engineType: z
     .string({ message: "Engine type must be a string" })
     .min(3, { message: "Engine type must be at least 3 characters long" })
     .max(50, {
       message: "Engine type must be at most 50 characters long",
-    }),
+    }).nullish(),
   titleNumber: z
     .string({ message: "Title number must be a string" })
     .min(2, { message: "Title number must be at least 2 characters long" })
     .max(50, {
       message: "Title number must be at most 50 characters long",
-    }),
+    }).nullish(),
   titleState: z
     .string({ message: "Title state must be a string" })
     .min(2, { message: "Title state must be at least 2 characters long" })
     .max(50, {
       message: "Title state must be at most 50 characters long",
-    }),
+    }).nullish(),
   fuelType: z
     .string({ message: "Fuel type must be a string" })
     .refine(
@@ -111,9 +111,9 @@ export const formSchema = z.object({
         message:
           "Fuel Type must be one of the following options: Gasoline, Diesel, Electric, Hybrid, Biodiesel, LPG, CNG, Hybrid Electric, Hybrid Gasoline, Other.",
       },
-    ),
-  fined: z.boolean({ message: "Fined must be a boolean" }),
-  arrived: z.boolean({ message: "Arrived must be a boolean" }),
+    ).nullish(),
+  fined: z.boolean({ message: "Fined must be a boolean" }).nullish(),
+  arrived: z.boolean({ message: "Arrived must be a boolean" }).nullish(),
   status: z
     .string({ message: "Status must be a string" })
     .refine(
@@ -123,40 +123,40 @@ export const formSchema = z.object({
         message:
           "Status must be one of the following options: Pending, OnHand, Loaded, InTransit, Fault.",
       },
-    ),
+    ).nullish(),
   originPort: z
     .string({ message: "Origin port must be a string" })
     .min(2, { message: "Origin port must be at least 2 characters long" })
     .max(50, {
       message: "Origin port must be at most 50 characters long",
-    }),
+    }).nullish(),
   destinationPort: z
     .string({ message: "Destination port must be a string" })
     .min(2, { message: "Destination port must be at least 2 characters long" })
     .max(50, {
       message: "Destination port must be at most 50 characters long",
-    }),
-  departureDate: z.date({ message: "Departure date must be a date" }),
-  arrivalDate: z.date({ message: "Arrival date must be a date" }),
+    }).nullish(),
+  departureDate: z.date({ message: "Departure date must be a date" }).nullish(),
+  arrivalDate: z.date({ message: "Arrival date must be a date" }).nullish(),
   auction: z
     .string({ message: "Auction must be a string" })
     .min(2, { message: "Auction must be at least 2 characters long" })
     .max(50, {
       message: "Auction must be at most 50 characters long",
-    }),
+    }).nullish(),
   shipping: z
     .string({ message: "Shipping must be a string" })
     .min(2, { message: "Shipping must be at least 2 characters long" })
     .max(50, {
       message: "Shipping must be at most 50 characters long",
-    }),
+    }).nullish(),
   price: z
     .number({ message: "Price must be a number" })
     .min(0, { message: "Price must be at least 0" })
     .max(150000, { message: "Price must be at most 150000" }),
   priceCurrency: z.enum(["1", "2", "3"], {
     message: "Price Currency must be between 1 and 3.",
-  }),
+  }).nullish(),
   arrived_images: z
     .custom<FileList>()
     .refine((files) => {

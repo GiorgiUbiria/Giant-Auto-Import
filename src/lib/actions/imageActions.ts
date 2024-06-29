@@ -6,6 +6,9 @@ import { APICarResponse } from "../api-interfaces";
 import { fetchCars } from "./actions";
 import { db } from "../drizzle/db";
 import { imageTable } from "../drizzle/schema";
+import { ActionResult } from "../form";
+import { eq } from "drizzle-orm";
+import { deleteImageFromBucket } from "./bucketActions";
 
 type NewImage = typeof imageTable.$inferInsert;
 
@@ -96,5 +99,22 @@ export async function fetchAssets(
   } catch (error) {
     console.error(`Error fetching assets for VIN: ${vin}:`, error);
     return undefined;
+  }
+}
+
+export async function deleteImage(imageUrl: string): Promise<ActionResult> {
+  try {
+    const isFromCloudFlare = imageUrl.includes("cloudflare");
+
+    if (isFromCloudFlare) {
+      await deleteImageFromBucket(imageUrl);
+    } else {
+      await db.delete(imageTable).where(eq(imageTable.imageUrl, imageUrl));
+    }
+
+    return { success: "Image deleted successfully", error: null };
+  } catch(error) {
+
+    return {  error: "Error deleting image" };
   }
 }

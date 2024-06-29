@@ -4,14 +4,15 @@ import { Image as ImageType } from "@/lib/interfaces";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import React from "react";
+import { toast } from "sonner";
 
 export default function Images({ images }: { images: ImageType[] }) {
+  const [loading, setTransitioning] = React.useTransition();
   const chunkArray = (arr: ImageType[], chunkSize: number) => {
     const chunks = [];
     for (let i = 0; i < arr.length; i += chunkSize) {
@@ -24,6 +25,19 @@ export default function Images({ images }: { images: ImageType[] }) {
 
   if (images && images.length > 0) {
     imageChunks = chunkArray(images, 3);
+  }
+
+  async function deleteImage(imageUrl: string) {
+    setTransitioning(async () => {
+      const res = await ();
+      if (res.error !== null) {
+        toast.error(res.error);
+        console.error(res.error);
+      } else {
+        toast.success(res.success);
+        console.log(res.success);
+      }
+    });
   }
 
   return (
@@ -42,14 +56,19 @@ export default function Images({ images }: { images: ImageType[] }) {
                     height={300}
                   />
                 </DialogTrigger>
-                <DialogContent className="min-w-full">
-                  <Image
-                    className="h-auto min-w-full max-w-full rounded-lg"
-                    src={image.imageUrl!}
-                    alt={`Car image ${imgIndex + 1}`}
-                    width={800}
-                    height={800}
-                  />
+                <DialogContent className="min-w-full md:min-w-fit">
+                  <div className="flex flex-col gap-4">
+                    <Button className="w-full" onClick={() => deleteImage(image.imageUrl!)}>
+                      Delete Image
+                    </Button>
+                    <Image
+                      className="h-auto min-w-full max-w-full rounded-lg"
+                      src={image.imageUrl!}
+                      alt={`Car image ${imgIndex + 1}`}
+                      width={550}
+                      height={400}
+                    />
+                  </div>
                 </DialogContent>
               </Dialog>
             </div>

@@ -5,6 +5,7 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   ListObjectsV2Command,
+  DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import "dotenv/config";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -24,6 +25,25 @@ const S3Client = new S3({
   },
 });
 
+export async function deleteImageFromBucket(imageUrl: string): Promise<void> {
+  const url = new URL(imageUrl);
+  const key = decodeURIComponent(url.pathname.substring(1));
+
+  const deleteParams = {
+    Bucket: bucketName,
+    Key: key,
+  };
+
+  const deleteCommand = new DeleteObjectCommand(deleteParams);
+
+  try {
+    await S3Client.send(deleteCommand);
+    console.log(`Successfully deleted ${key} from ${bucketName}`);
+  } catch (error) {
+    console.error(`Error deleting ${key} from ${bucketName}:`, error);
+  }
+}
+
 async function getFileCount(prefix: string): Promise<number> {
   const command = new ListObjectsV2Command({
     Bucket: bucketName,
@@ -35,7 +55,7 @@ async function getFileCount(prefix: string): Promise<number> {
 
   while (truncated) {
     const response = await S3Client.send(command);
-    fileCount += response.Contents?.length?? 0;
+    fileCount += response.Contents?.length ?? 0;
     truncated = response.IsTruncated as boolean;
     if (truncated) {
       command.input.ContinuationToken = response.NextContinuationToken;
@@ -114,7 +134,7 @@ export async function getImagesFromBucket(vin: string): Promise<Image[]> {
         } as Image;
       }
       return undefined;
-    })
+    }),
   );
 
   return imageData.filter((item): item is Image => item !== undefined);

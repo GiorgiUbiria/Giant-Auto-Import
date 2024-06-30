@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   integer,
   sqliteTable,
@@ -108,6 +109,7 @@ export const userCarTable = sqliteTable(
 export const priceTable = sqliteTable("price", {
   id: integer("id").primaryKey(),
   totalAmount: real("total_amount"),
+  amountLeft: real("amount_left"),
   currencyId: integer("currency_id").references(() => priceCurrencyTable.id),
   carId: integer("car_id").references(() => carTable.id, {
     onDelete: "cascade",

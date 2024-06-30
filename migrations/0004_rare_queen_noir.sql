@@ -1,0 +1,1 @@
+ALTER TABLE `price` ADD `amount_left` real;

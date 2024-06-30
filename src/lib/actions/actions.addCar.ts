@@ -12,7 +12,6 @@ import {
 import { db } from "../drizzle/db";
 import { CarStatus } from "../interfaces";
 import { revalidatePath } from "next/cache";
-import { handleUploadImages } from "./bucketActions";
 
 type NewCar = typeof carTable.$inferInsert;
 type NewSpecification = typeof specificationsTable.$inferInsert;
@@ -128,6 +127,7 @@ export async function addCarToDb(
 
     const newPrice: NewPrice = {
       totalAmount: price as number,
+      amountLeft: price as number,
       currencyId: Number(priceCurrency) as number,
       carId: carId[0].carId,
     };

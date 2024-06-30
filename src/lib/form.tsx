@@ -39,4 +39,5 @@ export function Form({
 export interface ActionResult {
   error: string | null;
   success?: string;
+  data?: any;
 }

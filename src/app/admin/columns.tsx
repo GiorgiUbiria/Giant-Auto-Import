@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import DeleteButton from "@/components/deleteCar/deleteButton";
 
 export const columns: ColumnDef<CarData>[] = [
@@ -175,7 +176,24 @@ export const columns: ColumnDef<CarData>[] = [
   },
   {
     accessorKey: "transaction",
-    header: "Transaction",
+    header: "Transactions",
+    cell: ({ row }) => {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">See All</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem className="flex flex-col">
+              <p>Transactions</p>
+              <ScrollArea className="h-96 w-64 rounded-md border">
+                
+              </ScrollArea>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
   },
   {
     id: "actions",
@@ -193,7 +211,11 @@ export const columns: ColumnDef<CarData>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem>
-              <Button onClick={() => navigator.clipboard.writeText(vin)} variant="outline" className="w-full text-center">
+              <Button
+                onClick={() => navigator.clipboard.writeText(vin)}
+                variant="outline"
+                className="w-full text-center"
+              >
                 Copy Vin Code
               </Button>
             </DropdownMenuItem>

@@ -34,8 +34,8 @@ export default async function EditCarForm({ car }: { car: CarData }) {
           <EditForm car={car} />
         </TabsContent>
         <TabsContent value="images">
-          {car.images && car.images.length > 0 ? (
-            <Images images={car.images} />
+          {car.images && car.images.length > 0 && car.car.vin ? (
+            <Images images={car.images} vin={car.car.vin} />
           ) : (
             <p>No images</p>
           )}

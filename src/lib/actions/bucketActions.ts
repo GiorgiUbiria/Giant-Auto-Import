@@ -10,6 +10,7 @@ import {
 import "dotenv/config";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Image } from "../interfaces";
+import { revalidatePath } from "next/cache";
 
 const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
 const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;

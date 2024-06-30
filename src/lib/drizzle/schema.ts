@@ -81,7 +81,9 @@ export const carTable = sqliteTable("car", {
 
 export const imageTable = sqliteTable("image", {
   id: integer("id").primaryKey(),
-  carVin: text("car_vin").references(() => carTable.vin, { onDelete: "cascade" }),
+  carVin: text("car_vin").references(() => carTable.vin, {
+    onDelete: "cascade",
+  }),
   imageUrl: text("image_url"),
   imageType: text("image_type"),
 });
@@ -128,6 +130,7 @@ export const transactionTable = sqliteTable("transaction", {
   carId: integer("car_id").references(() => carTable.id, {
     onDelete: "cascade",
   }),
+  currencyId: integer("currency_id").references(() => priceCurrencyTable.id),
   amount: real("amount"),
-  paymentDate: text("payment_date"),
+  paymentDate: integer("payment_date", { mode: "timestamp" }),
 });

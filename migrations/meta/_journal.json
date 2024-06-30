@@ -15,6 +15,20 @@
       "when": 1718541133176,
       "tag": "0001_ordinary_warstar",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1719743757874,
+      "tag": "0002_swift_the_fallen",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1719743851843,
+      "tag": "0003_peaceful_russian",
+      "breakpoints": true
     }
   ]
 }

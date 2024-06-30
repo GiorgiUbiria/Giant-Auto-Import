@@ -136,3 +136,15 @@ export const transactionTable = sqliteTable("transaction", {
   amount: real("amount"),
   paymentDate: integer("payment_date", { mode: "timestamp" }),
 });
+
+export const noteTable = sqliteTable("note", {
+  id: integer("id").primaryKey(),
+  userId: text("user_id").references(() => userTable.id, {
+    onDelete: "cascade",
+  }),
+  carId: integer("car_id").references(() => carTable.id, {
+    onDelete: "cascade",
+  }),
+  note: text("note"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }),
+});

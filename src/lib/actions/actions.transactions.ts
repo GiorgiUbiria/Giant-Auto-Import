@@ -25,3 +25,19 @@ export async function addTransaction(carId: string, userId: string): Promise<Act
     return { error: "Error adding transaction" };
   }
 }
+
+export async function updateTransaction(carId: string, transactionId: string, userId: string): Promise<ActionResult> {
+  try {
+    return { success: "Transaction updated successfully", error: null };
+  } catch (error) {
+    return { error: "Error updating transaction" };
+  }
+}
+
+export async function deleteTransaction(carId: string, transactionId: string): Promise<ActionResult> {
+  try {
+    return { success: "Transaction deleted successfully", error: null };
+  } catch (error) {
+    return { error: "Error deleting transaction" };
+  }
+}

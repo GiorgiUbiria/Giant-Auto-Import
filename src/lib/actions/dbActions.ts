@@ -26,8 +26,6 @@ const insertUserCar = async (userCar: NewUserCar) => {
   return db.insert(userCarTable).values(userCar);
 };
 
-
-
 export async function assignCarToUser(
   userId: string,
   formData: FormData,

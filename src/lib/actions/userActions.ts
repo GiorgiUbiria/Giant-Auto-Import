@@ -2,7 +2,7 @@
 
 import { eq } from "drizzle-orm";
 import { db } from "../drizzle/db";
-import { userTable } from "../drizzle/schema";
+import { carTable, userCarTable, userTable } from "../drizzle/schema";
 import { ActionResult } from "../form";
 import { UserWithCarsAndSpecs } from "../interfaces";
 import { getUser } from "./dbActions";
@@ -46,3 +46,35 @@ export async function removeUser(
   }
 }
 
+export async function getUserByCarId(carId: number): Promise<ActionResult> {
+  try {
+    const userCar = await db
+      .select({ userId: userCarTable.userId })
+      .from(userCarTable)
+      .where(eq(userCarTable.carId, carId))
+      .limit(1)
+      .offset(0);
+
+    if (userCar.length === 0) {
+      return { error: "User not found" };
+    }
+
+    const { userId } = userCar[0];
+
+    const user = await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.id, userId!))
+      .orderBy()
+      .limit(1);
+
+    if (user.length === 0) {
+      return { error: "User not found" };
+    }
+
+    return { success: "User found", data: user[0], error: null };
+  } catch (error) {
+    console.error(error);
+    return { error: "Failed to get user" };
+  }
+}

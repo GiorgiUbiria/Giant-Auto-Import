@@ -4,11 +4,19 @@ import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Images from "./images";
+import Transactions from "./transactions";
+import { getUserByCarId } from "@/lib/actions/userActions";
 
 export default async function EditCarForm({ car }: { car: CarData }) {
   const { user } = await validateRequest();
   if (!user || user?.role_id !== 2) {
     return redirect("/");
+  } 
+
+  const res  = await getUserByCarId(car.car.id);
+  let carUser = null;
+  if (res.data) {
+    carUser = res.data;
   }
 
   return (
@@ -17,15 +25,23 @@ export default async function EditCarForm({ car }: { car: CarData }) {
         Edit Car with VIN {car.car.vin}
       </h2>
       <Tabs defaultValue="form">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="form">Form</TabsTrigger>
           <TabsTrigger value="images">Images</TabsTrigger>
+          <TabsTrigger value="transactions">Transactions</TabsTrigger>
         </TabsList>
         <TabsContent value="form">
           <EditForm car={car} />
         </TabsContent>
         <TabsContent value="images">
-          {car.images && car.images.length > 0 ? <Images images={car.images} /> : <p>No images</p>}
+          {car.images && car.images.length > 0 ? (
+            <Images images={car.images} />
+          ) : (
+            <p>No images</p>
+          )}
+        </TabsContent>
+        <TabsContent value="transactions">
+          <Transactions car={car} userId={carUser?.id} />
         </TabsContent>
       </Tabs>
     </div>

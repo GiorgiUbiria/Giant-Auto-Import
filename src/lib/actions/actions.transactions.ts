@@ -18,7 +18,7 @@ export async function getTransaction(carId: string, transactionId: string): Prom
   }
 }
 
-export async function addTransaction(carId: string, userId: string): Promise<ActionResult> {
+export async function addTransaction(carId: number, userId: string, amount: number, priceCurrencyId: string): Promise<ActionResult> {
   try {
     return { success: "Transaction added successfully", error: null };
   } catch (error) {

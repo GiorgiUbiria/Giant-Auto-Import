@@ -2,7 +2,7 @@
 
 import { eq } from "drizzle-orm";
 import { db } from "../drizzle/db";
-import { carTable, userCarTable, userTable } from "../drizzle/schema";
+import { userCarTable, userTable } from "../drizzle/schema";
 import { ActionResult } from "../form";
 import { UserWithCarsAndSpecs } from "../interfaces";
 import { getUser } from "./dbActions";

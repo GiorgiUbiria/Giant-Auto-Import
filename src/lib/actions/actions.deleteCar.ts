@@ -4,9 +4,7 @@ import { eq } from "drizzle-orm";
 import {
   carTable,
   parkingDetailsTable,
-  priceTable,
   specificationsTable,
-  transactionTable,
 } from "../drizzle/schema";
 import { db } from "../drizzle/db";
 import { ActionResult } from "../form";

@@ -69,7 +69,7 @@ export type Transaction = {
 
 export type Note = {
   id: number;
-  userId: number | null;
+  userId: string | null;
   carId: number | null;
   note: string | null;
   createdAt: Date | null;

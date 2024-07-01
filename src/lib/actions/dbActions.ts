@@ -1,10 +1,6 @@
 "use server";
 
-import {
-  CarData,
-  User,
-  UserWithCarsAndSpecs,
-} from "@/lib/interfaces";
+import { CarData, Note, User, UserWithCarsAndSpecs } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 import { db } from "../drizzle/db";
 import {
@@ -122,7 +118,6 @@ export async function getCarsFromDatabase(): Promise<CarData[]> {
         eq(priceTable.currencyId, priceCurrencyTable.id),
       )
       .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
-      .leftJoin(noteTable, eq(carTable.id, noteTable.carId))
       .all()) as CarData[];
 
     if (cars.length === 0) {
@@ -158,7 +153,6 @@ export async function getCarsFromDatabaseForUser(
         eq(priceTable.currencyId, priceCurrencyTable.id),
       )
       .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
-      .leftJoin(noteTable, eq(carTable.id, noteTable.carId))
       .where(eq(userCarTable.userId, id))
       .all()) as CarData[];
 
@@ -211,7 +205,6 @@ export async function getCarFromDatabase(
         eq(priceTable.currencyId, priceCurrencyTable.id),
       )
       .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
-      .leftJoin(noteTable, eq(carTable.id, noteTable.carId))
       .where(eq(carTable.vin, vin))
       .limit(1)
       .get()) as CarData;
@@ -234,6 +227,14 @@ export async function getCarFromDatabase(
       imageUrl: image.imageUrl!,
       imageType: image.imageType as "Arrival" | "Container",
     }));
+
+    const notes = await db
+      .select()
+      .from(noteTable)
+      .where(eq(noteTable.carId, car.car.id))
+      .all();
+
+    car.note = notes;
 
     return car;
   } catch (e) {
@@ -262,7 +263,6 @@ export async function getCarFromDatabaseByID(
         eq(priceTable.currencyId, priceCurrencyTable.id),
       )
       .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
-      .leftJoin(noteTable, eq(carTable.id, noteTable.carId))
       .where(eq(carTable.id, id))
       .limit(1)
       .get()) as CarData;
@@ -270,6 +270,14 @@ export async function getCarFromDatabaseByID(
     if (!car) {
       return undefined;
     }
+
+    const notes = await db
+      .select()
+      .from(noteTable)
+      .where(eq(noteTable.carId, id))
+      .all();
+
+    car.note = notes;
 
     return car;
   } catch (e) {

@@ -12,7 +12,6 @@ import { createNote } from "@/lib/actions/actions.notes";
 import { CarData } from "@/lib/interfaces";
 import { NotesTable } from "./notes-table";
 import { columns } from "./notes-table-columns";
-import { warn } from "console";
 
 const formSchema = z.object({
   note: z.string(),
@@ -27,7 +26,6 @@ export default function Notes({
   car: CarData;
   userId: string;
 }) {
-  console.log(car.note);
   const [loading, setTransitioning] = React.useTransition();
   const { pending } = useFormStatus();
   const { handleSubmit, register, formState } = useForm<FormValues>({

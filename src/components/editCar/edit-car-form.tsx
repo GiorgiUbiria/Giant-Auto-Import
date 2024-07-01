@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Images from "./images";
 import Transactions from "./transactions";
 import { getUserByCarId } from "@/lib/actions/userActions";
+import Notes from "./notes";
 
 export default async function EditCarForm({ car }: { car: CarData }) {
   const { user } = await validateRequest();
@@ -25,10 +26,11 @@ export default async function EditCarForm({ car }: { car: CarData }) {
         Edit Car with VIN {car.car.vin}
       </h2>
       <Tabs defaultValue="form">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="form">Form</TabsTrigger>
           <TabsTrigger value="images">Images</TabsTrigger>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
+          <TabsTrigger value="notes">Notes</TabsTrigger>
         </TabsList>
         <TabsContent value="form">
           <EditForm car={car} />
@@ -42,6 +44,9 @@ export default async function EditCarForm({ car }: { car: CarData }) {
         </TabsContent>
         <TabsContent value="transactions">
           <Transactions car={car} userId={carUser?.id} />
+        </TabsContent>
+        <TabsContent value="notes">
+          <Notes carId={car.car.id} userId={carUser?.id} />
         </TabsContent>
       </Tabs>
     </div>

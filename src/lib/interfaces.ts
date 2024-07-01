@@ -67,6 +67,14 @@ export type Transaction = {
   paymentDate: string | null;
 }
 
+export type Note = {
+  id: number;
+  userId: number | null;
+  carId: number | null;
+  note: string | null;
+  createdAt: Date | null;
+}
+
 export type CarData = {
   car: Car;
   specifications: Specifications | null;
@@ -75,6 +83,7 @@ export type CarData = {
   price_currency?: { id: "1" | "2" | "3"; currencyCode: Currency } | null;
   transaction?: Transaction | null;
   images?: Image[];
+  notes?: Note[];
 };
 
 export type UserWithCarsAndSpecs = {

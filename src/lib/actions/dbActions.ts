@@ -17,6 +17,7 @@ import {
   priceTable,
   priceCurrencyTable,
   transactionTable,
+  noteTable,
 } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 
@@ -121,6 +122,7 @@ export async function getCarsFromDatabase(): Promise<CarData[]> {
         eq(priceTable.currencyId, priceCurrencyTable.id),
       )
       .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
+      .leftJoin(noteTable, eq(carTable.id, noteTable.carId))
       .all()) as CarData[];
 
     if (cars.length === 0) {
@@ -156,6 +158,7 @@ export async function getCarsFromDatabaseForUser(
         eq(priceTable.currencyId, priceCurrencyTable.id),
       )
       .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
+      .leftJoin(noteTable, eq(carTable.id, noteTable.carId))
       .where(eq(userCarTable.userId, id))
       .all()) as CarData[];
 
@@ -208,6 +211,7 @@ export async function getCarFromDatabase(
         eq(priceTable.currencyId, priceCurrencyTable.id),
       )
       .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
+      .leftJoin(noteTable, eq(carTable.id, noteTable.carId))
       .where(eq(carTable.vin, vin))
       .limit(1)
       .get()) as CarData;
@@ -258,6 +262,7 @@ export async function getCarFromDatabaseByID(
         eq(priceTable.currencyId, priceCurrencyTable.id),
       )
       .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
+      .leftJoin(noteTable, eq(carTable.id, noteTable.carId))
       .where(eq(carTable.id, id))
       .limit(1)
       .get()) as CarData;

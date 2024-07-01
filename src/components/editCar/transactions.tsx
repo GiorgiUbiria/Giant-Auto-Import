@@ -6,7 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { ErrorMessage } from "@hookform/error-message";
-import { EditCarPayload, editCarInDb } from "@/lib/actions/actions.editCar";
+import { toast } from "sonner";
+import { addTransaction } from "@/lib/actions/actions.transactions";
+import { CarData } from "@/lib/interfaces";
+import Spinner from "../spinner";
 
 const initialState = {
   error: null,
@@ -24,10 +27,6 @@ const formSchema = z.object({
 
 export type FormValues = z.infer<typeof formSchema>;
 
-import { toast } from "sonner";
-import { addTransaction } from "@/lib/actions/actions.transactions";
-import { CarData } from "@/lib/interfaces";
-
 export default function Transactions({
   car,
   userId,
@@ -36,7 +35,6 @@ export default function Transactions({
   userId: string;
 }) {
   const [loading, setTransitioning] = React.useTransition();
-  const [state, formAction] = useFormState(editCarInDb, initialState);
   const { pending } = useFormStatus();
   const { handleSubmit, register, formState } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -51,8 +49,9 @@ export default function Transactions({
       const res = await addTransaction(
         car.car.id,
         userId,
+        car.price?.priceId!,
         data.transactionAmount,
-        data.priceCurrency,
+        Number(data.priceCurrency),
       );
       if (res.error !== null) {
         toast.error(res.error);
@@ -118,11 +117,18 @@ export default function Transactions({
             />
           </div>
         </div>
+        <div className="grid gap-6 mb-6 md:grid-cols1-1">
+          <button
+            disabled={pending}
+            type="submit"
+            className="w-full py-2.5 px-5 me-2 mb-2 text-sm font-medium text-black focus:outline-none bg-gray-300 rounded-lg border border-gray-200 hover:bg-gray-900-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-900-800 dark:text-gray-900 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-900-700"
+          >
+            {pending ? <Spinner /> : "Add Transaction"}
+          </button>
+        </div>
       </form>
 
-      <div className="flex justify-end">
-        All transactions
-      </div>
+      <div className="flex justify-end">All transactions</div>
     </div>
   );
 }

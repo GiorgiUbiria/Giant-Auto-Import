@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { noteTable } from "../drizzle/schema";
 import { ActionResult } from "../form";
 import { db } from "../drizzle/db";
+import { revalidatePath } from "next/cache";
 
 type newNote = typeof noteTable.$inferInsert;
 type selectNote = typeof noteTable.$inferSelect;
@@ -93,6 +94,8 @@ export async function createNote(userId: string, carId: number, note: string) {
     if (noteId === null) {
       return { error: "Error creating note" };
     }
+
+    revalidatePath("/admin/edit");
 
     return {
       success: "Note created successfully",

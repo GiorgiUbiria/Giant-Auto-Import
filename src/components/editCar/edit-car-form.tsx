@@ -46,7 +46,7 @@ export default async function EditCarForm({ car }: { car: CarData }) {
           <Transactions car={car} userId={carUser?.id} />
         </TabsContent>
         <TabsContent value="notes">
-          <Notes carId={car.car.id} userId={carUser?.id} />
+          <Notes car={car} userId={carUser?.id} />
         </TabsContent>
       </Tabs>
     </div>

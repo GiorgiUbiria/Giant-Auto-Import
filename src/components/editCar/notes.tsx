@@ -9,6 +9,10 @@ import { ErrorMessage } from "@hookform/error-message";
 import { toast } from "sonner";
 import Spinner from "../spinner";
 import { createNote } from "@/lib/actions/actions.notes";
+import { CarData } from "@/lib/interfaces";
+import { NotesTable } from "./notes-table";
+import { columns } from "./notes-table-columns";
+import { warn } from "console";
 
 const formSchema = z.object({
   note: z.string(),
@@ -17,12 +21,13 @@ const formSchema = z.object({
 export type FormValues = z.infer<typeof formSchema>;
 
 export default function Notes({
-  carId,
+  car,
   userId,
 }: {
-  carId: number;
+  car: CarData;
   userId: string;
 }) {
+  console.log(car.note);
   const [loading, setTransitioning] = React.useTransition();
   const { pending } = useFormStatus();
   const { handleSubmit, register, formState } = useForm<FormValues>({
@@ -34,7 +39,7 @@ export default function Notes({
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     console.log("Submitting form data:", data);
     setTransitioning(async () => {
-      const res = await createNote(userId, carId, data.note);
+      const res = await createNote(userId, car.car.id, data.note);
       if (res.error !== null) {
         toast.error(res.error);
         console.error(res.error);
@@ -83,7 +88,16 @@ export default function Notes({
         </div>
       </form>
 
-      <div className="flex justify-end">All Notes</div>
+      <div>
+        <h3 className="text-xl font-bold mb-4">All Notes</h3>
+        <div>
+          {car.note && car.note.length > 0 ? (
+            <NotesTable columns={columns} data={car.note} />
+          ) : (
+            <p>No notes...</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

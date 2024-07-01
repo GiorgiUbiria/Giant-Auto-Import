@@ -83,7 +83,7 @@ export type CarData = {
   price_currency?: { id: "1" | "2" | "3"; currencyCode: Currency } | null;
   transaction?: Transaction | null;
   images?: Image[];
-  notes?: Note[];
+  note?: Note[];
 };
 
 export type UserWithCarsAndSpecs = {

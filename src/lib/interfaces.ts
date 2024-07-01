@@ -62,6 +62,8 @@ export type Transaction = {
   priceId: number | null;
   userId: number | null;
   carId: number | null;
+  currencyId: number | null;
+  amount: number | null;
   paymentDate: string | null;
 }
 

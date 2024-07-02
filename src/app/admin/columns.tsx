@@ -163,6 +163,15 @@ export const columns: ColumnDef<CarData>[] = [
     },
   },
   {
+    accessorKey: "price.amountLeft",
+    header: "Amount Left",
+    id: "amount_left",
+    cell: ({ row }) => {
+      const price = row.getValue("amount_left") as number;
+      return <p> {price} </p>;
+    },
+  },
+  {
     accessorKey: "price_currency",
     header: "Currency",
     id: "price_currency",

@@ -79,7 +79,7 @@ export type CarData = {
   car: Car;
   specifications: Specifications | null;
   parking_details: ParkingDetails | null;
-  price?: { priceId?: number; totalAmount: number; amountLeft?: number; currencyId: number } | null;
+  price?: { id?: number; totalAmount: number; amountLeft?: number; currencyId: number } | null;
   price_currency?: { id: "1" | "2" | "3"; currencyCode: Currency } | null;
   transaction?: Transaction | null;
   images?: Image[];

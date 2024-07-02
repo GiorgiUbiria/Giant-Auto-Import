@@ -44,7 +44,7 @@ export default function Transactions({
       const res = await addTransaction(
         car.car.id,
         userId,
-        car.price?.priceId!,
+        car.price?.id!,
         data.transactionAmount,
         Number(data.priceCurrency),
       );

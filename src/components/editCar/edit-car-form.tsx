@@ -7,6 +7,8 @@ import Images from "./images";
 import Transactions from "./transactions";
 import { getUserByCarId } from "@/lib/actions/userActions";
 import Notes from "./notes";
+import { getUser, getUsers } from "@/lib/actions/dbActions";
+import UserCar from "./user-car";
 
 export default async function EditCarForm({ car }: { car: CarData }) {
   const { user } = await validateRequest();
@@ -15,10 +17,10 @@ export default async function EditCarForm({ car }: { car: CarData }) {
   } 
 
   const res  = await getUserByCarId(car.car.id);
-  let carUser = null;
-  if (res.data) {
-    carUser = res.data;
-  }
+
+  const users = await getUsers();
+
+  const carUser = await getUser(res.data?.id);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -26,9 +28,10 @@ export default async function EditCarForm({ car }: { car: CarData }) {
         Edit Car with VIN {car.car.vin}
       </h2>
       <Tabs defaultValue="form">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="form">Form</TabsTrigger>
           <TabsTrigger value="images">Images</TabsTrigger>
+          <TabsTrigger value="user">User</TabsTrigger>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
         </TabsList>
@@ -42,11 +45,14 @@ export default async function EditCarForm({ car }: { car: CarData }) {
             <p>No images</p>
           )}
         </TabsContent>
+        <TabsContent value="user">
+          <UserCar car={car} userId={res.data?.id} users={users} carUser={carUser} />
+        </TabsContent>
         <TabsContent value="transactions">
-          <Transactions car={car} userId={carUser?.id} />
+          <Transactions car={car} userId={res.data?.id} />
         </TabsContent>
         <TabsContent value="notes">
-          <Notes car={car} userId={carUser?.id} />
+          <Notes car={car} userId={res.data?.id} />
         </TabsContent>
       </Tabs>
     </div>

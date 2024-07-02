@@ -16,6 +16,7 @@ import {
   noteTable,
 } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { ActionResult } from "../form";
 
 type NewUserCar = typeof userCarTable.$inferInsert;
 
@@ -25,14 +26,15 @@ const insertUserCar = async (userCar: NewUserCar) => {
 
 export async function assignCarToUser(
   userId: string,
-  formData: FormData,
-): Promise<void> {
-  const vin = formData.get("car_vin") as string;
+  carVin: string,
+): Promise<ActionResult> {
   try {
-    const car: CarData | undefined = await getCarFromDatabase(vin);
+    const car: CarData | undefined = await getCarFromDatabase(carVin);
 
     if (!car) {
-      throw new Error(`Car with VIN ${vin} not found`);
+      return {
+        error: `Car with VIN ${carVin} not found`,
+      }
     }
 
     const carId: number = car.car.id;
@@ -44,11 +46,18 @@ export async function assignCarToUser(
 
     await insertUserCar(userCar);
 
-    console.log(`Car with VIN ${vin} assigned to user with ID ${userId}`);
+    console.log(`Car with VIN ${carVin} assigned to user with ID ${userId}`);
     revalidatePath(`/users/${userId}`);
+
+    return {
+      success: "Car assigned to user",
+      error: null,
+    }
   } catch (e) {
     console.error(e);
-    throw new Error("Failed to assign car to user");
+    return {
+      error: "Failed to assign car to user"
+    }
   }
 }
 

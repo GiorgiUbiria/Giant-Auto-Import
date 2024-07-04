@@ -9,6 +9,7 @@ import { imageTable } from "../drizzle/schema";
 import { ActionResult } from "../form";
 import { eq } from "drizzle-orm";
 import { deleteImageFromBucket } from "./bucketActions";
+import { revalidatePath } from "next/cache";
 
 type NewImage = typeof imageTable.$inferInsert;
 
@@ -111,6 +112,8 @@ export async function deleteImage(imageUrl: string): Promise<ActionResult> {
     } else {
       await db.delete(imageTable).where(eq(imageTable.imageUrl, imageUrl));
     }
+
+    revalidatePath("/admin/edit");
 
     return { success: "Image deleted successfully", error: null };
   } catch(error) {

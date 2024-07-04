@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Spinner from "../spinner";
+import { useRouter } from "next/navigation";
 
 const initialState = {
   error: null,
@@ -39,6 +40,7 @@ function formatDateToInputValue(date: Date | null): string {
 }
 
 export default function EditForm({ car }: { car: CarData }) {
+  const router = useRouter();
   const [loading, setTransitioning] = React.useTransition();
   const [state, formAction] = useFormState(editCarInDb, initialState);
   const { pending } = useFormStatus();
@@ -76,6 +78,7 @@ export default function EditForm({ car }: { car: CarData }) {
         console.error(res.error);
       } else {
         toast.success(res.success);
+        router.refresh();
         console.log(res.success);
       }
     });

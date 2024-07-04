@@ -11,6 +11,7 @@ import { ActionResult } from "../form";
 import { eq } from "drizzle-orm";
 import { Transaction } from "../interfaces";
 import axios from "axios";
+import { revalidatePath } from "next/cache";
 
 const exchangeRateApiKey = process.env.EXCHANGE_RATE_API_KEY!;
 
@@ -150,6 +151,8 @@ export async function addTransaction(
     if (updatedPriceId.length === 0) {
       return { error: "Error updating price", data: null };
     }
+
+    revalidatePath("/admin/edit");
 
     return {
       success: "Transaction added successfully",

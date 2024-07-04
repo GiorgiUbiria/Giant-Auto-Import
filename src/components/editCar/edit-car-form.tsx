@@ -39,7 +39,7 @@ export default async function EditCarForm({ car }: { car: CarData }) {
           <EditForm car={car} />
         </TabsContent>
         <TabsContent value="images">
-            <Images images={car.images} vin={car.car.vin} />
+            <Images images={car.images} vin={car.car.vin!} />
         </TabsContent>
         <TabsContent value="user">
           <UserCar car={car} userId={res.data?.id} users={users} carUser={carUser} />

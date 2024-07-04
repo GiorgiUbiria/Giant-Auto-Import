@@ -111,7 +111,7 @@ export default function AddForm() {
         const vin = getValues("vin");
 
         await processAndUploadImages(container_images, "Container", vin);
-        await processAndUploadImages(arrived_images, "Arrived", vin);
+        await processAndUploadImages(arrived_images, "Arrival", vin);
 
         toast.success(res.success);
         console.log(res.success);

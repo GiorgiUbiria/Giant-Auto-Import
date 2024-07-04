@@ -166,7 +166,7 @@ export default function Images({
 
     setTransitioning(async () => {
       await processAndUploadImages(container_images, "Container", vin);
-      await processAndUploadImages(arrived_images, "Arrived", vin);
+      await processAndUploadImages(arrived_images, "Arrival", vin);
     });
   };
 

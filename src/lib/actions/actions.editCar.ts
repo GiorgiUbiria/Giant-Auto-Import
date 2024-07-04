@@ -6,6 +6,7 @@ import {
   parkingDetailsTable,
   priceTable,
   specificationsTable,
+  transactionTable,
 } from "../drizzle/schema";
 import { db } from "../drizzle/db";
 import { Car, CarData, ParkingDetails, Specifications } from "../interfaces";
@@ -134,8 +135,12 @@ export async function editCarInDb(
       ) {
         await db
           .update(priceTable)
-          .set({ totalAmount: values.price })
+          .set({ totalAmount: values.price, amountLeft: values.price })
           .where(eq(priceTable.carId, id));
+
+        await db
+          .delete(transactionTable)
+          .where(eq(transactionTable.carId, id));
       }
       if (
         values.priceCurrency !== undefined &&
@@ -150,6 +155,7 @@ export async function editCarInDb(
       await db.insert(priceTable).values({
         carId: id,
         totalAmount: values.price !== undefined ? values.price : null,
+        amountLeft: values.price !== undefined ? values.price : null,
         currencyId:
           values.priceCurrency !== undefined
             ? Number(values.priceCurrency)

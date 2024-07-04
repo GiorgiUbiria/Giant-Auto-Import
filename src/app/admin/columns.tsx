@@ -5,7 +5,7 @@ import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import Link from "next/link";
-import { CarData, Currency } from "@/lib/interfaces";
+import { CarData } from "@/lib/interfaces";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +16,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import DeleteButton from "@/components/deleteCar/deleteButton";
 
 export const columns: ColumnDef<CarData>[] = [

@@ -4,6 +4,8 @@ import React from "react";
 import Image from "next/image";
 import { Image as ImageType } from "@/lib/interfaces";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import Zoom from "react-medium-image-zoom";
+import "react-medium-image-zoom/dist/styles.css";
 import {
   Carousel,
   CarouselContent,
@@ -48,13 +50,15 @@ export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
     <div className="max-w-xl">
       <div className="grid gap-4">
         <div>
-          <Image
-            className="h-auto w-full max-w-full rounded-lg object-cover object-center md:h-[480px]"
-            src={active!}
-            alt="car"
-            width="400"
-            height="400"
-          />
+          <Zoom>
+            <Image
+              className="h-auto w-full max-w-full rounded-lg object-cover object-center md:h-[480px]"
+              src={active!}
+              alt="car"
+              width="400"
+              height="400"
+            />
+          </Zoom>
         </div>
         <div className="grid grid-cols-5 gap-4">
           {data.slice(0, 4).map(({ imageUrl }, index) => (
@@ -89,14 +93,16 @@ export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
                         className="sm:basis-1 md:basis-1/2 lg:basis-1/3"
                       >
                         <div className="sm:p-1">
-                          <Image
-                            key={index}
-                            src={imageUrl!}
-                            width="500"
-                            height="500"
-                            className="object-cover rounded-lg hover:cursor-pointer"
-                            alt="carousel-image"
-                          />
+                          <Zoom>
+                            <Image
+                              key={index}
+                              src={imageUrl!}
+                              width="500"
+                              height="500"
+                              className="object-cover rounded-lg hover:cursor-pointer"
+                              alt="carousel-image"
+                            />
+                          </Zoom>
                         </div>
                       </CarouselItem>
                     ))}

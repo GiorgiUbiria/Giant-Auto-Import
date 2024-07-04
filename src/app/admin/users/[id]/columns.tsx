@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import DeleteButton from "@/components/deleteCar/deleteButton";
 
 export const columns: ColumnDef<CarData>[] = [
   {
@@ -28,6 +29,7 @@ export const columns: ColumnDef<CarData>[] = [
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
+        className="mb-1"
       />
     ),
     cell: ({ row }) => (
@@ -35,6 +37,7 @@ export const columns: ColumnDef<CarData>[] = [
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Select row"
+        className="mb-1"
       />
     ),
     enableSorting: false,
@@ -42,16 +45,23 @@ export const columns: ColumnDef<CarData>[] = [
   },
   {
     accessorKey: "car.id",
+    id: "car.id",
     header: ({ column }) => {
       return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          ID
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        <div className="text-center">
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            ID
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
       );
+    },
+    cell: ({ row }) => {
+      const id = row.getValue("car.id") as number;
+      return <p className="text-center"> {id} </p>;
     },
   },
   {
@@ -65,7 +75,24 @@ export const columns: ColumnDef<CarData>[] = [
   },
   {
     accessorKey: "specifications.year",
-    header: "Year",
+    id: "year",
+    header: ({ column }) => {
+      return (
+        <div className="text-center">
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Year
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      );
+    },
+    cell: ({ row }) => {
+      const year = row.getValue("year") as string;
+      return <p className="text-center"> {year} </p>;
+    },
   },
   {
     accessorKey: "specifications.make",
@@ -76,16 +103,8 @@ export const columns: ColumnDef<CarData>[] = [
     header: "Model",
   },
   {
-    accessorKey: "specifications.trim",
-    header: "Trim",
-  },
-  {
     accessorKey: "specifications.country",
     header: "Country",
-  },
-  {
-    accessorKey: "specifications.manufacturer",
-    header: "Manufacturer",
   },
   {
     accessorKey: "specifications.titleNumber",
@@ -104,7 +123,7 @@ export const columns: ColumnDef<CarData>[] = [
     header: "Status",
   },
   {
-    accessorKey: "parking_details.parkingDateString",
+    accessorKey: "car.arrivalDate",
     header: ({ column }) => {
       return (
         <Button
@@ -122,9 +141,32 @@ export const columns: ColumnDef<CarData>[] = [
     header: "Destination Port",
   },
   {
+    accessorKey: "price",
+    header: "Price",
+    id: "price",
+    cell: ({ row }) => {
+      const price = row.getValue("price") as {
+        id: number;
+        totalAmount: number;
+        currencyId: number;
+      };
+      return <p> {price?.totalAmount} </p>;
+    },
+  },
+  {
+    accessorKey: "price.amountLeft",
+    header: "Amount Left",
+    id: "amount_left",
+    cell: ({ row }) => {
+      const price = row.getValue("amount_left") as number;
+      return <p> {price} </p>;
+    },
+  },
+  {
     id: "actions",
     cell: ({ row }) => {
       const vin = row.getValue("vin") as string;
+      const carId = row.getValue("car.id") as number;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -135,16 +177,25 @@ export const columns: ColumnDef<CarData>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(vin)}
-            >
-              Copy Vin Code
+            <DropdownMenuItem>
+              <Button
+                onClick={() => navigator.clipboard.writeText(vin)}
+                variant="outline"
+                className="w-full text-center"
+              >
+                Copy Vin Code
+              </Button>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <Link href={`/admin/edit/${vin}`}>Edit Car</Link>
+              <Button variant="link" className="text-center w-full">
+                <Link href={`/admin/edit/${vin}`}>Edit Car</Link>
+              </Button>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <DeleteButton carId={carId} />
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

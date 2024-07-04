@@ -291,7 +291,7 @@ export async function getCarFromDatabaseByID(
       .where(eq(transactionTable.carId, id))
       .all() as Transaction[];
 
-    car.transactions = transactions;
+    car.transaction = transactions;
 
     const notes = await db
       .select()

@@ -15,9 +15,6 @@ const formSchema = z.object({
   transactionAmount: z
     .number({ message: "Transaction amount should be a number" })
     .min(1, { message: "Transaction amount should be greater than 0" }),
-  priceCurrency: z.enum(["1", "2", "3"], {
-    message: "Price Currency must be between 1 and 3.",
-  }),
 });
 
 export type FormValues = z.infer<typeof formSchema>;
@@ -33,8 +30,6 @@ export default function Transactions({
   const { pending } = useFormStatus();
   const { handleSubmit, register, formState, watch } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-    },
   });
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
@@ -45,7 +40,6 @@ export default function Transactions({
         userId,
         car.price?.id!,
         data.transactionAmount,
-        Number(data.priceCurrency),
       );
       if (res.error !== null) {
         toast.error(res.error);
@@ -88,31 +82,6 @@ export default function Transactions({
             />
             <p className="mt-2 text-red-400">Amount left after transaction: {transactionAmount ? car.price?.amountLeft! - transactionAmount : car.price?.amountLeft!}</p>
           </div>
-          <div>
-            <label
-              htmlFor="priceCurrency"
-              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-            >
-              Currency
-            </label>
-            <select
-              id="priceCurrency"
-              {...register("priceCurrency")}
-              defaultValue={car.price_currency?.id}
-              className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-2.5 pb-2.5 pt-4 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            >
-              <option value="1">GEL</option>
-              <option value="2">USD</option>
-              <option value="3">EUR</option>
-            </select>
-            <ErrorMessage
-              errors={formState.errors}
-              name="priceCurrency"
-              render={({ message }) => (
-                <p className="text-red-500 text-sm">{message}</p>
-              )}
-            />
-          </div>
         </div>
         <div className="grid gap-6 mb-6 md:grid-cols1-1">
           <button
@@ -132,7 +101,10 @@ export default function Transactions({
             car.transaction.length > 0 &&
             car.transaction.map((transaction: Transaction) => (
               <li key={transaction.paymentDate}>
-                {transaction.amount} : {JSON.stringify(transaction.paymentDate)}
+                <div className="flex gap-2">
+                  <p>Paid {transaction.amount} USD</p>
+                  <p>At {transaction.paymentDate?.toString()}</p>
+                </div>
               </li>
             ))}
         </ul>

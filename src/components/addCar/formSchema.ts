@@ -45,18 +45,6 @@ export const formSchema = z.object({
     .max(50, {
       message: "Model must be at most 50 characters long",
     }),
-  trim: z
-    .string({ message: "Trim must be a string" })
-    .min(1, { message: "Trim must be at least 1 character long" })
-    .max(15, {
-      message: "Trim must be at most 15 characters long",
-    }).nullish(),
-  manufacturer: z
-    .string({ message: "Manufacturer must be a string" })
-    .min(3, { message: "Manufacturer must be at least 3 characters long" })
-    .max(50, {
-      message: "Manufacturer must be at most 50 characters long",
-    }),
   bodyType: z
     .string({ message: "Body type must be a string" })
     .min(3, { message: "Body type must be at least 3 characters long" })
@@ -154,9 +142,6 @@ export const formSchema = z.object({
     .number({ message: "Price must be a number" })
     .min(0, { message: "Price must be at least 0" })
     .max(150000, { message: "Price must be at most 150000" }),
-  priceCurrency: z.enum(["1", "2", "3"], {
-    message: "Price Currency must be between 1 and 3.",
-  }).nullish(),
   arrived_images: z
     .custom<FileList>()
     .refine((files) => {

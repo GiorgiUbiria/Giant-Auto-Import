@@ -104,16 +104,8 @@ export const columns: ColumnDef<CarData>[] = [
     header: "Model",
   },
   {
-    accessorKey: "specifications.trim",
-    header: "Trim",
-  },
-  {
     accessorKey: "specifications.country",
     header: "Country",
-  },
-  {
-    accessorKey: "specifications.manufacturer",
-    header: "Manufacturer",
   },
   {
     accessorKey: "specifications.titleNumber",
@@ -132,7 +124,7 @@ export const columns: ColumnDef<CarData>[] = [
     header: "Status",
   },
   {
-    accessorKey: "parking_details.parkingDateString",
+    accessorKey: "car.arrivalDate",
     header: ({ column }) => {
       return (
         <Button
@@ -169,18 +161,6 @@ export const columns: ColumnDef<CarData>[] = [
     cell: ({ row }) => {
       const price = row.getValue("amount_left") as number;
       return <p> {price} </p>;
-    },
-  },
-  {
-    accessorKey: "price_currency",
-    header: "Currency",
-    id: "price_currency",
-    cell: ({ row }) => {
-      const currency = row.getValue("price_currency") as {
-        id: number;
-        currencyCode: Currency;
-      };
-      return <p> {currency?.currencyCode}</p>;
     },
   },
   {

@@ -5,43 +5,15 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1718540523107,
-      "tag": "0000_curvy_miracleman",
+      "when": 1720111163465,
+      "tag": "0000_concerned_maria_hill",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "6",
-      "when": 1718541133176,
-      "tag": "0001_ordinary_warstar",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1719743757874,
-      "tag": "0002_swift_the_fallen",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1719743851843,
-      "tag": "0003_peaceful_russian",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1719745113871,
-      "tag": "0004_rare_queen_noir",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1719745236779,
-      "tag": "0005_spicy_sheva_callister",
+      "when": 1720113501423,
+      "tag": "0001_aspiring_mercury",
       "breakpoints": true
     }
   ]

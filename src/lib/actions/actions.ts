@@ -125,8 +125,6 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
         year: specifications?.year || null,
         make: specifications?.make || null,
         model: specifications?.model || null,
-        trim: specifications?.trim || null,
-        manufacturer: specifications?.manufacturer || null,
         country: specifications?.country || null,
         titleNumber: specifications?.titleNumber || null,
         titleState: specifications?.titleState || null,
@@ -144,7 +142,6 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
         status: parkingDetails?.status
           ? (parkingDetails?.status as CarStatus)
           : null,
-        parkingDateString: parkingDetails?.parkingDateString || null,
       };
 
       const spId = await insertSpecification(newSpecification);

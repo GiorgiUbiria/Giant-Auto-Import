@@ -40,11 +40,8 @@ export default function AddForm() {
       vin: "",
       fined: false,
       price: 0,
-      priceCurrency: "1",
       make: "",
       model: "",
-      trim: "",
-      manufacturer: "",
       bodyType: "",
       country: countries.find(
         (country: { name: string; code: string }) => country.name === "Germany",
@@ -126,12 +123,12 @@ export default function AddForm() {
   }, [formState.errors]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit)} className="p-4 bg-gray-600 rounded-md">
       <div className="grid gap-6 mb-6 md:grid-cols-2">
         <div>
           <label
             htmlFor="vin"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             VIN
           </label>
@@ -153,7 +150,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="year"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Year
           </label>
@@ -175,7 +172,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="make"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Make
           </label>
@@ -197,7 +194,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="model"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Model
           </label>
@@ -216,56 +213,12 @@ export default function AddForm() {
             )}
           />
         </div>
-        <div>
-          <label
-            htmlFor="manufacturer"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-          >
-            Manufacturer
-          </label>
-          <input
-            type="text"
-            placeholder="manufacturer"
-            id="manufacturer"
-            {...register("manufacturer")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-          />
-          <ErrorMessage
-            errors={formState.errors}
-            name="manufacturer"
-            render={({ message }) => (
-              <p className="text-red-500 text-sm">{message}</p>
-            )}
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="trim"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-          >
-            Trim
-          </label>
-          <input
-            type="text"
-            placeholder="trim"
-            id="trim"
-            {...register("trim")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-          />
-          <ErrorMessage
-            errors={formState.errors}
-            name="trim"
-            render={({ message }) => (
-              <p className="text-red-500 text-sm">{message}</p>
-            )}
-          />
-        </div>
       </div>
       <div className="grid gap-6 mb-6 md:grid-cols-3">
         <div>
           <label
             htmlFor="country"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Country
           </label>
@@ -291,7 +244,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="status"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Status
           </label>
@@ -317,7 +270,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="fuelType"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Fuel Type
           </label>
@@ -345,7 +298,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="engineType"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Engine Type
           </label>
@@ -367,7 +320,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="titleNumber"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Title Number
           </label>
@@ -389,7 +342,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="titleState"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Title State
           </label>
@@ -411,7 +364,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="bodyType"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Body Type
           </label>
@@ -435,7 +388,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="destinationPort"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Destination Port
           </label>
@@ -457,7 +410,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="originPort"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Origin Port
           </label>
@@ -481,7 +434,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="color"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Color
           </label>
@@ -517,7 +470,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="auction"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Auction
           </label>
@@ -539,7 +492,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="shipping"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Shipping
           </label>
@@ -559,11 +512,11 @@ export default function AddForm() {
           />
         </div>
       </div>
-      <div className="grid gap-6 mb-6 md:grid-cols-4">
+      <div className="grid gap-6 mb-6 md:grid-cols-3">
         <div>
           <label
             htmlFor="fined"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Fined
           </label>
@@ -588,7 +541,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="arrived"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Arrived
           </label>
@@ -613,7 +566,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="price"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Price
           </label>
@@ -634,36 +587,12 @@ export default function AddForm() {
             )}
           />
         </div>
-        <div>
-          <label
-            htmlFor="priceCurrency"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-          >
-            Currency
-          </label>
-          <select
-            id="priceCurrency"
-            {...register("priceCurrency")}
-            className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-2.5 pb-2.5 pt-4 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-          >
-            <option value="1">GEL</option>
-            <option value="2">USD</option>
-            <option value="3">EUR</option>
-          </select>
-          <ErrorMessage
-            errors={formState.errors}
-            name="priceCurrency"
-            render={({ message }) => (
-              <p className="text-red-500 text-sm">{message}</p>
-            )}
-          />
-        </div>
       </div>
       <div className="grid gap-6 mb-6 md:grid-cols-2">
         <div>
           <label
             htmlFor="departureDate"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Departure Date
           </label>
@@ -686,7 +615,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="arrivalDate"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Arrival Date
           </label>
@@ -711,7 +640,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="images"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Arrived Images
           </label>
@@ -735,7 +664,7 @@ export default function AddForm() {
         <div>
           <label
             htmlFor="container_images"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Container Images
           </label>

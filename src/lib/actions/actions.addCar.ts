@@ -58,7 +58,6 @@ export async function addCarToDb(
       year,
       make,
       model,
-      manufacturer,
       country,
       status,
       engineType,
@@ -67,7 +66,6 @@ export async function addCarToDb(
       titleState,
       color,
       bodyType,
-      trim,
       destinationPort,
       originPort,
       auction,
@@ -77,17 +75,14 @@ export async function addCarToDb(
       fined,
       arrived,
       price,
-      priceCurrency,
     } = result.data;
 
     const specifications: NewSpecification = {
       vin: vin,
-      carfax: year + make + model + manufacturer + country,
+      carfax: year + " " + make + " " + model + " " + country,
       year: year,
       make: make,
       model: model,
-      trim: trim,
-      manufacturer: manufacturer,
       bodyType: bodyType,
       country: country,
       engineType: engineType,
@@ -101,10 +96,6 @@ export async function addCarToDb(
       fined: fined,
       arrived: arrived,
       status: status as CarStatus,
-      parkingDateString:
-        arrivalDate !== null &&
-        arrivalDate !== undefined ? 
-        arrivalDate.toString() : null,
     };
 
     const specificationsId = await insertSpecification(specifications);
@@ -114,8 +105,14 @@ export async function addCarToDb(
       vin: vin,
       originPort: originPort,
       destinationPort: destinationPort,
-      departureDate: departureDate !== null && departureDate !== undefined ? new Date(departureDate) : null,
-      arrivalDate:  arrivalDate !== null && arrivalDate !== undefined ? new Date(arrivalDate) : null,
+      departureDate:
+        departureDate !== null && departureDate !== undefined
+          ? new Date(departureDate)
+          : null,
+      arrivalDate:
+        arrivalDate !== null && arrivalDate !== undefined
+          ? new Date(arrivalDate)
+          : null,
       createdAt: new Date(),
       auction: auction,
       shipping: shipping,
@@ -128,7 +125,6 @@ export async function addCarToDb(
     const newPrice: NewPrice = {
       totalAmount: price as number,
       amountLeft: price as number,
-      currencyId: Number(priceCurrency) as number,
       carId: carId[0].carId,
     };
 

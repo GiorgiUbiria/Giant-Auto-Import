@@ -39,5 +39,5 @@ export const columns: ColumnDef<Note>[] = [
       const note = row.getValue("note") as string;
       return <p> {note} </p>;
     },
-  }
+  },
 ];

@@ -1,13 +1,12 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { User } from "@/lib/interfaces";
 
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import React from "react";
 import { removeUser } from "@/lib/actions/userActions";
-import { ArrowUpDown, XIcon } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,8 +16,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { DbUser } from "@/lib/actions/dbActions";
 
-export const columns: ColumnDef<Omit<User, "passowrd">>[] = [
+export const columns: ColumnDef<Omit<DbUser, "passowrd">>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -58,14 +58,26 @@ export const columns: ColumnDef<Omit<User, "passowrd">>[] = [
     },
     cell: ({ row }) => {
       const id = row.getValue("id") as string;
+      return <p className="">{id}</p>;
+    },
+  },
+  {
+    accessorKey: "customId",
+    header: ({ column }) => {
       return (
-        <Link
-          href={`/admin/users/${id}`}
-          className="hover:text-muted-foreground"
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          {id}
-        </Link>
+          Custom ID
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
       );
+    },
+    cell: ({ row }) => {
+      const id = row.getValue("id") as string;
+      const customId = row.getValue("customId") as string;
+      return <p>{customId}</p>;
     },
   },
   {
@@ -112,9 +124,16 @@ export const columns: ColumnDef<Omit<User, "passowrd">>[] = [
         <div className="flex items-center justify-center">
           <Dialog>
             <DialogTrigger>
-              <p className="text-md bg-red-500 border rounded-md border-white p-2 hover:bg-red-300">
-                Remove User
-              </p>
+              <div className="flex gap-2">
+                <p className="text-md bg-red-500 border rounded-md border-white p-2 hover:bg-red-300">
+                  Remove User
+                </p>
+                <Link href={`/admin/users/${id}`}>
+                  <p className="text-md bg-white dark:bg-black hover:scale-105 dark:text-white text-gray-900  border rounded-md border-white p-2">
+                    Edit User
+                  </p>
+                </Link>
+              </div>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>

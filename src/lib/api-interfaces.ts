@@ -20,10 +20,8 @@ interface APISpecifications {
   year: string;
   make: string;
   model: string;
-  trim: string;
   vehicleClass: string;
   type: string;
-  manufacturer: string;
   bodyType: string;
   country: string;
   engineType: string;
@@ -43,7 +41,6 @@ interface APIParkingDetails {
   status: string;
   lot: string | null;
   parkingDate: string;
-  parkingDateString: string;
   updatedAt: string;
 }
 

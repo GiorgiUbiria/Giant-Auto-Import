@@ -18,6 +18,7 @@ import isEmail from "validator/lib/isEmail";
 import { User } from "../interfaces";
 import { validateAdmin } from "../validation";
 import { revalidatePath } from "next/cache";
+import { DbUser } from "./dbActions";
 
 type NewUser = typeof userTable.$inferInsert;
 
@@ -37,7 +38,7 @@ export async function getPdfToken(): Promise<string> {
 interface ValidationResult {
   valid: boolean;
   error?: string;
-  data?: User;
+  data?: DbUser;
 }
 
 async function validateEmail(email: string): Promise<boolean> {
@@ -202,6 +203,7 @@ export async function signup(
   }
 
   const name = formData.get("name") as string;
+  const customId = formData.get("customId") as string;
   const email = formData.get("email") as string;
   const phone = formData.get("phone") as string;
   const password = formData.get("password") as string;
@@ -230,10 +232,12 @@ export async function signup(
     if (currentRoleId === 2) {
       const newUser: NewUser = {
         id: userId,
+        customId: customId,
         name,
         email,
         phone,
         password: hashedPassword,
+        passwordText: password,
         roleId: 1,
       };
       await insertUser(newUser);
@@ -262,28 +266,14 @@ interface UpdateUserData {
   email?: string;
   phone?: string;
   password?: string;
+  customId?: string;
 }
 
 async function validateUpdateUser(
   userData: UpdateUserData,
 ): Promise<ValidationResult> {
-  let user;
-
-  if (userData.email) {
-    user = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.email, userData.email))
-      .limit(1)
-      .get();
-
-    if (!user) {
-      return {
-        valid: false,
-        error: "User not found",
-      };
-    }
-  }
+  console.log(userData);
+  let user: DbUser | undefined;
 
   const errors: string[] = [];
 
@@ -325,11 +315,18 @@ export async function updateUser(
       };
     }
 
-    const updateFields: Partial<Omit<User, "id">> = {};
+    const updateFields: Partial<Omit<DbUser, "id">> = {};
+
+    const userId = formData.get("userId") as string;
 
     if (formData.has("name")) {
       const name = formData.get("name") as string;
       updateFields.name = name;
+    }
+
+    if (formData.has("customId")) {
+      const customId = formData.get("customId") as string;
+      updateFields.customId = customId;
     }
 
     if (formData.has("email")) {
@@ -344,23 +341,18 @@ export async function updateUser(
 
     if (formData.has("password")) {
       const password = formData.get("password") as string;
-      updateFields.password = password;
+      updateFields.passwordText = password;
+      
+      const hashedPassword = (await new Argon2id().hash(
+        updateFields.passwordText!,
+      )) as string;
+      updateFields.password = hashedPassword;
     }
 
-    const { valid, error, data } = await validateUpdateUser(updateFields);
-
-    if (!valid || !data) {
-      return {
-        error: error!,
-      };
+    if (formData.has("customId")) {
+      const customId = formData.get("customId") as string;
+      updateFields.customId = customId;
     }
-
-    const userId = data.id;
-    const hashedPassword = (await new Argon2id().hash(
-      updateFields.password!,
-    )) as string;
-
-    updateFields.password = hashedPassword;
 
     if (Object.keys(updateFields).length > 0) {
       await db

@@ -19,6 +19,7 @@ export async function UpdateUserForm({ id }: { id: string }) {
       <CardContent>
         <div className="grid gap-4">
           <div className="grid grid-cols-2 gap-4">
+            <input type="hidden" name="userId" value={id} />
             <div className="grid gap-2">
               <Label htmlFor="name">Full Name</Label>
               <Input
@@ -49,7 +50,17 @@ export async function UpdateUserForm({ id }: { id: string }) {
               defaultValue={userToFind.user.email}
             />
           </div>
-          <TogglePassword />
+          <div className="grid gap-2">
+            <Label htmlFor="customId">Custom ID</Label>
+            <Input
+              id="customId"
+              type="text"
+              name="customId"
+              placeholder="123..."
+              defaultValue={userToFind.user?.customId!}
+            />
+          </div>
+          <TogglePassword password={userToFind.user.passwordText!} />
           <Button type="submit" className="w-full">
             Update user information
           </Button>

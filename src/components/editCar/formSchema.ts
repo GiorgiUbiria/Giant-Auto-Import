@@ -40,20 +40,6 @@ export const formSchema = z.object({
       message: "Model must be at most 50 characters long",
     })
     .nullish(),
-  trim: z
-    .string({ message: "Trim must be a string" })
-    .min(1, { message: "Trim must be at least 1 characters long" })
-    .max(15, {
-      message: "Trim must be at most 15 characters long",
-    })
-    .nullish(),
-  manufacturer: z
-    .string({ message: "Manufacturer must be a string" })
-    .min(3, { message: "Manufacturer must be at least 3 characters long" })
-    .max(50, {
-      message: "Manufacturer must be at most 50 characters long",
-    })
-    .nullish(),
   bodyType: z
     .string({ message: "Body Type must be a string" })
     .min(3, { message: "Body Type must be at least 3 characters long" })
@@ -163,7 +149,4 @@ export const formSchema = z.object({
     .min(0, { message: "Price must be at least 0" })
     .max(150000, { message: "Price must be at most 150000" })
     .nullish(),
-  priceCurrency: z.enum(["1", "2", "3"], {
-    message: "Price Currency must be between 1 and 3.",
-  }),
 });

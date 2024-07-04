@@ -1,6 +1,6 @@
 "use server";
 
-import { CarData, Note, Transaction, User, UserWithCarsAndSpecs } from "@/lib/interfaces";
+import { CarData, Transaction, UserWithCarsAndSpecs } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 import { db } from "../drizzle/db";
 import {
@@ -11,17 +11,22 @@ import {
   userCarTable,
   imageTable,
   priceTable,
-  priceCurrencyTable,
   transactionTable,
   noteTable,
 } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { ActionResult } from "../form";
 
+export type DbUser = typeof userTable.$inferSelect;
+
 type NewUserCar = typeof userCarTable.$inferInsert;
 
 const insertUserCar = async (userCar: NewUserCar) => {
   return db.insert(userCarTable).values(userCar);
+};
+
+const updateUserCar = async (userCar: NewUserCar) => {
+  return db.update(userCarTable).set(userCar).where(eq(userCarTable.carId, userCar.carId!));
 };
 
 export async function assignCarToUser(
@@ -34,7 +39,7 @@ export async function assignCarToUser(
     if (!car) {
       return {
         error: `Car with VIN ${carVin} not found`,
-      }
+      };
     }
 
     const carId: number = car.car.id;
@@ -44,7 +49,17 @@ export async function assignCarToUser(
       userId: userId,
     };
 
-    await insertUserCar(userCar);
+    const [alreadyAssigned] = await db
+      .select()
+      .from(userCarTable)
+      .where(eq(userCarTable.carId, carId));
+
+
+    if (alreadyAssigned) {
+      await updateUserCar(userCar);
+    } else {
+      await insertUserCar(userCar);
+    }
 
     console.log(`Car with VIN ${carVin} assigned to user with ID ${userId}`);
     revalidatePath(`/users/${userId}`);
@@ -52,22 +67,22 @@ export async function assignCarToUser(
     return {
       success: "Car assigned to user",
       error: null,
-    }
+    };
   } catch (e) {
     console.error(e);
     return {
-      error: "Failed to assign car to user"
-    }
+      error: "Failed to assign car to user",
+    };
   }
 }
 
-export async function getUsers(): Promise<User[] | undefined> {
+export async function getUsers(): Promise<DbUser[] | undefined> {
   try {
-    const users: User[] = (await db
+    const users: DbUser[] = await db
       .select()
       .from(userTable)
       .where(eq(userTable.roleId, 1))
-      .all()) as User[];
+      .all();
 
     if (users.length === 0) {
       console.warn("No users found");
@@ -84,11 +99,9 @@ export async function getUser(
   id: string,
 ): Promise<UserWithCarsAndSpecs | undefined> {
   try {
-    const user: User = (await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.id, id))
-      .get()) as User;
+    const user: DbUser = (
+      await db.select().from(userTable).where(eq(userTable.id, id))
+    )[0] as DbUser;
 
     if (!user) {
       throw new Error("No user found");
@@ -122,10 +135,6 @@ export async function getCarsFromDatabase(): Promise<CarData[]> {
         eq(carTable.parkingDetailsId, parkingDetailsTable.id),
       )
       .leftJoin(priceTable, eq(carTable.id, priceTable.carId))
-      .leftJoin(
-        priceCurrencyTable,
-        eq(priceTable.currencyId, priceCurrencyTable.id),
-      )
       .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
       .all()) as CarData[];
 
@@ -157,10 +166,6 @@ export async function getCarsFromDatabaseForUser(
         eq(carTable.parkingDetailsId, parkingDetailsTable.id),
       )
       .leftJoin(priceTable, eq(carTable.id, priceTable.carId))
-      .leftJoin(
-        priceCurrencyTable,
-        eq(priceTable.currencyId, priceCurrencyTable.id),
-      )
       .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
       .where(eq(userCarTable.userId, id))
       .all()) as CarData[];
@@ -209,10 +214,6 @@ export async function getCarFromDatabase(
         eq(carTable.parkingDetailsId, parkingDetailsTable.id),
       )
       .leftJoin(priceTable, eq(carTable.id, priceTable.carId))
-      .leftJoin(
-        priceCurrencyTable,
-        eq(priceTable.currencyId, priceCurrencyTable.id),
-      )
       .where(eq(carTable.vin, vin))
       .limit(1)
       .get()) as CarData;
@@ -236,11 +237,11 @@ export async function getCarFromDatabase(
       imageType: image.imageType as "Arrival" | "Container",
     }));
 
-    const transactions = await db
+    const transactions = (await db
       .select()
       .from(transactionTable)
       .where(eq(transactionTable.carId, car.car.id))
-      .all() as Transaction[];
+      .all()) as Transaction[];
 
     const notes = await db
       .select()
@@ -273,10 +274,6 @@ export async function getCarFromDatabaseByID(
         eq(carTable.parkingDetailsId, parkingDetailsTable.id),
       )
       .leftJoin(priceTable, eq(carTable.id, priceTable.carId))
-      .leftJoin(
-        priceCurrencyTable,
-        eq(priceTable.currencyId, priceCurrencyTable.id),
-      )
       .where(eq(carTable.id, id))
       .limit(1)
       .get()) as CarData;
@@ -285,11 +282,11 @@ export async function getCarFromDatabaseByID(
       return undefined;
     }
 
-    const transactions = await db
+    const transactions = (await db
       .select()
       .from(transactionTable)
       .where(eq(transactionTable.carId, id))
-      .all() as Transaction[];
+      .all()) as Transaction[];
 
     car.transaction = transactions;
 

@@ -22,25 +22,28 @@ CREATE TABLE `image` (
 	FOREIGN KEY (`car_vin`) REFERENCES `car`(`vin`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE TABLE `note` (
+	`id` integer PRIMARY KEY NOT NULL,
+	`user_id` text,
+	`car_id` integer,
+	`note` text,
+	`created_at` integer,
+	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`car_id`) REFERENCES `car`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
 CREATE TABLE `parking_details` (
 	`id` integer PRIMARY KEY NOT NULL,
 	`fined` integer,
 	`arrived` integer,
-	`status` text,
-	`parking_date_string` text
-);
---> statement-breakpoint
-CREATE TABLE `price_currency` (
-	`id` integer PRIMARY KEY NOT NULL,
-	`currency_code` text NOT NULL
+	`status` text
 );
 --> statement-breakpoint
 CREATE TABLE `price` (
 	`id` integer PRIMARY KEY NOT NULL,
 	`total_amount` real,
-	`currency_id` integer,
+	`amount_left` real,
 	`car_id` integer,
-	FOREIGN KEY (`currency_id`) REFERENCES `price_currency`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`car_id`) REFERENCES `car`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
@@ -63,8 +66,6 @@ CREATE TABLE `specifications` (
 	`year` text,
 	`make` text,
 	`model` text,
-	`trim` text,
-	`manufacturer` text,
 	`body_type` text,
 	`country` text,
 	`engine_type` text,
@@ -81,7 +82,7 @@ CREATE TABLE `transaction` (
 	`user_id` text,
 	`car_id` integer,
 	`amount` real,
-	`payment_date` text,
+	`payment_date` integer,
 	FOREIGN KEY (`price_id`) REFERENCES `price`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`car_id`) REFERENCES `car`(`id`) ON UPDATE no action ON DELETE cascade
@@ -105,7 +106,7 @@ CREATE TABLE `user` (
 	FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `price_currency_currency_code_unique` ON `price_currency` (`currency_code`);--> statement-breakpoint
+CREATE UNIQUE INDEX `car_vin_unique` ON `car` (`vin`);--> statement-breakpoint
 CREATE UNIQUE INDEX `roles_role_name_unique` ON `roles` (`role_name`);--> statement-breakpoint
 CREATE UNIQUE INDEX `user_email_unique` ON `user` (`email`);--> statement-breakpoint
 CREATE UNIQUE INDEX `user_phone_unique` ON `user` (`phone`);

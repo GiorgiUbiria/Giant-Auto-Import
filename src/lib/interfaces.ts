@@ -1,3 +1,5 @@
+import { DbUser } from "./actions/dbActions";
+
 export interface Specifications {
   id: number;
   vin: string | null;
@@ -5,8 +7,6 @@ export interface Specifications {
   year: string | null;
   make: string | null;
   model: string | null;
-  trim: string | null;
-  manufacturer: string | null;
   bodyType: string | null;
   country: string | null;
   engineType: string | null;
@@ -22,7 +22,6 @@ export interface ParkingDetails {
   fined: string | null;
   arrived: string | null;
   status: string | null;
-  parkingDateString: string | null;
 }
 
 export interface Car {
@@ -44,7 +43,9 @@ export interface User {
   name: string;
   email: string;
   phone: string;
-  password: string;
+  passwordHash: string;
+  password?: string;
+  customId?: string;
   roleId: number;
 }
 
@@ -62,7 +63,6 @@ export type Transaction = {
   priceId: number | null;
   userId: number | null;
   carId: number | null;
-  currencyId: number | null;
   amount: number | null;
   paymentDate: string | null;
 }
@@ -87,7 +87,7 @@ export type CarData = {
 };
 
 export type UserWithCarsAndSpecs = {
-  user: User;
+  user: DbUser;
   user_car?: UserCar;
   cars?: CarData[];
 };

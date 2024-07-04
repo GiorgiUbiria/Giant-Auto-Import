@@ -49,56 +49,51 @@ export default function UserCar({
     });
   };
 
-  if (userId === null || userId === undefined) {
-    return (
-      <div className="flex flex-col">
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid gap-6 mb-6 md:grid-cols-1">
-            <div>
-              <label
-                htmlFor="priceCurrency"
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-              >
-                Users
-              </label>
-              <select
-                id="user"
-                {...register("user")}
-                className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-2.5 pb-2.5 pt-4 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              >
-                {users?.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name}
-                  </option>
-                ))}
-              </select>
-              <ErrorMessage
-                errors={formState.errors}
-                name="user"
-                render={({ message }) => (
-                  <p className="text-red-500 text-sm">{message}</p>
-                )}
-              />
-            </div>
-          </div>
-          <div className="grid gap-6 mb-6 md:grid-cols1-1">
-            <button
-              disabled={pending}
-              type="submit"
-              className="w-full py-2.5 px-5 me-2 mb-2 text-sm font-medium text-black focus:outline-none bg-gray-300 rounded-lg border border-gray-200 hover:bg-gray-300 dark:bg-gray-900-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-300 dark:bg-gray-900-800 dark:text-gray-900 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-300 dark:bg-gray-900-700"
-            >
-              {pending ? <Spinner /> : "Assign to the user"}
-            </button>
-          </div>
-        </form>
-      </div>
-    );
-  }
-
   return (
-    <div>
-      <p> User information: </p>
-      <Link href={`/admin/users/${userId}`}>{carUser?.user.email}</Link>
+    <div className="flex flex-col">
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="grid gap-6 mb-6 md:grid-cols-1">
+          <div>
+            <label
+              htmlFor="priceCurrency"
+              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            >
+              Users
+            </label>
+            <select
+              id="user"
+              {...register("user")}
+              className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-2.5 pb-2.5 pt-4 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            >
+              {users?.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+            <ErrorMessage
+              errors={formState.errors}
+              name="user"
+              render={({ message }) => (
+                <p className="text-red-500 text-sm">{message}</p>
+              )}
+            />
+          </div>
+        </div>
+        <div className="grid gap-6 mb-6 md:grid-cols1-1">
+          <button
+            disabled={pending}
+            type="submit"
+            className="w-full py-2.5 px-5 me-2 mb-2 text-sm font-medium text-black focus:outline-none bg-gray-300 rounded-lg border border-gray-200 hover:bg-gray-300 dark:bg-gray-900-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-300 dark:bg-gray-900-800 dark:text-gray-900 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-300 dark:bg-gray-900-700"
+          >
+            {pending ? <Spinner /> : "Assign to the user"}
+          </button>
+        </div>
+      </form>
+      <div>
+        <p> Car is currently assigned to the following user: </p>
+        <Link href={`/admin/users/${userId}`}>{carUser?.user.name}</Link>
+      </div>
     </div>
   );
 }

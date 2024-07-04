@@ -63,8 +63,6 @@ export async function editCarInDb(
       "year",
       "make",
       "model",
-      "trim",
-      "manufacturer",
       "country",
       "engineType",
       "fuelType",
@@ -138,28 +136,13 @@ export async function editCarInDb(
           .set({ totalAmount: values.price, amountLeft: values.price })
           .where(eq(priceTable.carId, id));
 
-        await db
-          .delete(transactionTable)
-          .where(eq(transactionTable.carId, id));
-      }
-      if (
-        values.priceCurrency !== undefined &&
-        Number(values.priceCurrency) !== priceInstance.currencyId
-      ) {
-        await db
-          .update(priceTable)
-          .set({ currencyId: Number(values.priceCurrency) })
-          .where(eq(priceTable.carId, id));
+        await db.delete(transactionTable).where(eq(transactionTable.carId, id));
       }
     } else {
       await db.insert(priceTable).values({
         carId: id,
         totalAmount: values.price !== undefined ? values.price : null,
         amountLeft: values.price !== undefined ? values.price : null,
-        currencyId:
-          values.priceCurrency !== undefined
-            ? Number(values.priceCurrency)
-            : null,
       });
     }
 

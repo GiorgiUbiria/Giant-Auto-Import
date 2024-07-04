@@ -51,8 +51,6 @@ export default function EditForm({ car }: { car: CarData }) {
       fined: car.parking_details?.fined === "true" ? true : false,
       make: car.specifications?.make!,
       model: car.specifications?.model!,
-      trim: car.specifications?.trim!,
-      manufacturer: car.specifications?.manufacturer!,
       bodyType: car.specifications?.bodyType!,
       country: car.specifications?.country!,
       engineType: car.specifications?.engineType!,
@@ -176,50 +174,6 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="model"
-            render={({ message }) => (
-              <p className="text-red-500 text-sm">{message}</p>
-            )}
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="manufacturer"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-          >
-            Manufacturer
-          </label>
-          <input
-            type="text"
-            placeholder="manufacturer"
-            id="manufacturer"
-            {...register("manufacturer")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-          />
-          <ErrorMessage
-            errors={formState.errors}
-            name="manufacturer"
-            render={({ message }) => (
-              <p className="text-red-500 text-sm">{message}</p>
-            )}
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="trim"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-          >
-            Trim
-          </label>
-          <input
-            type="text"
-            placeholder="trim"
-            id="trim"
-            {...register("trim")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-          />
-          <ErrorMessage
-            errors={formState.errors}
-            name="trim"
             render={({ message }) => (
               <p className="text-red-500 text-sm">{message}</p>
             )}
@@ -524,7 +478,7 @@ export default function EditForm({ car }: { car: CarData }) {
           />
         </div>
       </div>
-      <div className="grid gap-6 mb-6 md:grid-cols-4">
+      <div className="grid gap-6 mb-6 md:grid-cols-3">
         <div>
           <label
             htmlFor="fined"
@@ -595,31 +549,6 @@ export default function EditForm({ car }: { car: CarData }) {
           <ErrorMessage
             errors={formState.errors}
             name="price"
-            render={({ message }) => (
-              <p className="text-red-500 text-sm">{message}</p>
-            )}
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="priceCurrency"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-          >
-            Currency
-          </label>
-          <select
-            id="priceCurrency"
-            {...register("priceCurrency")}
-            defaultValue={car.price_currency?.id}
-            className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-2.5 pb-2.5 pt-4 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-          >
-            <option value="1">GEL</option>
-            <option value="2">USD</option>
-            <option value="3">EUR</option>
-          </select>
-          <ErrorMessage
-            errors={formState.errors}
-            name="priceCurrency"
             render={({ message }) => (
               <p className="text-red-500 text-sm">{message}</p>
             )}

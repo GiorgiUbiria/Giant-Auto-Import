@@ -13,10 +13,12 @@ export const rolesTable = sqliteTable("roles", {
 
 export const userTable = sqliteTable("user", {
   id: text("id").primaryKey(),
+  customId: text("custom_id").default(""),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   phone: text("phone").notNull().unique(),
   password: text("password").notNull(),
+  passwordText: text("password_text").default(""),
   roleId: integer("role_id")
     .notNull()
     .references(() => rolesTable.id, { onDelete: "cascade" }),
@@ -37,8 +39,6 @@ export const specificationsTable = sqliteTable("specifications", {
   year: text("year"),
   make: text("make"),
   model: text("model"),
-  trim: text("trim"),
-  manufacturer: text("manufacturer"),
   bodyType: text("body_type"),
   country: text("country"),
   engineType: text("engine_type"),
@@ -56,7 +56,6 @@ export const parkingDetailsTable = sqliteTable("parking_details", {
   status: text("status", {
     enum: ["Pending", "OnHand", "Loaded", "InTransit", "Fault"],
   }),
-  parkingDateString: text("parking_date_string"),
 });
 
 export const carTable = sqliteTable("car", {
@@ -109,15 +108,9 @@ export const priceTable = sqliteTable("price", {
   id: integer("id").primaryKey(),
   totalAmount: real("total_amount"),
   amountLeft: real("amount_left"),
-  currencyId: integer("currency_id").references(() => priceCurrencyTable.id),
   carId: integer("car_id").references(() => carTable.id, {
     onDelete: "cascade",
   }),
-});
-
-export const priceCurrencyTable = sqliteTable("price_currency", {
-  id: integer("id").primaryKey(),
-  currencyCode: text("currency_code").notNull().unique(),
 });
 
 export const transactionTable = sqliteTable("transaction", {
@@ -131,7 +124,6 @@ export const transactionTable = sqliteTable("transaction", {
   carId: integer("car_id").references(() => carTable.id, {
     onDelete: "cascade",
   }),
-  currencyId: integer("currency_id").references(() => priceCurrencyTable.id),
   amount: real("amount"),
   paymentDate: integer("payment_date", { mode: "timestamp" }),
 });

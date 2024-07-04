@@ -10,10 +10,7 @@ import {
 import { ActionResult } from "../form";
 import { eq } from "drizzle-orm";
 import { Transaction } from "../interfaces";
-import axios from "axios";
 import { revalidatePath } from "next/cache";
-
-const exchangeRateApiKey = process.env.EXCHANGE_RATE_API_KEY!;
 
 type NewTransaction = typeof transactionTable.$inferInsert;
 
@@ -76,9 +73,7 @@ export async function addTransaction(
   userId: string,
   priceId: number,
   amount: number,
-  priceCurrencyId: number,
 ): Promise<ActionResult> {
-  console.log(carId, userId, priceId, amount, priceCurrencyId);
   try {
     const carExists = await db
       .select()
@@ -113,17 +108,6 @@ export async function addTransaction(
     const price = priceExists[0];
 
     let finalAmount = amount;
-    if (price.currencyId !== priceCurrencyId) {
-      try {
-        finalAmount = await convertCurrency(
-          amount,
-          priceCurrencyId,
-          price.currencyId!,
-        );
-      } catch (conversionError) {
-        return { error: "Currency conversion failed", data: null };
-      }
-    }
 
     if (price.amountLeft! < finalAmount) {
       return { error: "Going over the amount left", data: null };
@@ -134,7 +118,6 @@ export async function addTransaction(
       userId,
       amount,
       priceId,
-      currencyId: priceCurrencyId,
       paymentDate: new Date(),
     });
 
@@ -161,36 +144,6 @@ export async function addTransaction(
     };
   } catch (error: any) {
     return { error: error.message, data: null };
-  }
-}
-
-async function convertCurrency(
-  amount: number,
-  fromCurrencyId: number,
-  toCurrencyId: number,
-): Promise<number> {
-  const currencyMap: { [key: number]: string } = {
-    1: "GEL",
-    2: "USD",
-    3: "EUR",
-  };
-
-  const fromCurrency = currencyMap[fromCurrencyId];
-  const toCurrency = currencyMap[toCurrencyId];
-
-  if (!fromCurrency || !toCurrency) {
-    throw new Error("Unsupported currency ID");
-  }
-
-  const url = `https://v6.exchangerate-api.com/v6/${exchangeRateApiKey}/pair/${fromCurrency}/${toCurrency}`;
-
-  try {
-    const response = await axios.get(url);
-    const conversionRate = response.data.conversion_rate;
-
-    return amount * conversionRate;
-  } catch (error) {
-    throw new Error("Error fetching conversion rate");
   }
 }
 
@@ -228,17 +181,6 @@ export async function deleteTransaction(
     const price = priceExists[0];
 
     let rollbackAmount = transaction.amount;
-    if (transaction.currencyId !== price.currencyId) {
-      try {
-        rollbackAmount = await convertCurrency(
-          transaction.amount!,
-          transaction.currencyId!,
-          price.currencyId!,
-        );
-      } catch (conversionError) {
-        return { error: "Currency conversion failed", data: null };
-      }
-    }
 
     const updatedPriceId: { priceId: number }[] = await db
       .update(priceTable)

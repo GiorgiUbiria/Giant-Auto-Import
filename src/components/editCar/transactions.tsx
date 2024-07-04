@@ -8,7 +8,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { ErrorMessage } from "@hookform/error-message";
 import { toast } from "sonner";
 import { addTransaction } from "@/lib/actions/actions.transactions";
-import { CarData } from "@/lib/interfaces";
+import { CarData, Transaction } from "@/lib/interfaces";
 import Spinner from "../spinner";
 
 const formSchema = z.object({
@@ -31,10 +31,9 @@ export default function Transactions({
 }) {
   const [loading, setTransitioning] = React.useTransition();
   const { pending } = useFormStatus();
-  const { handleSubmit, register, formState } = useForm<FormValues>({
+  const { handleSubmit, register, formState, watch } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      priceCurrency: "1",
     },
   });
 
@@ -57,6 +56,8 @@ export default function Transactions({
       }
     });
   };
+
+  const transactionAmount = watch("transactionAmount");
 
   return (
     <div className="flex flex-col">
@@ -85,6 +86,7 @@ export default function Transactions({
                 <p className="text-red-500 text-sm">{message}</p>
               )}
             />
+            <p className="mt-2 text-red-400">Amount left after transaction: {transactionAmount ? car.price?.amountLeft! - transactionAmount : car.price?.amountLeft!}</p>
           </div>
           <div>
             <label
@@ -124,6 +126,17 @@ export default function Transactions({
       </form>
 
       <div className="flex justify-end">All transactions</div>
+      <div>
+        <ul>
+          {car.transaction &&
+            car.transaction.length > 0 &&
+            car.transaction.map((transaction: Transaction) => (
+              <li key={transaction.paymentDate}>
+                {transaction.amount} : {JSON.stringify(transaction.paymentDate)}
+              </li>
+            ))}
+        </ul>
+      </div>
     </div>
   );
 }

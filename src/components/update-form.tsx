@@ -14,7 +14,7 @@ export async function UpdateUserForm({ id }: { id: string }) {
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
-        <CardTitle className="text-3xl">Sign Up</CardTitle>
+        <CardTitle className="text-3xl">Edit User</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4">

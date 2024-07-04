@@ -184,27 +184,6 @@ export const columns: ColumnDef<CarData>[] = [
     },
   },
   {
-    accessorKey: "transaction",
-    header: "Transactions",
-    cell: ({ row }) => {
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">See All</Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem className="flex flex-col">
-              <p>Transactions</p>
-              <ScrollArea className="h-96 w-64 rounded-md border">
-                
-              </ScrollArea>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-  {
     id: "actions",
     cell: ({ row }) => {
       const vin = row.getValue("vin") as string;

@@ -82,7 +82,7 @@ export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
                   orientation={screenWidth! > 768 ? "horizontal" : "vertical"}
                   className="md:max-w-full sm:max-w-xs"
                 >
-                  <CarouselContent className="-ml-1 sm:h-[200px] md:p-24">
+                  <CarouselContent className="-ml-1 sm:h-[400px]">
                     {data.map(({ imageUrl }, index) => (
                       <CarouselItem
                         key={index}

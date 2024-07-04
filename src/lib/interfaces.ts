@@ -81,7 +81,7 @@ export type CarData = {
   parking_details: ParkingDetails | null;
   price?: { id?: number; totalAmount: number; amountLeft?: number; currencyId: number } | null;
   price_currency?: { id: "1" | "2" | "3"; currencyCode: Currency } | null;
-  transaction?: Transaction | null;
+  transaction?: Transaction[] | null;
   images?: Image[];
   note?: Note[];
 };

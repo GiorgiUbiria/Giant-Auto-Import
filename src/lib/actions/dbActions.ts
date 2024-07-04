@@ -1,6 +1,6 @@
 "use server";
 
-import { CarData, Note, User, UserWithCarsAndSpecs } from "@/lib/interfaces";
+import { CarData, Note, Transaction, User, UserWithCarsAndSpecs } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 import { db } from "../drizzle/db";
 import {
@@ -213,7 +213,6 @@ export async function getCarFromDatabase(
         priceCurrencyTable,
         eq(priceTable.currencyId, priceCurrencyTable.id),
       )
-      .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
       .where(eq(carTable.vin, vin))
       .limit(1)
       .get()) as CarData;
@@ -237,6 +236,12 @@ export async function getCarFromDatabase(
       imageType: image.imageType as "Arrival" | "Container",
     }));
 
+    const transactions = await db
+      .select()
+      .from(transactionTable)
+      .where(eq(transactionTable.carId, car.car.id))
+      .all() as Transaction[];
+
     const notes = await db
       .select()
       .from(noteTable)
@@ -244,6 +249,7 @@ export async function getCarFromDatabase(
       .all();
 
     car.note = notes;
+    car.transaction = transactions;
 
     return car;
   } catch (e) {
@@ -271,7 +277,6 @@ export async function getCarFromDatabaseByID(
         priceCurrencyTable,
         eq(priceTable.currencyId, priceCurrencyTable.id),
       )
-      .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
       .where(eq(carTable.id, id))
       .limit(1)
       .get()) as CarData;
@@ -279,6 +284,14 @@ export async function getCarFromDatabaseByID(
     if (!car) {
       return undefined;
     }
+
+    const transactions = await db
+      .select()
+      .from(transactionTable)
+      .where(eq(transactionTable.carId, id))
+      .all() as Transaction[];
+
+    car.transactions = transactions;
 
     const notes = await db
       .select()

@@ -134,6 +134,7 @@ export async function addTransaction(
       amount,
       priceId,
       currencyId: priceCurrencyId,
+      paymentDate: new Date(),
     });
 
     if (transactionId === null || transactionId === undefined) {

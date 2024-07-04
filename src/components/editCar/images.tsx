@@ -233,66 +233,68 @@ export default function Images({
           </button>
         </div>
       </form>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {imageChunks.map((chunk, index) => (
-          <div key={index} className="grid gap-4">
-            {chunk.map((image: ImageType, imgIndex: number) => (
-              <div key={imgIndex}>
-                <Dialog>
-                  <DialogTrigger>
-                    <Image
-                      className="h-auto max-w-full rounded-lg"
-                      src={image.imageUrl!}
-                      alt={`Car image ${imgIndex + 1}`}
-                      width={300}
-                      height={300}
-                    />
-                  </DialogTrigger>
-                  <DialogContent className="min-w-full md:min-w-fit">
-                    <div className="flex flex-col gap-4">
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="outline">Delete Image</Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Image</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete this image?
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel asChild>
-                              <Button variant="outline">Cancel</Button>
-                            </AlertDialogCancel>
-                            <AlertDialogAction asChild>
-                              <Button
-                                variant="destructive"
-                                onClick={async () =>
-                                  await deleteImageCall(image.imageUrl!)
-                                }
-                              >
-                                Delete
-                              </Button>
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+      {imageChunks.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {imageChunks.map((chunk, index) => (
+            <div key={index} className="grid gap-4">
+              {chunk.map((image: ImageType, imgIndex: number) => (
+                <div key={imgIndex}>
+                  <Dialog>
+                    <DialogTrigger>
                       <Image
-                        className="h-auto min-w-full max-w-full rounded-lg"
+                        className="h-auto max-w-full rounded-lg"
                         src={image.imageUrl!}
                         alt={`Car image ${imgIndex + 1}`}
-                        width={550}
-                        height={400}
+                        width={300}
+                        height={300}
                       />
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
+                    </DialogTrigger>
+                    <DialogContent className="min-w-full md:min-w-fit">
+                      <div className="flex flex-col gap-4">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline">Delete Image</Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Image</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this image?
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel asChild>
+                                <Button variant="outline">Cancel</Button>
+                              </AlertDialogCancel>
+                              <AlertDialogAction asChild>
+                                <Button
+                                  variant="destructive"
+                                  onClick={async () =>
+                                    await deleteImageCall(image.imageUrl!)
+                                  }
+                                >
+                                  Delete
+                                </Button>
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                        <Image
+                          className="h-auto min-w-full max-w-full rounded-lg"
+                          src={image.imageUrl!}
+                          alt={`Car image ${imgIndex + 1}`}
+                          width={550}
+                          height={400}
+                        />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

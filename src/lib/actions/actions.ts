@@ -10,6 +10,7 @@ import {
 } from "../drizzle/schema";
 import { APICarResponse, APICar } from "../api-interfaces";
 import { CarStatus } from "../interfaces";
+import { getCarFromDatabase } from "./dbActions";
 
 type NewCar = typeof carTable.$inferInsert;
 type NewSpecification = typeof specificationsTable.$inferInsert;
@@ -110,6 +111,13 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
         createdAt,
         shipping,
       } = data;
+
+      const findCar = await getCarFromDatabase(specifications?.vin!);
+
+      if (findCar) {
+        console.log("Car already exists in database");
+        continue;
+      }
 
       const newSpecification: NewSpecification = {
         vin: specifications?.vin || "",

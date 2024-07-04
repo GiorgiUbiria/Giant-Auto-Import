@@ -9,7 +9,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import { toast } from "sonner";
 import { CarData, User, UserWithCarsAndSpecs } from "@/lib/interfaces";
 import Spinner from "../spinner";
-import { assignCarToUser } from "@/lib/actions/dbActions";
+import { DbUser, assignCarToUser } from "@/lib/actions/dbActions";
 import Link from "next/link";
 
 const formSchema = z.object({
@@ -26,7 +26,7 @@ export default function UserCar({
 }: {
   car: CarData;
   userId: string;
-  users: User[] | undefined;
+  users: DbUser[] | undefined;
   carUser: UserWithCarsAndSpecs | undefined;
 }) {
   const [loading, setTransitioning] = React.useTransition();

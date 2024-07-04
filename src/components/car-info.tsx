@@ -22,7 +22,7 @@ export default function CarInfo({ carData }: { carData: CarData }) {
             VIN - {carData.car.vin}
             <CopyToClipBoard text={carData.car.vin!} />
           </CardTitle>
-          <CardDescription>Date: {carData.parking_details?.parkingDateString}</CardDescription>
+          <CardDescription>Date: {carData.car?.arrivalDate?.toString()}</CardDescription>
         </div>
         <div className="ml-auto flex items-center gap-1">
           <Button size="sm" variant="outline" className="h-8 gap-1">
@@ -62,10 +62,6 @@ export default function CarInfo({ carData }: { carData: CarData }) {
             />
           </div>
           <div className="flex gap-2">
-            <div className="flex flex-col align-start gap-2">
-              <Label htmlFor="car-trim"> Trim: </Label>
-              <Input type="text" value={carData.specifications?.trim!} readOnly id="car-trim" />
-            </div>
             <div className="flex flex-col align-start gap-2">
               <Label htmlFor="car-model"> Model: </Label>
               <Input

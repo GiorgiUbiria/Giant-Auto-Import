@@ -3,9 +3,10 @@ import { User } from "./interfaces";
 import { userTable } from "./drizzle/schema";
 import { db } from "./drizzle/db";
 import { eq } from "drizzle-orm";
+import { DbUser } from "./actions/dbActions";
 
 type AuthValidationResult = {
-  user: User | null;
+  user: DbUser | null;
   valid: boolean;
 }
 

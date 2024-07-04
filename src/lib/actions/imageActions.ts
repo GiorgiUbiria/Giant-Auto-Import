@@ -51,7 +51,12 @@ export async function updateLocalDatabaseImages(): Promise<void> {
           if (images.length > 0) {
             for (const image of images) {
               const imageUrl = image.value;
-              await insertImage(vin, imageUrl);
+              const imageExists = await db.select().from(imageTable).where(eq(imageTable.imageUrl, imageUrl));
+              if (!imageExists) {
+                await insertImage(vin, imageUrl);
+              } else {
+                continue;
+              }
             }
           } else {
             console.log(`No image assets found for VIN: ${vin}`);

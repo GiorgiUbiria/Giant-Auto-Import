@@ -76,7 +76,7 @@ export default function Images({
   images,
   vin,
 }: {
-  images: ImageType[];
+  images: ImageType[] | undefined;
   vin: string;
 }) {
   const router = useRouter();
@@ -233,7 +233,7 @@ export default function Images({
           </button>
         </div>
       </form>
-      {imageChunks.length > 0 && (
+      {images !== undefined && imageChunks.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {imageChunks.map((chunk, index) => (
             <div key={index} className="grid gap-4">
@@ -294,6 +294,8 @@ export default function Images({
             </div>
           ))}
         </div>
+      ) : (
+        <p> No Images </p>
       )}
     </div>
   );

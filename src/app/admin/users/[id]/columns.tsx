@@ -2,10 +2,10 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 
 import Link from "next/link";
-import { CarData } from "@/lib/interfaces";
+import { CarData, Image as ImageType } from "@/lib/interfaces";
+import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,28 +20,32 @@ import DeleteButton from "@/components/deleteCar/deleteButton";
 
 export const columns: ColumnDef<CarData>[] = [
   {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-        className="mb-1"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="mb-1"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
+    accessorKey: "images",
+    id: "images",
+    header: " ",
+    cell: ({ row }) => {
+      const images = row.getValue("images") as ImageType[];
+      if (!images || images.length === 0) {
+        return (
+          <div className="w-full flex justify-center ml-4">
+            <div className="bg-gray-300 rounded-md size-16"></div>
+          </div>
+        );
+      }
+      return (
+        <div className="w-full flex justify-center ml-4">
+          {images.at(0)?.imageUrl && (
+            <Image
+              src={images.at(0)?.imageUrl!}
+              alt="Car Image"
+              className="w-24 h-auto"
+              width={300}
+              height={300}
+            />
+          )}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "car.id",
@@ -103,24 +107,30 @@ export const columns: ColumnDef<CarData>[] = [
     header: "Model",
   },
   {
-    accessorKey: "specifications.country",
-    header: "Country",
-  },
-  {
-    accessorKey: "specifications.titleNumber",
-    header: "Title Number",
-  },
-  {
-    accessorKey: "specifications.carfax",
-    header: "Carfax",
-  },
-  {
     accessorKey: "specifications.fuelType",
     header: "Fuel Type",
   },
   {
+    accessorKey: "specifications.bodyType",
+    header: "Body Type",
+  },
+  {
     accessorKey: "parking_details.status",
     header: "Status",
+  },
+  {
+    accessorKey: "car.departureDate",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Departure Date
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
   },
   {
     accessorKey: "car.arrivalDate",
@@ -130,11 +140,15 @@ export const columns: ColumnDef<CarData>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Parking Date
+          Arrival Date
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
+  },
+  {
+    accessorKey: "car.originPort",
+    header: "Origin Port",
   },
   {
     accessorKey: "car.destinationPort",
@@ -159,7 +173,7 @@ export const columns: ColumnDef<CarData>[] = [
     id: "amount_left",
     cell: ({ row }) => {
       const price = row.getValue("amount_left") as number;
-      return <p> {price} </p>;
+      return <p className="text-red-500"> {price} </p>;
     },
   },
   {
@@ -202,3 +216,4 @@ export const columns: ColumnDef<CarData>[] = [
     },
   },
 ];
+

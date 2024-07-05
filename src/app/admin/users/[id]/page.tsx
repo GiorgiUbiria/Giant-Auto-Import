@@ -20,7 +20,7 @@ export default async function Page({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container-fluid px-4 py-8">
       <h1 className="text-3xl font-bold pb-8">{userToFind?.user.name}</h1>
       <div className="grid gap-4">
         <h2> Update the user information </h2>

@@ -92,8 +92,7 @@ export async function getUsers(): Promise<DbUser[] | undefined> {
     const users: DbUser[] = await db
       .select()
       .from(userTable)
-      .where(eq(userTable.roleId, 1))
-      .all();
+      .where(eq(userTable.roleId, 1));
 
     if (users.length === 0) {
       console.warn("No users found");
@@ -151,6 +150,61 @@ export async function getCarsFromDatabase(): Promise<CarData[]> {
       throw new Error("No cars found");
     }
 
+    const updatedCars = await Promise.all(
+      cars.map(async (car) => {
+        const transactions = (await db
+          .select()
+          .from(transactionTable)
+          .where(eq(transactionTable.carId, car.car.id))) as Transaction[];
+
+        car.transaction = transactions;
+
+        const notes = (await db
+          .select()
+          .from(noteTable)
+          .where(eq(noteTable.carId, car.car.id))) as Note[];
+
+        car.note = notes;
+
+        const dbImages = (await db
+          .select()
+          .from(imageTable)
+          .where(eq(imageTable.carVin, car.car.vin!))) as Image[];
+
+        const bucketImages = await getImagesFromBucket(car.car.vin!);
+
+        const images = [...dbImages, ...bucketImages].map((image) => ({
+          imageUrl: image.imageUrl,
+          imageType: image.imageType as DbImage,
+        }));
+
+        car.images = images;
+        return car;
+      }),
+    );
+
+    return updatedCars;
+  } catch (error) {
+    console.error("Error fetching cars:", error);
+    return [];
+  }
+}
+
+export async function getCarsFromDatabaseForUser(id: string): Promise<CarData[]> {
+  try {
+    const cars: CarData[] = (await db
+      .select()
+      .from(userCarTable)
+      .innerJoin(carTable, eq(userCarTable.carId, carTable.id))
+      .leftJoin(specificationsTable, eq(carTable.specificationsId, specificationsTable.id))
+      .leftJoin(parkingDetailsTable, eq(carTable.parkingDetailsId, parkingDetailsTable.id))
+      .leftJoin(priceTable, eq(carTable.id, priceTable.carId))
+      .where(eq(userCarTable.userId, id))) as CarData[];
+
+    if (cars.length === 0) {
+      throw new Error("No cars found");
+    }
+
     const updatedCars = await Promise.all(cars.map(async (car) => {
       const transactions = (await db
         .select()
@@ -183,38 +237,6 @@ export async function getCarsFromDatabase(): Promise<CarData[]> {
     }));
 
     return updatedCars;
-  } catch (error) {
-    console.error("Error fetching cars:", error);
-    return [];
-  }
-}
-
-export async function getCarsFromDatabaseForUser(
-  id: string,
-): Promise<CarData[]> {
-  try {
-    const cars: CarData[] = (await db
-      .select()
-      .from(userCarTable)
-      .innerJoin(carTable, eq(userCarTable.carId, carTable.id))
-      .leftJoin(
-        specificationsTable,
-        eq(carTable.specificationsId, specificationsTable.id),
-      )
-      .leftJoin(
-        parkingDetailsTable,
-        eq(carTable.parkingDetailsId, parkingDetailsTable.id),
-      )
-      .leftJoin(priceTable, eq(carTable.id, priceTable.carId))
-      .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
-      .where(eq(userCarTable.userId, id))
-      .all()) as CarData[];
-
-    if (cars.length === 0) {
-      throw new Error("No cars found");
-    }
-
-    return cars;
   } catch (error) {
     console.error("Error fetching cars:", error);
     return [];

@@ -2,7 +2,6 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 
 import Link from "next/link";
 import { CarData, Image as ImageType } from "@/lib/interfaces";
@@ -38,9 +37,10 @@ export const columns: ColumnDef<CarData>[] = [
           {images.at(0)?.imageUrl && (
             <Image
               src={images.at(0)?.imageUrl!}
+              className="w-24 h-auto"
               alt="Car Image"
-              width={100}
-              height={100}
+              width={300}
+              height={300}
             />
           )}
         </div>
@@ -117,6 +117,20 @@ export const columns: ColumnDef<CarData>[] = [
   {
     accessorKey: "parking_details.status",
     header: "Status",
+  },
+  {
+    accessorKey: "car.departureDate",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Departure Date
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
   },
   {
     accessorKey: "car.arrivalDate",

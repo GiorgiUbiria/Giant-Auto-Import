@@ -12,6 +12,15 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { CarData } from "@/lib/interfaces";
 import { Truck } from "lucide-react";
+import Link from "next/link";
+
+function formatDateToInputValue(date: Date | null): string {
+  if (!date) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 export default function CarInfo({ carData }: { carData: CarData }) {
   return (
@@ -22,14 +31,22 @@ export default function CarInfo({ carData }: { carData: CarData }) {
             VIN - {carData.car.vin}
             <CopyToClipBoard text={carData.car.vin!} />
           </CardTitle>
-          <CardDescription>Date: {carData.car?.arrivalDate?.toString()}</CardDescription>
+          <CardDescription>
+            Date: {carData.car?.arrivalDate?.toString()}
+          </CardDescription>
         </div>
         <div className="ml-auto flex items-center gap-1">
           <Button size="sm" variant="outline" className="h-8 gap-1">
             <Truck className="h-3.5 w-3.5" />
-            <span className="lg:sr-only xl:not-sr-only xl:whitespace-nowrap">
+            <Link
+              href={
+                carData.parking_details?.trackingLink
+                  ? carData.parking_details?.trackingLink
+                  : ""
+              }
+            >
               Track Car
-            </span>
+            </Link>
           </Button>
         </div>
       </CardHeader>
@@ -37,10 +54,15 @@ export default function CarInfo({ carData }: { carData: CarData }) {
         <div className="grid gap-3">
           <div className="font-semibold text-lg">Details</div>
           <Separator className="my-2" />
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col align-start gap-2">
               <Label htmlFor="car-make"> Make: </Label>
-              <Input type="text" value={carData.specifications?.make!} readOnly id="car-make" />
+              <Input
+                type="text"
+                value={carData.specifications?.make!}
+                readOnly
+                id="car-make"
+              />
             </div>
             <div className="flex flex-col align-start gap-2">
               <Label htmlFor="car-year"> Year: </Label>
@@ -52,54 +74,109 @@ export default function CarInfo({ carData }: { carData: CarData }) {
               />
             </div>
           </div>
-          <div className="flex flex-col align-start gap-2">
-            <Label htmlFor="car-description"> Description: </Label>
-            <Input
-              type="text"
-              value={carData.specifications?.carfax!}
-              readOnly
-              id="car-description"
-            />
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col align-start gap-2">
+              <Label htmlFor="car-container-number"> Container #: </Label>
+              <Input
+                type="text"
+                value={
+                  carData.parking_details?.containerNumber
+                    ? carData.parking_details?.containerNumber
+                    : "-"
+                }
+                readOnly
+                id="car-container-number"
+              />
+            </div>
+            <div className="flex flex-col align-start gap-2">
+              <Label htmlFor="car-booking-number"> Booking #: </Label>
+              <Input
+                type="text"
+                value={
+                  carData.parking_details?.bookingNumber
+                    ? carData.parking_details?.bookingNumber
+                    : "-"
+                }
+                readOnly
+                id="car-booking-number"
+              />
+            </div>
           </div>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col align-start gap-2">
               <Label htmlFor="car-model"> Model: </Label>
               <Input
                 type="text"
-                value={carData.specifications?.model!}
+                value={carData.specifications?.model ? carData.specifications?.model : "-"}
+                readOnly
+                id="car-model"
+              />
+            </div>
+            <div className="flex flex-col align-start gap-2">
+              <Label htmlFor="car-color"> Color: </Label>
+              <Input
+                type="text"
+                value={carData.specifications?.color ? carData.specifications?.color : "-"} 
                 readOnly
                 id="car-model"
               />
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col align-start gap-2">
-              <Label htmlFor="car-title-number"> Title Number: </Label>
+              <Label htmlFor="car-departure-date"> Departure Date:: </Label>
               <Input
                 type="text"
-                value={carData.specifications?.titleNumber! ? carData.specifications?.titleNumber! : "-"}
+                value={
+                  carData.car.departureDate
+                    ? formatDateToInputValue(carData.car.departureDate)
+                    : "-"
+                }
                 readOnly
-                id="car-title-number"
+                id="car-departure-date"
               />
             </div>
             <div className="flex flex-col align-start gap-2">
-              <Label htmlFor="car-country"> Country: </Label>
+              <Label htmlFor="car-arrival-date"> Arrival Date:: </Label>
               <Input
                 type="text"
-                value={carData.specifications?.country!}
+                value={
+                  carData.car.arrivalDate
+                    ? formatDateToInputValue(carData.car.arrivalDate)
+                    : "-"
+                }
                 readOnly
-                id="car-country"
+                id="car-arrival-date"
               />
             </div>
           </div>
-          <div className="flex flex-col align-start gap-2">
-            <Label htmlFor="car-engine-type"> Engine Type: </Label>
-            <Input
-              type="text"
-              value={carData.specifications?.engineType!}
-              readOnly
-              id="car-engine-type"
-            />
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col align-start gap-2">
+              <Label htmlFor="car-body-type"> Body Type: </Label>
+              <Input
+                type="text"
+                value={
+                  carData.specifications?.bodyType
+                    ? carData.specifications?.bodyType
+                    : "-"
+                }
+                readOnly
+                id="car-body-type"
+              />
+            </div>
+            <div className="flex flex-col align-start gap-2">
+              <Label htmlFor="car-fuel-type"> Fuel Type: </Label>
+              <Input
+                type="text"
+                value={
+                  carData.specifications?.fuelType
+                    ? carData.specifications?.fuelType
+                    : "-"
+                }
+                readOnly
+                id="car-fuel-type"
+              />
+            </div>
           </div>
         </div>
       </CardContent>

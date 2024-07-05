@@ -125,20 +125,14 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
         year: specifications?.year || null,
         make: specifications?.make || null,
         model: specifications?.model || null,
-        country: specifications?.country || null,
-        titleNumber: specifications?.titleNumber || null,
-        titleState: specifications?.titleState || null,
         color: specifications?.color || null,
         runndrive:
           specifications?.runndrive === true
             ? "true"
             : specifications?.runndrive || null,
-        fuelType: specifications?.fuelType || null,
       };
 
       const newParkingDetails: NewParkingDetails = {
-        fined: parkingDetails?.fined === true ? true : false,
-        arrived: parkingDetails?.arrived === true ? true : false,
         status: parkingDetails?.status
           ? (parkingDetails?.status as CarStatus)
           : null,
@@ -155,7 +149,6 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
         arrivalDate: shipment?.arrivalDate ?  new Date(shipment?.arrivalDate!) : new Date(),
         auction: auction?.name?.toString() || null,
         createdAt: createdAt ?  new Date(createdAt) : null,
-        shipping: shipping?.name?.toString() || null,
         specificationsId: spId[0].specificationsId,
         parkingDetailsId: pdId[0].parkingDetailsId,
       };

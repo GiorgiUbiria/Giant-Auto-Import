@@ -39,20 +39,20 @@ export const specificationsTable = sqliteTable("specifications", {
   year: text("year"),
   make: text("make"),
   model: text("model"),
-  bodyType: text("body_type"),
-  country: text("country"),
-  engineType: text("engine_type"),
-  titleNumber: text("title_number"),
-  titleState: text("title_state"),
+  bodyType: text("body_type", {
+    enum: ["SEDAN", "CROSSOVER", "SUV", "PICKUP"],
+  }),
   color: text("color"),
-  runndrive: text("runndrive"),
-  fuelType: text("fuel_type"),
+  fuelType: text("fuel_type", {
+    enum: ["DIESEL", "GASOLINE", "HYBRID", "ELECTRIC", "OTHER"],
+  }),
 });
 
 export const parkingDetailsTable = sqliteTable("parking_details", {
   id: integer("id").primaryKey(),
-  fined: integer("fined", { mode: "boolean" }),
-  arrived: integer("arrived", { mode: "boolean" }),
+  containerNumber: text("container_number"),
+  bookingNumber: text("booking_number"),
+  trackingLink: text("tracking_link"),
   status: text("status", {
     enum: ["Pending", "OnHand", "Loaded", "InTransit", "Fault"],
   }),
@@ -67,7 +67,6 @@ export const carTable = sqliteTable("car", {
   arrivalDate: integer("arrival_date", { mode: "timestamp" }),
   auction: text("auction"),
   createdAt: integer("created_at", { mode: "timestamp_ms" }),
-  shipping: text("shipping"),
   specificationsId: integer("specifications_id").references(
     () => specificationsTable.id,
     { onDelete: "cascade" },
@@ -84,7 +83,9 @@ export const imageTable = sqliteTable("image", {
     onDelete: "cascade",
   }),
   imageUrl: text("image_url"),
-  imageType: text("image_type"),
+  imageType: text("image_type", {
+    enum: ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERY"],
+  }),
 });
 
 export const userCarTable = sqliteTable(

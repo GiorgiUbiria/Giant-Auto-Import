@@ -17,7 +17,7 @@ const insertImage = async (vin: string, imageUrl: string) => {
   const image: NewImage = {
     carVin: vin,
     imageUrl: imageUrl,
-    imageType: "Arrival",
+    imageType: "AUCTION",
   };
 
   try {

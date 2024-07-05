@@ -12,9 +12,9 @@ export default async function Page({ params }: { params: { vin: string } }) {
     return <div>Car not found</div>;
   }
 
-  const containerImages = await getImagesFromBucket(params.vin);
+  const bucketImages = await getImagesFromBucket(params.vin);
 
-  car.images = [...car.images!, ...containerImages];
+  car.images = [...car.images!, ...bucketImages];
 
   return (
     <div className="flex flex-col items-center w-full py-12">

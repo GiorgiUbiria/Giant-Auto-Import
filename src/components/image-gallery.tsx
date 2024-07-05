@@ -36,7 +36,7 @@ export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
 
   if (data.length === 0) {
     return (
-      <div className="w-[480px]">
+      <div className="w-full">
         <div className="grid gap-4">
           <div className="flex flex-col items-center justify-center h-[480px] w-full max-w-full rounded-lg bg-gray-200">
             <p className="text-gray-600">No images found</p>
@@ -47,7 +47,7 @@ export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
   }
 
   return (
-    <div className="max-w-xl">
+    <div className="w-full">
       <div className="grid gap-4">
         <div>
           <Zoom>
@@ -60,7 +60,7 @@ export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
             />
           </Zoom>
         </div>
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-5">
           {data.slice(0, 4).map(({ imageUrl }, index) => (
             <div key={index}>
               <Image

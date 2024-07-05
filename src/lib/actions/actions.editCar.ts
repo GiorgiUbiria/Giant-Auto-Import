@@ -50,7 +50,6 @@ export async function editCarInDb(
       "vin",
       "originPort",
       "destinationPort",
-      "shipping",
       "auction",
       "departureDate",
       "arrivalDate",
@@ -63,18 +62,14 @@ export async function editCarInDb(
       "year",
       "make",
       "model",
-      "country",
-      "engineType",
       "fuelType",
-      "titleNumber",
-      "titleState",
       "color",
       "bodyType",
     ];
     const parkingDetailFields: (keyof Omit<
       ParkingDetails,
       "id" | "parkingDateString"
-    >)[] = ["fined", "arrived", "status"];
+    >)[] = ["trackingLink", "containerNumber", "bookingNumber", "status"];
 
     for (const field of carFields) {
       if (

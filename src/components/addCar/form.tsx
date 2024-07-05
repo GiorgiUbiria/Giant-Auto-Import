@@ -9,19 +9,10 @@ import { addCarToDb } from "@/lib/actions/actions.addCar";
 import { formSchema } from "./formSchema";
 import { toast } from "sonner";
 import { ErrorMessage } from "@hookform/error-message";
-import countries from "../../../public/countries.json";
 import { handleUploadImages } from "@/lib/actions/bucketActions";
 import Spinner from "../spinner";
 import { colors } from "../../../public/colors";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useRouter } from "next/navigation";
 
 const initialState = {
   error: null,
@@ -31,6 +22,7 @@ const initialState = {
 type FormValues = z.infer<typeof formSchema>;
 
 export default function AddForm() {
+  const router = useRouter();
   const [loading, setTransitioning] = React.useTransition();
   const [state, formAction] = useFormState(addCarToDb, initialState);
   const { pending } = useFormStatus();
@@ -38,19 +30,11 @@ export default function AddForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       vin: "",
-      fined: false,
       price: 0,
       make: "",
       model: "",
-      bodyType: "",
-      country: countries.find(
-        (country: { name: string; code: string }) => country.name === "Germany",
-      )?.name,
-      engineType: "",
-      titleNumber: "",
-      titleState: "",
-      fuelType: "Gasoline",
-      shipping: "",
+      fuelType: "GASOLINE",
+      bodyType: "SUV",
       originPort: "",
       destinationPort: "",
       auction: "",
@@ -60,7 +44,13 @@ export default function AddForm() {
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     console.log("Submitting form data:", data);
-    const { arrived_images, container_images, ...formDataWithoutImages } = data;
+    const {
+      auction_images,
+      delivery_images,
+      warehouse_images,
+      pick_up_images,
+      ...formDataWithoutImages
+    } = data;
     const processAndUploadImages = async (
       images: FileList | undefined,
       type: string,
@@ -107,10 +97,14 @@ export default function AddForm() {
       } else {
         const vin = getValues("vin");
 
-        await processAndUploadImages(container_images, "Container", vin);
-        await processAndUploadImages(arrived_images, "Arrival", vin);
+        await processAndUploadImages(delivery_images, "DELIVERY", vin);
+        await processAndUploadImages(pick_up_images, "PICK_UP", vin);
+        await processAndUploadImages(warehouse_images, "WAREHOUSE", vin);
+        await processAndUploadImages(auction_images, "AUCTION", vin);
 
         toast.success(res.success);
+
+        router.push("/admin");
         console.log(res.success);
       }
     });
@@ -123,7 +117,10 @@ export default function AddForm() {
   }, [formState.errors]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="p-4 bg-gray-600 rounded-md">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="p-4 bg-gray-600 rounded-md"
+    >
       <div className="grid gap-6 mb-6 md:grid-cols-2">
         <div>
           <label
@@ -214,33 +211,7 @@ export default function AddForm() {
           />
         </div>
       </div>
-      <div className="grid gap-6 mb-6 md:grid-cols-3">
-        <div>
-          <label
-            htmlFor="country"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
-          >
-            Country
-          </label>
-          <select
-            id="country"
-            {...register("country")}
-            className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-          >
-            {countries.map((country: { name: string; code: string }) => (
-              <option key={country.code} value={country.name}>
-                {country.name}
-              </option>
-            ))}
-          </select>
-          <ErrorMessage
-            errors={formState.errors}
-            name="country"
-            render={({ message }) => (
-              <p className="text-red-500 text-sm">{message}</p>
-            )}
-          />
-        </div>
+      <div className="grid gap-6 mb-6 md:grid-cols-2">
         <div>
           <label
             htmlFor="status"
@@ -279,11 +250,11 @@ export default function AddForm() {
             {...register("fuelType")}
             className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
           >
-            <option value="Gasoline">Gasoline</option>
-            <option value="Diesel">Diesel</option>
-            <option value="Electric">Electric</option>
-            <option value="Hybrid">Hybrid</option>
-            <option value="Other">Other</option>
+            <option value="GASOLINE">Gasoline</option>
+            <option value="DIESEL">Diesel</option>
+            <option value="ELECTRIC">Electric</option>
+            <option value="HYBRID">Hybrid</option>
+            <option value="OTHER">Other</option>
           </select>
           <ErrorMessage
             errors={formState.errors}
@@ -297,87 +268,46 @@ export default function AddForm() {
       <div className="grid gap-6 mb-6 md:grid-cols-2">
         <div>
           <label
-            htmlFor="engineType"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
-          >
-            Engine Type
-          </label>
-          <input
-            type="text"
-            placeholder="engine type"
-            id="engineType"
-            {...register("engineType")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-          />
-          <ErrorMessage
-            errors={formState.errors}
-            name="engineType"
-            render={({ message }) => (
-              <p className="text-red-500 text-sm">{message}</p>
-            )}
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="titleNumber"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
-          >
-            Title Number
-          </label>
-          <input
-            type="text"
-            placeholder="title number"
-            id="titleNumber"
-            {...register("titleNumber")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-          />
-          <ErrorMessage
-            errors={formState.errors}
-            name="titleNumber"
-            render={({ message }) => (
-              <p className="text-red-500 text-sm">{message}</p>
-            )}
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="titleState"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
-          >
-            Title State
-          </label>
-          <input
-            type="text"
-            placeholder="title state"
-            id="titleState"
-            {...register("titleState")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-          />
-          <ErrorMessage
-            errors={formState.errors}
-            name="titleState"
-            render={({ message }) => (
-              <p className="text-red-500 text-sm">{message}</p>
-            )}
-          />
-        </div>
-        <div>
-          <label
             htmlFor="bodyType"
             className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Body Type
           </label>
-          <input
-            type="text"
-            placeholder="body type"
+          <select
             id="bodyType"
             {...register("bodyType")}
+            className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          >
+            <option value="SEDAN">Sedan</option>
+            <option value="SUV">SUV</option>
+            <option value="CROSSOVER">CrossOver</option>
+            <option value="PICKUP">PickUp</option>
+          </select>
+          <ErrorMessage
+            errors={formState.errors}
+            name="bodyType"
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="trackingLink"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
+          >
+            Tracking Link
+          </label>
+          <input
+            type="text"
+            placeholder="trackingLink"
+            id="trackingLink"
+            {...register("trackingLink")}
             className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
-            name="bodyType"
+            name="destinationPort"
             render={({ message }) => (
               <p className="text-red-500 text-sm">{message}</p>
             )}
@@ -430,7 +360,7 @@ export default function AddForm() {
           />
         </div>
       </div>
-      <div className="grid gap-6 mb-6 md:grid-cols-3">
+      <div className="grid gap-6 mb-6 md:grid-cols-2">
         <div>
           <label
             htmlFor="color"
@@ -438,27 +368,17 @@ export default function AddForm() {
           >
             Color
           </label>
-          <Select {...register("color")}>
-            <SelectTrigger className="w-full bg-gray-300 dark:bg-gray-900">
-              <SelectValue placeholder="Select a color" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Colors</SelectLabel>
-                {colors.map((color) => (
-                  <SelectItem key={color.name} value={color.name}>
-                    <div className="flex gap-2">
-                      <div
-                        className="w-6 h-6 rounded-full border-2 border-gray-600"
-                        style={{ backgroundColor: color.hex }}
-                      />
-                      {color.name}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          <select
+            {...register("color")}
+            id="color"
+            className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          >
+            {colors.map((color) => (
+              <option key={color.name} value={color.name}>
+                {color.name}
+              </option>
+            ))}
+          </select>
           <ErrorMessage
             errors={formState.errors}
             name="color"
@@ -469,7 +389,7 @@ export default function AddForm() {
         </div>
         <div>
           <label
-            htmlFor="auction"
+            htmlFor="auction_text"
             className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Auction
@@ -477,7 +397,7 @@ export default function AddForm() {
           <input
             type="text"
             placeholder="auction"
-            id="auction"
+            id="auction_text"
             {...register("auction")}
             className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
@@ -489,50 +409,25 @@ export default function AddForm() {
             )}
           />
         </div>
-        <div>
-          <label
-            htmlFor="shipping"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
-          >
-            Shipping
-          </label>
-          <input
-            type="text"
-            placeholder="shipping"
-            id="shipping"
-            {...register("shipping")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-          />
-          <ErrorMessage
-            errors={formState.errors}
-            name="shipping"
-            render={({ message }) => (
-              <p className="text-red-500 text-sm">{message}</p>
-            )}
-          />
-        </div>
       </div>
       <div className="grid gap-6 mb-6 md:grid-cols-3">
         <div>
           <label
-            htmlFor="fined"
+            htmlFor="containerNumber"
             className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
-            Fined
+            Container #
           </label>
-          <select
-            id="fined"
-            {...register("fined", {
-              setValueAs: (v) => (v === "true" ? true : false),
-            })}
-            className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-2.5 pb-2.5 pt-4 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-          >
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </select>
+          <input
+            type="text"
+            placeholder="container number"
+            id="containerNumber"
+            {...register("containerNumber")}
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+          />
           <ErrorMessage
             errors={formState.errors}
-            name="fined"
+            name="price"
             render={({ message }) => (
               <p className="text-red-500 text-sm">{message}</p>
             )}
@@ -540,24 +435,21 @@ export default function AddForm() {
         </div>
         <div>
           <label
-            htmlFor="arrived"
+            htmlFor="bookingNumber"
             className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
-            Arrived
+            Booking #
           </label>
-          <select
-            id="arrived"
-            {...register("arrived", {
-              setValueAs: (v) => (v === "true" ? true : false),
-            })}
-            className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-2.5 pb-2.5 pt-4 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-          >
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </select>
+          <input
+            type="text"
+            placeholder="booking number"
+            id="bookingNumber"
+            {...register("bookingNumber")}
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+          />
           <ErrorMessage
             errors={formState.errors}
-            name="arrived"
+            name="price"
             render={({ message }) => (
               <p className="text-red-500 text-sm">{message}</p>
             )}
@@ -636,26 +528,26 @@ export default function AddForm() {
           />
         </div>
       </div>
-      <div className="grid gap-6 mb-6 md:grid-cols-2">
+      <div className="grid gap-6 mb-6 md:grid-cols-4">
         <div>
           <label
-            htmlFor="images"
+            htmlFor="auction_images"
             className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
-            Arrived Images
+            Auction Photos
           </label>
           <input
             type="file"
-            id="arrived_images"
+            id="auction_images"
             multiple
-            {...register("arrived_images", {
+            {...register("auction_images", {
               setValueAs: (v) => Array.from(v),
             })}
             className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
-            name="model"
+            name="auction_images"
             render={({ message }) => (
               <p className="text-red-500 text-sm">{message}</p>
             )}
@@ -663,23 +555,71 @@ export default function AddForm() {
         </div>
         <div>
           <label
-            htmlFor="container_images"
+            htmlFor="warehouse_images"
             className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
-            Container Images
+            Warehouse Photos
           </label>
           <input
             type="file"
-            id="container_images"
+            id="warehouse_images"
             multiple
-            {...register("container_images", {
+            {...register("warehouse_images", {
               setValueAs: (v) => Array.from(v),
             })}
             className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
-            name="model"
+            name="warehouse_images"
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="pick_up_images"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
+          >
+            Pick Up Photos
+          </label>
+          <input
+            type="file"
+            id="pick_up_images"
+            multiple
+            {...register("pick_up_images", {
+              setValueAs: (v) => Array.from(v),
+            })}
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+          />
+          <ErrorMessage
+            errors={formState.errors}
+            name="pick_up_images"
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="delivery_images"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
+          >
+            Delivery Photos
+          </label>
+          <input
+            type="file"
+            id="delivery_images"
+            multiple
+            {...register("delivery_images", {
+              setValueAs: (v) => Array.from(v),
+            })}
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+          />
+          <ErrorMessage
+            errors={formState.errors}
+            name="delivery_images"
             render={({ message }) => (
               <p className="text-red-500 text-sm">{message}</p>
             )}
@@ -692,7 +632,7 @@ export default function AddForm() {
           type="submit"
           className="w-full py-2.5 px-5 me-2 mb-2 text-sm font-medium text-black focus:outline-none bg-gray-300 rounded-lg border border-gray-200 hover:bg-gray-300 dark:bg-gray-900-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-300 dark:bg-gray-900-800 dark:text-gray-900 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-300 dark:bg-gray-900-700"
         >
-          {pending ? <Spinner /> : "Submit"}
+          {pending ? <Spinner /> : "Add Car"}
         </button>
       </div>
     </form>

@@ -42,7 +42,7 @@ const initialState = {
 };
 
 const formSchema = z.object({
-  arrived_images: z
+  auction_images: z
     .custom<FileList>()
     .refine((files) => {
       return Array.from(files ?? []).every(
@@ -55,7 +55,33 @@ const formSchema = z.object({
       );
     }, "File type is not supported")
     .optional(),
-  container_images: z
+  pick_up_images: z
+    .custom<FileList>()
+    .refine((files) => {
+      return Array.from(files ?? []).every(
+        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE,
+      );
+    }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
+    .refine((files) => {
+      return Array.from(files ?? []).every((file) =>
+        ACCEPTED_IMAGE_TYPES.includes(file.type),
+      );
+    }, "File type is not supported")
+    .optional(),
+  warehouse_images: z
+    .custom<FileList>()
+    .refine((files) => {
+      return Array.from(files ?? []).every(
+        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE,
+      );
+    }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
+    .refine((files) => {
+      return Array.from(files ?? []).every((file) =>
+        ACCEPTED_IMAGE_TYPES.includes(file.type),
+      );
+    }, "File type is not supported")
+    .optional(),
+  delivery_images: z
     .custom<FileList>()
     .refine((files) => {
       return Array.from(files ?? []).every(
@@ -116,7 +142,7 @@ export default function Images({
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     console.log("Submitting form data:", data);
-    const { arrived_images, container_images } = data;
+    const { auction_images, pick_up_images, warehouse_images, delivery_images } = data;
     const processAndUploadImages = async (
       images: FileList | undefined,
       type: string,
@@ -165,34 +191,36 @@ export default function Images({
     };
 
     setTransitioning(async () => {
-      await processAndUploadImages(container_images, "Container", vin);
-      await processAndUploadImages(arrived_images, "Arrival", vin);
+      await processAndUploadImages(auction_images, "AUCTION", vin);
+      await processAndUploadImages(pick_up_images, "PICK_UP", vin);
+      await processAndUploadImages(warehouse_images, "WAREHOUSE", vin);
+      await processAndUploadImages(delivery_images, "DELIVERY", vin);
     });
   };
 
   return (
     <div>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="grid gap-6 mb-6 md:grid-cols-2">
+        <div className="grid gap-6 mb-6 md:grid-cols-4">
           <div>
             <label
-              htmlFor="images"
+              htmlFor="auction_images"
               className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
             >
-              Arrived Images
+              Auction Photos 
             </label>
             <input
               type="file"
-              id="arrived_images"
+              id="auction_images"
               multiple
-              {...register("arrived_images", {
+              {...register("auction_images", {
                 setValueAs: (v) => Array.from(v),
               })}
               className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 dark:text-white bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
             />
             <ErrorMessage
               errors={formState.errors}
-              name="arrived_images"
+              name="auction_images"
               render={({ message }) => (
                 <p className="text-red-500 text-sm">{message}</p>
               )}
@@ -200,23 +228,71 @@ export default function Images({
           </div>
           <div>
             <label
-              htmlFor="container_images"
+              htmlFor="warehouse_images"
               className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
             >
-              Container Images
+              Warehouse Photos
             </label>
             <input
               type="file"
-              id="container_images"
+              id="warehouse_images"
               multiple
-              {...register("container_images", {
+              {...register("warehouse_images", {
                 setValueAs: (v) => Array.from(v),
               })}
               className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 dark:text-white bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
             />
             <ErrorMessage
               errors={formState.errors}
-              name="container_images"
+              name="warehouse_images"
+              render={({ message }) => (
+                <p className="text-red-500 text-sm">{message}</p>
+              )}
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="pick_up_images"
+              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            >
+              Pick Up Photos
+            </label>
+            <input
+              type="file"
+              id="pick_up_images"
+              multiple
+              {...register("pick_up_images", {
+                setValueAs: (v) => Array.from(v),
+              })}
+              className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 dark:text-white bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            />
+            <ErrorMessage
+              errors={formState.errors}
+              name="pick_up_images"
+              render={({ message }) => (
+                <p className="text-red-500 text-sm">{message}</p>
+              )}
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="delivery_images"
+              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            >
+              Delivery Photos
+            </label>
+            <input
+              type="file"
+              id="delivery_images"
+              multiple
+              {...register("delivery_images", {
+                setValueAs: (v) => Array.from(v),
+              })}
+              className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 dark:text-white bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            />
+            <ErrorMessage
+              errors={formState.errors}
+              name="delivery_images"
               render={({ message }) => (
                 <p className="text-red-500 text-sm">{message}</p>
               )}

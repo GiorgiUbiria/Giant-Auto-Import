@@ -21,6 +21,8 @@ export type DbUser = typeof userTable.$inferSelect;
 
 type NewUserCar = typeof userCarTable.$inferInsert;
 
+export type DbImage = typeof imageTable.$inferSelect.imageType;
+
 const insertUserCar = async (userCar: NewUserCar) => {
   return db.insert(userCarTable).values(userCar);
 };
@@ -234,7 +236,7 @@ export async function getCarFromDatabase(
 
     car.images = images.filter(isValidImage).map((image) => ({
       imageUrl: image.imageUrl!,
-      imageType: image.imageType as "Arrival" | "Container",
+      imageType: image.imageType as DbImage,
     }));
 
     const transactions = (await db

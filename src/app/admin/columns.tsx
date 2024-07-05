@@ -44,6 +44,17 @@ export const columns: ColumnDef<CarData>[] = [
     enableHiding: false,
   },
   {
+    accessorKey: "images",
+    id: "images",
+    header: " ",
+    cell: ({ row }) => {
+      const images = row.getValue("images") as string;
+      return (
+        <p> {JSON.stringify(images)} </p>
+      )
+    },
+  },
+  {
     accessorKey: "car.id",
     id: "car.id",
     header: ({ column }) => {
@@ -103,20 +114,12 @@ export const columns: ColumnDef<CarData>[] = [
     header: "Model",
   },
   {
-    accessorKey: "specifications.country",
-    header: "Country",
-  },
-  {
-    accessorKey: "specifications.titleNumber",
-    header: "Title Number",
-  },
-  {
-    accessorKey: "specifications.carfax",
-    header: "Carfax",
-  },
-  {
     accessorKey: "specifications.fuelType",
     header: "Fuel Type",
+  },
+  {
+    accessorKey: "specifications.bodyType",
+    header: "Body Type",
   },
   {
     accessorKey: "parking_details.status",
@@ -130,11 +133,15 @@ export const columns: ColumnDef<CarData>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Parking Date
+          Arrival Date
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
+  },
+  {
+    accessorKey: "car.originPort",
+    header: "Origin Port",
   },
   {
     accessorKey: "car.destinationPort",

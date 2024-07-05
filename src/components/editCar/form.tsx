@@ -48,16 +48,9 @@ export default function EditForm({ car }: { car: CarData }) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       vin: car.car.vin!,
-      fined: car.parking_details?.fined === "true" ? true : false,
       make: car.specifications?.make!,
       model: car.specifications?.model!,
-      bodyType: car.specifications?.bodyType!,
-      country: car.specifications?.country!,
-      engineType: car.specifications?.engineType!,
-      titleNumber: car.specifications?.titleNumber!,
-      titleState: car.specifications?.titleState!,
       color: car.specifications?.color!,
-      shipping: car.car?.shipping!,
       originPort: car.car?.originPort!,
       destinationPort: car.car?.destinationPort!,
       auction: car.car?.auction!,
@@ -94,7 +87,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="vin"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             VIN
           </label>
@@ -116,7 +109,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="year"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Year
           </label>
@@ -138,7 +131,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="make"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Make
           </label>
@@ -160,7 +153,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="model"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Model
           </label>
@@ -180,37 +173,11 @@ export default function EditForm({ car }: { car: CarData }) {
           />
         </div>
       </div>
-      <div className="grid gap-6 mb-6 md:grid-cols-3">
-        <div>
-          <label
-            htmlFor="country"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-          >
-            Country
-          </label>
-          <select
-            id="country"
-            {...register("country")}
-            className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-          >
-            {countries.map((country: { name: string; code: string }) => (
-              <option key={country.code} value={country.name}>
-                {country.name}
-              </option>
-            ))}
-          </select>
-          <ErrorMessage
-            errors={formState.errors}
-            name="country"
-            render={({ message }) => (
-              <p className="text-red-500 text-sm">{message}</p>
-            )}
-          />
-        </div>
+      <div className="grid gap-6 mb-6 md:grid-cols-2">
         <div>
           <label
             htmlFor="status"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Status
           </label>
@@ -236,7 +203,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="fuelType"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Fuel Type
           </label>
@@ -263,87 +230,52 @@ export default function EditForm({ car }: { car: CarData }) {
       <div className="grid gap-6 mb-6 md:grid-cols-2">
         <div>
           <label
-            htmlFor="engineType"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-          >
-            Engine Type
-          </label>
-          <input
-            type="text"
-            placeholder="engine type"
-            id="engineType"
-            {...register("engineType")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-          />
-          <ErrorMessage
-            errors={formState.errors}
-            name="engineType"
-            render={({ message }) => (
-              <p className="text-red-500 text-sm">{message}</p>
-            )}
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="titleNumber"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-          >
-            Title Number
-          </label>
-          <input
-            type="text"
-            placeholder="title number"
-            id="titleNumber"
-            {...register("titleNumber")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-          />
-          <ErrorMessage
-            errors={formState.errors}
-            name="titleNumber"
-            render={({ message }) => (
-              <p className="text-red-500 text-sm">{message}</p>
-            )}
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="titleState"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-          >
-            Title State
-          </label>
-          <input
-            type="text"
-            placeholder="title state"
-            id="titleState"
-            {...register("titleState")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-          />
-          <ErrorMessage
-            errors={formState.errors}
-            name="titleState"
-            render={({ message }) => (
-              <p className="text-red-500 text-sm">{message}</p>
-            )}
-          />
-        </div>
-        <div>
-          <label
             htmlFor="bodyType"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Body Type
           </label>
+          <Select 
+            {...register("bodyType")}
+          >
+            <SelectTrigger className="w-full bg-gray-300 dark:bg-gray-900">
+              <SelectValue placeholder="Select a body type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Body Types</SelectLabel>
+                <SelectItem value="SEDAN">Sedan</SelectItem>
+                <SelectItem value="SUV">SUV</SelectItem>
+                <SelectItem value="CROSSOVER">CrossOver</SelectItem>
+                <SelectItem value="PICKUP">PickUp</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <ErrorMessage
+            errors={formState.errors}
+            name="bodyType"
+            render={({ message }) => (
+              <p className="text-red-500 text-sm">{message}</p>
+            )}
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="trackingLink"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
+          >
+            Tracking Link
+          </label>
           <input
             type="text"
-            placeholder="body type"
-            id="bodyType"
-            {...register("bodyType")}
+            placeholder="trackingLink"
+            id="trackingLink"
+            {...register("trackingLink")}
             className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
-            name="bodyType"
+            name="destinationPort"
             render={({ message }) => (
               <p className="text-red-500 text-sm">{message}</p>
             )}
@@ -354,7 +286,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="destinationPort"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Destination Port
           </label>
@@ -376,7 +308,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="originPort"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Origin Port
           </label>
@@ -396,11 +328,11 @@ export default function EditForm({ car }: { car: CarData }) {
           />
         </div>
       </div>
-      <div className="grid gap-6 mb-6 md:grid-cols-3">
+      <div className="grid gap-6 mb-6 md:grid-cols-2">
         <div>
           <label
             htmlFor="color"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Color
           </label>
@@ -436,7 +368,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="auction"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Auction
           </label>
@@ -455,50 +387,25 @@ export default function EditForm({ car }: { car: CarData }) {
             )}
           />
         </div>
-        <div>
-          <label
-            htmlFor="shipping"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-          >
-            Shipping
-          </label>
-          <input
-            type="text"
-            placeholder="shipping"
-            id="shipping"
-            {...register("shipping")}
-            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-          />
-          <ErrorMessage
-            errors={formState.errors}
-            name="shipping"
-            render={({ message }) => (
-              <p className="text-red-500 text-sm">{message}</p>
-            )}
-          />
-        </div>
       </div>
       <div className="grid gap-6 mb-6 md:grid-cols-3">
         <div>
           <label
-            htmlFor="fined"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            htmlFor="containerNumber"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
-            Fined
+            Container #
           </label>
-          <select
-            id="fined"
-            {...register("fined", {
-              setValueAs: (v) => (v === "true" ? true : false),
-            })}
-            className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-2.5 pb-2.5 pt-4 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-          >
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </select>
+          <input
+            type="text"
+            placeholder="container number"
+            id="containerNumber"
+            {...register("containerNumber")}
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+          />
           <ErrorMessage
             errors={formState.errors}
-            name="fined"
+            name="price"
             render={({ message }) => (
               <p className="text-red-500 text-sm">{message}</p>
             )}
@@ -506,24 +413,21 @@ export default function EditForm({ car }: { car: CarData }) {
         </div>
         <div>
           <label
-            htmlFor="arrived"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            htmlFor="bookingNumber"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
-            Arrived
+            Booking #
           </label>
-          <select
-            id="arrived"
-            {...register("arrived", {
-              setValueAs: (v) => (v === "true" ? true : false),
-            })}
-            className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-2.5 pb-2.5 pt-4 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-          >
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </select>
+          <input
+            type="text"
+            placeholder="booking number"
+            id="bookingNumber"
+            {...register("bookingNumber")}
+            className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+          />
           <ErrorMessage
             errors={formState.errors}
-            name="arrived"
+            name="price"
             render={({ message }) => (
               <p className="text-red-500 text-sm">{message}</p>
             )}
@@ -532,7 +436,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="price"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Price
           </label>
@@ -540,7 +444,6 @@ export default function EditForm({ car }: { car: CarData }) {
             type="number"
             placeholder="price"
             id="price"
-            defaultValue={car.price?.totalAmount}
             {...register("price", {
               valueAsNumber: true,
             })}
@@ -559,18 +462,17 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="departureDate"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Departure Date
           </label>
           <input
             type="date"
             id="departureDate"
-            defaultValue={formatDateToInputValue(car.car?.departureDate)}
             {...register("departureDate", {
               valueAsDate: true,
             })}
-            className="w-full py-2.5 px-5 rounded-lg border bg-gray-300 dark:bg-gray-900 border-gray-300 appearance-none dark:border-gray-900 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+            className="w-full py-2.5 px-5 rounded-lg border bg-gray-300 dark:bg-gray-900 border-gray-300 appearance-none dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
           />
           <ErrorMessage
             errors={formState.errors}
@@ -583,13 +485,12 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="arrivalDate"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+            className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
             Arrival Date
           </label>
           <input
             type="date"
-            defaultValue={formatDateToInputValue(car.car?.arrivalDate)}
             id="arrivalDate"
             {...register("arrivalDate", {
               valueAsDate: true,

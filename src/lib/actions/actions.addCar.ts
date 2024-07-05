@@ -58,43 +58,38 @@ export async function addCarToDb(
       year,
       make,
       model,
-      country,
+      containerNumber,
+      bookingNumber,
+      trackingLink,
       status,
-      engineType,
       fuelType,
-      titleNumber,
-      titleState,
       color,
       bodyType,
       destinationPort,
       originPort,
       auction,
-      shipping,
       departureDate,
       arrivalDate,
-      fined,
-      arrived,
       price,
     } = result.data;
 
+    console.log(result.data);
+
     const specifications: NewSpecification = {
       vin: vin,
-      carfax: year + " " + make + " " + model + " " + country,
+      carfax: year + " " + make + " " + model + " " ,
       year: year,
       make: make,
       model: model,
       bodyType: bodyType,
-      country: country,
-      engineType: engineType,
-      titleNumber: titleNumber,
-      titleState: titleState,
+      fuelType: fuelType,
       color: color,
-      runndrive: fuelType,
     };
 
     const parkingDetails: NewParkingDetails = {
-      fined: fined,
-      arrived: arrived,
+      trackingLink: trackingLink,
+      containerNumber: containerNumber,
+      bookingNumber: bookingNumber,
       status: status as CarStatus,
     };
 
@@ -115,7 +110,6 @@ export async function addCarToDb(
           : null,
       createdAt: new Date(),
       auction: auction,
-      shipping: shipping,
       specificationsId: specificationsId[0].specificationsId,
       parkingDetailsId: parkingDetailsId[0].parkingDetailsId,
     };

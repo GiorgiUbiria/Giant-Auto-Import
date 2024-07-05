@@ -1,4 +1,4 @@
-import { DbUser } from "./actions/dbActions";
+import { DbImage, DbUser } from "./actions/dbActions";
 
 export interface Specifications {
   id: number;
@@ -8,19 +8,15 @@ export interface Specifications {
   make: string | null;
   model: string | null;
   bodyType: string | null;
-  country: string | null;
-  engineType: string | null;
-  titleNumber: string | null;
-  titleState: string | null;
   color: string | null;
-  runndrive: string | null;
   fuelType: string | null;
 }
 
 export interface ParkingDetails {
   id: number;
-  fined: string | null;
-  arrived: string | null;
+  containerNumber: string | null;
+  bookingNumber: string | null;
+  trackingLink: string | null;
   status: string | null;
 }
 
@@ -33,7 +29,6 @@ export interface Car {
   arrivalDate: Date | null;
   auction: string | null;
   createdAt: Date | null;
-  shipping: string | null;
   specificationsId: number | null;
   parkingDetailsId: number | null;
 }
@@ -56,7 +51,7 @@ export interface UserCar {
 
 export type Image = {
   imageUrl: string | null;
-  imageType?: "Arrival" | "Container";
+  imageType?: DbImage;
 }
 
 export type Transaction = {
@@ -79,8 +74,7 @@ export type CarData = {
   car: Car;
   specifications: Specifications | null;
   parking_details: ParkingDetails | null;
-  price?: { id?: number; totalAmount: number; amountLeft?: number; currencyId: number } | null;
-  price_currency?: { id: "1" | "2" | "3"; currencyCode: Currency } | null;
+  price?: { id?: number; totalAmount: number; amountLeft?: number } | null;
   transaction?: Transaction[] | null;
   images?: Image[];
   note?: Note[];
@@ -113,5 +107,3 @@ export interface GalleryImage {
 }
 
 export type CarStatus = "Pending" | "InTransit" | "OnHand" | "Loaded" | "Fault";
-
-export type Currency = "USD" | "EUR" | "GEL"

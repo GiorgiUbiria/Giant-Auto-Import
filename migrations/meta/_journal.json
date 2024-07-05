@@ -15,6 +15,34 @@
       "when": 1720113501423,
       "tag": "0001_aspiring_mercury",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1720168337655,
+      "tag": "0002_gorgeous_supreme_intelligence",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1720168374766,
+      "tag": "0003_tiny_gladiator",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1720168424852,
+      "tag": "0004_fast_nightcrawler",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1720172466544,
+      "tag": "0005_nappy_impossible_man",
+      "breakpoints": true
     }
   ]
 }

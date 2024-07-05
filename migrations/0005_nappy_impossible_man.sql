@@ -1,0 +1,1 @@
+ALTER TABLE `specifications` DROP COLUMN `runndrive`;

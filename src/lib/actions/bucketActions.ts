@@ -11,6 +11,7 @@ import "dotenv/config";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Image } from "../interfaces";
 import { revalidatePath } from "next/cache";
+import { DbImage } from "./dbActions";
 
 const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
 const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
@@ -126,10 +127,10 @@ export async function getImagesFromBucket(vin: string): Promise<Image[]> {
         const command = new GetObjectCommand(getObjectParams);
         const url = await getSignedUrl(S3Client, command, { expiresIn: 3600 });
 
-        const typeMatch = item.Key.match(/\/(Arrival|Container)\//);
+        const typeMatch = item.Key.match(/\/(AUCTION|PICK_UP|WAREHOUSE|DELIVERY)\//);
         const imageType = typeMatch
-          ? (typeMatch[1] as "Arrival" | "Container")
-          : "Container";
+          ? (typeMatch[1] as DbImage)
+          : "AUCTION";
 
         return {
           imageUrl: url,

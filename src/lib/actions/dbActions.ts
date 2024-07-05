@@ -1,6 +1,12 @@
 "use server";
 
-import { CarData, Transaction, UserWithCarsAndSpecs } from "@/lib/interfaces";
+import {
+  CarData,
+  Image,
+  Note,
+  Transaction,
+  UserWithCarsAndSpecs,
+} from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 import { db } from "../drizzle/db";
 import {
@@ -16,6 +22,7 @@ import {
 } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { ActionResult } from "../form";
+import { getImagesFromBucket } from "./bucketActions";
 
 export type DbUser = typeof userTable.$inferSelect;
 
@@ -28,7 +35,10 @@ const insertUserCar = async (userCar: NewUserCar) => {
 };
 
 const updateUserCar = async (userCar: NewUserCar) => {
-  return db.update(userCarTable).set(userCar).where(eq(userCarTable.carId, userCar.carId!));
+  return db
+    .update(userCarTable)
+    .set(userCar)
+    .where(eq(userCarTable.carId, userCar.carId!));
 };
 
 export async function assignCarToUser(
@@ -55,7 +65,6 @@ export async function assignCarToUser(
       .select()
       .from(userCarTable)
       .where(eq(userCarTable.carId, carId));
-
 
     if (alreadyAssigned) {
       await updateUserCar(userCar);
@@ -136,15 +145,44 @@ export async function getCarsFromDatabase(): Promise<CarData[]> {
         parkingDetailsTable,
         eq(carTable.parkingDetailsId, parkingDetailsTable.id),
       )
-      .leftJoin(priceTable, eq(carTable.id, priceTable.carId))
-      .leftJoin(transactionTable, eq(carTable.id, transactionTable.carId))
-      .all()) as CarData[];
+      .leftJoin(priceTable, eq(carTable.id, priceTable.carId))) as CarData[];
 
     if (cars.length === 0) {
       throw new Error("No cars found");
     }
 
-    return cars;
+    const updatedCars = await Promise.all(cars.map(async (car) => {
+      const transactions = (await db
+        .select()
+        .from(transactionTable)
+        .where(eq(transactionTable.carId, car.car.id))) as Transaction[];
+
+      car.transaction = transactions;
+
+      const notes = (await db
+        .select()
+        .from(noteTable)
+        .where(eq(noteTable.carId, car.car.id))) as Note[];
+
+      car.note = notes;
+
+      const dbImages = await db
+        .select()
+        .from(imageTable)
+        .where(eq(imageTable.carVin, car.car.vin!)) as Image[];
+
+      const bucketImages = await getImagesFromBucket(car.car.vin!);
+
+      const images = [...dbImages, ...bucketImages].map((image) => ({
+        imageUrl: image.imageUrl,
+        imageType: image.imageType as DbImage,
+      }));
+
+      car.images = images;
+      return car;
+    }));
+
+    return updatedCars;
   } catch (error) {
     console.error("Error fetching cars:", error);
     return [];
@@ -183,23 +221,6 @@ export async function getCarsFromDatabaseForUser(
   }
 }
 
-function isValidImage(image: {
-  id: number;
-  carVin: string | null;
-  imageUrl: string | null;
-  imageType: string | null;
-}): image is {
-  id: number;
-  carVin: string | null;
-  imageUrl: string;
-  imageType: "Arrival" | "Container";
-} {
-  return (
-    image.imageUrl !== null &&
-    (image.imageType === "Arrival" || image.imageType === "Container")
-  );
-}
-
 export async function getCarFromDatabase(
   vin: string,
 ): Promise<CarData | undefined> {
@@ -234,7 +255,7 @@ export async function getCarFromDatabase(
       console.log(`No images found for VIN: ${vin}`);
     }
 
-    car.images = images.filter(isValidImage).map((image) => ({
+    car.images = images.map((image) => ({
       imageUrl: image.imageUrl!,
       imageType: image.imageType as DbImage,
     }));

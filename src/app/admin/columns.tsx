@@ -5,7 +5,8 @@ import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import Link from "next/link";
-import { CarData } from "@/lib/interfaces";
+import { CarData, Image as ImageType } from "@/lib/interfaces";
+import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,38 +21,30 @@ import DeleteButton from "@/components/deleteCar/deleteButton";
 
 export const columns: ColumnDef<CarData>[] = [
   {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-        className="mb-1"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="mb-1"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
     accessorKey: "images",
     id: "images",
     header: " ",
     cell: ({ row }) => {
-      const images = row.getValue("images") as string;
+      const images = row.getValue("images") as ImageType[];
+      if (!images || images.length === 0) {
+        return (
+          <div className="w-full flex justify-center ml-4">
+            <div className="bg-gray-300 rounded-md size-16"></div>
+          </div>
+        );
+      }
       return (
-        <p> {JSON.stringify(images)} </p>
-      )
+        <div className="w-full flex justify-center ml-4">
+          {images.at(0)?.imageUrl && (
+            <Image
+              src={images.at(0)?.imageUrl!}
+              alt="Car Image"
+              width={100}
+              height={100}
+            />
+          )}
+        </div>
+      );
     },
   },
   {
@@ -166,7 +159,7 @@ export const columns: ColumnDef<CarData>[] = [
     id: "amount_left",
     cell: ({ row }) => {
       const price = row.getValue("amount_left") as number;
-      return <p> {price} </p>;
+      return <p className="text-red-500"> {price} </p>;
     },
   },
   {

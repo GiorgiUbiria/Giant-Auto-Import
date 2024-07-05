@@ -5,7 +5,7 @@ import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import Link from "next/link";
-import { CarData, Currency } from "@/lib/interfaces";
+import { CarData } from "@/lib/interfaces";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -110,50 +110,24 @@ export default function getColumns(
       header: "Model",
     },
     {
-      accessorKey: "specifications.trim",
-      header: "Trim",
-    },
-    {
-      accessorKey: "specifications.country",
-      header: "Country",
-    },
-    {
-      accessorKey: "specifications.manufacturer",
-      header: "Manufacturer",
-    },
-    {
-      accessorKey: "specifications.titleNumber",
-      header: "Title Number",
-    },
-    {
-      accessorKey: "specifications.carfax",
-      header: "Carfax",
-    },
-    {
       accessorKey: "specifications.fuelType",
       header: "Fuel Type",
+    },
+    {
+      accessorKey: "specifications.bodyType",
+      header: "Body Type",
     },
     {
       accessorKey: "parking_details.status",
       header: "Status",
     },
     {
-      accessorKey: "parking_details.parkingDateString",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Parking Date
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-    },
-    {
       accessorKey: "car.destinationPort",
       header: "Destination Port",
+    },
+    {
+      accessorKey: "car.originPortt",
+      header: "Origin Port",
     },
     {
       accessorKey: "price",
@@ -167,22 +141,6 @@ export default function getColumns(
         };
         return <p> {price?.totalAmount} </p>;
       },
-    },
-    {
-      accessorKey: "price_currency",
-      header: "Currency",
-      id: "price_currency",
-      cell: ({ row }) => {
-        const currency = row.getValue("price_currency") as {
-          id: number;
-          currencyCode: Currency;
-        };
-        return <p> {currency?.currencyCode}</p>;
-      },
-    },
-    {
-      accessorKey: "transaction",
-      header: "Transaction",
     },
     {
       id: "actions",

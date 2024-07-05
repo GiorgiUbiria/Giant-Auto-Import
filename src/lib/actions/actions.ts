@@ -126,10 +126,6 @@ export async function updateLocalDatabaseFromAPI(): Promise<void> {
         make: specifications?.make || null,
         model: specifications?.model || null,
         color: specifications?.color || null,
-        runndrive:
-          specifications?.runndrive === true
-            ? "true"
-            : specifications?.runndrive || null,
       };
 
       const newParkingDetails: NewParkingDetails = {

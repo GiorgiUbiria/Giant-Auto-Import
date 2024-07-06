@@ -1,4 +1,3 @@
-"use client";
 import { FeaturedImageGallery } from "@/components/image-gallery";
 import { CarData } from "@/lib/interfaces";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

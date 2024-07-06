@@ -1,6 +1,6 @@
 "use client";
 
-import { HomeIcon } from "lucide-react";
+import { HomeIcon, Timer, Handshake, Package, Trash2 } from "lucide-react";
 import { useMedia } from "react-use";
 
 interface StatusLineProps {
@@ -14,11 +14,11 @@ interface Status {
 }
 
 const statuses: Status[] = [
-  { status: "Pending", index: 0, icon: <HomeIcon /> },
-  { status: "OnHand", index: 1, icon: <HomeIcon /> },
+  { status: "Pending", index: 0, icon: <Timer /> },
+  { status: "OnHand", index: 1, icon: <Handshake /> },
   { status: "Loaded", index: 2, icon: <HomeIcon /> },
-  { status: "InTransit", index: 3, icon: <HomeIcon /> },
-  { status: "Fault", index: 4, icon: <HomeIcon /> },
+  { status: "InTransit", index: 3, icon: <Package /> },
+  { status: "Fault", index: 4, icon: <Trash2 /> },
 ];
 
 const StatusLine: React.FC<StatusLineProps> = ({ status }) => {
@@ -26,23 +26,20 @@ const StatusLine: React.FC<StatusLineProps> = ({ status }) => {
   const isLastStatus = currentStatusIndex === statuses.length - 1;
   const progressPercentage = ((currentStatusIndex + 1) / statuses.length) * 100;
 
-  // Detect if the device is a mobile based on screen width
-  const isMobile = useMedia(`(max-width: 1280px)`);
+  const isMobile = useMedia(`(max-width: 1280px)`, true);
 
-  // Find the current status object
   const currentStatus = statuses.find((s) => s.status === status);
 
   return (
     <div className="w-full px-24 py-4">
-      {/* Mobile display: Show only the current status node */}
       {isMobile && currentStatus && (
         <div className="flex justify-center">
           <div
-            className={`flex w-24 h-14 font-bold text-white p-6 transition-all duration-300 bg-${
+            className={`flex w-16 h-16 font-bold text-white p-8 transition-all duration-300 bg-${
               isLastStatus ? "green-500" : "blue-500"
             } rounded-full justify-center items-center transform scale-110`}
           >
-            {currentStatus.icon}
+            <span>{currentStatus.icon}</span>
             <div className="absolute -bottom-[1.5rem] w-max text-center">
               <p className="block font-sans text-base antialiased leading-relaxed text-gray-700 font-bold">
                 {currentStatus.status}
@@ -52,12 +49,9 @@ const StatusLine: React.FC<StatusLineProps> = ({ status }) => {
         </div>
       )}
 
-      {/* Desktop display: Show full status line */}
       {!isMobile && (
         <div className="relative flex items-center justify-between w-full">
-          {/* Static background line */}
           <div className="absolute left-0 top-2/4 h-0.5 w-full -translate-y-2/4 bg-gray-300"></div>
-          {/* Dynamic completed portion of the line */}
           <div
             className={`absolute left-0 top-2/4 h-0.5 w-${progressPercentage}% -translate-y-2/4 ${
               currentStatusIndex === statuses.length - 1
@@ -66,7 +60,6 @@ const StatusLine: React.FC<StatusLineProps> = ({ status }) => {
             } transition-all duration-500`}
             style={{ width: `${progressPercentage}%` }}
           ></div>
-          {/* Status nodes */}
           {statuses.map((status, index) => (
             <div
               key={index}
@@ -75,7 +68,7 @@ const StatusLine: React.FC<StatusLineProps> = ({ status }) => {
                   ? "green-500"
                   : index <= currentStatusIndex
                     ? "blue-500"
-                    : "gray-900"
+                    : "gray-300"
               } rounded-full place-items-center transform scale-${index === currentStatusIndex ? "110" : "100"}`}
             >
               {status.icon}

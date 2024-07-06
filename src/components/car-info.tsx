@@ -24,7 +24,7 @@ function formatDateToInputValue(date: Date | null): string {
 
 export default function CarInfo({ carData }: { carData: CarData }) {
   return (
-    <Card className="overflow-hidden lg:w-1/2">
+    <Card className="overflow-hidden">
       <CardHeader className="flex flex-row items-start bg-muted/50">
         <div className="grid gap-0.5">
           <CardTitle className="group flex items-center gap-2 text-lg">
@@ -51,7 +51,7 @@ export default function CarInfo({ carData }: { carData: CarData }) {
         </div>
       </CardHeader>
       <CardContent className="p-6 text-sm">
-        <div className="grid gap-3">
+        <div className="grid gap-8">
           <div className="font-semibold text-lg">Details</div>
           <Separator className="my-2" />
           <div className="grid grid-cols-2 gap-2">

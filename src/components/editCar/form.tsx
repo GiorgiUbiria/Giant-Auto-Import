@@ -49,6 +49,12 @@ export default function EditForm({ car }: { car: CarData }) {
     defaultValues: {
       vin: car.car.vin!,
       make: car.specifications?.make!,
+      fuelType: car.specifications?.fuelType!,
+      bodyType: car.specifications?.bodyType!,
+      trackingLink: car.parking_details?.trackingLink!,
+      containerNumber: car.parking_details?.containerNumber!,
+      bookingNumber: car.parking_details?.bookingNumber!,
+      price: car.price?.totalAmount!,
       model: car.specifications?.model!,
       color: car.specifications?.color!,
       originPort: car.car?.originPort!,
@@ -87,7 +93,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="vin"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             VIN
           </label>
@@ -109,7 +115,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="year"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             Year
           </label>
@@ -131,7 +137,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="make"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             Make
           </label>
@@ -153,7 +159,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="model"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             Model
           </label>
@@ -177,13 +183,14 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="status"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             Status
           </label>
           <select
             id="status"
             {...register("status")}
+            defaultValue={car.parking_details?.status!}
             className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
           >
             <option value="Pending">Pending</option>
@@ -203,20 +210,21 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="fuelType"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             Fuel Type
           </label>
           <select
             id="fuelType"
             {...register("fuelType")}
+            defaultValue={car.specifications?.fuelType!}
             className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
           >
-            <option value="Gasoline">Gasoline</option>
-            <option value="Diesel">Diesel</option>
-            <option value="Electric">Electric</option>
-            <option value="Hybrid">Hybrid</option>
-            <option value="Other">Other</option>
+            <option value="GASOLINE">Gasoline</option>
+            <option value="DIESEL">Diesel</option>
+            <option value="ELECTRIC">Electric</option>
+            <option value="HYBRID">Hybrid</option>
+            <option value="OTHER">Other</option>
           </select>
           <ErrorMessage
             errors={formState.errors}
@@ -231,26 +239,21 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="bodyType"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             Body Type
           </label>
-          <Select 
+          <select
+            id="bodyType"
             {...register("bodyType")}
+            defaultValue={car.specifications?.bodyType!}
+            className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
           >
-            <SelectTrigger className="w-full bg-gray-300 dark:bg-gray-900">
-              <SelectValue placeholder="Select a body type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Body Types</SelectLabel>
-                <SelectItem value="SEDAN">Sedan</SelectItem>
-                <SelectItem value="SUV">SUV</SelectItem>
-                <SelectItem value="CROSSOVER">CrossOver</SelectItem>
-                <SelectItem value="PICKUP">PickUp</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+            <option value="SEDAN">Sedan</option>
+            <option value="SUV">SUV</option>
+            <option value="CROSSOVER">CrossOver</option>
+            <option value="PICKUP">PickUp</option>
+          </select>
           <ErrorMessage
             errors={formState.errors}
             name="bodyType"
@@ -262,7 +265,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="trackingLink"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             Tracking Link
           </label>
@@ -286,7 +289,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="destinationPort"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             Destination Port
           </label>
@@ -308,7 +311,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="originPort"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             Origin Port
           </label>
@@ -332,7 +335,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="color"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             Color
           </label>
@@ -368,7 +371,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="auction"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             Auction
           </label>
@@ -392,7 +395,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="containerNumber"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             Container #
           </label>
@@ -414,7 +417,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="bookingNumber"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             Booking #
           </label>
@@ -436,7 +439,7 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="price"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             Price
           </label>
@@ -462,13 +465,14 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="departureDate"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             Departure Date
           </label>
           <input
             type="date"
             id="departureDate"
+            defaultValue={formatDateToInputValue(car.car?.departureDate)}
             {...register("departureDate", {
               valueAsDate: true,
             })}
@@ -485,13 +489,14 @@ export default function EditForm({ car }: { car: CarData }) {
         <div>
           <label
             htmlFor="arrivalDate"
-            className="block mb-2 text-sm font-medium text-white dark:text-white"
+            className="block mb-2 text-sm font-medium text-black dark:text-white"
           >
             Arrival Date
           </label>
           <input
             type="date"
             id="arrivalDate"
+            defaultValue={formatDateToInputValue(car.car?.arrivalDate)}
             {...register("arrivalDate", {
               valueAsDate: true,
             })}

@@ -6,7 +6,7 @@ import DownloadButton from "./download-button";
 
 export default function Gallery({ car }: { car: CarData }) {
   return (
-    <div className="lg:w-1/2 grid place-items-center">
+    <div className="grid place-items-center">
       <Tabs defaultValue="AUCTION" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="AUCTION">Auction</TabsTrigger>

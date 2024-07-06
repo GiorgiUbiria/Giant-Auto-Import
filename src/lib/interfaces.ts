@@ -1,4 +1,5 @@
 import { DbImage, DbUser } from "./actions/dbActions";
+import { carTable, specificationsTable, parkingDetailsTable } from "./drizzle/schema";
 
 export interface Specifications {
   id: number;
@@ -7,9 +8,9 @@ export interface Specifications {
   year: string | null;
   make: string | null;
   model: string | null;
-  bodyType: string | null;
+  bodyType: typeof specificationsTable.$inferSelect["bodyType"];
   color: string | null;
-  fuelType: string | null;
+  fuelType: typeof specificationsTable.$inferSelect["fuelType"]; 
 }
 
 export interface ParkingDetails {
@@ -17,7 +18,7 @@ export interface ParkingDetails {
   containerNumber: string | null;
   bookingNumber: string | null;
   trackingLink: string | null;
-  status: string | null;
+  status: typeof parkingDetailsTable.$inferSelect["status"];
 }
 
 export interface Car {

@@ -14,6 +14,8 @@ const Page: React.FC = async () => {
     return redirect("/");
   }
 
+  console.log(user)
+
   const data = {
     billedTo: user.name,
     paymentDate: new Date().toDateString(),

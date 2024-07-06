@@ -28,20 +28,26 @@ const PSPDFKitWrapper: React.FC<PSPDFKitWrapperProps> = ({
   const pdfToken = searchParams.get("token");
   const userId = searchParams.get("userId");
   const vin = searchParams.get("vin");
+
+  console.log(pdfToken, vin, userId)  
+
   const router = useRouter();
 
   useEffect(() => {
     if (!pdfToken || pdfToken !== token) {
+      console.log("redirecting because pdfToken is not valid")
       router.push("/");
       return;
     }
 
     if (!userId || userId !== id) {
+      console.log("redirecting because userId is not valid")
       router.push("/");
       return;
     }
 
     if (!vin) {
+      console.log("redirecting because vin is not valid")
       router.push("/");
       return;
     }

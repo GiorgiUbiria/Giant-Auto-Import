@@ -164,7 +164,7 @@ export default function getColumns(
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <Link
-                  href={`/pdf?token=${pdfToken}&userId=${userId}$vin=${vin}`}
+                  href={`/pdf?token=${pdfToken}&userId=${userId}&vin=${vin}`}
                 >
                   Invoice
                 </Link>

@@ -9,9 +9,9 @@ export default function Gallery({ car }: { car: CarData }) {
       <Tabs defaultValue="AUCTION" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="AUCTION">Auction</TabsTrigger>
-          <TabsTrigger value="DELIVERY">Delivery</TabsTrigger>
-          <TabsTrigger value="WAREHOUSE">Warehouse</TabsTrigger>
           <TabsTrigger value="PICK_UP">Pick Up</TabsTrigger>
+          <TabsTrigger value="WAREHOUSE">Warehouse</TabsTrigger>
+          <TabsTrigger value="DELIVERY">Delivery</TabsTrigger>
         </TabsList>
         <TabsContent value="AUCTION">
           <FeaturedImageGallery

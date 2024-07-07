@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { validateRequest } from "@/lib/auth";
-import { fetchCars, updateLocalDatabaseFromAPI } from "@/lib/actions/actions";
+import { updateLocalDatabaseFromAPI } from "@/lib/actions/actions";
 import { updateLocalDatabaseImages } from "@/lib/actions/imageActions";
 import { getCarsFromDatabase } from "@/lib/actions/dbActions";
 

@@ -22,27 +22,25 @@ export const columns: ColumnDef<CarData>[] = [
   {
     accessorKey: "images",
     id: "images",
-    header: " ",
+    header: "", 
     cell: ({ row }) => {
       const images = row.getValue("images") as ImageType[];
       if (!images || images.length === 0) {
         return (
-          <div className="w-full flex justify-center ml-4">
+          <div className="w-[64px] flex justify-center ml-4">
             <div className="bg-gray-300 rounded-md size-16"></div>
           </div>
         );
       }
       return (
-        <div className="w-full flex justify-center ml-4">
-          {images.at(0)?.imageUrl && (
-            <Image
-              src={images.at(0)?.imageUrl!}
-              alt="Car Image"
-              className="w-24 h-auto"
-              width={300}
-              height={300}
-            />
-          )}
+        <div className="w-[128px] flex justify-center ml-8">
+          <Image
+            alt="Product image"
+            className="w-full aspect-square rounded-md object-cover"
+            height="300"
+            src={images.at(0)?.imageUrl!}
+            width="300"
+          />
         </div>
       );
     },

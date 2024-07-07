@@ -1,4 +1,4 @@
-import { FeaturedImageGallery } from "@/components/image-gallery";
+import { FeaturedImageGallery } from "@/components/gallery/image-gallery";
 import { CarData } from "@/lib/interfaces";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DownloadButton from "./download-button";

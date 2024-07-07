@@ -127,7 +127,7 @@ export default function AddForm() {
             htmlFor="vin"
             className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
-            VIN
+            VIN *
           </label>
           <input
             type="text"
@@ -149,7 +149,7 @@ export default function AddForm() {
             htmlFor="year"
             className="block mb-2 text-sm font-medium text-white dark:text-white"
           >
-            Year
+            Year *
           </label>
           <input
             type="number"

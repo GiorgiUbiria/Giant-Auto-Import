@@ -3,7 +3,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 
 import Link from "next/link";
-import { Checkbox } from "@/components/ui/checkbox";
 import React from "react";
 import { removeUser } from "@/lib/actions/userActions";
 import { ArrowUpDown } from "lucide-react";

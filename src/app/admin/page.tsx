@@ -23,13 +23,13 @@ export default async function Page() {
   }
 
   return (
-    <div className="py-10 flex flex-col">
+    <div className="container mx-auto py-10">
       <div className="mx-auto flex gap-4 py-8">
         <form action={updateLocalDatabaseFromAPI}>
-          <Button type="submit"> Update database </Button>
+          <Button type="submit" disabled> Update database </Button>
         </form>
         <form action={updateLocalDatabaseImages}>
-          <Button type="submit"> Fetch Images </Button>
+          <Button type="submit" disabled> Fetch Images </Button>
         </form>
       </div>
       <DataTable columns={columns} data={cars} />

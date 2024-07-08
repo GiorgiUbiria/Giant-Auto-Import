@@ -118,6 +118,7 @@ export const columns: ColumnDef<CarData>[] = [
   },
   {
     accessorKey: "car.departureDate",
+    id: "departureDate",
     header: ({ column }) => {
       return (
         <Button
@@ -129,9 +130,22 @@ export const columns: ColumnDef<CarData>[] = [
         </Button>
       );
     },
+    cell: ({ row }) => {
+      const departureDate = row.getValue("departureDate") as Date;
+      
+      if (!departureDate || departureDate === null) {
+        return <p className="text-center"> - </p>;
+      }
+
+      const date = new Date(departureDate);
+      const formattedDate = date.toLocaleDateString();
+
+      return <p className="text-center"> {formattedDate} </p>;
+    },
   },
   {
     accessorKey: "car.arrivalDate",
+    id: "arrivalDate",
     header: ({ column }) => {
       return (
         <Button
@@ -142,6 +156,17 @@ export const columns: ColumnDef<CarData>[] = [
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
+    },
+    cell: ({ row }) => {
+      const arrivalDate = row.getValue("arrivalDate") as Date;
+      if (!arrivalDate || arrivalDate === null) {
+        return <p className="text-center"> - </p>;
+      }
+
+      const date = new Date(arrivalDate);
+      const formattedDate = date.toLocaleDateString();
+
+      return <p className="text-center"> {formattedDate} </p>;
     },
   },
   {

@@ -22,13 +22,13 @@ export const columns: ColumnDef<CarData>[] = [
   {
     accessorKey: "images",
     id: "images",
-    header: "", 
+    header: "",
     cell: ({ row }) => {
       const images = row.getValue("images") as ImageType[];
       if (!images || images.length === 0) {
         return (
-          <div className="w-[64px] flex justify-center ml-4">
-            <div className="bg-gray-300 rounded-md size-16"></div>
+          <div className="w-[128px] flex justify-center ml-8">
+            <div className="bg-gray-300 rounded-md size-16 w-full"></div>
           </div>
         );
       }
@@ -118,6 +118,7 @@ export const columns: ColumnDef<CarData>[] = [
   },
   {
     accessorKey: "car.departureDate",
+    id: "departureDate",
     header: ({ column }) => {
       return (
         <Button
@@ -129,9 +130,22 @@ export const columns: ColumnDef<CarData>[] = [
         </Button>
       );
     },
+    cell: ({ row }) => {
+      const departureDate = row.getValue("departureDate") as Date;
+      
+      if (!departureDate || departureDate === null) {
+        return <p className="text-center"> - </p>;
+      }
+
+      const date = new Date(departureDate);
+      const formattedDate = date.toLocaleDateString();
+
+      return <p className="text-center"> {formattedDate} </p>;
+    },
   },
   {
     accessorKey: "car.arrivalDate",
+    id: "arrivalDate",
     header: ({ column }) => {
       return (
         <Button
@@ -142,6 +156,17 @@ export const columns: ColumnDef<CarData>[] = [
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
+    },
+    cell: ({ row }) => {
+      const arrivalDate = row.getValue("arrivalDate") as Date;
+      if (!arrivalDate || arrivalDate === null) {
+        return <p className="text-center"> - </p>;
+      }
+
+      const date = new Date(arrivalDate);
+      const formattedDate = date.toLocaleDateString();
+
+      return <p className="text-center"> {formattedDate} </p>;
     },
   },
   {

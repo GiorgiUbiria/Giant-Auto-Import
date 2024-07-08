@@ -28,20 +28,8 @@ export const formSchema = z.object({
       },
     )
     .optional(),
-  make: z
-    .string({ message: "Make must be a string" })
-    .min(3, { message: "Make must be at least 3 characters long" })
-    .max(50, {
-      message: "Make must be at most 50 characters long",
-    })
-    .optional(),
-  model: z
-    .string({ message: "Model must be a string" })
-    .min(2, { message: "Model must be at least 2 characters long" })
-    .max(50, {
-      message: "Model must be at most 50 characters long",
-    })
-    .optional(),
+  make: z.string({ message: "Make must be a string" }).optional(),
+  model: z.string({ message: "Model must be a string" }).optional(),
   bodyType: z
     .enum(["SEDAN", "PICKUP", "SUV", "CROSSOVER"], {
       message:
@@ -79,34 +67,18 @@ export const formSchema = z.object({
       },
     )
     .optional(),
-  originPort: z
-    .string({ message: "Origin port must be a string" })
-    .min(2, { message: "Origin port must be at least 2 characters long" })
-    .max(50, {
-      message: "Origin port must be at most 50 characters long",
-    })
-    .optional(),
+  originPort: z.string({ message: "Origin port must be a string" }).optional(),
   destinationPort: z
     .string({ message: "Destination port must be a string" })
-    .min(2, { message: "Destination port must be at least 2 characters long" })
-    .max(50, {
-      message: "Destination port must be at most 50 characters long",
-    })
     .optional(),
   departureDate: z
     .date({ message: "Departure date must be a date" })
+    .nullable()
     .optional(),
-  arrivalDate: z.date({ message: "Arrival date must be a date" }).optional(),
-  auction: z
-    .string({ message: "Auction must be a string" })
-    .min(2, { message: "Auction must be at least 2 characters long" })
-    .max(50, {
-      message: "Auction must be at most 50 characters long",
-    })
+  arrivalDate: z
+    .date({ message: "Arrival date must be a date" })
+    .nullable()
     .optional(),
-  price: z
-    .number({ message: "Price must be a number" })
-    .min(0, { message: "Price must be at least 0" })
-    .max(150000, { message: "Price must be at most 150000" })
-    .optional(),
+  auction: z.string({ message: "Auction must be a string" }).optional(),
+  price: z.number({ message: "Price must be a number" }).optional(),
 });

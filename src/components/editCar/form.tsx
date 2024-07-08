@@ -9,7 +9,6 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { formSchema } from "./formSchema";
 import { toast } from "sonner";
 import { ErrorMessage } from "@hookform/error-message";
-import countries from "../../../public/countries.json";
 import { EditCarPayload, editCarInDb } from "@/lib/actions/actions.editCar";
 import { colors } from "../../../public/colors";
 import {
@@ -62,6 +61,8 @@ export default function EditForm({ car }: { car: CarData }) {
       auction: car.car?.auction!,
       status: car.parking_details?.status!,
       year: car.specifications?.year!,
+      departureDate: car.car?.departureDate!,
+      arrivalDate: car.car?.arrivalDate!,
     },
   });
 
@@ -472,7 +473,6 @@ export default function EditForm({ car }: { car: CarData }) {
           <input
             type="date"
             id="departureDate"
-            defaultValue={formatDateToInputValue(car.car?.departureDate)}
             {...register("departureDate", {
               valueAsDate: true,
             })}
@@ -496,7 +496,6 @@ export default function EditForm({ car }: { car: CarData }) {
           <input
             type="date"
             id="arrivalDate"
-            defaultValue={formatDateToInputValue(car.car?.arrivalDate)}
             {...register("arrivalDate", {
               valueAsDate: true,
             })}

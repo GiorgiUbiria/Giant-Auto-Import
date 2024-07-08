@@ -39,6 +39,8 @@ export default function AddForm() {
       destinationPort: "",
       auction: "",
       status: "Pending",
+      departureDate: null,
+      arrivalDate: null,
     },
   });
 

@@ -3,6 +3,7 @@
 import { ActionResult } from "next/dist/server/app-render/types";
 import { z } from "zod";
 import { formSchema } from "@/components/addCar/formSchema";
+import { eq } from "drizzle-orm";
 import {
   carTable,
   parkingDetailsTable,
@@ -73,23 +74,28 @@ export async function addCarToDb(
       price,
     } = result.data;
 
-    console.log(result.data);
+    const findCar = await db.select().from(carTable).where(eq(carTable.vin, vin));
+    if (findCar.length > 0) {
+      return {
+        error: "Car with this VIN already exists",
+      };
+    }
 
     const specifications: NewSpecification = {
       vin: vin,
-      carfax: year + " " + make + " " + model + " " ,
+      carfax: year + " " + make ? make : "" + " " + model ? model : "",
       year: year,
-      make: make,
-      model: model,
+      make: make ? make : "",
+      model: model ? model : "",
       bodyType: bodyType,
       fuelType: fuelType,
-      color: color,
+      color: color ? color : "",
     };
 
     const parkingDetails: NewParkingDetails = {
-      trackingLink: trackingLink,
-      containerNumber: containerNumber,
-      bookingNumber: bookingNumber,
+      trackingLink: trackingLink ? trackingLink : "",
+      containerNumber: containerNumber ? containerNumber : "",
+      bookingNumber: bookingNumber ? bookingNumber : "",
       status: status as CarStatus,
     };
 
@@ -98,8 +104,8 @@ export async function addCarToDb(
 
     const car: NewCar = {
       vin: vin,
-      originPort: originPort,
-      destinationPort: destinationPort,
+      originPort: originPort ? originPort : "",
+      destinationPort: destinationPort ? destinationPort : "",
       departureDate:
         departureDate !== null && departureDate !== undefined
           ? new Date(departureDate)
@@ -108,8 +114,8 @@ export async function addCarToDb(
         arrivalDate !== null && arrivalDate !== undefined
           ? new Date(arrivalDate)
           : null,
-      createdAt: new Date(),
-      auction: auction,
+      createdAt: new Date(Date.now()),
+      auction: auction ? auction : "",
       specificationsId: specificationsId[0].specificationsId,
       parkingDetailsId: parkingDetailsId[0].parkingDetailsId,
     };
@@ -117,8 +123,8 @@ export async function addCarToDb(
     const carId = await insertCar(car);
 
     const newPrice: NewPrice = {
-      totalAmount: price as number,
-      amountLeft: price as number,
+      totalAmount: price as number || 0,
+      amountLeft: price as number || 0,
       carId: carId[0].carId,
     };
 

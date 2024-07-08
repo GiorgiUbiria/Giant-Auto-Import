@@ -122,11 +122,64 @@ export default function getColumns(
       header: "Status",
     },
     {
+      accessorKey: "car.departureDate",
+      id: "departureDate",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Departure Date
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const departureDate = row.getValue("departureDate") as Date;
+
+        if (!departureDate || departureDate === null) {
+          return <p className="text-center"> - </p>;
+        }
+
+        const date = new Date(departureDate);
+        const formattedDate = date.toLocaleDateString();
+
+        return <p className="text-center"> {formattedDate} </p>;
+      },
+    },
+    {
+      accessorKey: "car.arrivalDate",
+      id: "arrivalDate",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Arrival Date
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const arrivalDate = row.getValue("arrivalDate") as Date;
+        if (!arrivalDate || arrivalDate === null) {
+          return <p className="text-center"> - </p>;
+        }
+
+        const date = new Date(arrivalDate);
+        const formattedDate = date.toLocaleDateString();
+
+        return <p className="text-center"> {formattedDate} </p>;
+      },
+    },
+    {
       accessorKey: "car.destinationPort",
       header: "Destination Port",
     },
     {
-      accessorKey: "car.originPortt",
+      accessorKey: "car.originPort",
       header: "Origin Port",
     },
     {
@@ -140,6 +193,15 @@ export default function getColumns(
           currencyId: number;
         };
         return <p> {price?.totalAmount} </p>;
+      },
+    },
+    {
+      accessorKey: "price.amountLeft",
+      header: "Amount Left",
+      id: "amount_left",
+      cell: ({ row }) => {
+        const price = row.getValue("amount_left") as number;
+        return <p className="text-red-500"> {price} </p>;
       },
     },
     {

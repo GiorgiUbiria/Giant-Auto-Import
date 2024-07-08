@@ -25,7 +25,6 @@ export default function AddForm() {
   const router = useRouter();
   const [loading, setTransitioning] = React.useTransition();
   const [state, formAction] = useFormState(addCarToDb, initialState);
-  const { pending } = useFormStatus();
   const { handleSubmit, register, formState, getValues } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -53,45 +52,45 @@ export default function AddForm() {
       pick_up_images,
       ...formDataWithoutImages
     } = data;
-    const processAndUploadImages = async (
-      images: FileList | undefined,
-      type: string,
-      vin: string,
-    ) => {
-      if (!images || images.length === 0) return;
-
-      const fileData = await Promise.all(
-        Array.from(images).map(async (file: File) => {
-          const arrayBuffer = await file.arrayBuffer();
-          return {
-            buffer: new Uint8Array(arrayBuffer),
-            size: file.size,
-            type: file.type,
-            name: file.name,
-          };
-        }),
-      );
-
-      const urls = await handleUploadImages(
-        type,
-        vin,
-        fileData.map((file) => file.size),
-      );
-
-      await Promise.all(
-        urls.map((url: string, index: number) =>
-          fetch(url, {
-            method: "PUT",
-            headers: {
-              "Content-Type": images[index].type,
-            },
-            body: fileData[index].buffer,
-          }),
-        ),
-      );
-    };
-
     setTransitioning(async () => {
+      const processAndUploadImages = async (
+        images: FileList | undefined,
+        type: string,
+        vin: string,
+      ) => {
+        if (!images || images.length === 0) return;
+
+        const fileData = await Promise.all(
+          Array.from(images).map(async (file: File) => {
+            const arrayBuffer = await file.arrayBuffer();
+            return {
+              buffer: new Uint8Array(arrayBuffer),
+              size: file.size,
+              type: file.type,
+              name: file.name,
+            };
+          }),
+        );
+
+        const urls = await handleUploadImages(
+          type,
+          vin,
+          fileData.map((file) => file.size),
+        );
+
+        await Promise.all(
+          urls.map((url: string, index: number) =>
+            fetch(url, {
+              method: "PUT",
+              headers: {
+                "Content-Type": images[index].type,
+              },
+              body: fileData[index].buffer,
+            }),
+          ),
+        );
+      };
+
       const res = await addCarToDb(state, formDataWithoutImages);
       if (res.error !== null) {
         toast.error(res.error);
@@ -132,6 +131,7 @@ export default function AddForm() {
             VIN *
           </label>
           <input
+            disabled={loading}
             type="text"
             id="vin"
             className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
@@ -154,6 +154,7 @@ export default function AddForm() {
             Year *
           </label>
           <input
+            disabled={loading}
             type="number"
             placeholder="year"
             id="year"
@@ -176,6 +177,7 @@ export default function AddForm() {
             Make
           </label>
           <input
+            disabled={loading}
             type="text"
             placeholder="make"
             id="make"
@@ -198,6 +200,7 @@ export default function AddForm() {
             Model
           </label>
           <input
+            disabled={loading}
             type="text"
             placeholder="model"
             id="model"
@@ -301,6 +304,7 @@ export default function AddForm() {
             Tracking Link
           </label>
           <input
+            disabled={loading}
             type="text"
             placeholder="trackingLink"
             id="trackingLink"
@@ -325,6 +329,7 @@ export default function AddForm() {
             Destination Port
           </label>
           <input
+            disabled={loading}
             type="text"
             placeholder="destinationPort"
             id="destinationPort"
@@ -347,6 +352,7 @@ export default function AddForm() {
             Origin Port
           </label>
           <input
+            disabled={loading}
             type="text"
             placeholder="originPort"
             id="originPort"
@@ -397,6 +403,7 @@ export default function AddForm() {
             Auction
           </label>
           <input
+            disabled={loading}
             type="text"
             placeholder="auction"
             id="auction_text"
@@ -421,6 +428,7 @@ export default function AddForm() {
             Container #
           </label>
           <input
+            disabled={loading}
             type="text"
             placeholder="container number"
             id="containerNumber"
@@ -443,6 +451,7 @@ export default function AddForm() {
             Booking #
           </label>
           <input
+            disabled={loading}
             type="text"
             placeholder="booking number"
             id="bookingNumber"
@@ -465,6 +474,7 @@ export default function AddForm() {
             Price
           </label>
           <input
+            disabled={loading}
             type="number"
             placeholder="price"
             id="price"
@@ -491,6 +501,7 @@ export default function AddForm() {
             Departure Date
           </label>
           <input
+            disabled={loading}
             type="date"
             id="departureDate"
             {...register("departureDate", {
@@ -514,6 +525,7 @@ export default function AddForm() {
             Arrival Date
           </label>
           <input
+            disabled={loading}
             type="date"
             id="arrivalDate"
             {...register("arrivalDate", {
@@ -539,6 +551,7 @@ export default function AddForm() {
             Auction Photos
           </label>
           <input
+            disabled={loading}
             type="file"
             id="auction_images"
             multiple
@@ -563,6 +576,7 @@ export default function AddForm() {
             Warehouse Photos
           </label>
           <input
+            disabled={loading}
             type="file"
             id="warehouse_images"
             multiple
@@ -587,6 +601,7 @@ export default function AddForm() {
             Pick Up Photos
           </label>
           <input
+            disabled={loading}
             type="file"
             id="pick_up_images"
             multiple
@@ -611,6 +626,7 @@ export default function AddForm() {
             Delivery Photos
           </label>
           <input
+            disabled={loading}
             type="file"
             id="delivery_images"
             multiple
@@ -630,11 +646,11 @@ export default function AddForm() {
       </div>
       <div className="grid gap-6 mb-6 md:grid-cols1-1">
         <button
-          disabled={pending}
+          disabled={loading}
           type="submit"
-          className="w-full py-2.5 px-5 me-2 mb-2 text-sm font-medium text-black focus:outline-none bg-gray-300 rounded-lg border border-gray-200 hover:bg-gray-300 dark:bg-gray-900-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-300 dark:bg-gray-900-800 dark:text-gray-900 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-300 dark:bg-gray-900-700"
+          className="w-full text-center py-2.5 px-5 mb-2 text-sm font-medium text-black bg-gray-300 rounded-lg border border-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:bg-gray-800 dark:text-gray-900 dark:border-gray-600 dark:hover:bg-gray-300 dark:hover:text-white"
         >
-          {pending ? <Spinner /> : "Add Car"}
+          {loading ? <Spinner /> : "Add Car"}
         </button>
       </div>
     </form>

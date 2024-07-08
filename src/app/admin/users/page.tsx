@@ -14,7 +14,7 @@ export default async function Page() {
   const users: DbUser[] | undefined = await getUsers();
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-10 text-primary">
       <h1 className="text-3xl font-bold pb-8">Users</h1>
       {users !== undefined && users.length > 0 ? (
         <UserDataTable columns={columns} data={users!} />

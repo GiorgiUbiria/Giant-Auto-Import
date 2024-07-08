@@ -11,11 +11,11 @@ import AddressIcon from "../../public/icons8-address-50.png";
 
 export default async function Footer() {
   return (
-    <div className="mt-8 bg-muted pt-9">
+    <div className="mt-8 bg-foreground pt-9">
       <div className="mx-auto w-full max-w-[1166px] px-4 xl:px-0">
         <div className="flex flex-col justify-between sm:px-[18px] md:flex-row md:px-10">
           <div className="md:w-[316px]">
-            <h1 className="md:flex md:items-center md:gap-4 dark:text-white text-black font-extrabold">
+            <h1 className="md:flex md:items-center md:gap-4 text-white text-black font-extrabold">
               <Image
                 src={CompanyLogo}
                 alt="Company Logo"
@@ -23,7 +23,7 @@ export default async function Footer() {
               />
               Giant Auto Import
             </h1>
-            <p className="mt-[18px] text-[15px] font-normal dark:text-white/[80%]">
+            <p className="mt-[18px] text-[15px] font-normal text-white/[80%]">
               Website where you can find all the information about cars and
               their history.
             </p>
@@ -76,11 +76,11 @@ export default async function Footer() {
               <div className="ml-[18px]">
                 <a
                   href="tel:+911800123444"
-                  className="font-Inter text-[14px] font-medium dark:text-white"
+                  className="font-Inter text-[14px] font-medium text-white"
                 >
                   +995 551443314{" "}
                 </a>
-                <p className="font-Inter text-[12px] font-medium dark:text-white">
+                <p className="font-Inter text-[12px] font-medium text-white">
                   Company Number
                 </p>
               </div>
@@ -98,11 +98,11 @@ export default async function Footer() {
               <div className="ml-[18px]">
                 <a
                   href="mailto:help@lorem.com"
-                  className="font-Inter text-[14px] font-medium dark:text-[#fff]"
+                  className="font-Inter text-[14px] font-medium text-white"
                 >
                   giantautoimport@gmail.com
                 </a>
-                <p className="font-Inter text-[12px] font-medium dark:text-[#fff]">
+                <p className="font-Inter text-[12px] font-medium text-[#fff]">
                   Company Email
                 </p>
               </div>
@@ -120,17 +120,17 @@ export default async function Footer() {
               <div className="ml-[18px]">
                 <a
                   href="mailto:help@lorem.com"
-                  className="font-Inter text-[14px] font-medium dark:text-[#fff]"
+                  className="font-Inter text-[14px] font-medium text-[#fff]"
                 >
                   Poti, Georgia, 10001, Georgia
                 </a>
-                <p className="font-Inter text-[12px] font-medium dark:text-white">
+                <p className="font-Inter text-[12px] font-medium text-white">
                   Address
                 </p>
               </div>
             </div>
           </div>
-          <div className="mt-6 flex w-full flex-col justify-between dark:text-white sm:flex-row md:mt-0 md:max-w-[341px]">
+          <div className="mt-6 flex w-full flex-col justify-between text-white sm:flex-row md:mt-0 md:max-w-[341px]">
             <div className="">
               <p className="text-deutziawhite font-inter text-[18px] font-medium leading-normal">
                 Pages
@@ -182,7 +182,7 @@ export default async function Footer() {
         </div>
         <hr className="mt-[30px] text-white dark:bg-white bg-black h-1" />
         <div className="flex items-center justify-center pb-8 pt-[9px] md:py-8">
-          <p className="text-[12px] font-normal dark:text-white md:text-[14px]">
+          <p className="text-[12px] font-normal text-white md:text-[14px]">
             © Copyright 2024. Giant Auto Import
           </p>
         </div>

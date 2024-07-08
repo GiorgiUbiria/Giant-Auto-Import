@@ -17,10 +17,10 @@ export default function NavigationLinks({ links }: { links: LinkProp[] }) {
         <Link
           href={link.href}
           key={link.href}
-          className={`flex items-center text-nowrap text-xl transition-colors dark:hover:text-zinc-500 hover:text-muted-foreground ${
+          className={`flex items-center text-nowrap text-2xl transition-colors dark:hover:text-zinc-500 hover:text-muted ${
             pathname === link.href
-              ? "font-semibold text-foreground"
-              : "text-foreground"
+              ? "font-semibold text-primary-foreground"
+              : "text-secondary-foreground"
           }`}
         >
           <span>{link.label}</span>

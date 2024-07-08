@@ -34,8 +34,8 @@ const Avatar: React.FC<AvatarProps> = ({ user, logout }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" className="w-14 h-14 rounded-full">
-          <CircleUser className="h-5 w-5" />
+        <Button variant="outline" size="icon" className="w-14 h-14 rounded-full bg-foreground text-white">
+          <CircleUser className="h-[2rem] w-[2rem]" />
           <span className="sr-only">Toggle user menu</span>
         </Button>
       </DropdownMenuTrigger>

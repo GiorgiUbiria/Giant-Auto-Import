@@ -19,26 +19,26 @@ type NewSpecification = typeof specificationsTable.$inferInsert;
 type NewParkingDetails = typeof parkingDetailsTable.$inferInsert;
 type NewPrice = typeof priceTable.$inferInsert;
 
-const insertCar = async (car: NewCar) => {
-  return db.insert(carTable).values(car).returning({ carId: carTable.id });
+const insertCar = async (trx: any, car: NewCar) => {
+  return trx.insert(carTable).values(car).returning({ carId: carTable.id });
 };
 
-const insertSpecification = async (specification: NewSpecification) => {
-  return db
+const insertSpecification = async (trx: any,specification: NewSpecification) => {
+  return trx 
     .insert(specificationsTable)
     .values(specification)
     .returning({ specificationsId: specificationsTable.id });
 };
 
-const insertParkingDetails = async (parkingDetails: NewParkingDetails) => {
-  return db
+const insertParkingDetails = async (trx: any, parkingDetails: NewParkingDetails) => {
+  return trx 
     .insert(parkingDetailsTable)
     .values(parkingDetails)
     .returning({ parkingDetailsId: parkingDetailsTable.id });
 };
 
-const insertPrice = async (price: NewPrice) => {
-  return db
+const insertPrice = async (trx: any, price: NewPrice) => {
+  return trx 
     .insert(priceTable)
     .values(price)
     .returning({ priceId: priceTable.id });
@@ -74,61 +74,60 @@ export async function addCarToDb(
       price,
     } = result.data;
 
-    const findCar = await db.select().from(carTable).where(eq(carTable.vin, vin));
+    const findCar = await db
+      .select()
+      .from(carTable)
+      .where(eq(carTable.vin, vin));
     if (findCar.length > 0) {
       return {
         error: "Car with this VIN already exists",
       };
     }
 
-    const specifications: NewSpecification = {
-      vin: vin,
-      carfax: year + " " + make ? make : "" + " " + model ? model : "",
-      year: year,
-      make: make ? make : "",
-      model: model ? model : "",
-      bodyType: bodyType,
-      fuelType: fuelType,
-      color: color ? color : "",
-    };
+    await db.transaction(async (trx) => {
+      const specifications: NewSpecification = {
+        vin: vin,
+        carfax: `${year} ${make || ""} ${model || ""}`,
+        year: year,
+        make: make || "",
+        model: model || "",
+        bodyType: bodyType,
+        fuelType: fuelType,
+        color: color || "",
+      };
 
-    const parkingDetails: NewParkingDetails = {
-      trackingLink: trackingLink ? trackingLink : "",
-      containerNumber: containerNumber ? containerNumber : "",
-      bookingNumber: bookingNumber ? bookingNumber : "",
-      status: status as CarStatus,
-    };
+      const parkingDetails: NewParkingDetails = {
+        trackingLink: trackingLink || "",
+        containerNumber: containerNumber || "",
+        bookingNumber: bookingNumber || "",
+        status: status as CarStatus,
+      };
 
-    const specificationsId = await insertSpecification(specifications);
-    const parkingDetailsId = await insertParkingDetails(parkingDetails);
+      const specificationsId = await insertSpecification(trx,specifications);
+      const parkingDetailsId = await insertParkingDetails(trx, parkingDetails);
 
-    const car: NewCar = {
-      vin: vin,
-      originPort: originPort ? originPort : "",
-      destinationPort: destinationPort ? destinationPort : "",
-      departureDate:
-        departureDate !== null && departureDate !== undefined
-          ? new Date(departureDate)
-          : null,
-      arrivalDate:
-        arrivalDate !== null && arrivalDate !== undefined
-          ? new Date(arrivalDate)
-          : null,
-      createdAt: new Date(Date.now()),
-      auction: auction ? auction : "",
-      specificationsId: specificationsId[0].specificationsId,
-      parkingDetailsId: parkingDetailsId[0].parkingDetailsId,
-    };
+      const car: NewCar = {
+        vin: vin,
+        originPort: originPort || "",
+        destinationPort: destinationPort || "",
+        departureDate: departureDate ? new Date(departureDate) : null,
+        arrivalDate: arrivalDate ? new Date(arrivalDate) : null,
+        createdAt: new Date(Date.now()),
+        auction: auction || "",
+        specificationsId: specificationsId[0].specificationsId,
+        parkingDetailsId: parkingDetailsId[0].parkingDetailsId,
+      };
 
-    const carId = await insertCar(car);
+      const carId = await insertCar(trx, car);
 
-    const newPrice: NewPrice = {
-      totalAmount: price as number || 0,
-      amountLeft: price as number || 0,
-      carId: carId[0].carId,
-    };
+      const newPrice: NewPrice = {
+        totalAmount: price || 0,
+        amountLeft: price || 0,
+        carId: carId[0].carId,
+      };
 
-    await insertPrice(newPrice);
+      await insertPrice(trx, newPrice);
+    });
 
     revalidatePath("/admin/");
 

@@ -4,6 +4,7 @@ const nextConfig = {
     serverComponentsExternalPackages: ["oslo", "lucia"],
   },
   images: {
+    unoptimized: true,
     remotePatterns: [
        {
         protocol: "https",

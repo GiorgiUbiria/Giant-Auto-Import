@@ -132,12 +132,22 @@ export const columns: ColumnDef<CarData>[] = [
     },
     cell: ({ row }) => {
       const departureDate = row.getValue("departureDate") as Date;
-      
-      if (!departureDate || departureDate === null) {
+
+      if (!departureDate) {
         return <p className="text-center"> - </p>;
       }
 
-      const date = new Date(departureDate);
+      const date = new Date(departureDate)
+
+      const isSpecificDate =
+        date.getFullYear() === 1 &&
+        date.getMonth() === 0 &&
+        date.getDate() === 1;
+
+      if (isSpecificDate) {
+        return <p className="text-center"> - </p>;
+      }
+
       const formattedDate = date.toLocaleDateString();
 
       return <p className="text-center"> {formattedDate} </p>;
@@ -159,11 +169,22 @@ export const columns: ColumnDef<CarData>[] = [
     },
     cell: ({ row }) => {
       const arrivalDate = row.getValue("arrivalDate") as Date;
-      if (!arrivalDate || arrivalDate === null) {
+
+      if (!arrivalDate) {
         return <p className="text-center"> - </p>;
       }
 
       const date = new Date(arrivalDate);
+
+      const isSpecificDate =
+        date.getFullYear() === 1 &&
+        date.getMonth() === 0 &&
+        date.getDate() === 1;
+
+      if (isSpecificDate) {
+        return <p className="text-center"> - </p>;
+      }
+
       const formattedDate = date.toLocaleDateString();
 
       return <p className="text-center"> {formattedDate} </p>;

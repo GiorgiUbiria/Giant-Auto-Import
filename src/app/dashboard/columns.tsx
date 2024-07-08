@@ -121,59 +121,80 @@ export default function getColumns(
       accessorKey: "parking_details.status",
       header: "Status",
     },
-    {
-      accessorKey: "car.departureDate",
-      id: "departureDate",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Departure Date
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        const departureDate = row.getValue("departureDate") as Date;
-
-        if (!departureDate || departureDate === null) {
-          return <p className="text-center"> - </p>;
-        }
-
-        const date = new Date(departureDate);
-        const formattedDate = date.toLocaleDateString();
-
-        return <p className="text-center"> {formattedDate} </p>;
-      },
+  {
+    accessorKey: "car.departureDate",
+    id: "departureDate",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Departure Date
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
     },
-    {
-      accessorKey: "car.arrivalDate",
-      id: "arrivalDate",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Arrival Date
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        const arrivalDate = row.getValue("arrivalDate") as Date;
-        if (!arrivalDate || arrivalDate === null) {
-          return <p className="text-center"> - </p>;
-        }
+    cell: ({ row }) => {
+      const departureDate = row.getValue("departureDate") as Date;
 
-        const date = new Date(arrivalDate);
-        const formattedDate = date.toLocaleDateString();
+      if (!departureDate) {
+        return <p className="text-center"> - </p>;
+      }
 
-        return <p className="text-center"> {formattedDate} </p>;
-      },
+      const date = new Date(departureDate)
+
+      const isSpecificDate =
+        date.getFullYear() === 1 &&
+        date.getMonth() === 0 &&
+        date.getDate() === 1;
+
+      if (isSpecificDate) {
+        return <p className="text-center"> - </p>;
+      }
+
+      const formattedDate = date.toLocaleDateString();
+
+      return <p className="text-center"> {formattedDate} </p>;
     },
+  },
+  {
+    accessorKey: "car.arrivalDate",
+    id: "arrivalDate",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Arrival Date
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const arrivalDate = row.getValue("arrivalDate") as Date;
+
+      if (!arrivalDate) {
+        return <p className="text-center"> - </p>;
+      }
+
+      const date = new Date(arrivalDate);
+
+      const isSpecificDate =
+        date.getFullYear() === 1 &&
+        date.getMonth() === 0 &&
+        date.getDate() === 1;
+
+      if (isSpecificDate) {
+        return <p className="text-center"> - </p>;
+      }
+
+      const formattedDate = date.toLocaleDateString();
+
+      return <p className="text-center"> {formattedDate} </p>;
+    },
+  },
     {
       accessorKey: "car.destinationPort",
       header: "Destination Port",

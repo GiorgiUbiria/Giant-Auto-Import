@@ -40,8 +40,8 @@ const StatusLine: React.FC<StatusLineProps> = ({ status }) => {
             } rounded-full justify-center items-center transform scale-110`}
           >
             <span>{currentStatus.icon}</span>
-            <div className="absolute -bottom-[1.5rem] w-max text-center">
-              <p className="block font-sans text-base antialiased leading-relaxed text-gray-700 font-bold">
+            <div className="absolute -bottom-[1.75rem] w-max text-center">
+              <p className="block font-sans text-base antialiased leading-relaxed text-primary font-bold">
                 {currentStatus.status}
               </p>
             </div>
@@ -72,8 +72,8 @@ const StatusLine: React.FC<StatusLineProps> = ({ status }) => {
               } rounded-full place-items-center transform scale-${index === currentStatusIndex ? "110" : "100"}`}
             >
               {status.icon}
-              <div className="absolute -bottom-[1.5rem] w-max text-center">
-                <p className="block font-sans text-base antialiased leading-relaxed text-gray-700 font-bold">
+              <div className="absolute -bottom-[1.75rem] w-max text-center">
+                <p className="block font-sans text-base antialiased leading-relaxed text-primary font-bold">
                   {status.status}
                 </p>
               </div>

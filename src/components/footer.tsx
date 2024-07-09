@@ -11,11 +11,11 @@ import AddressIcon from "../../public/icons8-address-50.png";
 
 export default async function Footer() {
   return (
-    <div className="mt-8 bg-foreground pt-9">
+    <div className="mt-8 bg-gradient-to-r from-background to-foreground pt-9">
       <div className="mx-auto w-full max-w-[1166px] px-4 xl:px-0">
         <div className="flex flex-col justify-between sm:px-[18px] md:flex-row md:px-10">
           <div className="md:w-[316px]">
-            <h1 className="md:flex md:items-center md:gap-4 text-white text-black font-extrabold">
+            <h1 className="md:flex md:items-center md:gap-4 text-white font-extrabold">
               <Image
                 src={CompanyLogo}
                 alt="Company Logo"

@@ -11,43 +11,60 @@ interface PdfDataInterface {
 }
 
 interface PSPDFKitWrapperProps {
-  documentPath: string;
   data: PdfDataInterface;
   token: string;
   id: string;
 }
 
 const PSPDFKitWrapper: React.FC<PSPDFKitWrapperProps> = ({
-  documentPath,
   data,
   token,
   id,
 }) => {
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const searchParams = useSearchParams();
   const pdfToken = searchParams.get("token");
   const userId = searchParams.get("userId");
   const vin = searchParams.get("vin");
-
-  console.log(pdfToken, vin, userId)  
-
-  const router = useRouter();
+  const documentPath = searchParams.get("type");
+  let documentPathString = "";
+  switch (documentPath) {
+    case "iaai":
+      documentPathString = "invoice-iaai.pdf";
+      break;
+    case "copart":
+      documentPathString = "invoice-copart.pdf";
+      break;
+    case "shipping":
+      documentPathString = "invoice-shipping.pdf";
+      break;
+    default:
+      console.log("redirecting because documentPath is not valid");
+      router.push("/");
+  }
 
   useEffect(() => {
     if (!pdfToken || pdfToken !== token) {
-      console.log("redirecting because pdfToken is not valid")
+      console.log("redirecting because pdfToken is not valid");
       router.push("/");
       return;
     }
 
     if (!userId || userId !== id) {
-      console.log("redirecting because userId is not valid")
+      console.log("redirecting because userId is not valid");
       router.push("/");
       return;
     }
 
     if (!vin) {
-      console.log("redirecting because vin is not valid")
+      console.log("redirecting because vin is not valid");
+      router.push("/");
+      return;
+    }
+
+    if (!documentPath) {
+      console.log("redirecting because documentPath is not valid");
       router.push("/");
       return;
     }
@@ -75,7 +92,7 @@ const PSPDFKitWrapper: React.FC<PSPDFKitWrapperProps> = ({
         });
 
         let searchQuery = "Company Ltd.";
-        let searchResults = await instance.search(searchQuery) as any;
+        let searchResults = (await instance.search(searchQuery)) as any;
         let bbox = searchResults.first().rectsOnPage.get(0);
 
         const estimatedWidth = Math.max(bbox.width, data.billedTo.length * 5);
@@ -131,7 +148,18 @@ const PSPDFKitWrapper: React.FC<PSPDFKitWrapperProps> = ({
         PSPDFKit.unload(container);
       }
     };
-  }, [data.paymentDate, data.billedTo, pdfToken, token, router, documentPath, userId, id, vin, data]);
+  }, [
+    data.paymentDate,
+    data.billedTo,
+    pdfToken,
+    token,
+    router,
+    documentPath,
+    userId,
+    id,
+    vin,
+    data,
+  ]);
 
   return <div ref={containerRef} id="pspdfkit" style={{ height: "100vh" }} />;
 };

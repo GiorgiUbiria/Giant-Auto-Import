@@ -247,9 +247,23 @@ export default function getColumns(
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <Link
-                  href={`/pdf?token=${pdfToken}&userId=${userId}&vin=${vin}`}
+                  href={`/pdf?token=${pdfToken}&userId=${userId}&vin=${vin}&type=copart`}
                 >
-                  Invoice
+                  Copart Invoice
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link
+                  href={`/pdf?token=${pdfToken}&userId=${userId}&vin=${vin}&type=iaai`}
+                >
+                  IAAI Invoice
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link
+                  href={`/pdf?token=${pdfToken}&userId=${userId}&vin=${vin}&type=shipping`}
+                >
+                  Shipping Invoice
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />

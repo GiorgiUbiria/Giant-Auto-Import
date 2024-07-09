@@ -27,7 +27,7 @@ export default function CarInfo({ carData }: { carData: CarData }) {
     <Card className="overflow-hidden">
       <CardHeader className="flex flex-row items-start bg-muted/50">
         <div className="grid gap-0.5">
-          <CardTitle className="group flex items-center gap-2 text-lg">
+          <CardTitle className="group flex items-center gap-2 text-xl">
             VIN - {carData.car.vin}
             <CopyToClipBoard text={carData.car.vin!} />
           </CardTitle>
@@ -51,131 +51,115 @@ export default function CarInfo({ carData }: { carData: CarData }) {
         </div>
       </CardHeader>
       <CardContent className="p-6 text-sm">
-        <div className="grid gap-8">
-          <div className="font-semibold text-lg">Details</div>
-          <Separator className="my-2" />
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col align-start gap-2">
-              <Label htmlFor="car-make"> Make: </Label>
-              <Input
-                type="text"
-                value={carData.specifications?.make!}
-                readOnly
-                id="car-make"
-              />
-            </div>
-            <div className="flex flex-col align-start gap-2">
-              <Label htmlFor="car-year"> Year: </Label>
-              <Input
-                type="text"
-                value={carData.specifications?.year!}
-                readOnly
-                id="car-year"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col align-start gap-2">
-              <Label htmlFor="car-container-number"> Container #: </Label>
-              <Input
-                type="text"
-                value={
-                  carData.parking_details?.containerNumber
-                    ? carData.parking_details?.containerNumber
-                    : "-"
-                }
-                readOnly
-                id="car-container-number"
-              />
-            </div>
-            <div className="flex flex-col align-start gap-2">
-              <Label htmlFor="car-booking-number"> Booking #: </Label>
-              <Input
-                type="text"
-                value={
-                  carData.parking_details?.bookingNumber
-                    ? carData.parking_details?.bookingNumber
-                    : "-"
-                }
-                readOnly
-                id="car-booking-number"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col align-start gap-2">
-              <Label htmlFor="car-model"> Model: </Label>
-              <Input
-                type="text"
-                value={carData.specifications?.model ? carData.specifications?.model : "-"}
-                readOnly
-                id="car-model"
-              />
-            </div>
-            <div className="flex flex-col align-start gap-2">
-              <Label htmlFor="car-color"> Color: </Label>
-              <Input
-                type="text"
-                value={carData.specifications?.color ? carData.specifications?.color : "-"} 
-                readOnly
-                id="car-model"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col align-start gap-2">
-              <Label htmlFor="car-departure-date"> Departure Date:: </Label>
-              <Input
-                type="text"
-                value={
-                  carData.car.departureDate
+        <div className="grid gap-12">
+          <div className="flex flex-col gap-4">
+            <h3 className="font-semibold text-4xl">Tracking Info:</h3>
+            <div className="flex flex-col gap-4">
+              <div className="flex justify-between">
+                <p className="text-xl text-primary"> Order Created: </p>
+                <p className="text-xl text-primary">
+                  {" "}
+                  {carData.car.createdAt
+                    ? formatDateToInputValue(carData.car.createdAt)
+                    : "-"}{" "}
+                </p>
+              </div>
+              <div className="flex justify-between">
+                <p className="text-xl text-primary"> Pick Up Date: </p>
+                <p className="text-xl text-primary">
+                  {" "}
+                  {carData.car.createdAt
+                    ? formatDateToInputValue(carData.car.createdAt)
+                    : "-"}{" "}
+                </p>
+              </div>
+              <div className="flex justify-between">
+                <p className="text-xl text-primary">
+                  {" "}
+                  Delivered To Warehouse:{" "}
+                </p>
+                <p className="text-xl text-primary">
+                  {" "}
+                  {carData.car.createdAt
+                    ? formatDateToInputValue(carData.car.createdAt)
+                    : "-"}{" "}
+                </p>
+              </div>
+              <div className="flex justify-between">
+                <p className="text-xl text-primary">
+                  {" "}
+                  Estimated Departure Date:{" "}
+                </p>
+                <p className="text-xl text-primary">
+                  {" "}
+                  {carData.car.departureDate
                     ? formatDateToInputValue(carData.car.departureDate)
-                    : "-"
-                }
-                readOnly
-                id="car-departure-date"
-              />
-            </div>
-            <div className="flex flex-col align-start gap-2">
-              <Label htmlFor="car-arrival-date"> Arrival Date:: </Label>
-              <Input
-                type="text"
-                value={
-                  carData.car.arrivalDate
+                    : "-"}{" "}
+                </p>
+              </div>
+              <div className="flex justify-between">
+                <p className="text-xl text-primary">
+                  {" "}
+                  Estimated Arrival Date:{" "}
+                </p>
+                <p className="text-xl text-primary">
+                  {" "}
+                  {carData.car.arrivalDate
                     ? formatDateToInputValue(carData.car.arrivalDate)
-                    : "-"
-                }
-                readOnly
-                id="car-arrival-date"
-              />
+                    : "-"}{" "}
+                </p>
+              </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col align-start gap-2">
-              <Label htmlFor="car-body-type"> Body Type: </Label>
-              <Input
-                type="text"
-                value={
-                  carData.specifications?.bodyType
+          <Separator className="my-2" />
+          <div className="flex flex-col gap-4">
+            <h3 className="font-semibold text-4xl">Shipping Info:</h3>
+            <div className="flex flex-col gap-4">
+              <div className="flex justify-between">
+                <p className="text-xl text-primary"> Body Type: </p>
+                <p className="text-xl text-primary">
+                  {" "}
+                  {carData.specifications?.bodyType
                     ? carData.specifications?.bodyType
-                    : "-"
-                }
-                readOnly
-                id="car-body-type"
-              />
-            </div>
-            <div className="flex flex-col align-start gap-2">
-              <Label htmlFor="car-fuel-type"> Fuel Type: </Label>
-              <Input
-                type="text"
-                value={
-                  carData.specifications?.fuelType
+                    : "-"}{" "}
+                </p>
+              </div>
+              <div className="flex justify-between">
+                <p className="text-xl text-primary"> Fuel Type: </p>
+                <p className="text-xl text-primary">
+                  {" "}
+                  {carData.specifications?.fuelType
                     ? carData.specifications?.fuelType
-                    : "-"
-                }
-                readOnly
-                id="car-fuel-type"
-              />
+                    : "-"}{" "}
+                </p>
+              </div>
+              <div className="flex justify-between">
+                <p className="text-xl text-primary"> Vehicle Status: </p>
+                <p className="text-xl text-primary">
+                  {" "}
+                  {carData.parking_details?.status
+                    ? carData.parking_details?.status
+                    : "-"}{" "}
+                </p>
+              </div>
+              <div className="flex justify-between">
+                <p className="text-xl text-primary"> Booking #: </p>
+                <p className="text-xl text-primary">
+                  {" "}
+                  {carData.parking_details?.bookingNumber
+                    ? carData.parking_details?.bookingNumber
+                    : "-"}{" "}
+                </p>
+              </div>
+              <div className="flex justify-between">
+                <p className="text-xl text-primary"> Container #: </p>
+                <p className="text-xl text-primary">
+                  {" "}
+                  {carData.parking_details?.containerNumber
+                    ? carData.parking_details?.containerNumber
+                    : "-"}{" "}
+                </p>
+              </div>
             </div>
           </div>
         </div>

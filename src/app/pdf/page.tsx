@@ -25,7 +25,6 @@ const Page: React.FC = async () => {
   return (
     <div>
       <PSPDFKitWrapper
-        documentPath="/document.pdf"
         data={data}
         token={user.pdf_token}
         id={user.id!}

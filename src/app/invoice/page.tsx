@@ -49,8 +49,8 @@ export default function Page() {
       const vinCode = form.getTextField("Text12");
       vinCode.setText("Vin Code");
 
-      const totalDue = form.getTextField("Text13");
-      totalDue.setText("$$$ Total Due");
+      // const totalDue = form.getTextField("Text13");
+      // totalDue.setText("$$$ Total Due");
 
       const pdfBytes = await pdfDoc.save();
       return pdfBytes;

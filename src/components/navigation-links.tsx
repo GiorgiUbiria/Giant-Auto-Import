@@ -19,7 +19,7 @@ export default function NavigationLinks({ links }: { links: LinkProp[] }) {
           key={link.href}
           className={`flex items-center text-nowrap text-2xl transition-colors dark:hover:text-zinc-500 hover:text-muted ${
             pathname === link.href
-              ? "font-semibold text-primary-foreground"
+              ? "font-semibold text-primary"
               : "text-secondary-foreground"
           }`}
         >

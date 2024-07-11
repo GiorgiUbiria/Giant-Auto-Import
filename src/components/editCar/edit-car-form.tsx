@@ -1,4 +1,4 @@
-import { CarData, Image as ImageType } from "@/lib/interfaces";
+import { CarData } from "@/lib/interfaces";
 import EditForm from "./form";
 import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";

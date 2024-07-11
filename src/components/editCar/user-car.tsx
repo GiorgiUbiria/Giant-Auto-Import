@@ -1,15 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { useFormStatus } from "react-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { ErrorMessage } from "@hookform/error-message";
 import { toast } from "sonner";
-import { CarData, User, UserWithCarsAndSpecs } from "@/lib/interfaces";
+import { CarData, UserWithCarsAndSpecs } from "@/lib/interfaces";
 import Spinner from "../spinner";
-import { DbUser, assignCarToUser } from "@/lib/actions/dbActions";
+import { DbUser, assignCarToUser, removeUserCarAssignment } from "@/lib/actions/dbActions";
 import Link from "next/link";
 
 const formSchema = z.object({
@@ -30,7 +29,6 @@ export default function UserCar({
   carUser: UserWithCarsAndSpecs | undefined;
 }) {
   const [loading, setTransitioning] = React.useTransition();
-  const { pending } = useFormStatus();
   const { handleSubmit, register, formState } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
   });
@@ -50,7 +48,7 @@ export default function UserCar({
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col text-primary">
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid gap-6 mb-6 md:grid-cols-1">
           <div>
@@ -63,8 +61,10 @@ export default function UserCar({
             <select
               id="user"
               {...register("user")}
+              defaultValue={carUser?.user.id}
               className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-2.5 pb-2.5 pt-4 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             >
+              <option value="0">Unassigned</option>
               {users?.map((user) => (
                 <option key={user.id} value={user.id}>
                   {user.name}
@@ -82,17 +82,27 @@ export default function UserCar({
         </div>
         <div className="grid gap-6 mb-6 md:grid-cols1-1">
           <button
-            disabled={pending}
+            disabled={loading}
             type="submit"
             className="w-full py-2.5 px-5 me-2 mb-2 text-sm font-medium text-black focus:outline-none bg-gray-300 rounded-lg border border-gray-200 hover:bg-gray-300 dark:bg-gray-900-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-300 dark:bg-gray-900-800 dark:text-gray-900 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-300 dark:bg-gray-900-700"
           >
-            {pending ? <Spinner /> : "Assign to the user"}
+            {loading ? <Spinner /> : "Assign to the user"}
           </button>
         </div>
       </form>
       <div>
-        <p> Car is currently assigned to the following user: </p>
-        <Link href={`/admin/users/${userId}`}>{carUser?.user.name}</Link>
+        {carUser?.user.name ? (
+          <>
+            <Link href={`/admin/users/${userId}`}>{carUser?.user.name}</Link>
+            <button
+              onClick={() => removeUserCarAssignment(userId, car.car.vin!)}
+            >
+              Unassign Car
+            </button>
+          </>
+        ) : (
+          <p>Currently unassigned</p>
+        )}
       </div>
     </div>
   );

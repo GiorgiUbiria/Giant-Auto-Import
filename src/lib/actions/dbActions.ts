@@ -1,6 +1,7 @@
 "use server";
 
 import {
+    Car,
   CarData,
   Image,
   Note,
@@ -20,7 +21,7 @@ import {
   transactionTable,
   noteTable,
 } from "../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { ActionResult } from "../form";
 
 export type DbUser = typeof userTable.$inferSelect;
@@ -38,6 +39,44 @@ const updateUserCar = async (userCar: NewUserCar) => {
     .update(userCarTable)
     .set(userCar)
     .where(eq(userCarTable.carId, userCar.carId!));
+};
+
+export const removeUserCarAssignment = async (userId: string, carVin: string): Promise<ActionResult> => {
+  try {
+    const carRecord: Car[] = await db.select().from(carTable).where(eq(carTable.vin, carVin));
+    if (carRecord.length === 0 || !carRecord) {
+      return {
+        error: `Car with VIN ${carVin} not found`,
+      };
+    }
+
+    const carId = carRecord[0].id;
+
+    const deleteResult = await db.delete(userCarTable).where(and(
+      eq(userCarTable.carId, carId),
+      eq(userCarTable.userId, userId),
+    ));
+
+    if (!deleteResult) {
+      return {
+        error: `No assignment found between user ${userId} and car VIN ${carVin}`,
+      };
+    }
+
+    console.log(`Assignment between user ${userId} and car VIN ${carVin} removed`);
+
+    revalidatePath(`/admin/edit/{carId}`);
+
+    return {
+      success: "Car unassigned from user",
+      error: null,
+    };
+  } catch (e) {
+    console.error(e);
+    return {
+      error: "Failed to remove car assignment from user",
+    };
+  }
 };
 
 export async function assignCarToUser(
@@ -380,8 +419,7 @@ export async function getCarFromDatabase(
     const images = await db
       .select()
       .from(imageTable)
-      .where(eq(imageTable.carVin, vin))
-      .all();
+      .where(eq(imageTable.carVin, vin));
 
     if (images.length === 0) {
       console.log(`No images found for VIN: ${vin}`);
@@ -395,17 +433,16 @@ export async function getCarFromDatabase(
     const transactions = (await db
       .select()
       .from(transactionTable)
-      .where(eq(transactionTable.carId, car.car.id))
-      .all()) as Transaction[];
+      .where(eq(transactionTable.carId, car.car.id))) as Transaction[];
+
+    car.transaction = transactions;
 
     const notes = await db
       .select()
       .from(noteTable)
-      .where(eq(noteTable.carId, car.car.id))
-      .all();
+      .where(eq(noteTable.carId, car.car.id));
 
     car.note = notes;
-    car.transaction = transactions;
 
     return car;
   } catch (e) {

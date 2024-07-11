@@ -64,6 +64,8 @@ export async function addCarToDb(
       trackingLink,
       status,
       fuelType,
+      auctionFee,
+      lotNumber,
       color,
       bodyType,
       destinationPort,
@@ -100,6 +102,7 @@ export async function addCarToDb(
         trackingLink: trackingLink || "",
         containerNumber: containerNumber || "",
         bookingNumber: bookingNumber || "",
+        lotNumber: lotNumber || "", 
         status: status as CarStatus,
       };
 
@@ -123,6 +126,9 @@ export async function addCarToDb(
       const newPrice: NewPrice = {
         totalAmount: price || 0,
         amountLeft: price || 0,
+        auctionFee: auctionFee || 0,
+        totalDue: price || 0,
+        transactionFee: 0,
         carId: carId[0].carId,
       };
 

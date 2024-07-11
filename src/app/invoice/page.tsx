@@ -17,45 +17,36 @@ export default function Page() {
   const editPdf = async (existingPdfBytes: ArrayBuffer, type: string) => {
     console.log(type);
     console.log("Editing PDF");
-    if (type === "/invoice-copart.pdf") {
-      const pdfDoc = await PDFDocument.load(existingPdfBytes);
-      pdfDoc.registerFontkit(fontkit);
+    const pdfDoc = await PDFDocument.load(existingPdfBytes);
+    pdfDoc.registerFontkit(fontkit);
 
-      const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-      const form = pdfDoc.getForm();
+    const form = pdfDoc.getForm();
 
-      const invoiceNumber = form.getTextField("Text1");
-      invoiceNumber.setText("User Name");
+    const invoiceNumber = form.getTextField("Text1");
+    invoiceNumber.setText("User Name");
 
-      // const vinNumber = form.getTextField("Text2");
-      // vinNumber.setText("1HGBH41JXMN109186");
+    const salesPrice = form.getTextField("Text3");
+    salesPrice.setText("$$$ Sales Price");
 
-      const salesPrice = form.getTextField("Text3");
-      salesPrice.setText("$$$ Sales Price");
+    const auctionFee = form.getTextField("Text4");
+    auctionFee.setText("$$$ Auction Fee");
 
-      const auctionFee = form.getTextField("Text4");
-      auctionFee.setText("$$$ Auction Fee");
+    const transactionFee = form.getTextField("Text5");
+    transactionFee.setText("$$$ Transaction Fee");
 
-      const transactionFee = form.getTextField("Text5");
-      transactionFee.setText("$$$ Transaction Fee");
+    const vehicle = form.getTextField("Text10");
+    vehicle.setText("Toyota Corolla");
 
-      const vehicle = form.getTextField("Text10");
-      vehicle.setText("Toyota Corolla");
+    const lotNumber = form.getTextField("Text11");
+    lotNumber.setText("Lot Number");
 
-      const lotNumber = form.getTextField("Text11");
-      lotNumber.setText("Lot Number");
+    const vinCode = form.getTextField("Text12");
+    vinCode.setText("Vin Code");
 
-      const vinCode = form.getTextField("Text12");
-      vinCode.setText("Vin Code");
-
-      // const totalDue = form.getTextField("Text13");
-      // totalDue.setText("$$$ Total Due");
-
-      const pdfBytes = await pdfDoc.save();
-      return pdfBytes;
-    }
-    return null;
+    const pdfBytes = await pdfDoc.save();
+    return pdfBytes;
   };
 
   const handleSelectChange = async (

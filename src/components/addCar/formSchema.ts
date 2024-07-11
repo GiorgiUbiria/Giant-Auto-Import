@@ -19,6 +19,7 @@ export const formSchema = z.object({
   containerNumber: z.string().optional(),
   bookingNumber: z.string().optional(),
   trackingLink: z.string().optional(),
+  lotNumber: z.string().optional(),
   year: z.string().refine(
     (val) => {
       const year = parseInt(val, 10);
@@ -77,6 +78,7 @@ export const formSchema = z.object({
   arrivalDate: z.date({ message: "Arrival date must be a date" }).nullish().optional(),
   auction: z.string().optional(),
   price: z.number({ message: "Price must be a number" }).optional(),
+  auctionFee: z.number({ message: "Auction fee must be a number" }).optional(),
   auction_images: z
     .custom<FileList>()
     .refine((files) => {

@@ -54,22 +54,19 @@ export async function editCarInDb(
       "departureDate",
       "arrivalDate",
     ];
+
     const specificationsFields: (keyof Omit<
       Specifications,
-      "id" | "carfax" | "runndrive"
-    >)[] = [
-      "vin",
-      "year",
-      "make",
-      "model",
-      "fuelType",
-      "color",
-      "bodyType",
+      "id" | "carfax"
+    >)[] = ["vin", "year", "make", "model", "fuelType", "color", "bodyType"];
+
+    const parkingDetailFields: (keyof Omit<ParkingDetails, "id">)[] = [
+      "trackingLink",
+      "containerNumber",
+      "bookingNumber",
+      "lotNumber",
+      "status",
     ];
-    const parkingDetailFields: (keyof Omit<
-      ParkingDetails,
-      "id" | "parkingDateString"
-    >)[] = ["trackingLink", "containerNumber", "bookingNumber", "status"];
 
     for (const field of carFields) {
       if (
@@ -99,7 +96,6 @@ export async function editCarInDb(
     }
 
     const parkingDetailsInstance = carInstance.parking_details;
-
     if (parkingDetailsInstance) {
       for (const field of parkingDetailFields) {
         if (
@@ -120,7 +116,6 @@ export async function editCarInDb(
       .where(eq(priceTable.carId, id))
       .limit(1)
       .get();
-
     if (priceInstance) {
       if (
         values.price !== undefined &&
@@ -128,7 +123,13 @@ export async function editCarInDb(
       ) {
         await db
           .update(priceTable)
-          .set({ totalAmount: values.price, amountLeft: values.price })
+          .set({
+            totalAmount: values.price,
+            amountLeft: values.price,
+            auctionFee: values.auctionFee,
+            transactionFee: values.price,
+            totalDue: values.price,
+          })
           .where(eq(priceTable.carId, id));
 
         await db.delete(transactionTable).where(eq(transactionTable.carId, id));

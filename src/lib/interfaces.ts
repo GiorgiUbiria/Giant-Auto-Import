@@ -18,6 +18,7 @@ export interface ParkingDetails {
   containerNumber: string | null;
   bookingNumber: string | null;
   trackingLink: string | null;
+  lotNumber: string | null;
   status: typeof parkingDetailsTable.$inferSelect["status"];
 }
 
@@ -75,7 +76,7 @@ export type CarData = {
   car: Car;
   specifications: Specifications | null;
   parking_details: ParkingDetails | null;
-  price?: { id?: number; totalAmount: number; amountLeft?: number } | null;
+  price?: { id?: number; totalAmount: number; amountLeft?: number, auctionFee?: number } | null;
   transaction?: Transaction[] | null;
   images?: Image[];
   note?: Note[];

@@ -56,6 +56,7 @@ export const formSchema = z.object({
   containerNumber: z.string().optional(),
   bookingNumber: z.string().optional(),
   trackingLink: z.string().optional(),
+  lotNumber: z.string().optional(),
   status: z
     .string({ message: "Status must be a string" })
     .refine(
@@ -81,4 +82,5 @@ export const formSchema = z.object({
     .optional(),
   auction: z.string({ message: "Auction must be a string" }).optional(),
   price: z.number({ message: "Price must be a number" }).optional(),
+  auctionFee: z.number({ message: "Price must be a number" }).optional(),
 });

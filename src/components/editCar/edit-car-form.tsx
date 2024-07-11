@@ -25,12 +25,12 @@ export default async function EditCarForm({ car }: { car: CarData }) {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h2 className="text-xl font-bold mb-4">
+      <h2 className="text-4xl font-bold mb-4 text-primary">
         Edit Car with VIN{" "}
         <Link href={`/car/${car.car.vin}`}>{car.car.vin}</Link>
       </h2>
       <Tabs defaultValue="form">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-5 text-primary">
           <TabsTrigger value="form">Form</TabsTrigger>
           <TabsTrigger value="images">Images</TabsTrigger>
           <TabsTrigger value="user">User</TabsTrigger>

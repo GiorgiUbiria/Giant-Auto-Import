@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
   integer,
   sqliteTable,
@@ -23,6 +24,10 @@ export const userTable = sqliteTable("user", {
     .notNull()
     .references(() => rolesTable.id, { onDelete: "cascade" }),
 });
+
+export const userRelations = relations(userTable, ({ many, one }) => ({
+  role: one(rolesTable),
+}));
 
 export const sessionTable = sqliteTable("session", {
   id: text("id").notNull().primaryKey(),
@@ -53,6 +58,7 @@ export const parkingDetailsTable = sqliteTable("parking_details", {
   containerNumber: text("container_number"),
   bookingNumber: text("booking_number"),
   trackingLink: text("tracking_link"),
+  lotNumber: text("lot_number"),
   status: text("status", {
     enum: ["Pending", "OnHand", "Loaded", "InTransit", "Fault"],
   }),
@@ -77,6 +83,11 @@ export const carTable = sqliteTable("car", {
   ),
 });
 
+export const carRelations = relations(carTable, ({ many, one }) => ({
+  specifications: one(specificationsTable),
+  parkingDetails: one(parkingDetailsTable),
+}));
+
 export const imageTable = sqliteTable("image", {
   id: integer("id").primaryKey(),
   carVin: text("car_vin").references(() => carTable.vin, {
@@ -87,6 +98,10 @@ export const imageTable = sqliteTable("image", {
     enum: ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERY"],
   }),
 });
+
+export const imageRelations = relations(imageTable, ({ many, one }) => ({
+  car: one(carTable),
+}));
 
 export const userCarTable = sqliteTable(
   "user_car",
@@ -109,10 +124,17 @@ export const priceTable = sqliteTable("price", {
   id: integer("id").primaryKey(),
   totalAmount: real("total_amount"),
   amountLeft: real("amount_left"),
+  auctionFee: integer("auction_fee"),
+  transactionFee: integer("transaction_fee"),
+  totalDue: integer("total_due"),
   carId: integer("car_id").references(() => carTable.id, {
     onDelete: "cascade",
   }),
 });
+
+export const priceRelations = relations(priceTable, ({ many, one }) => ({
+  car: one(carTable),
+}));
 
 export const transactionTable = sqliteTable("transaction", {
   id: integer("id").primaryKey(),
@@ -129,6 +151,15 @@ export const transactionTable = sqliteTable("transaction", {
   paymentDate: integer("payment_date", { mode: "timestamp" }),
 });
 
+export const transactionRelations = relations(
+  transactionTable,
+  ({ many, one }) => ({
+    price: one(priceTable),
+    user: one(userTable),
+    car: one(carTable),
+  }),
+);
+
 export const noteTable = sqliteTable("note", {
   id: integer("id").primaryKey(),
   userId: text("user_id").references(() => userTable.id, {
@@ -140,3 +171,8 @@ export const noteTable = sqliteTable("note", {
   note: text("note"),
   createdAt: integer("created_at", { mode: "timestamp_ms" }),
 });
+
+export const noteRelations = relations(noteTable, ({ many, one }) => ({
+  user: one(userTable),
+  car: one(carTable),
+}));

@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useEffect, useTransition } from "react";
+import { useFormState } from "react-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -24,7 +24,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function AddForm() {
   const router = useRouter();
-  const [loading, setTransitioning] = React.useTransition();
+  const [loading, setTransitioning] = useTransition();
   const [state, formAction] = useFormState(addCarToDb, initialState);
   const { handleSubmit, register, formState, getValues } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -114,17 +114,14 @@ export default function AddForm() {
     });
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (Object.keys(formState.errors).length > 0) {
       console.error("Validation errors:", formState.errors);
     }
   }, [formState.errors]);
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="p-4 bg-gray-600 rounded-md"
-    >
+    <form onSubmit={handleSubmit(onSubmit)}>
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-4">
           <h2 className="self-start text-2xl font-bold text-black dark:text-white">
@@ -607,9 +604,9 @@ export default function AddForm() {
           <button
             disabled={loading}
             type="submit"
-            className="w-full py-2.5 px-5 me-2 mb-2 text-sm font-medium text-white focus:outline-none bg-gray-700 rounded-lg border border-gray-200 hover:bg-gray-300 dark:bg-gray-900-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-300 dark:bg-gray-900-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-300 dark:bg-gray-900-700"
+            className="w-full py-2.5 px-5 me-2 mb-2 text-md font-bold text-primary bg-secondary rounded-md hover:bg-secondary/20 flex justify-center"
           >
-            {loading ? <Spinner /> : "Submit"}
+            {loading ? <Spinner /> : "Add"}
           </button>
         </div>
       </div>

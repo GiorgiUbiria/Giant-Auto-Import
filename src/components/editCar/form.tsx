@@ -568,9 +568,9 @@ export default function EditForm({ car }: { car: CarData }) {
           <button
             disabled={loading}
             type="submit"
-            className="w-full py-2.5 px-5 me-2 mb-2 text-sm font-medium text-white focus:outline-none bg-gray-700 rounded-lg border border-gray-200 hover:bg-gray-300 dark:bg-gray-900-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-300 dark:bg-gray-900-800 dark:text-white dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-300 dark:bg-gray-900-700"
+            className="w-full py-2.5 px-5 me-2 mb-2 text-md font-bold text-primary bg-secondary rounded-md hover:bg-secondary/20 flex justify-center"
           >
-            {loading ? <Spinner /> : "Submit"}
+            {loading ? <Spinner /> : "Edit"}
           </button>
         </div>
       </div>

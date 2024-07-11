@@ -1,13 +1,10 @@
 import { redirect } from "next/navigation";
 
 import { validateRequest } from "@/lib/auth";
-import { updateLocalDatabaseFromAPI } from "@/lib/actions/actions";
-import { updateLocalDatabaseImages } from "@/lib/actions/imageActions";
-import { getCarsFromDatabase } from "@/lib/actions/dbActions";
+import { getCarsFromDatabaseForTables } from "@/lib/actions/dbActions";
 
 import { columns } from "./columns";
 
-import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/data-table";
 
 export default async function Page() {
@@ -16,7 +13,7 @@ export default async function Page() {
     return redirect("/");
   }
 
-  const cars = await getCarsFromDatabase();
+  const cars = await getCarsFromDatabaseForTables();
 
   if (!cars) {
     return <p> No cars fetched. </p>;
@@ -24,14 +21,6 @@ export default async function Page() {
 
   return (
     <div className="container mx-auto py-10 text-primary">
-      <div className="mx-auto flex gap-4 py-8">
-        <form action={updateLocalDatabaseFromAPI}>
-          <Button type="submit" disabled> Update database </Button>
-        </form>
-        <form action={updateLocalDatabaseImages}>
-          <Button type="submit" disabled> Fetch Images </Button>
-        </form>
-      </div>
       <DataTable columns={columns} data={cars} />
     </div>
   );

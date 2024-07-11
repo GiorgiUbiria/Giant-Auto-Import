@@ -12,6 +12,8 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Image } from "../interfaces";
 import { revalidatePath } from "next/cache";
 import { DbImage } from "./dbActions";
+import { db } from "../drizzle/db";
+import { carTable, imageTable } from "../drizzle/schema";
 
 const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
 const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
@@ -95,6 +97,14 @@ export async function handleUploadImages(
     }),
   );
 
+  const insertUrls = urls.map((url, index) => ({
+    carVin: vin,
+    imageType: type as DbImage,
+    imageUrl: url,
+  }));
+
+  await db.insert(imageTable).values(insertUrls)
+
   revalidatePath("/admin/edit");
 
   return urls;
@@ -142,4 +152,45 @@ export async function getImagesFromBucket(vin: string): Promise<Image[]> {
   );
 
   return imageData.filter((item): item is Image => item !== undefined);
+}
+
+async function saveImageUrlToDb(carVin: string, imageUrl: string, imageType: DbImage) {
+  await db.insert(imageTable).values({
+    carVin: carVin,
+    imageUrl: imageUrl,
+    imageType: imageType,
+  });
+}
+
+export async function syncCarImagesWithDatabase() {
+  try {
+    const cars = await db.select().from(carTable);
+
+    for (const car of cars) {
+      const prefix = `${car.vin}/`;
+
+      const listObjectsParams = {
+        Bucket: bucketName,
+        Prefix: prefix,
+      };
+      const listedObjects = await S3Client.send(new ListObjectsV2Command(listObjectsParams));
+
+      for (const item of listedObjects.Contents || []) {
+        const getObjectParams = {
+          Bucket: bucketName,
+          Key: item.Key,
+        };
+        const command = new GetObjectCommand(getObjectParams);
+        const url = await getSignedUrl(S3Client, command, { expiresIn: 3600 });
+
+        const imageType = "AUCTION";
+
+        await saveImageUrlToDb(car.vin!, url, imageType);
+      }
+    }
+
+    console.log("Image URLs have been successfully synced with the database.");
+  } catch (error) {
+    console.error("Error syncing car images with the database:", error);
+  }
 }

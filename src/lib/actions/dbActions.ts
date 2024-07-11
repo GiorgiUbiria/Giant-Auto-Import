@@ -22,7 +22,6 @@ import {
 } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { ActionResult } from "../form";
-import { getImagesFromBucket } from "./bucketActions";
 
 export type DbUser = typeof userTable.$inferSelect;
 
@@ -172,20 +171,10 @@ export async function getCarsFromDatabaseForTables(): Promise<CarData[]> {
           .where(eq(imageTable.carVin, car.car.vin!))
           .limit(1)) as Image[];
 
-        const bucketImages = await getImagesFromBucket(car.car.vin!);
-
-        let images;
-        if (dbImages.length > 0) {
-          images = dbImages.map((image) => ({
-            imageUrl: image.imageUrl,
-            imageType: image.imageType as DbImage,
-          }));
-        } else {
-          images = bucketImages.map((image) => ({
-            imageUrl: image.imageUrl,
-            imageType: image.imageType as DbImage,
-          }));
-        }
+        let images = dbImages.map((image) => ({
+          imageUrl: image.imageUrl,
+          imageType: image.imageType as DbImage,
+        }));
 
         car.images = images.slice(0, 1);
         return car;
@@ -239,9 +228,54 @@ export async function getCarsFromDatabase(): Promise<CarData[]> {
           .from(imageTable)
           .where(eq(imageTable.carVin, car.car.vin!))) as Image[];
 
-        const bucketImages = await getImagesFromBucket(car.car.vin!);
+        const images = dbImages.map((image) => ({
+          imageUrl: image.imageUrl,
+          imageType: image.imageType as DbImage,
+        }));
 
-        const images = [...dbImages, ...bucketImages].map((image) => ({
+        car.images = images;
+        return car;
+      }),
+    );
+
+    return updatedCars;
+  } catch (error) {
+    console.error("Error fetching cars:", error);
+    return [];
+  }
+}
+
+export async function getCarsFromDatabaseForUserForTables(
+  id: string,
+): Promise<CarData[]> {
+  try {
+    const cars: CarData[] = (await db
+      .select()
+      .from(userCarTable)
+      .innerJoin(carTable, eq(userCarTable.carId, carTable.id))
+      .leftJoin(
+        specificationsTable,
+        eq(carTable.specificationsId, specificationsTable.id),
+      )
+      .leftJoin(
+        parkingDetailsTable,
+        eq(carTable.parkingDetailsId, parkingDetailsTable.id),
+      )
+      .leftJoin(priceTable, eq(carTable.id, priceTable.carId))
+      .where(eq(userCarTable.userId, id))) as CarData[];
+
+    if (cars.length === 0) {
+      throw new Error("No cars found");
+    }
+
+    const updatedCars = await Promise.all(
+      cars.map(async (car) => {
+        const dbImages = (await db
+          .select()
+          .from(imageTable)
+          .where(eq(imageTable.carVin, car.car.vin!))) as Image[];
+
+        const images = dbImages.map((image) => ({
           imageUrl: image.imageUrl,
           imageType: image.imageType as DbImage,
         }));
@@ -302,9 +336,7 @@ export async function getCarsFromDatabaseForUser(
           .from(imageTable)
           .where(eq(imageTable.carVin, car.car.vin!))) as Image[];
 
-        const bucketImages = await getImagesFromBucket(car.car.vin!);
-
-        const images = [...dbImages, ...bucketImages].map((image) => ({
+        const images = dbImages.map((image) => ({
           imageUrl: image.imageUrl,
           imageType: image.imageType as DbImage,
         }));

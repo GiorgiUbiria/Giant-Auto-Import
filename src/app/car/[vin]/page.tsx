@@ -3,7 +3,6 @@ import { CarData } from "@/lib/interfaces";
 
 import CarInfo from "@/components/car-info";
 import Gallery from "./featured-images";
-import { getImagesFromBucket } from "@/lib/actions/bucketActions";
 import StatusLine from "./status-line";
 
 export default async function Page({ params }: { params: { vin: string } }) {
@@ -12,10 +11,6 @@ export default async function Page({ params }: { params: { vin: string } }) {
   if (!car) {
     return <div>Car not found</div>;
   }
-
-  const bucketImages = await getImagesFromBucket(params.vin);
-
-  car.images = [...car.images!, ...bucketImages];
 
   return (
     <div className="flex flex-col">

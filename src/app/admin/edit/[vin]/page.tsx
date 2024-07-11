@@ -3,7 +3,6 @@ import { getCarFromDatabase } from "@/lib/actions/dbActions";
 import { CarData } from "@/lib/interfaces";
 import { validateRequest } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getImagesFromBucket } from "@/lib/actions/bucketActions";
 
 export default async function Page({ params }: { params: { vin: string } }) {
   const { user } = await validateRequest();
@@ -16,10 +15,6 @@ export default async function Page({ params }: { params: { vin: string } }) {
   if (!car) {
     return <div>Car not found</div>;
   }
-
-  const containerImages = await getImagesFromBucket(params.vin);
-
-  car.images = [...car.images!, ...containerImages];
 
   return <EditCarForm car={car!} />;
 }

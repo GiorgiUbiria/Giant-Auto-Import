@@ -8,11 +8,17 @@ import { UserWithCarsAndSpecs } from "../interfaces";
 import { getUser } from "./dbActions";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { validateRequest } from "../auth";
 
 export async function removeUser(
   id: string,
 ): Promise<ActionResult | undefined> {
   try {
+    const { user } = await validateRequest();
+    if (!user || (user && user.role_id !== 2)) {
+      return redirect("/");
+    }
+
     if (!id) {
       return {
         error: "No user ID provided",

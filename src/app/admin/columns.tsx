@@ -38,7 +38,7 @@ export const columns: ColumnDef<CarData>[] = [
             alt="Product image"
             className="w-full aspect-square rounded-md object-cover"
             height="300"
-            src={images.at(0)?.imageUrl!}
+            src={images[0]?.imageUrl!}
             width="300"
           />
         </div>

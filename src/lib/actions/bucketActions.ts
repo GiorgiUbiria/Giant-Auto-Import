@@ -90,7 +90,6 @@ export async function handleUploadImages(
           ContentLength: size,
           ContentType: "image/png",
         }),
-        { expiresIn: 3600 },
       );
 
       return url;
@@ -103,7 +102,7 @@ export async function handleUploadImages(
     imageUrl: url,
   }));
 
-  await db.insert(imageTable).values(insertUrls)
+  await db.insert(imageTable).values(insertUrls);
 
   revalidatePath("/admin/edit");
 
@@ -137,10 +136,10 @@ export async function getImagesFromBucket(vin: string): Promise<Image[]> {
         const command = new GetObjectCommand(getObjectParams);
         const url = await getSignedUrl(S3Client, command, { expiresIn: 3600 });
 
-        const typeMatch = item.Key.match(/\/(AUCTION|PICK_UP|WAREHOUSE|DELIVERY)\//);
-        const imageType = typeMatch
-          ? (typeMatch[1] as DbImage)
-          : "AUCTION";
+        const typeMatch = item.Key.match(
+          /\/(AUCTION|PICK_UP|WAREHOUSE|DELIVERY)\//,
+        );
+        const imageType = typeMatch ? (typeMatch[1] as DbImage) : "AUCTION";
 
         return {
           imageUrl: url,
@@ -154,7 +153,11 @@ export async function getImagesFromBucket(vin: string): Promise<Image[]> {
   return imageData.filter((item): item is Image => item !== undefined);
 }
 
-async function saveImageUrlToDb(carVin: string, imageUrl: string, imageType: DbImage) {
+async function saveImageUrlToDb(
+  carVin: string,
+  imageUrl: string,
+  imageType: DbImage,
+) {
   await db.insert(imageTable).values({
     carVin: carVin,
     imageUrl: imageUrl,
@@ -173,7 +176,9 @@ export async function syncCarImagesWithDatabase() {
         Bucket: bucketName,
         Prefix: prefix,
       };
-      const listedObjects = await S3Client.send(new ListObjectsV2Command(listObjectsParams));
+      const listedObjects = await S3Client.send(
+        new ListObjectsV2Command(listObjectsParams),
+      );
 
       for (const item of listedObjects.Contents || []) {
         const getObjectParams = {
@@ -181,7 +186,7 @@ export async function syncCarImagesWithDatabase() {
           Key: item.Key,
         };
         const command = new GetObjectCommand(getObjectParams);
-        const url = await getSignedUrl(S3Client, command, { expiresIn: 3600 });
+        const url = await getSignedUrl(S3Client, command);
 
         const imageType = "AUCTION";
 

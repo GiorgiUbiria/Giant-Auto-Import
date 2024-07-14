@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { PDFDocument } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { User } from "lucia";
 
@@ -20,17 +20,13 @@ export default function PdfSelect({ user }: Props) {
   };
 
   const editPdf = async (existingPdfBytes: ArrayBuffer, type: string) => {
-    console.log(type);
-    console.log("Editing PDF");
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     pdfDoc.registerFontkit(fontkit);
-
-    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
     const form = pdfDoc.getForm();
 
     const invoiceNumber = form.getTextField("Text1");
-    invoiceNumber.setText("User Name");
+    invoiceNumber.setText(user.name);
 
     const salesPrice = form.getTextField("Text3");
     salesPrice.setText("$$$ Sales Price");

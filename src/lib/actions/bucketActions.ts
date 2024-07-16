@@ -70,7 +70,7 @@ export async function cleanUpBucket(): Promise<void> {
   }
 }
 
-async function deleteObjectFromBucket(key: string): Promise<void> {
+export async function deleteObjectFromBucket(key: string): Promise<void> {
   const deleteParams = {
     Bucket: bucketName,
     Key: key,

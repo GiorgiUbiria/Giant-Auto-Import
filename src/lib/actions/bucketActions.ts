@@ -30,10 +30,47 @@ const S3Client = new S3({
   },
 });
 
-export async function deleteImageFromBucket(imageUrl: string): Promise<void> {
-  const url = new URL(imageUrl);
-  const key = decodeURIComponent(url.pathname.substring(1));
+export async function cleanUpBucket(): Promise<void> {
+  try {
+    const currentCars = await db.select().from(carTable);
+    const currentVins = new Set(currentCars.map((car) => car.vin));
 
+    const listObjectsParams = {
+      Bucket: bucketName,
+    };
+
+    let continuationToken;
+
+    do {
+      const listCommand = new ListObjectsV2Command({
+        ...listObjectsParams,
+        ContinuationToken: continuationToken,
+      });
+      const listedObjects: any = await S3Client.send(listCommand);
+
+      if (listedObjects.Contents) {
+        for (const item of listedObjects.Contents) {
+          if (item.Key) {
+            const keyVinMatch = item.Key.match(/^(.*?\/)/);
+            const keyVin = keyVinMatch ? keyVinMatch[1].slice(0, -1) : null;
+
+            if (keyVin && !currentVins.has(keyVin)) {
+              await deleteObjectFromBucket(item.Key);
+            }
+          }
+        }
+      }
+
+      continuationToken = listedObjects.NextContinuationToken;
+    } while (continuationToken);
+
+    console.log("Bucket cleanup completed successfully.");
+  } catch (error) {
+    console.error("Error cleaning up the bucket:", error);
+  }
+}
+
+async function deleteObjectFromBucket(key: string): Promise<void> {
   const deleteParams = {
     Bucket: bucketName,
     Key: key,
@@ -165,6 +202,20 @@ async function getSignedUrlForKey(key: string): Promise<string> {
   );
 }
 
+export async function fetchImageForDisplay(vin: string): Promise<Image> {
+  const [imageRecord] = await db
+    .select()
+    .from(imageTable)
+    .where(eq(imageTable.carVin, vin));
+
+    const url = await getSignedUrlForKey(imageRecord.imageKey!);
+
+    return {
+      imageUrl: url,
+      imageType: imageRecord.imageType,
+    } as Image
+}
+
 export async function fetchImagesForDisplay(vin: string): Promise<Image[]> {
   const imageRecords = await db
     .select()
@@ -182,18 +233,6 @@ export async function fetchImagesForDisplay(vin: string): Promise<Image[]> {
   );
 
   return images;
-}
-
-async function saveImageUrlToDb(
-  carVin: string,
-  imageUrl: string,
-  imageType: DbImage,
-) {
-  await db.insert(imageTable).values({
-    carVin: carVin,
-    imageUrl: imageUrl,
-    imageType: imageType,
-  });
 }
 
 export async function syncCarImagesWithDatabase() {
@@ -215,11 +254,13 @@ export async function syncCarImagesWithDatabase() {
         const imageTypeMatch = item.Key?.match(
           /\/(AUCTION|PICK_UP|WAREHOUSE|DELIVERY)\//,
         );
-        const imageType = imageTypeMatch ? (imageTypeMatch[1] as DbImage) : "AUCTION";
+        const imageType = imageTypeMatch
+          ? (imageTypeMatch[1] as DbImage)
+          : "AUCTION";
 
         await db.insert(imageTable).values({
           carVin: car.vin!,
-          imageKey: item.Key!,  // Store the key instead of the signed URL
+          imageKey: item.Key!,
           imageType: imageType,
         });
       }

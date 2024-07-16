@@ -10,7 +10,7 @@ import {
 } from "@/lib/interfaces";
 import { revalidatePath } from "next/cache";
 import { db } from "../drizzle/db";
-import { fetchImagesForDisplay } from "./bucketActions";
+import { fetchImageForDisplay, fetchImagesForDisplay } from "./bucketActions";
 import {
   carTable,
   specificationsTable,
@@ -293,9 +293,9 @@ export async function getCarsFromDatabaseForUserForTables(
 
     const updatedCars = await Promise.all(
       cars.map(async (car) => {
-        const images = await fetchImagesForDisplay(car.car.vin!);
+        const images = await fetchImageForDisplay(car.car.vin!);
 
-        car.images = images;
+        car.images = [images];
         return car;
       }),
     );

@@ -14,7 +14,7 @@ import Spinner from "../spinner";
 import { colors } from "../../../public/colors";
 import { useRouter } from "next/navigation";
 import { Separator } from "../ui/separator";
-import Compressor from 'compressorjs';
+import Compressor from "compressorjs";
 
 const initialState = {
   error: null,
@@ -66,9 +66,23 @@ export default function AddForm() {
 
         const fileData = await Promise.all(
           Array.from(images).map(async (file: File) => {
-            const arrayBuffer = await file.arrayBuffer();
+            const compressedFilePromise = new Promise<File | Blob>(
+              (resolve, reject) => {
+                new Compressor(file, {
+                  quality: 0.6,
+                  success(result) {
+                    resolve(result);
+                  },
+                  error(err) {
+                    reject(err);
+                  },
+                });
+              },
+            );
+            const compressedFile = await compressedFilePromise;
+            const compressedArrayBuffer = await compressedFile.arrayBuffer();
             return {
-              buffer: new Uint8Array(arrayBuffer),
+              buffer: new Uint8Array(compressedArrayBuffer),
               size: file.size,
               type: file.type,
               name: file.name,

@@ -27,6 +27,7 @@ import { deleteImage } from "@/lib/actions/imageActions";
 import { handleUploadImages } from "@/lib/actions/bucketActions";
 import Spinner from "../spinner";
 import { useRouter } from "next/navigation";
+import Compressor from "compressorjs";
 
 const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpg", "image/jpeg"];
 const MAX_IMAGE_SIZE = 4;
@@ -108,7 +109,6 @@ export default function Images({
   const router = useRouter();
   const [loading, setTransitioning] = React.useTransition();
   const [state, formAction] = useFormState(editCarInDb, initialState);
-  const { pending } = useFormStatus();
   const { handleSubmit, register, formState } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
   });
@@ -142,7 +142,12 @@ export default function Images({
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     console.log("Submitting form data:", data);
-    const { auction_images, pick_up_images, warehouse_images, delivery_images } = data;
+    const {
+      auction_images,
+      pick_up_images,
+      warehouse_images,
+      delivery_images,
+    } = data;
     const processAndUploadImages = async (
       images: FileList | undefined,
       type: string,
@@ -152,9 +157,23 @@ export default function Images({
 
       const fileData = await Promise.all(
         Array.from(images).map(async (file: File) => {
-          const arrayBuffer = await file.arrayBuffer();
+          const compressedFilePromise = new Promise<File | Blob>(
+            (resolve, reject) => {
+              new Compressor(file, {
+                quality: 0.6,
+                success(result) {
+                  resolve(result);
+                },
+                error(err) {
+                  reject(err);
+                },
+              });
+            },
+          );
+          const compressedFile = await compressedFilePromise;
+          const compressedArrayBuffer = await compressedFile.arrayBuffer();
           return {
-            buffer: new Uint8Array(arrayBuffer),
+            buffer: new Uint8Array(compressedArrayBuffer),
             size: file.size,
             type: file.type,
             name: file.name,
@@ -207,7 +226,7 @@ export default function Images({
               htmlFor="auction_images"
               className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
             >
-              Auction Photos 
+              Auction Photos
             </label>
             <input
               type="file"
@@ -301,11 +320,11 @@ export default function Images({
         </div>
         <div className="grid gap-6 mb-6 md:grid-cols1-1">
           <button
-            disabled={pending}
+            disabled={loading}
             type="submit"
             className="w-full py-2.5 px-5 me-2 mb-2 text-sm font-medium text-black focus:outline-none bg-gray-300 rounded-lg border border-gray-200 hover:bg-gray-900-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-900-800 dark:text-gray-900 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-900-700"
           >
-            {pending ? <Spinner /> : "Upload Images"}
+            {loading ? <Spinner /> : "Upload Images"}
           </button>
         </div>
       </form>

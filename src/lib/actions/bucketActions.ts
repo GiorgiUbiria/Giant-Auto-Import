@@ -14,6 +14,7 @@ import { revalidatePath } from "next/cache";
 import { DbImage } from "./dbActions";
 import { db } from "../drizzle/db";
 import { carTable, imageTable } from "../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
 const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
@@ -77,36 +78,35 @@ export async function handleUploadImages(
   const prefix = `${vin}/${type}/`;
   const existingFileCount = await getFileCount(prefix);
 
-  const urls = await Promise.all(
-    sizes.map(async (size, index) => {
-      const newIndex = existingFileCount + index + 1;
-      const fileName = `${prefix}${newIndex}.png`;
+  const keys = sizes.map((size, index) => {
+    const newIndex = existingFileCount + index + 1;
+    return `${prefix}${newIndex}.png`;
+  });
 
-      const url = await getSignedUrl(
-        S3Client,
+  await Promise.all(
+    keys.map((key, index) =>
+      S3Client.send(
         new PutObjectCommand({
           Bucket: bucketName,
-          Key: fileName,
-          ContentLength: size,
+          Key: key,
+          ContentLength: sizes[index],
           ContentType: "image/png",
         }),
-      );
-
-      return url;
-    }),
+      ),
+    ),
   );
 
-  const insertUrls = urls.map((url, index) => ({
+  const insertUrls = keys.map((key) => ({
     carVin: vin,
     imageType: type as DbImage,
-    imageUrl: url,
+    imageKey: key,
   }));
 
   await db.insert(imageTable).values(insertUrls);
 
   revalidatePath("/admin/edit");
 
-  return urls;
+  return keys;
 }
 
 export async function getImagesFromBucket(vin: string): Promise<Image[]> {
@@ -128,13 +128,14 @@ export async function getImagesFromBucket(vin: string): Promise<Image[]> {
   const imageData = await Promise.all(
     listedObjects.Contents.map(async (item) => {
       if (item.Key) {
-        const getObjectParams = {
-          Bucket: bucketName,
-          Key: item.Key,
-        };
-
-        const command = new GetObjectCommand(getObjectParams);
-        const url = await getSignedUrl(S3Client, command, { expiresIn: 3600 });
+        const url = await getSignedUrl(
+          S3Client,
+          new GetObjectCommand({
+            Bucket: bucketName,
+            Key: item.Key,
+          }),
+          { expiresIn: 3600 },
+        );
 
         const typeMatch = item.Key.match(
           /\/(AUCTION|PICK_UP|WAREHOUSE|DELIVERY)\//,
@@ -151,6 +152,36 @@ export async function getImagesFromBucket(vin: string): Promise<Image[]> {
   );
 
   return imageData.filter((item): item is Image => item !== undefined);
+}
+
+async function getSignedUrlForKey(key: string): Promise<string> {
+  return getSignedUrl(
+    S3Client,
+    new GetObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+    }),
+    { expiresIn: 3600 },
+  );
+}
+
+export async function fetchImagesForDisplay(vin: string): Promise<Image[]> {
+  const imageRecords = await db
+    .select()
+    .from(imageTable)
+    .where(eq(imageTable.carVin, vin));
+
+  const images = await Promise.all(
+    imageRecords.map(async (record) => {
+      const url = await getSignedUrlForKey(record.imageKey!);
+      return {
+        imageUrl: url,
+        imageType: record.imageType,
+      };
+    }),
+  );
+
+  return images;
 }
 
 async function saveImageUrlToDb(
@@ -181,20 +212,20 @@ export async function syncCarImagesWithDatabase() {
       );
 
       for (const item of listedObjects.Contents || []) {
-        const getObjectParams = {
-          Bucket: bucketName,
-          Key: item.Key,
-        };
-        const command = new GetObjectCommand(getObjectParams);
-        const url = await getSignedUrl(S3Client, command);
+        const imageTypeMatch = item.Key?.match(
+          /\/(AUCTION|PICK_UP|WAREHOUSE|DELIVERY)\//,
+        );
+        const imageType = imageTypeMatch ? (imageTypeMatch[1] as DbImage) : "AUCTION";
 
-        const imageType = "AUCTION";
-
-        await saveImageUrlToDb(car.vin!, url, imageType);
+        await db.insert(imageTable).values({
+          carVin: car.vin!,
+          imageKey: item.Key!,  // Store the key instead of the signed URL
+          imageType: imageType,
+        });
       }
     }
 
-    console.log("Image URLs have been successfully synced with the database.");
+    console.log("Image keys have been successfully synced with the database.");
   } catch (error) {
     console.error("Error syncing car images with the database:", error);
   }

@@ -88,6 +88,7 @@ export const imageTable = sqliteTable("image", {
   imageType: text("image_type", {
     enum: ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERY"],
   }),
+  imageKey: text("image_key"),
 });
 
 export const userCarTable = sqliteTable(

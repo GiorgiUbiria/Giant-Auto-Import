@@ -14,6 +14,7 @@ import Spinner from "../spinner";
 import { colors } from "../../../public/colors";
 import { useRouter } from "next/navigation";
 import { Separator } from "../ui/separator";
+import Compressor from 'compressorjs';
 
 const initialState = {
   error: null,

@@ -80,6 +80,9 @@ export async function deleteObjectFromBucket(key: string): Promise<void> {
 
   try {
     await S3Client.send(deleteCommand);
+    
+    await db.delete(imageTable).where(eq(imageTable.imageKey, key));
+
     console.log(`Successfully deleted ${key} from ${bucketName}`);
   } catch (error) {
     console.error(`Error deleting ${key} from ${bucketName}:`, error);
@@ -120,30 +123,35 @@ export async function handleUploadImages(
     return `${prefix}${newIndex}.png`;
   });
 
-  await Promise.all(
-    keys.map((key, index) =>
-      S3Client.send(
-        new PutObjectCommand({
-          Bucket: bucketName,
-          Key: key,
-          ContentLength: sizes[index],
-          ContentType: "image/png",
-        }),
-      ),
-    ),
+  const urls = await Promise.all(
+    keys.map(async (key, index) => {
+      const command = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: key,
+        ContentLength: sizes[index],
+        ContentType: "image/png",
+      });
+
+      const signedUrl = await getSignedUrl(S3Client, command, {
+        expiresIn: 3600,
+      });
+
+      return signedUrl;
+    }),
   );
 
-  const insertUrls = keys.map((key) => ({
+  const insertUrls = keys.map((key, index) => ({
     carVin: vin,
     imageType: type as DbImage,
     imageKey: key,
+    imageUrl: urls[index],
   }));
 
   await db.insert(imageTable).values(insertUrls);
 
   revalidatePath("/admin/edit");
 
-  return keys;
+  return urls;
 }
 
 export async function getImagesFromBucket(vin: string): Promise<Image[]> {
@@ -208,12 +216,12 @@ export async function fetchImageForDisplay(vin: string): Promise<Image> {
     .from(imageTable)
     .where(eq(imageTable.carVin, vin));
 
-    const url = await getSignedUrlForKey(imageRecord.imageKey!);
+  const url = await getSignedUrlForKey(imageRecord.imageKey!);
 
-    return {
-      imageUrl: url,
-      imageType: imageRecord.imageType,
-    } as Image
+  return {
+    imageUrl: url,
+    imageType: imageRecord.imageType,
+  } as Image;
 }
 
 export async function fetchImagesForDisplay(vin: string): Promise<Image[]> {

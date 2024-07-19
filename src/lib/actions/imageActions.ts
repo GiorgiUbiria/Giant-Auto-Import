@@ -1,6 +1,7 @@
 "use server";
 
 import { APIAssets } from "@/lib/interfaces";
+import sharp from "sharp";
 import { ensureToken } from "./tokenActions";
 import { APICarResponse } from "../api-interfaces";
 import { fetchCars } from "./actions";
@@ -47,11 +48,16 @@ export async function updateLocalDatabaseImages(): Promise<void> {
         console.log(assets);
 
         if (assets && Array.isArray(assets)) {
-          const images = assets.filter((asset: APIAssets) => asset.type.toLowerCase() === "image");
+          const images = assets.filter(
+            (asset: APIAssets) => asset.type.toLowerCase() === "image",
+          );
           if (images.length > 0) {
             for (const image of images) {
               const imageUrl = image.value;
-              const imageExists = await db.select().from(imageTable).where(eq(imageTable.imageUrl, imageUrl));
+              const imageExists = await db
+                .select()
+                .from(imageTable)
+                .where(eq(imageTable.imageUrl, imageUrl));
               if (!imageExists) {
                 await insertImage(vin, imageUrl);
               } else {
@@ -124,8 +130,16 @@ export async function deleteImage(imageUrl: string): Promise<ActionResult> {
     revalidatePath("/admin/edit");
 
     return { success: "Image deleted successfully", error: null };
-  } catch(error) {
+  } catch (error) {
     console.error("Error deleting image:", error);
     return { error: "Error deleting image" };
   }
+}
+
+export async function convertToWebp(
+  buff: ArrayBuffer,
+  name: string,
+): Promise<File> {
+  const webp = await sharp(buff).webp().toBuffer();
+  return new File([webp], name, { type: "image/webp" });
 }

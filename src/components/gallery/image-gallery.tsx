@@ -32,6 +32,7 @@ export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
             width="500"
             height="500"
             onClick={() => setOpenModal(true)}
+            priority
           />
         ))}
       </Carousel>

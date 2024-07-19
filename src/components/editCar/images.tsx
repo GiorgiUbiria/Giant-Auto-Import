@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import React from "react";
 import { toast } from "sonner";
-import { deleteImage } from "@/lib/actions/imageActions";
+import { convertToWebp, deleteImage } from "@/lib/actions/imageActions";
 import { handleUploadImages } from "@/lib/actions/bucketActions";
 import Spinner from "../spinner";
 import { useRouter } from "next/navigation";
@@ -170,13 +170,13 @@ export default function Images({
               });
             },
           );
-          const compressedFile = await compressedFilePromise;
+          const compressedFile = await compressedFilePromise as File; 
           const compressedArrayBuffer = await compressedFile.arrayBuffer();
           return {
             buffer: new Uint8Array(compressedArrayBuffer),
             size: file.size,
             type: file.type,
-            name: file.name,
+            name: file.name.replace(/\.[^/.]+$/, ".webp"),
           };
         }),
       );
@@ -342,6 +342,9 @@ export default function Images({
                         alt={`Car image ${imgIndex + 1}`}
                         width={300}
                         height={300}
+                        placeholder="blur"
+                        blurDataURL="../../../public/placeholder.webp"
+                        priority
                       />
                     </DialogTrigger>
                     <DialogContent className="min-w-full md:min-w-fit">
@@ -378,8 +381,10 @@ export default function Images({
                           className="h-auto min-w-full max-w-full rounded-lg"
                           src={image.imageUrl!}
                           alt={`Car image ${imgIndex + 1}`}
-                          width={550}
-                          height={400}
+                          width={350}
+                          height={200}
+                          placeholder="blur"
+                          blurDataURL="../../../public/placeholder.webp"
                         />
                       </div>
                     </DialogContent>

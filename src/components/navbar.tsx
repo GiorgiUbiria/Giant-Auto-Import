@@ -35,7 +35,7 @@ const Navbar = async () => {
     <DynamicHeader>
       <nav className="hidden flex-col gap-12 font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
         <Link href="/" className="w-max">
-          <Image src={NavbarLogo} alt="Company logo" className="w-20 h-20" />
+          <Image src={NavbarLogo} alt="Company logo" className="w-20 h-20" priority />
         </Link>
         <NavigationLinks links={navigationLinks} />
       </nav>

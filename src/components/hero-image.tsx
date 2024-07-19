@@ -37,6 +37,7 @@ export default function HeroImageComponent() {
         objectFit="cover"
         objectPosition="center"
         className={`${animating ? "animate-zoomIn" : ""}`}
+        priority
       />
       <div className="absolute inset-0 bg-black opacity-50"></div>
     </div>

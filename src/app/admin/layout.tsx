@@ -9,11 +9,16 @@ export default async function AdminLayout({
 }) {
   return (
     <section>
-      <nav className="flex items-center justify-between flex-wrap bg-base-100 p-4">
+      <nav className="flex items-center justify-between flex-wrap bg-base-100 p-4 ml-28">
         <Menubar>
           <MenubarMenu>
             <MenubarTrigger className="text-md text-primary">
-              <Link href="/admin"> Cars </Link>
+              <Link href="/admin"> Admin Panel </Link>
+            </MenubarTrigger>
+          </MenubarMenu>
+          <MenubarMenu>
+            <MenubarTrigger className="text-md text-primary">
+              <Link href="/admin/cars"> Cars </Link>
             </MenubarTrigger>
           </MenubarMenu>
           <MenubarMenu>

@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 
-import HeroImage from "../../public/hero-image.png";
-import HeroBackgroundImage from "../../public/background2.png";
+import HeroImage from "../../public/hero-image.avif";
+import HeroBackgroundImage from "../../public/background2.avif";
 
 export default function HeroImageComponent() {
   const [currentImage, setCurrentImage] = useState(HeroImage);

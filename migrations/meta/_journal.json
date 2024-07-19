@@ -64,6 +64,20 @@
       "when": 1721132123600,
       "tag": "0008_wooden_tony_stark",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1721400790826,
+      "tag": "0009_magenta_scourge",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1721400842672,
+      "tag": "0010_sparkling_madripoor",
+      "breakpoints": true
     }
   ]
 }

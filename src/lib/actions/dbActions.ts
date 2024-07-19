@@ -199,23 +199,10 @@ export async function getCarsFromDatabaseForTables(): Promise<CarData[]> {
 
     const updatedCars = await Promise.all(
       cars.map(async (car) => {
-        const transactions = (await db
-          .select()
-          .from(transactionTable)
-          .where(eq(transactionTable.carId, car.car.id))) as Transaction[];
+        const images = await fetchImageForDisplay(car.car.vin!);
 
-        car.transaction = transactions;
+        car.images = [images];
 
-        const notes = (await db
-          .select()
-          .from(noteTable)
-          .where(eq(noteTable.carId, car.car.id))) as Note[];
-
-        car.note = notes;
-
-        const images = await fetchImagesForDisplay(car.car.vin!);
-
-        car.images = images.slice(0, 1);
         return car;
       }),
     );

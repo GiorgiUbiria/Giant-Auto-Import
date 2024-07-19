@@ -4,6 +4,7 @@ import {
   text,
   primaryKey,
   real,
+  index,
 } from "drizzle-orm/sqlite-core";
 
 export const rolesTable = sqliteTable("roles", {
@@ -33,21 +34,29 @@ export const sessionTable = sqliteTable("session", {
   expiresAt: integer("expires_at").notNull(),
 });
 
-export const specificationsTable = sqliteTable("specifications", {
-  id: integer("id").primaryKey(),
-  vin: text("vin"),
-  carfax: text("carfax"),
-  year: text("year"),
-  make: text("make"),
-  model: text("model"),
-  bodyType: text("body_type", {
-    enum: ["SEDAN", "CROSSOVER", "SUV", "PICKUP"],
-  }),
-  color: text("color"),
-  fuelType: text("fuel_type", {
-    enum: ["DIESEL", "GASOLINE", "HYBRID", "ELECTRIC", "OTHER"],
-  }),
-});
+export const specificationsTable = sqliteTable(
+  "specifications",
+  {
+    id: integer("id").primaryKey(),
+    vin: text("vin"),
+    carfax: text("carfax"),
+    year: text("year"),
+    make: text("make"),
+    model: text("model"),
+    bodyType: text("body_type", {
+      enum: ["SEDAN", "CROSSOVER", "SUV", "PICKUP"],
+    }),
+    color: text("color"),
+    fuelType: text("fuel_type", {
+      enum: ["DIESEL", "GASOLINE", "HYBRID", "ELECTRIC", "OTHER"],
+    }),
+  },
+  (table) => {
+    return {
+      vinIdx: index("vin_idx").on(table.vin),
+    };
+  },
+);
 
 export const parkingDetailsTable = sqliteTable("parking_details", {
   id: integer("id").primaryKey(),
@@ -60,36 +69,52 @@ export const parkingDetailsTable = sqliteTable("parking_details", {
   }),
 });
 
-export const carTable = sqliteTable("car", {
-  id: integer("id").primaryKey(),
-  vin: text("vin").unique(),
-  originPort: text("origin_port"),
-  destinationPort: text("destination_port"),
-  departureDate: integer("departure_date", { mode: "timestamp" }),
-  arrivalDate: integer("arrival_date", { mode: "timestamp" }),
-  auction: text("auction"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }),
-  specificationsId: integer("specifications_id").references(
-    () => specificationsTable.id,
-    { onDelete: "cascade" },
-  ),
-  parkingDetailsId: integer("parking_details_id").references(
-    () => parkingDetailsTable.id,
-    { onDelete: "cascade" },
-  ),
-});
+export const carTable = sqliteTable(
+  "car",
+  {
+    id: integer("id").primaryKey(),
+    vin: text("vin").unique(),
+    originPort: text("origin_port"),
+    destinationPort: text("destination_port"),
+    departureDate: integer("departure_date", { mode: "timestamp" }),
+    arrivalDate: integer("arrival_date", { mode: "timestamp" }),
+    auction: text("auction"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }),
+    specificationsId: integer("specifications_id").references(
+      () => specificationsTable.id,
+      { onDelete: "cascade" },
+    ),
+    parkingDetailsId: integer("parking_details_id").references(
+      () => parkingDetailsTable.id,
+      { onDelete: "cascade" },
+    ),
+  },
+  (table) => {
+    return {
+      idIdx: index("id_idx").on(table.id),
+    };
+  },
+);
 
-export const imageTable = sqliteTable("image", {
-  id: integer("id").primaryKey(),
-  carVin: text("car_vin").references(() => carTable.vin, {
-    onDelete: "cascade",
-  }),
-  imageUrl: text("image_url"),
-  imageType: text("image_type", {
-    enum: ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERY"],
-  }),
-  imageKey: text("image_key"),
-});
+export const imageTable = sqliteTable(
+  "image",
+  {
+    id: integer("id").primaryKey(),
+    carVin: text("car_vin").references(() => carTable.vin, {
+      onDelete: "cascade",
+    }),
+    imageUrl: text("image_url"),
+    imageType: text("image_type", {
+      enum: ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERY"],
+    }),
+    imageKey: text("image_key"),
+  },
+  (table) => {
+    return {
+      imageKeyIdx: index("image_key_idx").on(table.imageKey),
+    };
+  },
+);
 
 export const userCarTable = sqliteTable(
   "user_car",

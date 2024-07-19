@@ -5,8 +5,9 @@ import { Carousel, Modal } from "flowbite-react";
 
 import { Image as ImageType } from "@/lib/interfaces";
 import { useState } from "react";
+import React from "react";
 
-export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
+const FeaturedImageGalleryComponent = ({ data }: { data: ImageType[] }) => {
   const [openModal, setOpenModal] = useState(false);
 
   if (data.length === 0) {
@@ -53,3 +54,5 @@ export function FeaturedImageGallery({ data }: { data: ImageType[] }) {
     </div>
   );
 }
+
+export const FeaturedImageGallery = React.memo(FeaturedImageGalleryComponent);

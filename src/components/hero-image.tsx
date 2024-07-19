@@ -8,9 +8,9 @@ export default function HeroImageComponent() {
       <Image
         src={HeroBackgroundImage}
         alt="Background Image"
-        layout="fill"
         objectFit="cover"
         objectPosition="center"
+        layout="fill"
         priority
       />
       <div className="absolute inset-0 bg-black opacity-50"></div>

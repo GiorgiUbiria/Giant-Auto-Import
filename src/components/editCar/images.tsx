@@ -1,11 +1,9 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { ErrorMessage } from "@hookform/error-message";
-import { editCarInDb } from "@/lib/actions/actions.editCar";
 import { Image as ImageType } from "@/lib/interfaces";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import {
@@ -23,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import React from "react";
 import { toast } from "sonner";
-import { convertToWebp, deleteImage } from "@/lib/actions/imageActions";
+import { deleteImage } from "@/lib/actions/imageActions";
 import { handleUploadImages } from "@/lib/actions/bucketActions";
 import Spinner from "../spinner";
 import { useRouter } from "next/navigation";
@@ -35,11 +33,6 @@ const MAX_IMAGE_SIZE = 4;
 const sizeInMB = (sizeInBytes: number, decimalsNum = 2) => {
   const result = sizeInBytes / (1024 * 1024);
   return +result.toFixed(decimalsNum);
-};
-
-const initialState = {
-  error: null,
-  success: undefined,
 };
 
 const formSchema = z.object({
@@ -108,7 +101,6 @@ export default function Images({
 }) {
   const router = useRouter();
   const [loading, setTransitioning] = React.useTransition();
-  const [state, formAction] = useFormState(editCarInDb, initialState);
   const { handleSubmit, register, formState } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
   });
@@ -120,9 +112,7 @@ export default function Images({
     }
     return chunks;
   };
-
   let imageChunks: ImageType[][] = [];
-
   if (images && images.length > 0) {
     imageChunks = chunkArray(images, 3);
   }
@@ -140,8 +130,14 @@ export default function Images({
     });
   }
 
+  const imageTypes = [
+    "auction_images",
+    "pick_up_images",
+    "warehouse_images",
+    "delivery_images",
+  ] as const;
+
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    console.log("Submitting form data:", data);
     const {
       auction_images,
       pick_up_images,
@@ -170,7 +166,7 @@ export default function Images({
               });
             },
           );
-          const compressedFile = await compressedFilePromise as File; 
+          const compressedFile = (await compressedFilePromise) as File;
           const compressedArrayBuffer = await compressedFile.arrayBuffer();
           return {
             buffer: new Uint8Array(compressedArrayBuffer),
@@ -221,102 +217,32 @@ export default function Images({
     <div>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid gap-6 mb-6 md:grid-cols-4">
-          <div>
-            <label
-              htmlFor="auction_images"
-              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-            >
-              Auction Photos
-            </label>
-            <input
-              type="file"
-              id="auction_images"
-              multiple
-              {...register("auction_images", {
-                setValueAs: (v) => Array.from(v),
-              })}
-              className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 dark:text-white bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-            />
-            <ErrorMessage
-              errors={formState.errors}
-              name="auction_images"
-              render={({ message }) => (
-                <p className="text-red-500 text-sm">{message}</p>
-              )}
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="warehouse_images"
-              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-            >
-              Warehouse Photos
-            </label>
-            <input
-              type="file"
-              id="warehouse_images"
-              multiple
-              {...register("warehouse_images", {
-                setValueAs: (v) => Array.from(v),
-              })}
-              className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 dark:text-white bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-            />
-            <ErrorMessage
-              errors={formState.errors}
-              name="warehouse_images"
-              render={({ message }) => (
-                <p className="text-red-500 text-sm">{message}</p>
-              )}
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="pick_up_images"
-              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-            >
-              Pick Up Photos
-            </label>
-            <input
-              type="file"
-              id="pick_up_images"
-              multiple
-              {...register("pick_up_images", {
-                setValueAs: (v) => Array.from(v),
-              })}
-              className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 dark:text-white bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-            />
-            <ErrorMessage
-              errors={formState.errors}
-              name="pick_up_images"
-              render={({ message }) => (
-                <p className="text-red-500 text-sm">{message}</p>
-              )}
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="delivery_images"
-              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-            >
-              Delivery Photos
-            </label>
-            <input
-              type="file"
-              id="delivery_images"
-              multiple
-              {...register("delivery_images", {
-                setValueAs: (v) => Array.from(v),
-              })}
-              className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 dark:text-white bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-            />
-            <ErrorMessage
-              errors={formState.errors}
-              name="delivery_images"
-              render={({ message }) => (
-                <p className="text-red-500 text-sm">{message}</p>
-              )}
-            />
-          </div>
+          {imageTypes.map((type) => (
+            <div key={type}>
+              <label
+                htmlFor={type}
+                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
+                {type.replace("_", " ").toUpperCase()} Photos
+              </label>
+              <input
+                type="file"
+                id={type}
+                multiple
+                {...register(type, {
+                  setValueAs: (v) => Array.from(v),
+                })}
+                className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 dark:text-white bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+              />
+              <ErrorMessage
+                errors={formState.errors}
+                name={type}
+                render={({ message }) => (
+                  <p className="text-red-500 text-sm">{message}</p>
+                )}
+              />
+            </div>
+          ))}
         </div>
         <div className="grid gap-6 mb-6 md:grid-cols1-1">
           <button

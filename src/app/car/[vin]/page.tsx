@@ -18,7 +18,7 @@ export default async function Page({ params }: { params: { vin: string } }) {
         <StatusLine status={car?.parking_details?.status!} />
       </div>
       <div className="mt-8 w-11/12 mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <Gallery car={car} />
+        <Gallery images={car.images!} vin={car.car.vin!} />
         <CarInfo carData={car} />
       </div>
     </div>

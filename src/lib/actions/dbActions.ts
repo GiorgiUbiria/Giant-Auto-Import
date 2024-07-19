@@ -21,7 +21,7 @@ import {
   transactionTable,
   noteTable,
 } from "../drizzle/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { ActionResult } from "../form";
 
 export type DbUser = typeof userTable.$inferSelect;
@@ -178,20 +178,22 @@ export async function getUser(
   }
 }
 
+const preparedGetCars = db
+  .select()
+  .from(carTable)
+  .leftJoin(
+    specificationsTable,
+    eq(carTable.specificationsId, specificationsTable.id),
+  )
+  .leftJoin(
+    parkingDetailsTable,
+    eq(carTable.parkingDetailsId, parkingDetailsTable.id),
+  )
+  .leftJoin(priceTable, eq(carTable.id, priceTable.carId));
+
 export async function getCarsFromDatabaseForTables(): Promise<CarData[]> {
   try {
-    const cars = (await db
-      .select()
-      .from(carTable)
-      .leftJoin(
-        specificationsTable,
-        eq(carTable.specificationsId, specificationsTable.id),
-      )
-      .leftJoin(
-        parkingDetailsTable,
-        eq(carTable.parkingDetailsId, parkingDetailsTable.id),
-      )
-      .leftJoin(priceTable, eq(carTable.id, priceTable.carId))) as CarData[];
+    const cars = (await preparedGetCars.all()) as CarData[];
 
     if (cars.length === 0) {
       throw new Error("No cars found");
@@ -355,47 +357,31 @@ export async function getCarsFromDatabaseForUser(
   }
 }
 
+const preparedGetCar = db
+  .select()
+  .from(carTable)
+  .leftJoin(
+    specificationsTable,
+    eq(carTable.specificationsId, specificationsTable.id),
+  )
+  .leftJoin(
+    parkingDetailsTable,
+    eq(carTable.parkingDetailsId, parkingDetailsTable.id),
+  )
+  .leftJoin(priceTable, eq(carTable.id, priceTable.carId))
+  .where(eq(carTable.vin, sql.placeholder("vin")));
+
 export async function getCarFromDatabase(
   vin: string,
 ): Promise<CarData | undefined> {
   try {
-    const car: CarData = (await db
-      .select()
-      .from(carTable)
-      .leftJoin(
-        specificationsTable,
-        eq(carTable.specificationsId, specificationsTable.id),
-      )
-      .leftJoin(
-        parkingDetailsTable,
-        eq(carTable.parkingDetailsId, parkingDetailsTable.id),
-      )
-      .leftJoin(priceTable, eq(carTable.id, priceTable.carId))
-      .where(eq(carTable.vin, vin))
-      .limit(1)
-      .get()) as CarData;
-
+    const [car] = (await preparedGetCar.all({ vin: vin })) as CarData[];
     if (!car) {
       console.log("No car found");
     }
 
     const images = await fetchImagesForDisplay(vin);
-
     car.images = images;
-
-    const transactions = (await db
-      .select()
-      .from(transactionTable)
-      .where(eq(transactionTable.carId, car.car.id))) as Transaction[];
-
-    car.transaction = transactions;
-
-    const notes = await db
-      .select()
-      .from(noteTable)
-      .where(eq(noteTable.carId, car.car.id));
-
-    car.note = notes;
 
     return car;
   } catch (e) {

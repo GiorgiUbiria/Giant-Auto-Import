@@ -15,7 +15,6 @@ import type { ActionResult } from "@/lib/form";
 import { SqliteError } from "better-sqlite3";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import isEmail from "validator/lib/isEmail";
-import { User } from "../interfaces";
 import { validateAdmin } from "../validation";
 import { revalidatePath } from "next/cache";
 import { DbUser } from "./dbActions";

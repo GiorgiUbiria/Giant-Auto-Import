@@ -1,9 +1,8 @@
 "use server";
 
 import {
-    Car,
+  Car,
   CarData,
-  Image,
   Note,
   Transaction,
   UserWithCarsAndSpecs,
@@ -42,9 +41,15 @@ const updateUserCar = async (userCar: NewUserCar) => {
     .where(eq(userCarTable.carId, userCar.carId!));
 };
 
-export const removeUserCarAssignment = async (userId: string, carVin: string): Promise<ActionResult> => {
+export const removeUserCarAssignment = async (
+  userId: string,
+  carVin: string,
+): Promise<ActionResult> => {
   try {
-    const carRecord: Car[] = await db.select().from(carTable).where(eq(carTable.vin, carVin));
+    const carRecord: Car[] = await db
+      .select()
+      .from(carTable)
+      .where(eq(carTable.vin, carVin));
     if (carRecord.length === 0 || !carRecord) {
       return {
         error: `Car with VIN ${carVin} not found`,
@@ -53,10 +58,11 @@ export const removeUserCarAssignment = async (userId: string, carVin: string): P
 
     const carId = carRecord[0].id;
 
-    const deleteResult = await db.delete(userCarTable).where(and(
-      eq(userCarTable.carId, carId),
-      eq(userCarTable.userId, userId),
-    ));
+    const deleteResult = await db
+      .delete(userCarTable)
+      .where(
+        and(eq(userCarTable.carId, carId), eq(userCarTable.userId, userId)),
+      );
 
     if (!deleteResult) {
       return {
@@ -64,7 +70,9 @@ export const removeUserCarAssignment = async (userId: string, carVin: string): P
       };
     }
 
-    console.log(`Assignment between user ${userId} and car VIN ${carVin} removed`);
+    console.log(
+      `Assignment between user ${userId} and car VIN ${carVin} removed`,
+    );
 
     revalidatePath(`/admin/edit/{carId}`);
 
@@ -347,7 +355,7 @@ export async function getCarsFromDatabaseForUser(
         car.note = notes;
 
         const images = await fetchImagesForDisplay(car.car.vin!);
-        
+
         car.images = images;
         return car;
       }),

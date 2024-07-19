@@ -1,22 +1,13 @@
 import { CarData } from "@/lib/interfaces";
 import EditForm from "./form";
-import { validateRequest } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/tabLinks";
 import Images from "./images";
-import Transactions from "./transactions";
 import { getUserByCarId } from "@/lib/actions/userActions";
-import Notes from "./notes";
 import { getUser, getUsers } from "@/lib/actions/dbActions";
 import UserCar from "./user-car";
 import Link from "next/link";
 
 export default async function EditCarForm({ car }: { car: CarData }) {
-  const { user } = await validateRequest();
-  if (!user || user?.role_id !== 2) {
-    return redirect("/");
-  }
-
   const res = await getUserByCarId(car.car.id);
 
   const users = await getUsers();
@@ -29,13 +20,11 @@ export default async function EditCarForm({ car }: { car: CarData }) {
         Edit Car with VIN{" "}
         <Link href={`/car/${car.car.vin}`}>{car.car.vin}</Link>
       </h2>
-      <Tabs defaultValue="form">
-        <TabsList className="grid w-full grid-cols-5 text-primary">
+      <Tabs defaultValue="form" searchParam="type">
+        <TabsList className="grid w-full grid-cols-3 text-primary">
           <TabsTrigger value="form">Form</TabsTrigger>
           <TabsTrigger value="images">Images</TabsTrigger>
           <TabsTrigger value="user">User</TabsTrigger>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
-          <TabsTrigger value="notes">Notes</TabsTrigger>
         </TabsList>
         <TabsContent value="form">
           <EditForm car={car} />
@@ -50,12 +39,6 @@ export default async function EditCarForm({ car }: { car: CarData }) {
             users={users}
             carUser={carUser}
           />
-        </TabsContent>
-        <TabsContent value="transactions">
-          <Transactions car={car} userId={res.data?.id} />
-        </TabsContent>
-        <TabsContent value="notes">
-          <Notes car={car} userId={res.data?.id} />
         </TabsContent>
       </Tabs>
     </div>

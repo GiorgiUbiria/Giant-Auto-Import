@@ -60,7 +60,6 @@ export default function EditForm({ car }: { car: CarData }) {
   });
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    console.log("Submitting form data:", data);
     setTransitioning(async () => {
       const payload: EditCarPayload = { id: car.car.id, values: data };
       const res = await editCarInDb(state, payload);

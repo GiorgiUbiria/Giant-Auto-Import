@@ -345,7 +345,7 @@ export default function Images({
                       />
                     </DialogTrigger>
                     <DialogContent className="min-w-full md:min-w-fit">
-                      <div className="flex flex-col gap-4">
+                      <div className="flex flex-col gap-4 p-4">
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="outline">Delete Image</Button>

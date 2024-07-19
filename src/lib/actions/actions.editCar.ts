@@ -13,6 +13,7 @@ import { Car, CarData, ParkingDetails, Specifications } from "../interfaces";
 import { getCarFromDatabaseByID } from "./dbActions";
 import { eq } from "drizzle-orm";
 import { FormValues } from "@/components/editCar/form";
+import { revalidatePath } from "next/cache";
 
 export type EditCarPayload = { id: number; values: FormValues };
 
@@ -141,6 +142,8 @@ export async function editCarInDb(
         amountLeft: values.price !== undefined ? values.price : null,
       });
     }
+
+    revalidatePath(`admin/edit/${carInstance.car.vin}`)
 
     return { error: null, success: "Car updated successfully" };
   } catch (error) {

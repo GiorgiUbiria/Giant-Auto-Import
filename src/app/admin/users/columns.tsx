@@ -79,7 +79,7 @@ export const columns: ColumnDef<Omit<DbUser, "passowrd">>[] = [
     cell: ({ row }) => {
       const role_id = row.getValue("roleId") as number;
 
-      const role = role_id === 1 ? "User" : "Admin";
+      const role = role_id === 1 ? "User" : "Accountant";
 
       return <div className="text-left font-medium">{role}</div>;
     },

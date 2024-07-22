@@ -7,7 +7,7 @@ import {
   Transaction,
   UserWithCarsAndSpecs,
 } from "@/lib/interfaces";
-import { and, eq, sql } from "drizzle-orm";
+import { and, or, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "../drizzle/db";
 import {
@@ -139,7 +139,7 @@ export async function getUsers(): Promise<DbUser[] | undefined> {
     const users: DbUser[] = await db
       .select()
       .from(userTable)
-      .where(and(eq(userTable.roleId, 1), eq(userTable.roleId, 3)));
+      .where(or(eq(userTable.roleId, 1), eq(userTable.roleId, 3)));
 
     if (users.length === 0) {
       console.warn("No users found");

@@ -3,6 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TogglePassword } from "./toggle-password";
+import { 
+  Select,
+  SelectItem,
+  SelectLabel,
+  SelectValue,
+  SelectTrigger,
+  SelectContent
+} from "./ui/select";
 
 export function RegisterForm() {
   return (
@@ -48,11 +56,24 @@ export function RegisterForm() {
               required
             />
           </div>
+          <div className="grid gap-2">
+            <Label htmlFor="role">Role</Label>
+            <Select name="role" required>
+              <SelectTrigger>
+                <SelectValue placeholder="USER" />
+              </SelectTrigger> 
+              <SelectContent>
+                <SelectItem value="1">USER</SelectItem>
+                <SelectItem value="2">ADMIN</SelectItem>
+                <SelectItem value="3">ACCOUNTANT</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Button type="submit" className="w-full">
             Create an account
           </Button>
-        </div>
-      </CardContent>
+          </div>
+        </CardContent>
     </Card>
   );
 }

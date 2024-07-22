@@ -1,9 +1,9 @@
-import { DbUser, getUsers } from "@/lib/actions/dbActions";
 import { UserDataTable } from "@/components/user-data-table";
-import { columns } from "./columns";
-import { redirect } from "next/navigation";
+import { DbUser, getUsers } from "@/lib/actions/dbActions";
 import { validateRequest } from "@/lib/auth";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { columns } from "./columns";
 
 export default async function Page() {
   const { user } = await validateRequest();

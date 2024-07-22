@@ -7,22 +7,22 @@ import {
   Transaction,
   UserWithCarsAndSpecs,
 } from "@/lib/interfaces";
+import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "../drizzle/db";
-import { fetchImageForDisplay, fetchImagesForDisplay } from "./bucketActions";
 import {
   carTable,
-  specificationsTable,
-  parkingDetailsTable,
-  userTable,
-  userCarTable,
   imageTable,
-  priceTable,
-  transactionTable,
   noteTable,
+  parkingDetailsTable,
+  priceTable,
+  specificationsTable,
+  transactionTable,
+  userCarTable,
+  userTable,
 } from "../drizzle/schema";
-import { and, eq, sql } from "drizzle-orm";
 import { ActionResult } from "../form";
+import { fetchImageForDisplay, fetchImagesForDisplay } from "./bucketActions";
 
 export type DbUser = typeof userTable.$inferSelect;
 
@@ -139,7 +139,7 @@ export async function getUsers(): Promise<DbUser[] | undefined> {
     const users: DbUser[] = await db
       .select()
       .from(userTable)
-      .where(eq(userTable.roleId, 1));
+      .where(and(eq(userTable.roleId, 1), eq(userTable.roleId, 3)));
 
     if (users.length === 0) {
       console.warn("No users found");

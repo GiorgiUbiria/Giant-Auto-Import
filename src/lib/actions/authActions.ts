@@ -205,6 +205,7 @@ export async function signup(
   const customId = formData.get("customId") as string;
   const email = formData.get("email") as string;
   const phone = formData.get("phone") as string;
+  const role = formData.get("role") as string;
   const password = formData.get("password") as string;
 
   const { valid, error } = await validateSignUp(name, email, phone, password);
@@ -214,6 +215,8 @@ export async function signup(
       error: error!,
     };
   }
+
+  const roleId = Number(role);
 
   const hashedPassword = (await new Argon2id().hash(password)) as string;
 
@@ -237,7 +240,7 @@ export async function signup(
         phone,
         password: hashedPassword,
         passwordText: password,
-        roleId: 1,
+        roleId: roleId,
       };
       await insertUser(newUser);
     } else {

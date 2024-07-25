@@ -132,6 +132,7 @@ export const userCarTable = sqliteTable(
 export const priceTable = sqliteTable("price", {
   id: integer("id").primaryKey(),
   totalAmount: real("total_amount"),
+  shippingFee: integer("shipping_fee"),
   amountLeft: real("amount_left"),
   auctionFee: integer("auction_fee"),
   transactionFee: integer("transaction_fee"),

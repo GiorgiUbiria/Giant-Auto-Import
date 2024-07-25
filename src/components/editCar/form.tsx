@@ -22,14 +22,6 @@ const initialState = {
 
 export type FormValues = z.infer<typeof formSchema>;
 
-function formatDateToInputValue(date: Date | null): string {
-  if (!date) return "";
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 export default function EditForm({ car }: { car: CarData }) {
   const router = useRouter();
   const [loading, setTransitioning] = React.useTransition();
@@ -44,7 +36,7 @@ export default function EditForm({ car }: { car: CarData }) {
       trackingLink: car.parking_details?.trackingLink!,
       containerNumber: car.parking_details?.containerNumber!,
       bookingNumber: car.parking_details?.bookingNumber!,
-      price: car.price?.totalAmount!,
+      shippingFee: car.price?.shippingFee!,
       auctionFee: car.price?.auctionFee!,
       model: car.specifications?.model!,
       color: car.specifications?.color!,
@@ -55,7 +47,7 @@ export default function EditForm({ car }: { car: CarData }) {
       year: car.specifications?.year!,
       departureDate: car.car?.departureDate!,
       arrivalDate: car.car?.arrivalDate!,
-      lotNumber: car.parking_details?.lotNumber!,
+      lotNumber: car.parking_details?.lotNumber! ?? "",
     },
   });
 
@@ -515,23 +507,23 @@ export default function EditForm({ car }: { car: CarData }) {
           <div className="grid gap-6 mb-6 md:grid-cols-2">
             <div>
               <label
-                htmlFor="price"
+                htmlFor="shippingFee"
                 className="block mb-2 text-sm font-medium text-black dark:text-white"
               >
-                Total Price
+                Shipping Fee 
               </label>
               <input
                 type="number"
-                placeholder="0000"
-                id="price"
-                {...register("price", {
+                placeholder="0"
+                id="shippingFee"
+                {...register("shippingFee", {
                   valueAsNumber: true,
                 })}
                 className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
               />
               <ErrorMessage
                 errors={formState.errors}
-                name="price"
+                name="shippingFee"
                 render={({ message }) => (
                   <p className="text-red-500 text-sm">{message}</p>
                 )}
@@ -546,7 +538,7 @@ export default function EditForm({ car }: { car: CarData }) {
               </label>
               <input
                 type="number"
-                placeholder="0000"
+                placeholder="0"
                 id="auctionFee"
                 {...register("auctionFee", {
                   valueAsNumber: true,

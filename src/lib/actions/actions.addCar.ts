@@ -69,11 +69,11 @@ export async function addCarToDb(
       color,
       bodyType,
       destinationPort,
+      shippingFee,
       originPort,
       auction,
       departureDate,
       arrivalDate,
-      price,
     } = result.data;
 
     const findCar = await db
@@ -124,11 +124,10 @@ export async function addCarToDb(
       const carId = await insertCar(trx, car);
 
       const newPrice: NewPrice = {
-        totalAmount: price || 0,
-        amountLeft: price || 0,
+        totalAmount: (shippingFee && auctionFee) ? shippingFee + auctionFee : 0,
+        amountLeft: (shippingFee && auctionFee) ? shippingFee + auctionFee : 0,
         auctionFee: auctionFee || 0,
-        totalDue: price || 0,
-        transactionFee: 0,
+        totalDue: (shippingFee && auctionFee) ? shippingFee + auctionFee : 0,
         carId: carId[0].carId,
       };
 

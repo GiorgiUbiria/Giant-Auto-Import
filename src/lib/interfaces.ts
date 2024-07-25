@@ -78,7 +78,7 @@ export type CarData = {
   car: Car;
   specifications: Specifications | null;
   parking_details: ParkingDetails | null;
-  price?: { id?: number; totalAmount: number; amountLeft?: number, auctionFee?: number } | null;
+  price?: { id?: number; totalAmount: number; amountLeft?: number, auctionFee?: number, shippingFee?: number } | null;
   transaction?: Transaction[] | null;
   images?: Image[];
   note?: Note[];

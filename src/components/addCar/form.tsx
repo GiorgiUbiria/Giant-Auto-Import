@@ -31,19 +31,19 @@ export default function AddForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       vin: "",
-      price: 0,
       make: "",
       model: "",
       fuelType: "GASOLINE",
       bodyType: "SUV",
       lotNumber: "",
-      auctionFee: 0,
       originPort: "",
       destinationPort: "",
       auction: "",
       status: "Pending",
       departureDate: null,
       arrivalDate: null,
+      auctionFee: 0,
+      shippingFee: 0,
     },
   });
 
@@ -567,23 +567,23 @@ export default function AddForm() {
           <div className="grid gap-6 mb-6 md:grid-cols-2">
             <div>
               <label
-                htmlFor="price"
+                htmlFor="shippingFee"
                 className="block mb-2 text-sm font-medium text-black dark:text-white"
               >
-                Total Price
+                Shipping Fee 
               </label>
               <input
                 type="number"
-                placeholder="0000"
-                id="price"
-                {...register("price", {
+                placeholder="0"
+                id="shippingFee"
+                {...register("shippingFee", {
                   valueAsNumber: true,
                 })}
                 className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
               />
               <ErrorMessage
                 errors={formState.errors}
-                name="price"
+                name="shippingFee"
                 render={({ message }) => (
                   <p className="text-red-500 text-sm">{message}</p>
                 )}
@@ -598,7 +598,7 @@ export default function AddForm() {
               </label>
               <input
                 type="number"
-                placeholder="0000"
+                placeholder="0"
                 id="auctionFee"
                 {...register("auctionFee", {
                   valueAsNumber: true,

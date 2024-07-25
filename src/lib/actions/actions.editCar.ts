@@ -6,7 +6,6 @@ import {
   parkingDetailsTable,
   priceTable,
   specificationsTable,
-  transactionTable,
 } from "../drizzle/schema";
 import { db } from "../drizzle/db";
 import { Car, CarData, ParkingDetails, Specifications } from "../interfaces";
@@ -48,13 +47,13 @@ export async function editCarInDb(
       Car,
       "id" | "createdAt" | "specificationsId" | "parkingDetailsId"
     >)[] = [
-      "vin",
-      "originPort",
-      "destinationPort",
-      "auction",
-      "departureDate",
-      "arrivalDate",
-    ];
+        "vin",
+        "originPort",
+        "destinationPort",
+        "auction",
+        "departureDate",
+        "arrivalDate",
+      ];
 
     const specificationsFields: (keyof Omit<
       Specifications,
@@ -117,30 +116,34 @@ export async function editCarInDb(
       .where(eq(priceTable.carId, id))
       .limit(1)
       .get();
+
     if (priceInstance) {
       if (
-        values.price !== undefined &&
-        values.price !== priceInstance.totalAmount
+        (values.shippingFee !== undefined && values.auctionFee !== undefined)
+        && (values.shippingFee !== priceInstance.shippingFee && values.auctionFee !== priceInstance.auctionFee)
       ) {
         await db
           .update(priceTable)
           .set({
-            totalAmount: values.price,
-            amountLeft: values.price,
+            totalAmount: values.shippingFee + values.auctionFee,
+            amountLeft: values.shippingFee + values.auctionFee,
+            totalDue: values.shippingFee + values.auctionFee,
             auctionFee: values.auctionFee,
-            transactionFee: values.price,
-            totalDue: values.price,
+            shippingFee: values.shippingFee,
           })
           .where(eq(priceTable.carId, id));
-
-        await db.delete(transactionTable).where(eq(transactionTable.carId, id));
       }
     } else {
-      await db.insert(priceTable).values({
-        carId: id,
-        totalAmount: values.price !== undefined ? values.price : null,
-        amountLeft: values.price !== undefined ? values.price : null,
-      });
+      if (values.shippingFee !== undefined && values.auctionFee !== undefined) {
+        await db.insert(priceTable).values({
+          carId: id,
+          totalAmount: values.shippingFee + values.auctionFee,
+          amountLeft: values.shippingFee + values.auctionFee,
+          totalDue: values.shippingFee + values.auctionFee,
+          auctionFee: values.auctionFee,
+          shippingFee: values.shippingFee,
+        });
+      }
     }
 
     revalidatePath(`admin/edit/${carInstance.car.vin}`)

@@ -46,35 +46,21 @@ export const columns: ColumnDef<CarData>[] = [
     },
   },
   {
-    accessorKey: "car.id",
-    id: "car.id",
+    accessorKey: "specifications.vin",
     header: ({ column }) => {
       return (
-        <div className="text-center">
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            ID
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-      );
+        <p className="text-center"> VIN </p>
+      )
     },
-    cell: ({ row }) => {
-      const id = row.getValue("car.id") as number;
-      return <p className="text-center"> {id} </p>;
-    },
-  },
-  {
-    accessorKey: "specifications.vin",
-    header: "Vin",
     id: "vin",
     cell: ({ row }) => {
       const vin = row.getValue("vin") as string;
       return <Link href={`/car/${vin}`}>{vin}</Link>;
     },
   },
+  // {
+  // // Add date
+  // }
   {
     accessorKey: "specifications.year",
     id: "year",
@@ -199,25 +185,46 @@ export const columns: ColumnDef<CarData>[] = [
     header: "Destination Port",
   },
   {
-    accessorKey: "price",
-    header: "Price",
+    accessorKey: "shippingDue",
+    header: "Shipping Due",
     id: "price",
     cell: ({ row }) => {
       const price = row.getValue("price") as {
         id: number;
         totalAmount: number;
+        auctionFee: number;
+        shippingFee: number;
         currencyId: number;
       };
-      return <p> {price?.totalAmount} </p>;
+      return <p className="text-center"> {price?.shippingFee ? price.shippingFee : "-"} </p>;
     },
   },
   {
-    accessorKey: "price.amountLeft",
-    header: "Amount Left",
-    id: "amount_left",
+    accessorKey: "price",
+    header: "Purchase Due",
     cell: ({ row }) => {
-      const price = row.getValue("amount_left") as number;
-      return <p className="text-red-500"> {price} </p>;
+      const price = row.getValue("price") as {
+        id: number;
+        totalAmount: number;
+        auctionFee: number;
+        shippingFee: number;
+        currencyId: number;
+      };
+      return <p className="text-center"> {price?.auctionFee ? price.auctionFee : "-"} </p>;
+    },
+  },
+  {
+    accessorKey: "price",
+    header: "Total Due",
+    cell: ({ row }) => {
+      const price = row.getValue("price") as {
+        id: number;
+        totalAmount: number;
+        auctionFee: number;
+        shippingFee: number;
+        currencyId: number;
+      };
+      return <p className="text-center"> {price?.totalAmount ? price.totalAmount : "-"} </p>;
     },
   },
   {

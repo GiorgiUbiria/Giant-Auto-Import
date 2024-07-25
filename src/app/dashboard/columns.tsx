@@ -198,16 +198,18 @@ export default function getColumns(
       },
     },
     {
-      accessorKey: "price",
+      accessorKey: "shippingDue",
       header: "Shipping Due",
       id: "price",
       cell: ({ row }) => {
         const price = row.getValue("price") as {
           id: number;
           totalAmount: number;
+          auctionFee: number;
+          shippingFee: number;
           currencyId: number;
         };
-        return <p className="text-center"> {price?.totalAmount} </p>;
+        return <p className="text-center"> {price?.shippingFee} </p>;
       },
     },
     {
@@ -217,9 +219,11 @@ export default function getColumns(
         const price = row.getValue("price") as {
           id: number;
           totalAmount: number;
+          auctionFee: number;
+          shippingFee: number;
           currencyId: number;
         };
-        return <p className="text-center"> {price?.totalAmount} </p>;
+        return <p className="text-center"> {price?.auctionFee} </p>;
       },
     },
     {
@@ -229,6 +233,8 @@ export default function getColumns(
         const price = row.getValue("price") as {
           id: number;
           totalAmount: number;
+          auctionFee: number;
+          shippingFee: number;
           currencyId: number;
         };
         return <p className="text-center"> {price?.totalAmount} </p>;

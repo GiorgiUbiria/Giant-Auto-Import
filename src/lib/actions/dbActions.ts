@@ -194,7 +194,6 @@ const preparedGetCars = db
 export async function getCarsFromDatabaseForTables(): Promise<CarData[]> {
   try {
     const cars = (await preparedGetCars.all()) as CarData[];
-    console.log(cars)
 
     if (cars.length === 0) {
       throw new Error("No cars found");
@@ -203,7 +202,6 @@ export async function getCarsFromDatabaseForTables(): Promise<CarData[]> {
     const updatedCars = await Promise.all(
       cars.map(async (car) => {
         const images = await fetchImageForDisplay(car.car.vin!);
-        console.log(images)
 
         car.images = [images];
 

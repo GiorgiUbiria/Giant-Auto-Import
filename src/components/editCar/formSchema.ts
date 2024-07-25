@@ -83,4 +83,5 @@ export const formSchema = z.object({
   auction: z.string({ message: "Auction must be a string" }).optional(),
   price: z.number({ message: "Price must be a number" }).optional(),
   auctionFee: z.number({ message: "Price must be a number" }).optional(),
+  shippingFee: z.number({ message: "Shipping fee must be a number" }).optional(),
 });

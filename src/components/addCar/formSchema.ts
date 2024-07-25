@@ -79,6 +79,7 @@ export const formSchema = z.object({
   auction: z.string().optional(),
   price: z.number({ message: "Price must be a number" }).optional(),
   auctionFee: z.number({ message: "Auction fee must be a number" }).optional(),
+  shippingFee: z.number({ message: "Shipping fee must be a number" }).optional(),
   auction_images: z
     .custom<FileList>()
     .refine((files) => {

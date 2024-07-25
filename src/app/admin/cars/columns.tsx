@@ -20,9 +20,50 @@ import DeleteButton from "@/components/deleteCar/deleteButton";
 
 export const columns: ColumnDef<CarData>[] = [
   {
+    accessorKey: "car.createdAt",
+    id: "createdAt",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Purchase Date
+          <ArrowUpDown className="ml-1 size-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const createdAt = row.getValue("createdAt") as Date;
+
+      if (!createdAt || !(createdAt instanceof Date) || isNaN(createdAt.getTime())) {
+        return <p className="text-center"> - </p>;
+      }
+
+      const date = new Date(createdAt);
+
+      const isSpecificDate =
+        date.getFullYear() === 1 &&
+        date.getMonth() === 0 &&
+        date.getDate() === 1;
+
+      if (isSpecificDate) {
+        return <p className="text-center"> - </p>;
+      }
+
+      const formattedDate = date.toLocaleDateString();
+
+      return <p className="text-center"> {formattedDate} </p>;
+    },
+  },
+  {
     accessorKey: "images",
     id: "images",
-    header: "",
+    header: ({ column }) => {
+      return (
+        <p className="text-center"> Photo </p>
+      )
+    },
     cell: ({ row }) => {
       const images = row.getValue("images") as ImageType[];
       if (!images || images.length === 0) {
@@ -33,7 +74,7 @@ export const columns: ColumnDef<CarData>[] = [
         );
       }
       return (
-        <div className="w-[128px] flex justify-center ml-8">
+        <div className="w-[92px] flex justify-center ml-8">
           <Image
             alt="Product image"
             className="w-full aspect-square rounded-md object-cover"
@@ -91,8 +132,8 @@ export const columns: ColumnDef<CarData>[] = [
     header: "Model",
   },
   {
-    accessorKey: "specifications.fuelType",
-    header: "Fuel Type",
+    accessorKey: "car.auction",
+    header: "Auction",
   },
   {
     accessorKey: "specifications.bodyType",

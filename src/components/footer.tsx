@@ -11,7 +11,7 @@ import AddressIcon from "../../public/icons8-address-50.png";
 
 export default async function Footer() {
   return (
-    <div className="mt-8 bg-gradient-to-r from-background to-foreground pt-9">
+    <div className="mt-8 dark:bg-gratient-to-r dark:from-darkbg dark:to-darkfg bg-gradient-to-r from-darkbg to-darkfg pt-9">
       <div className="mx-auto w-full max-w-[1166px] px-4 xl:px-0">
         <div className="flex flex-col justify-between sm:px-[18px] md:flex-row md:px-10">
           <div className="md:w-[316px]">

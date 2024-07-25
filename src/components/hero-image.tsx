@@ -1,12 +1,12 @@
 import Image from "next/image";
 
-import HeroBackgroundImage from "../../public/background2.avif";
+import Bg from "../../public/bg.jpg"
 
 export default function HeroImageComponent() {
   return (
     <div className="absolute inset-0 overflow-hidden">
       <Image
-        src={HeroBackgroundImage}
+        src={Bg}
         alt="Background Image"
         objectFit="cover"
         objectPosition="center"

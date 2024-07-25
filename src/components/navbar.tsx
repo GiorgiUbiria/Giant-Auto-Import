@@ -77,7 +77,7 @@ const Navbar = async () => {
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
           <div className="ml-auto"></div>
           <Avatar user={user} logout={logout} />
-          <p className="text-white text-2xl font-bold"> {user?.name ? user?.name : "" }</p>
+          <p className="text-white text-xl font-bold"> {user?.name ? user?.name : "" }</p>
         </div>
       </DynamicHeader>
       <NavigationLinks links={navigationLinks} />

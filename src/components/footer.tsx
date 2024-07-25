@@ -65,8 +65,8 @@ export default async function Footer() {
                   alt="phone icon"
                   width="36"
                   height="36"
-                  className="filter invert"
                   src={PhoneIcon}
+                  className="invert"
                 />
               </div>
               <div className="ml-[18px]">
@@ -87,8 +87,8 @@ export default async function Footer() {
                   alt="mail icon"
                   width="36"
                   height="36"
-                  className="filter invert"
                   src={MailIcon}
+                  className="invert"
                 />
               </div>
               <div className="ml-[18px]">
@@ -109,8 +109,8 @@ export default async function Footer() {
                   alt="address icon"
                   width="36"
                   height="36"
-                  className="filter invert"
                   src={AddressIcon}
+                  className="invert"
                 />
               </div>
               <div className="ml-[18px]">

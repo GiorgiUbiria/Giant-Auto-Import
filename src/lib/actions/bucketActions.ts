@@ -14,7 +14,7 @@ import { revalidatePath } from "next/cache";
 import { DbImage } from "./dbActions";
 import { db } from "../drizzle/db";
 import { carTable, imageTable } from "../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
 const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
@@ -80,7 +80,7 @@ export async function deleteObjectFromBucket(key: string): Promise<void> {
 
   try {
     await S3Client.send(deleteCommand);
-    
+
     await db.delete(imageTable).where(eq(imageTable.imageKey, key));
 
     console.log(`Successfully deleted ${key} from ${bucketName}`);
@@ -211,16 +211,36 @@ async function getSignedUrlForKey(key: string): Promise<string> {
 }
 
 export async function fetchImageForDisplay(vin: string): Promise<Image> {
-  const [imageRecord] = await db
+  const priorityExists = await db
     .select()
     .from(imageTable)
-    .where(eq(imageTable.carVin, vin));
+    .where(and(eq(imageTable.carVin, vin), eq(imageTable.priority, true)))
+    .limit(1)
+
+  let imageRecords;
+
+  if (priorityExists.length > 0) {
+    imageRecords = await db
+      .select()
+      .from(imageTable)
+      .where(eq(imageTable.carVin, vin))
+      .orderBy(desc(imageTable.priority));
+  } else {
+    imageRecords = await db
+      .select()
+      .from(imageTable)
+      .where(eq(imageTable.carVin, vin));
+  }
+
+  const imageRecord = imageRecords[0];
 
   const url = await getSignedUrlForKey(imageRecord.imageKey!);
 
   return {
     imageUrl: url,
     imageType: imageRecord.imageType,
+    imageKey: imageRecord.imageKey,
+    priority: imageRecord.priority,
   } as Image;
 }
 
@@ -228,14 +248,17 @@ export async function fetchImagesForDisplay(vin: string): Promise<Image[]> {
   const imageRecords = await db
     .select()
     .from(imageTable)
-    .where(eq(imageTable.carVin, vin));
+    .where(eq(imageTable.carVin, vin))
+    .orderBy(desc(imageTable.priority));
 
   const images = await Promise.all(
     imageRecords.map(async (record) => {
       const url = await getSignedUrlForKey(record.imageKey!);
       return {
+        imageKey: record.imageKey!,
         imageUrl: url,
         imageType: record.imageType,
+        priority: record.priority,
       };
     }),
   );

@@ -37,3 +37,36 @@ export async function convertToWebp(
   const webp = await sharp(buff).webp().toBuffer();
   return new File([webp], name, { type: "image/webp" });
 }
+
+export async function makeMain(key: string, vin: string) {
+  console.log("Making main", key, vin)
+  try {
+    const isMain = await db
+      .select({
+        imageKey: imageTable.imageKey
+      })
+      .from(imageTable)
+      .where(eq(imageTable.priority, true))
+
+    if (isMain.length === 0) {
+      await db
+        .update(imageTable)
+        .set({
+          priority: true,
+        })
+        .where(eq(imageTable.imageKey, key))
+    } else {
+      await db
+        .transaction(async (tx) => {
+          await tx.update(imageTable).set({ priority: null }).where(eq(imageTable.imageKey, isMain[0].imageKey!));
+          await tx.update(imageTable).set({ priority: true }).where(eq(imageTable.imageKey, key));
+        })
+    }
+
+  } catch (error) {
+    console.error(error)
+  } finally {
+    revalidatePath("/admin/edit")
+    revalidatePath("/car/" + vin)
+  }
+}

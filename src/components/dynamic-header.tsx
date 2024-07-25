@@ -49,7 +49,7 @@ export default function DynamicHeader({
     }
   }, [resetVisibilityTimeout]);
 
-  const className = `fixed bottom-0 left-0 right-0 md:relative md:top-0 flex h-20 items-center gap-4 bg-gradient-to-r from-background to-foreground z-10 px-4 md:px-6 shadow-blac-5 ${isVisible ? "" : "header-hidden"}`;
+  const className = `fixed bottom-0 left-0 right-0 md:relative md:top-0 flex h-20 items-center gap-4 dark:bg-gratient-to-r dark:from-darkbg dark:to-darkfg bg-gradient-to-r from-darkbg to-darkfg z-10 px-4 md:px-6 shadow-blac-5 ${isVisible ? "" : "header-hidden"}`;
 
   return (
     <header

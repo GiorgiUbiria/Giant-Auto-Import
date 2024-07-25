@@ -108,11 +108,7 @@ export const imageTable = sqliteTable(
       enum: ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERY"],
     }),
     imageKey: text("image_key"),
-  },
-  (table) => {
-    return {
-      imageKeyIdx: index("image_key_idx").on(table.imageKey),
-    };
+    priority: integer("priority", { mode: "boolean" }),
   },
 );
 

@@ -54,6 +54,8 @@ export interface UserCar {
 export type Image = {
   imageUrl: string | null;
   imageType?: DbImage;
+  imageKey: string | null;
+  priority: boolean | null;
 }
 
 export type Transaction = {

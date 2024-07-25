@@ -78,6 +78,13 @@
       "when": 1721400842672,
       "tag": "0010_sparkling_madripoor",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1721906721027,
+      "tag": "0011_aspiring_boomer",
+      "breakpoints": true
     }
   ]
 }

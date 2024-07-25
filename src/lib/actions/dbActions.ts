@@ -194,6 +194,7 @@ const preparedGetCars = db
 export async function getCarsFromDatabaseForTables(): Promise<CarData[]> {
   try {
     const cars = (await preparedGetCars.all()) as CarData[];
+    console.log(cars)
 
     if (cars.length === 0) {
       throw new Error("No cars found");
@@ -202,6 +203,7 @@ export async function getCarsFromDatabaseForTables(): Promise<CarData[]> {
     const updatedCars = await Promise.all(
       cars.map(async (car) => {
         const images = await fetchImageForDisplay(car.car.vin!);
+        console.log(images)
 
         car.images = [images];
 
@@ -412,22 +414,6 @@ export async function getCarFromDatabaseByID(
     if (!car) {
       return undefined;
     }
-
-    const transactions = (await db
-      .select()
-      .from(transactionTable)
-      .where(eq(transactionTable.carId, id))
-      .all()) as Transaction[];
-
-    car.transaction = transactions;
-
-    const notes = await db
-      .select()
-      .from(noteTable)
-      .where(eq(noteTable.carId, id))
-      .all();
-
-    car.note = notes;
 
     return car;
   } catch (e) {

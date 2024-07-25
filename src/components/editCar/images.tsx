@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import React from "react";
 import { toast } from "sonner";
-import { deleteImage } from "@/lib/actions/imageActions";
+import { deleteImage, makeMain } from "@/lib/actions/imageActions";
 import { handleUploadImages } from "@/lib/actions/bucketActions";
 import Spinner from "../spinner";
 import { useRouter } from "next/navigation";
@@ -261,20 +261,25 @@ export default function Images({
               {chunk.map((image: ImageType, imgIndex: number) => (
                 <div key={imgIndex}>
                   <Dialog>
-                    <DialogTrigger>
-                      <Image
-                        className="h-auto max-w-full rounded-lg"
-                        src={image.imageUrl!}
-                        alt={`Car image ${imgIndex + 1}`}
-                        width={300}
-                        height={300}
-                        placeholder="blur"
-                        blurDataURL="../../../public/placeholder.webp"
-                        priority
-                      />
+                    <DialogTrigger asChild>
+                      <div>
+                        <Image
+                          className="h-auto max-w-full rounded-lg"
+                          src={image.imageUrl!}
+                          alt={`Car image ${imgIndex + 1}`}
+                          width={300}
+                          height={300}
+                          placeholder="blur"
+                          blurDataURL="../../../public/placeholder.webp"
+                          priority
+                        />
+                      </div>
                     </DialogTrigger>
                     <DialogContent className="min-w-full md:min-w-fit">
                       <div className="flex flex-col gap-4 p-4">
+                        <Button onClick={
+                          async () => await makeMain(image.imageKey!, vin)
+                        }> Make main </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="outline">Delete Image</Button>

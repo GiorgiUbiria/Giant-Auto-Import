@@ -2,7 +2,8 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
+import Image from "next/image";
+import { Image as ImageType } from "../../lib/interfaces";
 
 import Link from "next/link";
 import { CarData } from "@/lib/interfaces";
@@ -22,53 +23,32 @@ export default function getColumns(
   userId: string,
 ): ColumnDef<CarData>[] {
   return [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-          className="mb-1"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-          className="mb-1"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      accessorKey: "car.id",
-      id: "car.id",
-      header: ({ column }) => {
+  {
+    accessorKey: "images",
+    id: "images",
+    header: "",
+    cell: ({ row }) => {
+      const images = row.getValue("images") as ImageType[];
+      if (!images || images.length === 0) {
         return (
-          <div className="text-center">
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              ID
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
+          <div className="w-[128px] flex justify-center ml-8">
+            <div className="bg-gray-300 rounded-md size-16 w-full"></div>
           </div>
         );
-      },
-      cell: ({ row }) => {
-        const id = row.getValue("car.id") as number;
-        return <p className="text-center"> {id} </p>;
-      },
+      }
+      return (
+        <div className="w-[128px] flex justify-center ml-8">
+          <Image
+            alt="Product image"
+            className="w-full aspect-square rounded-md object-cover"
+            height="300"
+            src={images[0]?.imageUrl!}
+            width="300"
+          />
+        </div>
+      );
     },
+  },
     {
       accessorKey: "specifications.vin",
       header: "Vin",
@@ -110,12 +90,14 @@ export default function getColumns(
       header: "Model",
     },
     {
-      accessorKey: "specifications.fuelType",
-      header: "Fuel Type",
-    },
-    {
       accessorKey: "specifications.bodyType",
-      header: "Body Type",
+      header: ({ column }) => {
+        return (
+          <div className="text-center">
+            <p> Vehicle Type </p>
+          </div>
+        );
+      },
     },
     {
       accessorKey: "parking_details.status",
@@ -197,15 +179,27 @@ export default function getColumns(
   },
     {
       accessorKey: "car.destinationPort",
-      header: "Destination Port",
+      header: ({ column }) => {
+        return (
+          <div className="text-center">
+            <p> Destination Port </p>
+          </div>
+        );
+      },
     },
     {
       accessorKey: "car.originPort",
-      header: "Origin Port",
+      header: ({ column }) => {
+        return (
+          <div className="text-center">
+            <p> Origin Port </p>
+          </div>
+        );
+      },
     },
     {
       accessorKey: "price",
-      header: "Price",
+      header: "Shipping Due",
       id: "price",
       cell: ({ row }) => {
         const price = row.getValue("price") as {
@@ -213,16 +207,31 @@ export default function getColumns(
           totalAmount: number;
           currencyId: number;
         };
-        return <p> {price?.totalAmount} </p>;
+        return <p className="text-center"> {price?.totalAmount} </p>;
       },
     },
     {
-      accessorKey: "price.amountLeft",
-      header: "Amount Left",
-      id: "amount_left",
+      accessorKey: "price",
+      header: "Purchase Due",
       cell: ({ row }) => {
-        const price = row.getValue("amount_left") as number;
-        return <p className="text-red-500"> {price} </p>;
+        const price = row.getValue("price") as {
+          id: number;
+          totalAmount: number;
+          currencyId: number;
+        };
+        return <p className="text-center"> {price?.totalAmount} </p>;
+      },
+    },
+    {
+      accessorKey: "price",
+      header: "Total Due",
+      cell: ({ row }) => {
+        const price = row.getValue("price") as {
+          id: number;
+          totalAmount: number;
+          currencyId: number;
+        };
+        return <p className="text-center"> {price?.totalAmount} </p>;
       },
     },
     {

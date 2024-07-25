@@ -11,6 +11,7 @@ export default async function Page() {
   }
 
   const cars = await getCarsFromDatabaseForTables();
+  console.log(cars)
   if (!cars) {
     return <p> No cars fetched. </p>;
   }

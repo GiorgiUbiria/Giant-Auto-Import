@@ -53,7 +53,7 @@ export const columns: ColumnDef<CarData>[] = [
 
       const formattedDate = date.toLocaleDateString();
 
-      return <p className="text-center"> {formattedDate} </p>;
+      return <p className="text-center font-semibold"> {formattedDate} </p>;
     },
   },
   {

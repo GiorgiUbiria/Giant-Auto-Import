@@ -26,7 +26,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex min-h-screen w-full flex-col">
+          <div className="flex min-h-screen w-full flex-col dark:bg-gray-900">
             <Navbar />
             <main className="flex flex-1 flex-col gap-4 md:gap-8">
               {children}

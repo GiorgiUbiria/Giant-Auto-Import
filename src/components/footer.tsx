@@ -23,10 +23,6 @@ export default async function Footer() {
               />
               Giant Auto Import
             </h1>
-            <p className="mt-[18px] text-[15px] font-normal text-white/[80%]">
-              Website where you can find all the information about cars and
-              their history.
-            </p>
             <div className="mt-[18px] flex gap-4">
               <Link className="hover:scale-110" href="/">
                 <Image
@@ -69,7 +65,7 @@ export default async function Footer() {
                   alt="phone icon"
                   width="36"
                   height="36"
-                  className="dark:filter dark:invert"
+                  className="filter invert"
                   src={PhoneIcon}
                 />
               </div>
@@ -78,7 +74,7 @@ export default async function Footer() {
                   href="tel:+911800123444"
                   className="font-Inter text-[14px] font-medium text-white"
                 >
-                  +995 551443314{" "}
+                  +995 555 550 553
                 </a>
                 <p className="font-Inter text-[12px] font-medium text-white">
                   Company Number
@@ -91,7 +87,7 @@ export default async function Footer() {
                   alt="mail icon"
                   width="36"
                   height="36"
-                  className="dark:filter dark:invert"
+                  className="filter invert"
                   src={MailIcon}
                 />
               </div>
@@ -100,7 +96,7 @@ export default async function Footer() {
                   href="mailto:help@lorem.com"
                   className="font-Inter text-[14px] font-medium text-white"
                 >
-                  giantautoimport@gmail.com
+                  giant.autoimporti@gmail.com
                 </a>
                 <p className="font-Inter text-[12px] font-medium text-[#fff]">
                   Company Email
@@ -113,16 +109,16 @@ export default async function Footer() {
                   alt="address icon"
                   width="36"
                   height="36"
-                  className="dark:filter dark:invert"
+                  className="filter invert"
                   src={AddressIcon}
                 />
               </div>
               <div className="ml-[18px]">
                 <a
-                  href="mailto:help@lorem.com"
+                  href=""
                   className="font-Inter text-[14px] font-medium text-[#fff]"
                 >
-                  Poti, Georgia, 10001, Georgia
+                  Poti, 32 Javakhishvili St., Terminal-Gezi, R. 109
                 </a>
                 <p className="font-Inter text-[12px] font-medium text-white">
                   Address
@@ -183,7 +179,7 @@ export default async function Footer() {
         <hr className="mt-[30px] text-white dark:bg-white bg-black h-1" />
         <div className="flex items-center justify-center pb-8 pt-[9px] md:py-8">
           <p className="text-[12px] font-normal text-white md:text-[14px]">
-            © Copyright 2024. Giant Auto Import
+            ©Copyright 2024. Giant Auto Import
           </p>
         </div>
       </div>

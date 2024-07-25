@@ -1,6 +1,6 @@
 export default function LandingFeaturesComponent() {
   return (
-    <div className="max-w-4xl mx-auto px-5 mt-16 mb-16">
+    <div className="max-w-4xl mx-auto px-5 mt-16 mb-16 bg-gray-900">
       <div className="text-center">
         <h2 className="font-semibold text-3xl animate-float">
           {"Features you'll love"}

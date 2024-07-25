@@ -79,10 +79,7 @@ export default function Page() {
                         Our Address
                       </h3>
                       <p className="text-gray-600 dark:text-slate-400">
-                        1230 Maecenas Street Donec Road
-                      </p>
-                      <p className="text-gray-600 dark:text-slate-400">
-                        New York, EEUU
+                        Poti, 32 Javakhishvili St., Terminal-Gezi, R. 109
                       </p>
                     </div>
                   </li>
@@ -112,9 +109,9 @@ export default function Page() {
                       <p className="text-gray-600 dark:text-slate-400">
                         WhatsApp:{" "}
                         <a
-                          href={`https://wa.me/995551002206?text=I'm%20interested%20in%20your%20car%20for%20sale`}
+                          href={`https://wa.me/995555550553?text=I'm%20interested%20in%20your%20car%20for%20sale`}
                         >
-                          +995 551443314
+                        +995 555 550 553
                         </a>
                       </p>
                       <p className="text-gray-600 dark:text-slate-400">
@@ -148,10 +145,7 @@ export default function Page() {
                         Working hours
                       </h3>
                       <p className="text-gray-600 dark:text-slate-400">
-                        Monday - Friday: 08:00 - 17:00
-                      </p>
-                      <p className="text-gray-600 dark:text-slate-400">
-                        Saturday &amp; Sunday: 08:00 - 12:00
+                        Monday - Sunday: 10:00 - 18:00
                       </p>
                     </div>
                   </li>

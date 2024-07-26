@@ -50,6 +50,12 @@ export const formSchema = z.object({
       message: "Color must be a real color.",
     })
     .optional(),
+  keys: z
+    .enum(["YES", "NO", "UNKNOWN"])
+    .optional(),
+  title: z
+    .enum(["YES", "NO", "PENDING"])
+    .optional(),
   fuelType: z
     .enum(["GASOLINE", "DIESEL", "ELECTRIC", "HYBRID", "OTHER"], {
       message:
@@ -76,7 +82,9 @@ export const formSchema = z.object({
     .nullish()
     .optional(),
   arrivalDate: z.date({ message: "Arrival date must be a date" }).nullish().optional(),
-  auction: z.string().optional(),
+  auction: z.enum(
+    ["Copart", "IAAI"]
+  ).optional(),
   price: z.number({ message: "Price must be a number" }).optional(),
   auctionFee: z.number({ message: "Auction fee must be a number" }).optional(),
   shippingFee: z.number({ message: "Shipping fee must be a number" }).optional(),

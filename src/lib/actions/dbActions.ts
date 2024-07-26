@@ -46,7 +46,7 @@ export const removeUserCarAssignment = async (
   carVin: string,
 ): Promise<ActionResult> => {
   try {
-    const carRecord: Car[] = await db
+    const carRecord = await db
       .select()
       .from(carTable)
       .where(eq(carTable.vin, carVin));

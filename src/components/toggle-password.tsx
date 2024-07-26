@@ -3,12 +3,13 @@
 import * as React from "react";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { Checkbox } from "./ui/checkbox";
 
 export function TogglePassword({ password }: { password?: string }) {
   const [togglePassword, setTogglePassword] = React.useState(false);
 
-  const handleToggleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setTogglePassword(event.target.checked);
+  const handleToggleChange = (checked: boolean | 'indeterminate') => {
+    setTogglePassword(checked === true);
   };
 
   return (
@@ -22,16 +23,16 @@ export function TogglePassword({ password }: { password?: string }) {
         placeholder="********"
         pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$%*?&])[A-Za-z\d@$%*?&]{8,}$"
       />
-      <div className="flex align-center gap-2">
-        <Input
-          type="checkbox"
-          id="toggle-password"
-          name="toggle-password"
-          checked={togglePassword}
-          onChange={handleToggleChange}
-          className="h-4 w-4"
+      <div className="flex items-center gap-2">
+        <Checkbox id="toggle-password" checked={togglePassword}
+          onCheckedChange={handleToggleChange}
         />
-        <span> show password </span>
+        <label
+          htmlFor="toggle-password"
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          Toggle Password Visibility
+        </label>
       </div>
     </div>
   );

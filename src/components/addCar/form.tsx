@@ -38,10 +38,12 @@ export default function AddForm() {
       lotNumber: "",
       originPort: "",
       destinationPort: "",
-      auction: "",
+      auction: "Copart",
       status: "Pending",
       departureDate: null,
       arrivalDate: null,
+      keys: "UNKNOWN",
+      title: "PENDING",
       auctionFee: 0,
       shippingFee: 0,
     },
@@ -445,26 +447,77 @@ export default function AddForm() {
           <div className="grid gap-6 mb-6 md:grid-cols-3">
             <div>
               <label
-                htmlFor="destinationPort"
+                htmlFor="auction"
                 className="block mb-2 text-sm font-medium text-black dark:text-white"
               >
-                Destination Port
+                Auction
               </label>
-              <input
-                type="text"
-                placeholder="Destination Port..."
-                id="destinationPort"
-                {...register("destinationPort")}
-                className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-              />
+              <select
+                id="auction"
+                {...register("auction")}
+                className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              >
+                <option value="Copart">Copart</option>
+                <option value="IAAI">IAAI</option>
+              </select>
               <ErrorMessage
                 errors={formState.errors}
-                name="destinationPort"
+                name="auction"
                 render={({ message }) => (
                   <p className="text-red-500 text-sm">{message}</p>
                 )}
               />
             </div>
+            <div>
+              <label
+                htmlFor="keys"
+                className="block mb-2 text-sm font-medium text-black dark:text-white"
+              >
+                Keys
+              </label>
+              <select
+                id="keys"
+                {...register("keys")}
+                className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              >
+                <option value="YES">YES</option>
+                <option value="NO">NO</option>
+                <option value="UNKNOWN">UNKNOWN</option>
+              </select>
+              <ErrorMessage
+                errors={formState.errors}
+                name="keys"
+                render={({ message }) => (
+                  <p className="text-red-500 text-sm">{message}</p>
+                )}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="title"
+                className="block mb-2 text-sm font-medium text-black dark:text-white"
+              >
+                Title
+              </label>
+              <select
+                id="title"
+                {...register("title")}
+                className="bg-gray-300 dark:bg-gray-900 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              >
+                <option value="YES">YES</option>
+                <option value="NO">NO</option>
+                <option value="PENDING">PENDING</option>
+              </select>
+              <ErrorMessage
+                errors={formState.errors}
+                name="title"
+                render={({ message }) => (
+                  <p className="text-red-500 text-sm">{message}</p>
+                )}
+              />
+            </div>
+          </div>
+          <div className="grid gap-6 mb-6 md:grid-cols-2">
             <div>
               <label
                 htmlFor="originPort"
@@ -482,28 +535,6 @@ export default function AddForm() {
               <ErrorMessage
                 errors={formState.errors}
                 name="originPort"
-                render={({ message }) => (
-                  <p className="text-red-500 text-sm">{message}</p>
-                )}
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="auction"
-                className="block mb-2 text-sm font-medium text-black dark:text-white"
-              >
-                Auction
-              </label>
-              <input
-                type="text"
-                placeholder="Auction..."
-                id="auction"
-                {...register("auction")}
-                className="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-gray-300 dark:bg-gray-900 rounded-lg border-1 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-              />
-              <ErrorMessage
-                errors={formState.errors}
-                name="auction"
                 render={({ message }) => (
                   <p className="text-red-500 text-sm">{message}</p>
                 )}

@@ -3,13 +3,10 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
 import { CarData } from "@/lib/interfaces";
 import { Truck } from "lucide-react";
 import Link from "next/link";
@@ -28,14 +25,16 @@ export default function CarInfo({ carData }: { carData: CarData }) {
       <CardHeader className="flex flex-row items-start bg-muted/50">
         <div className="grid gap-0.5">
           <CardTitle className="group flex items-center gap-2 text-xl">
-            VIN - {carData.car.vin}
-            <CopyToClipBoard text={carData.car.vin!} />
+            <div>
+              <h2 className="text-2xl"> {carData.specifications?.make! + "   " + carData.specifications?.model} </h2>
+              <div>
+                VIN - {carData.car.vin}
+                <CopyToClipBoard text={carData.car.vin!} />
+              </div>
+            </div>
           </CardTitle>
-          <CardDescription>
-            Date: {carData.car?.arrivalDate?.toString()}
-          </CardDescription>
         </div>
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-1 mr-6">
           <Button size="sm" variant="outline" className="h-8 gap-1">
             <Truck className="h-3.5 w-3.5" />
             <Link
@@ -57,7 +56,7 @@ export default function CarInfo({ carData }: { carData: CarData }) {
             <div className="flex flex-col gap-4">
               <div className="flex justify-between">
                 <p className="text-xl text-primary"> Order Created: </p>
-                <p className="text-xl text-primary">
+                <p className="text-xl text-primary mr-8">
                   {" "}
                   {carData.car.createdAt
                     ? formatDateToInputValue(carData.car.createdAt)
@@ -66,7 +65,7 @@ export default function CarInfo({ carData }: { carData: CarData }) {
               </div>
               <div className="flex justify-between">
                 <p className="text-xl text-primary"> Pick Up Date: </p>
-                <p className="text-xl text-primary">
+                <p className="text-xl text-primary mr-8">
                   {" "}
                   {carData.car.createdAt
                     ? formatDateToInputValue(carData.car.createdAt)
@@ -78,7 +77,7 @@ export default function CarInfo({ carData }: { carData: CarData }) {
                   {" "}
                   Delivered To Warehouse:{" "}
                 </p>
-                <p className="text-xl text-primary">
+                <p className="text-xl text-primary mr-8">
                   {" "}
                   {carData.car.createdAt
                     ? formatDateToInputValue(carData.car.createdAt)
@@ -90,7 +89,7 @@ export default function CarInfo({ carData }: { carData: CarData }) {
                   {" "}
                   Estimated Departure Date:{" "}
                 </p>
-                <p className="text-xl text-primary">
+                <p className="text-xl text-primary mr-8">
                   {" "}
                   {carData.car.departureDate
                     ? formatDateToInputValue(carData.car.departureDate)
@@ -102,7 +101,7 @@ export default function CarInfo({ carData }: { carData: CarData }) {
                   {" "}
                   Estimated Arrival Date:{" "}
                 </p>
-                <p className="text-xl text-primary">
+                <p className="text-xl text-primary mr-8">
                   {" "}
                   {carData.car.arrivalDate
                     ? formatDateToInputValue(carData.car.arrivalDate)
@@ -117,7 +116,7 @@ export default function CarInfo({ carData }: { carData: CarData }) {
             <div className="flex flex-col gap-4">
               <div className="flex justify-between">
                 <p className="text-xl text-primary"> Body Type: </p>
-                <p className="text-xl text-primary">
+                <p className="text-xl text-primary mr-8">
                   {" "}
                   {carData.specifications?.bodyType
                     ? carData.specifications?.bodyType
@@ -126,7 +125,7 @@ export default function CarInfo({ carData }: { carData: CarData }) {
               </div>
               <div className="flex justify-between">
                 <p className="text-xl text-primary"> Fuel Type: </p>
-                <p className="text-xl text-primary">
+                <p className="text-xl text-primary mr-8">
                   {" "}
                   {carData.specifications?.fuelType
                     ? carData.specifications?.fuelType
@@ -135,7 +134,7 @@ export default function CarInfo({ carData }: { carData: CarData }) {
               </div>
               <div className="flex justify-between">
                 <p className="text-xl text-primary"> Vehicle Status: </p>
-                <p className="text-xl text-primary">
+                <p className="text-xl text-primary mr-8">
                   {" "}
                   {carData.parking_details?.status
                     ? carData.parking_details?.status
@@ -144,7 +143,7 @@ export default function CarInfo({ carData }: { carData: CarData }) {
               </div>
               <div className="flex justify-between">
                 <p className="text-xl text-primary"> Booking #: </p>
-                <p className="text-xl text-primary">
+                <p className="text-xl text-primary mr-8">
                   {" "}
                   {carData.parking_details?.bookingNumber
                     ? carData.parking_details?.bookingNumber
@@ -153,7 +152,7 @@ export default function CarInfo({ carData }: { carData: CarData }) {
               </div>
               <div className="flex justify-between">
                 <p className="text-xl text-primary"> Container #: </p>
-                <p className="text-xl text-primary">
+                <p className="text-xl text-primary mr-8">
                   {" "}
                   {carData.parking_details?.containerNumber
                     ? carData.parking_details?.containerNumber

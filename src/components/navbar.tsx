@@ -7,7 +7,6 @@ import Avatar from "./avatar";
 import { ActionResult } from "@/lib/form";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ModeToggle } from "./theme-toggle";
 import NavigationLinks from "./navigation-links";
 import NavbarLogo from "../../public/logo.png";
 import CopartLogo from "../../public/copart-logo.png";
@@ -33,13 +32,42 @@ const Navbar = async () => {
     },
   ];
 
+  if (user?.role_id! > 1) {
+    navigationLinks.push(
+      {
+        href: "/admin",
+        label: "Admin Panel",
+      },
+      {
+        href: "/admin/cars",
+        label: "Cars",
+      },
+      {
+        href: "/admin/add",
+        label: "Add Car",
+      },
+      {
+        href: "/admin/users",
+        label: "Users",
+      },
+      {
+        href: "/admin/signup",
+        label: "Register",
+      },
+    )
+  }
+
   return (
     <div>
-
       <DynamicHeader>
         <nav className="hidden flex-col gap-12 font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
           <Link href="/" className="w-max">
-            <Image src={NavbarLogo} alt="Company logo" className="size-20" priority />
+            <Image
+              src={NavbarLogo}
+              alt="Company logo"
+              className="size-20 brightness-0 invert custom-shadow"
+              priority
+            />
           </Link>
           <div className="flex gap-2 ml-8">
             <Link href="https://www.copart.com/login/" className="w-max">
@@ -77,7 +105,6 @@ const Navbar = async () => {
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
           <div className="ml-auto"></div>
           <Avatar user={user} logout={logout} />
-          <p className="text-white text-xl font-bold"> {user?.name ? user?.name : "" }</p>
         </div>
       </DynamicHeader>
       <NavigationLinks links={navigationLinks} />

@@ -1,5 +1,5 @@
 import { DbImage, DbUser } from "./actions/dbActions";
-import { carTable, specificationsTable, parkingDetailsTable } from "./drizzle/schema";
+import { specificationsTable, parkingDetailsTable } from "./drizzle/schema";
 
 export interface Specifications {
   id: number;
@@ -29,7 +29,9 @@ export interface Car {
   destinationPort: string | null;
   departureDate: Date | null;
   arrivalDate: Date | null;
-  auction: string | null;
+  auction: "Copart" | "IAAI" | null;
+  keys: "YES" | "NO" | "UNKNOWN" | null;
+  title: "YES" | "NO" | "PENDING" | null;
   createdAt: Date | null;
   specificationsId: number | null;
   parkingDetailsId: number | null;
@@ -110,4 +112,4 @@ export interface GalleryImage {
   imgelink: string;
 }
 
-export type CarStatus = "Pending" | "InTransit" | "OnHand" | "Loaded" | "Fault";
+export type CarStatus = "Pending" | "InTransit" | "OnHand" | "Loaded" | "Warehouse" | null;

@@ -13,7 +13,7 @@ export default function NavigationLinks({ links }: { links: LinkProp[] }) {
   const pathname = usePathname();
 
   return (
-    <div className="flex gap-6 pl-8 bg-black shadow-2xl items-center">
+    <div className="flex gap-6 pl-8 py-1 bg-black shadow-2xl items-center">
       {links.map((link) => (
         <Link
           href={link.href}

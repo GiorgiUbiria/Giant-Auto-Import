@@ -18,7 +18,7 @@ export function ModeToggle() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <p className="text-white text-lg font-bold cursor-pointer flex justify-center items-center">
-          Toggle Theme <span> <ChevronDown  className="ml-1 size-4"/> </span>
+          Toggle Theme <span> <ChevronDown  className="ml-1 mt-1 size-4"/> </span>
         </p>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

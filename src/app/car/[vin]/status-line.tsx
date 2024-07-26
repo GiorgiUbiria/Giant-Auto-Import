@@ -1,6 +1,6 @@
 "use client";
 
-import { HomeIcon, Timer, Handshake, Package, Trash2 } from "lucide-react";
+import { Timer, Handshake, Package, Warehouse, Ship } from "lucide-react";
 import { useMedia } from "react-use";
 
 interface StatusLineProps {
@@ -16,9 +16,9 @@ interface Status {
 const statuses: Status[] = [
   { status: "Pending", index: 0, icon: <Timer /> },
   { status: "OnHand", index: 1, icon: <Handshake /> },
-  { status: "Loaded", index: 2, icon: <HomeIcon /> },
-  { status: "InTransit", index: 3, icon: <Package /> },
-  { status: "Fault", index: 4, icon: <Trash2 /> },
+  { status: "Loaded", index: 2, icon: <Package /> },
+  { status: "InTransit", index: 3, icon: <Ship /> },
+  { status: "Warehouse", index: 4, icon: <Warehouse /> },
 ];
 
 const StatusLine: React.FC<StatusLineProps> = ({ status }) => {

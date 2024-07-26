@@ -1,13 +1,14 @@
+import dynamic from 'next/dynamic';
+
 import { getCarFromDatabase } from "@/lib/actions/dbActions";
 import { CarData } from "@/lib/interfaces";
 
-import CarInfo from "@/components/car-info";
-import Gallery from "./featured-images";
-import StatusLine from "./status-line";
+const CarInfo = dynamic(() => import('@/components/car-info'));
+const Gallery = dynamic(() => import('./featured-images'));
+const StatusLine = dynamic(() => import('./status-line'));
 
 export default async function Page({ params }: { params: { vin: string } }) {
   const car: CarData | undefined = await getCarFromDatabase(params.vin);
-
   if (!car) {
     return <div>Car not found</div>;
   }

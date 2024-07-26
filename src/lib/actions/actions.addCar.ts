@@ -68,7 +68,6 @@ export async function addCarToDb(
       lotNumber,
       color,
       bodyType,
-      destinationPort,
       shippingFee,
       originPort,
       auction,
@@ -112,7 +111,7 @@ export async function addCarToDb(
       const car: NewCar = {
         vin: vin,
         originPort: originPort || "",
-        destinationPort: destinationPort || "",
+        destinationPort: "Poti",
         departureDate: departureDate ? new Date(departureDate) : null,
         arrivalDate: arrivalDate ? new Date(arrivalDate) : null,
         createdAt: new Date(Date.now()),

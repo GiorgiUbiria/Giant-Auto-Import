@@ -49,7 +49,6 @@ export async function editCarInDb(
     >)[] = [
         "vin",
         "originPort",
-        "destinationPort",
         "auction",
         "departureDate",
         "arrivalDate",

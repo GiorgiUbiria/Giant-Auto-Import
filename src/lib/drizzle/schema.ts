@@ -65,7 +65,7 @@ export const parkingDetailsTable = sqliteTable("parking_details", {
   trackingLink: text("tracking_link"),
   lotNumber: text("lot_number"),
   status: text("status", {
-    enum: ["Pending", "OnHand", "Loaded", "InTransit", "Fault"],
+    enum: ["Pending", "OnHand", "Loaded", "InTransit", "Warehouse"],
   }),
 });
 
@@ -76,9 +76,15 @@ export const carTable = sqliteTable(
     vin: text("vin").unique(),
     originPort: text("origin_port"),
     destinationPort: text("destination_port"),
+    auction: text("auction"),
+    keys: text("keys", {
+      enum: ["YES", "NO", "UNKNOWN"],
+    }),
+    title: text("title", {
+      enum: ["YES", "NO", "PENDING"],
+    }),
     departureDate: integer("departure_date", { mode: "timestamp" }),
     arrivalDate: integer("arrival_date", { mode: "timestamp" }),
-    auction: text("auction"),
     createdAt: integer("created_at", { mode: "timestamp_ms" }),
     specificationsId: integer("specifications_id").references(
       () => specificationsTable.id,

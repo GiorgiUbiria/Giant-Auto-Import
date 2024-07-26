@@ -30,6 +30,15 @@ export const formSchema = z.object({
     .optional(),
   make: z.string({ message: "Make must be a string" }).optional(),
   model: z.string({ message: "Model must be a string" }).optional(),
+  keys: z
+    .enum(["YES", "NO", "UNKNOWN"])
+    .optional(),
+  title: z
+    .enum(["YES", "NO", "PENDING"])
+    .optional(),
+  auction: z.enum(
+    ["Copart", "IAAI"]
+  ).optional(),
   bodyType: z
     .enum(["SEDAN", "PICKUP", "SUV", "CROSSOVER"], {
       message:
@@ -80,7 +89,6 @@ export const formSchema = z.object({
     .date({ message: "Arrival date must be a date" })
     .nullable()
     .optional(),
-  auction: z.string({ message: "Auction must be a string" }).optional(),
   price: z.number({ message: "Price must be a number" }).optional(),
   auctionFee: z.number({ message: "Price must be a number" }).optional(),
   shippingFee: z.number({ message: "Shipping fee must be a number" }).optional(),

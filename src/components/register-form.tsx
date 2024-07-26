@@ -6,7 +6,6 @@ import { TogglePassword } from "./toggle-password";
 import { 
   Select,
   SelectItem,
-  SelectLabel,
   SelectValue,
   SelectTrigger,
   SelectContent
@@ -14,7 +13,7 @@ import {
 
 export function RegisterForm() {
   return (
-    <Card className="mx-auto max-w-sm">
+    <Card className="mx-auto max-w-lg">
       <CardHeader>
         <CardTitle className="text-3xl">Sign Up</CardTitle>
       </CardHeader>
@@ -64,7 +63,7 @@ export function RegisterForm() {
               </SelectTrigger> 
               <SelectContent>
                 <SelectItem value="1">USER</SelectItem>
-                <SelectItem value="2">ADMIN</SelectItem>
+                <SelectItem value="4">MODERATOR</SelectItem>
                 <SelectItem value="3">ACCOUNTANT</SelectItem>
               </SelectContent>
             </Select>

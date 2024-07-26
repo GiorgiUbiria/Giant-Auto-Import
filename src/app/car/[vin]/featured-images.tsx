@@ -1,7 +1,9 @@
-import { FeaturedImageGallery } from "@/components/gallery/image-gallery";
+import dynamic from 'next/dynamic';
 import { Image } from "@/lib/interfaces";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DownloadButton from "./download-button";
+
+const FeaturedImageGallery = dynamic(() => import('@/components/gallery/image-gallery'));
 
 export default function Gallery({
   images,

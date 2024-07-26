@@ -7,7 +7,7 @@ import { Image as ImageType } from "@/lib/interfaces";
 import { useState } from "react";
 import React from "react";
 
-const FeaturedImageGalleryComponent = ({ data }: { data: ImageType[] }) => {
+export default function FeaturedImageGallery({ data }: { data: ImageType[] }) {
   const [openModal, setOpenModal] = useState(false);
 
   if (data.length === 0) {
@@ -40,19 +40,17 @@ const FeaturedImageGalleryComponent = ({ data }: { data: ImageType[] }) => {
       <Modal show={openModal} onClose={() => setOpenModal(false)} size="7xl">
         <Modal.Header></Modal.Header>
         <Modal.Body>
-            <Image
-              key={data.at(0)!.imageUrl}
-              src={data.at(0)!.imageUrl!}
-              className="w-full h-auto object-cover"
-              alt={"Image"}
-              width="500"
-              height="500"
-            />
+          <Image
+            key={data.at(0)!.imageUrl}
+            src={data.at(0)!.imageUrl!}
+            className="w-full h-auto object-cover"
+            alt={"Image"}
+            width="500"
+            height="500"
+          />
         </Modal.Body>
         <Modal.Footer></Modal.Footer>
       </Modal>
     </div>
   );
 }
-
-export const FeaturedImageGallery = React.memo(FeaturedImageGalleryComponent);

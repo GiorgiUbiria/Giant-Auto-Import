@@ -178,22 +178,20 @@ export async function getUser(
   }
 }
 
-const preparedGetCars = db
-  .select()
-  .from(carTable)
-  .leftJoin(
-    specificationsTable,
-    eq(carTable.specificationsId, specificationsTable.id),
-  )
-  .leftJoin(
-    parkingDetailsTable,
-    eq(carTable.parkingDetailsId, parkingDetailsTable.id),
-  )
-  .leftJoin(priceTable, eq(carTable.id, priceTable.carId));
-
 export async function getCarsFromDatabaseForTables(): Promise<CarData[]> {
   try {
-    const cars = (await preparedGetCars.all()) as CarData[];
+    const cars = await db
+      .select()
+      .from(carTable)
+      .leftJoin(
+        specificationsTable,
+        eq(carTable.specificationsId, specificationsTable.id),
+      )
+      .leftJoin(
+        parkingDetailsTable,
+        eq(carTable.parkingDetailsId, parkingDetailsTable.id),
+      )
+      .leftJoin(priceTable, eq(carTable.id, priceTable.carId)) as CarData[];
 
     if (cars.length === 0) {
       throw new Error("No cars found");

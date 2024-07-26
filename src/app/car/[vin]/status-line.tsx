@@ -36,9 +36,8 @@ const StatusLine: React.FC<StatusLineProps> = ({ status }) => {
       {isMobile && currentStatus && (
         <div className="flex justify-center">
           <div
-            className={`flex w-16 h-16 font-bold text-white p-8 transition-all duration-300 bg-${
-              isLastStatus ? "green-500" : "blue-500"
-            } rounded-full justify-center items-center transform scale-110`}
+            className={`flex w-16 h-16 font-bold text-white p-8 transition-all duration-300 bg-${isLastStatus ? "green-500" : "blue-500"
+              } rounded-full justify-center items-center transform scale-110`}
           >
             <span>{currentStatus.icon}</span>
             <div className="absolute -bottom-[1.75rem] w-max text-center">
@@ -54,23 +53,21 @@ const StatusLine: React.FC<StatusLineProps> = ({ status }) => {
         <div className="relative flex items-center justify-between w-full">
           <div className="absolute left-0 top-2/4 h-0.5 w-full -translate-y-2/4 dark:bg-gray-700 bg-gray-300"></div>
           <div
-            className={`absolute left-0 top-2/4 h-0.5 w-${progressPercentage}% -translate-y-2/4 ${
-              currentStatusIndex === statuses.length - 1
+            className={`absolute left-0 top-2/4 h-0.5 w-${progressPercentage}% -translate-y-2/4 ${currentStatusIndex === statuses.length - 1
                 ? "bg-green-500"
                 : "bg-blue-500"
-            } transition-all duration-500`}
+              } transition-all duration-500`}
             style={{ width: `${progressPercentage}%` }}
           ></div>
           {statuses.map((status, index) => (
             <div
               key={index}
-              className={`relative z-10 grid w-${isLastStatus ? "14" : index <= currentStatusIndex ? "14" : "10"} h-${isLastStatus ? "14" : index <= currentStatusIndex ? "14" : "10"} font-bold text-white transition-all duration-300 bg-${
-                isLastStatus
+              className={`relative z-10 grid w-${isLastStatus ? "14" : index <= currentStatusIndex ? "14" : "10"} h-${isLastStatus ? "14" : index <= currentStatusIndex ? "14" : "10"} font-bold text-white transition-all duration-300 bg-${isLastStatus
                   ? "green-500"
                   : index <= currentStatusIndex
                     ? "blue-500"
                     : "gray-300 dark:bg-gray-700"
-              } rounded-full place-items-center transform scale-${index === currentStatusIndex ? "110" : "100"}`}
+                } rounded-full place-items-center transform scale-${index === currentStatusIndex ? "110" : "100"}`}
             >
               {status.icon}
               <div className="absolute -bottom-[1.75rem] w-max text-center">

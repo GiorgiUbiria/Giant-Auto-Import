@@ -10,14 +10,14 @@ export default async function Page() {
     return redirect("/");
   }
 
-  const cars = await getCarsFromDatabaseForTables();
-  if (!cars) {
-    return <p> No cars fetched. </p>;
-  }
+  // const cars = await getCarsFromDatabaseForTables();
+  // if (!cars) {
+  //   return <p> No cars fetched. </p>;
+  // }
 
   return (
     <div className="py-10 text-primary">
-      <DataTable columns={columns} data={cars} />
+      {/* <DataTable columns={columns} data={cars} /> */}
     </div>
   );
 }

@@ -22,7 +22,7 @@ function formatDateToInputValue(date: Date | null): string {
 export default function CarInfo({ carData }: { carData: CarData }) {
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="flex flex-row items-start bg-muted/50">
+      <CardHeader className="flex flex-row items-start bg-gray-300 dark:bg-gray-700">
         <div className="grid gap-0.5">
           <CardTitle className="group flex items-center gap-2 text-xl">
             <div>

@@ -16,7 +16,7 @@ export default async function Page() {
   }
 
   return (
-    <div className="container mx-auto py-10 text-primary">
+    <div className="py-10 text-primary">
       <DataTable columns={columns} data={cars} />
     </div>
   );

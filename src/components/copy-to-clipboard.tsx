@@ -29,7 +29,7 @@ export default function CopyToClipBoard({ text }: { text: string }) {
     <Button
       size="icon"
       variant="outline"
-      className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+      className="h-3 w-3 opacity-100 transition-opacity"
       onClick={handleCopy}
       disabled={isCopying}
     >
@@ -40,7 +40,7 @@ export default function CopyToClipBoard({ text }: { text: string }) {
       ) : (
         <Copy className="h-3 w-3" />
       )}
-      <span className="sr-only">Copy Order ID</span>
+      <span className="sr-only">Copy VIN code</span>
     </Button>
   );
 }

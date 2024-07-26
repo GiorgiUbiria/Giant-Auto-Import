@@ -30,7 +30,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "./ui/select";
 import { DataTablePagination } from "./data-table-pagination";
 
 interface DataTableProps<TData, TValue> {
@@ -70,9 +69,9 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="mx-auto max-w-screen-2xl container-fluid">
+    <div className="mx-auto container-fluid">
       <div className="flex gap-4 pb-4">
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-2.5 container pl-2">
         <DataTablePagination table={table} />
       </div>
         <DropdownMenu>

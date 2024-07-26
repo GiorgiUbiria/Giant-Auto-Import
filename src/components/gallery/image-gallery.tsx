@@ -38,7 +38,6 @@ export default function FeaturedImageGallery({ data }: { data: ImageType[] }) {
         ))}
       </Carousel>
       <Modal show={openModal} onClose={() => setOpenModal(false)} size="7xl">
-        <Modal.Header></Modal.Header>
         <Modal.Body>
           <Image
             key={data.at(0)!.imageUrl}
@@ -49,7 +48,6 @@ export default function FeaturedImageGallery({ data }: { data: ImageType[] }) {
             height="500"
           />
         </Modal.Body>
-        <Modal.Footer></Modal.Footer>
       </Modal>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { Timer, Handshake, Package, Warehouse, Ship } from "lucide-react";
+import { Warehouse, Ship, Gavel, Truck, Container, CircleCheckBig } from "lucide-react";
 import { useMedia } from "react-use";
 
 interface StatusLineProps {
@@ -14,11 +14,12 @@ interface Status {
 }
 
 const statuses: Status[] = [
-  { status: "Pending", index: 0, icon: <Timer /> },
-  { status: "OnHand", index: 1, icon: <Handshake /> },
-  { status: "Loaded", index: 2, icon: <Package /> },
-  { status: "InTransit", index: 3, icon: <Ship /> },
-  { status: "Warehouse", index: 4, icon: <Warehouse /> },
+  { status: "Auction", index: 0, icon: <Gavel className="invert dark:invert-0" /> },
+  { status: "In Transit", index: 1, icon: <Truck className="invert dark:invert-0" /> },
+  { status: "Warehouse", index: 2, icon: <Warehouse className="invert dark:invert-0" /> },
+  { status: "Container", index: 3, icon: <Container className="invert dark:invert-0" /> },
+  { status: "In Transit", index: 4, icon: <Ship className="invert dark:invert-0" /> },
+  { status: "Delievered", index: 5, icon: <CircleCheckBig className="invert dark:invert-0" /> },
 ];
 
 const StatusLine: React.FC<StatusLineProps> = ({ status }) => {
@@ -51,7 +52,7 @@ const StatusLine: React.FC<StatusLineProps> = ({ status }) => {
 
       {!isMobile && (
         <div className="relative flex items-center justify-between w-full">
-          <div className="absolute left-0 top-2/4 h-0.5 w-full -translate-y-2/4 bg-gray-300"></div>
+          <div className="absolute left-0 top-2/4 h-0.5 w-full -translate-y-2/4 dark:bg-gray-700 bg-gray-300"></div>
           <div
             className={`absolute left-0 top-2/4 h-0.5 w-${progressPercentage}% -translate-y-2/4 ${
               currentStatusIndex === statuses.length - 1
@@ -68,7 +69,7 @@ const StatusLine: React.FC<StatusLineProps> = ({ status }) => {
                   ? "green-500"
                   : index <= currentStatusIndex
                     ? "blue-500"
-                    : "gray-300"
+                    : "gray-300 dark:bg-gray-700"
               } rounded-full place-items-center transform scale-${index === currentStatusIndex ? "110" : "100"}`}
             >
               {status.icon}

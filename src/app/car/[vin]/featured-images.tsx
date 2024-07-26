@@ -19,8 +19,8 @@ export default function Gallery({
 
   return (
     <div className="grid place-items-center">
-      <Tabs defaultValue="AUCTION" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="AUCTION" className="w-full text-black dark:text-white">
+        <TabsList className="grid w-full grid-cols-4 bg-gray-300 dark:bg-gray-700 dark:text-white">
           {imageTypes.map((type) => (
             <TabsTrigger key={type} value={type}>
               {type}

@@ -105,11 +105,9 @@ export const columns: ColumnDef<CarData>[] = [
     header: "Vehicle",
     cell: ({ row }) => {
       const specs = row.getValue("specs_model") as Specifications;
-      const auction = row.getValue("car.auction") as string;
       return (
         <div className="flex items-center justify-between w-[84px]">
           <p className="text-left"> {specs.year + " " + specs.make + " " + specs.model} </p>
-          {auction !== "Copart" && <Image src={IAAILogo} alt="IAAI" className="size-8" />}
         </div>
       )
     },

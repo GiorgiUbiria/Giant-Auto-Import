@@ -8,6 +8,7 @@ import WhatsAppIcon from "../../public/icons8-whatsapp.svg";
 import PhoneIcon from "../../public/icons8-phone.svg";
 import MailIcon from "../../public/icons8-mail.svg";
 import AddressIcon from "../../public/icons8-address-50.png";
+import { ModeToggle } from "./theme-toggle";
 
 export default async function Footer() {
   return (
@@ -15,47 +16,54 @@ export default async function Footer() {
       <div className="mx-auto w-full max-w-[1166px] px-4 xl:px-0">
         <div className="flex flex-col justify-between sm:px-[18px] md:flex-row md:px-10">
           <div className="md:w-[316px]">
-            <h1 className="md:flex md:items-center md:gap-4 text-white font-extrabold">
+            <div className="md:flex md:items-center md:gap-4">
               <Image
                 src={CompanyLogo}
                 alt="Company Logo"
-                className="w-24 h-24"
+                className="w-24 h-24 self-start invert brightness-0"
               />
-              Giant Auto Import
-            </h1>
-            <div className="mt-[18px] flex gap-4">
-              <Link className="hover:scale-110" href="/">
-                <Image
-                  alt="facebook icon"
-                  width="36"
-                  height="36"
-                  src={FacebookIcon}
-                />
-              </Link>
-              <Link className="hover:scale-110" href="/">
-                <Image
-                  alt="instagram icon"
-                  width="36"
-                  height="36"
-                  src={InstagramIcon}
-                />
-              </Link>
-              <Link className="hover:scale-110" href="/">
-                <Image
-                  alt="whatsapp icon"
-                  width="36"
-                  height="36"
-                  src={WhatsAppIcon}
-                />
-              </Link>
-              <Link className="hover:scale-110" href="/">
-                <Image
-                  alt="telegram icon"
-                  width="36"
-                  height="36"
-                  src={TelegramIcon}
-                />
-              </Link>
+              <h1 className="text-white font-extrabold text-lg">
+                Giant Auto Import
+              </h1>
+            </div>
+            <div className="mt-[18px] flex flex-col">
+              <div className="flex gap-4">
+                <Link className="hover:scale-110" href="/">
+                  <Image
+                    alt="facebook icon"
+                    width="36"
+                    height="36"
+                    src={FacebookIcon}
+                  />
+                </Link>
+                <Link className="hover:scale-110" href="/">
+                  <Image
+                    alt="instagram icon"
+                    width="36"
+                    height="36"
+                    src={InstagramIcon}
+                  />
+                </Link>
+                <Link className="hover:scale-110" href="/">
+                  <Image
+                    alt="whatsapp icon"
+                    width="36"
+                    height="36"
+                    src={WhatsAppIcon}
+                  />
+                </Link>
+                <Link className="hover:scale-110" href="/">
+                  <Image
+                    alt="telegram icon"
+                    width="36"
+                    height="36"
+                    src={TelegramIcon}
+                  />
+                </Link>
+              </div>
+              <div className="self-start mt-4">
+                <ModeToggle />
+              </div>
             </div>
           </div>
           <div className="md:w-[316px]">

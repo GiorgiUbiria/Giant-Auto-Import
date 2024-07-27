@@ -1,4 +1,3 @@
-import Link from "next/link";
 import HeroImageComponent from "./hero-image";
 
 export default async function Hero() {
@@ -14,12 +13,6 @@ export default async function Hero() {
         <p className="text-lg text-gray-300 mb-8">
           Discover amazing features and services that await you.
         </p>
-        <Link
-          href="/"
-          className="bg-yellow-400 text-gray-900 hover:bg-yellow-300 py-2 px-6 rounded-full text-lg font-semibold transition duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg"
-        >
-          Get Started
-        </Link>
       </div>
     </div>
   );

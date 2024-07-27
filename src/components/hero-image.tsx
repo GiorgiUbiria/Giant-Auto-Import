@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import Bg from "../../public/bg.jpg"
+import Bg from "../../public/bg.avif"
 
 export default function HeroImageComponent() {
   return (

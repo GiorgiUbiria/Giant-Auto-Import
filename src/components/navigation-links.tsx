@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ModeToggle } from "./theme-toggle";
 
 interface LinkProp {
   href: string;
@@ -27,7 +26,6 @@ export default function NavigationLinks({ links }: { links: LinkProp[] }) {
           <span>{link.label}</span>
         </Link>
       ))}
-      <ModeToggle />
     </div>
   );
 }

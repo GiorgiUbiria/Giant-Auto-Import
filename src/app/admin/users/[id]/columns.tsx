@@ -252,7 +252,7 @@ export const columns: ColumnDef<CarData>[] = [
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <DeleteButton carId={carId} />
+              <DeleteButton vin={vin} />
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

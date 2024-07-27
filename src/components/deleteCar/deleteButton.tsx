@@ -5,11 +5,11 @@ import { Button } from "../ui/button";
 import { toast } from "sonner";
 import React from "react";
 
-export default function DeleteButton({ carId }: { carId: number }) {
+export default function DeleteButton({ vin }: { vin: string }) {
   const [loading, setTransitioning] = React.useTransition();
   const deleteAction = async () => {
     setTransitioning(async () => {
-      const res = await deleteCarFromDb(carId);
+      const res = await deleteCarFromDb(vin);
       if (res.error !== null) {
         toast.error(res.error);
         console.error(res.error);

@@ -2,7 +2,6 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
-import IAAILogo from "../../../../public/iaai-logo.png";
 
 import {
   Accordion,
@@ -25,7 +24,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import DeleteButton from "@/components/deleteCar/deleteButton";
-import CopyToClipBoard from "@/components/copy-to-clipboard";
 
 export const columns: ColumnDef<CarData>[] = [
   {
@@ -85,33 +83,33 @@ export const columns: ColumnDef<CarData>[] = [
       );
     },
   },
-  {
-    accessorKey: "specifications.vin",
-    header: "VIN #  LOT #",
-    id: "vin",
-    cell: ({ row }) => {
-      const vin = row.getValue("vin") as string;
-      return (
-        <div className="flex flex-col gap-2 w-[100px]">
-          <Link href={`/car/${vin}`} className="text-md">{vin}</Link>
-          <Link href={`/car/${vin}`} className="text-md">{vin}</Link>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "specifications",
-    id: "specs_model",
-    header: "Vehicle",
-    cell: ({ row }) => {
-      const specs = row.getValue("specs_model") as Specifications;
-      return (
-        <div className="flex items-center justify-between w-[84px]">
-          <p className="text-left"> {specs.year + " " + specs.make + " " + specs.model} </p>
-        </div>
-      )
-    },
-  },
+  // {
+  //   accessorKey: "specifications.vin",
+  //   header: "VIN #  LOT #",
+  //   id: "vin",
+  //   cell: ({ row }) => {
+  //     const vin = row.getValue("vin") as string;
+  //     return (
+  //       <div className="flex flex-col gap-2 w-[100px]">
+  //         <Link href={`/car/${vin}`} className="text-md">{vin}</Link>
+  //         <Link href={`/car/${vin}`} className="text-md">{vin}</Link>
+  //       </div>
+  //     )
+  //   },
+  // },
+  // {
+  //   accessorKey: "specifications",
+  //   id: "specs_model",
+  //   header: "Vehicle",
+  //   cell: ({ row }) => {
+  //     const specs = row.getValue("specs_model") as Specifications;
+  //     return (
+  //       <div className="flex items-center justify-between w-[84px]">
+  //         <p className="text-left"> {specs.year + " " + specs.make + " " + specs.model} </p>
+  //       </div>
+  //     )
+  //   },
+  // },
   {
     accessorKey: "specifications.bodyType",
     header: "Body",
@@ -265,8 +263,6 @@ export const columns: ColumnDef<CarData>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
-      const vin = row.getValue("vin") as string;
-      const carId = row.getValue("car.id") as number;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -277,25 +273,15 @@ export const columns: ColumnDef<CarData>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>
-              <Button
-                onClick={() => navigator.clipboard.writeText(vin)}
-                variant="outline"
-                className="w-full text-center"
-              >
-                Copy Vin Code
-              </Button>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Button variant="link" className="text-center w-full">
-                <Link href={`/admin/edit/${vin}`}>Edit Car</Link>
-              </Button>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <DeleteButton carId={carId} />
-            </DropdownMenuItem>
+            {/* <DropdownMenuItem> */}
+            {/*   <Button variant="link" className="text-center w-full"> */}
+            {/*     <Link href={`/admin/edit/${vin}`}>Edit Car</Link> */}
+            {/*   </Button> */}
+            {/* </DropdownMenuItem> */}
+            {/* <DropdownMenuSeparator /> */}
+            {/* <DropdownMenuItem> */}
+            {/*   <DeleteButton carId={carId} /> */}
+            {/* </DropdownMenuItem> */}
           </DropdownMenuContent>
         </DropdownMenu>
       );

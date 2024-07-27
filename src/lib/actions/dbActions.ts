@@ -200,9 +200,7 @@ export async function getCarsFromDatabaseForTables(): Promise<CarData[]> {
     const updatedCars = await Promise.all(
       cars.map(async (car) => {
         const images = await fetchImageForDisplay(car.car.vin!);
-
         car.images = [images];
-
         return car;
       }),
     );

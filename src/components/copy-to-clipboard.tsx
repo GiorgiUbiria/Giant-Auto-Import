@@ -28,8 +28,8 @@ export default function CopyToClipBoard({ text }: { text: string }) {
   return (
     <Button
       size="icon"
-      variant="outline"
-      className="h-3 w-3 opacity-100 transition-opacity"
+      variant="ghost"
+      className="h-3 w-3 opacity-100"
       onClick={handleCopy}
       disabled={isCopying}
     >

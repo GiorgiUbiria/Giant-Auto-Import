@@ -13,7 +13,7 @@ import {
 
 export function RegisterForm() {
   return (
-    <Card className="mx-auto max-w-lg">
+    <Card className="mx-auto max-w-lg dark:bg-gray-700">
       <CardHeader>
         <CardTitle className="text-3xl">Sign Up</CardTitle>
       </CardHeader>

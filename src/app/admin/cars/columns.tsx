@@ -4,13 +4,6 @@ import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import IAAILogo from "../../../../public/iaai-logo.png";
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
-
 import Link from "next/link";
 import { CarData, Image as ImageType, Specifications } from "@/lib/interfaces";
 import Image from "next/image";
@@ -93,9 +86,9 @@ export const columns: ColumnDef<CarData>[] = [
       const vin = row.getValue("vin") as string;
       return (
         <div className="flex flex-col gap-2 w-[100px]">
-          <div className="flex">
+          <div className="flex items-center gap-0.5">
             <Link href={`/car/${vin}`} className="text-md">{vin}</Link>
-            <CopyToClipBoard text={vin} /> 
+            <CopyToClipBoard text={vin} />
           </div>
           <Link href={`/car/${vin}`} className="text-md">{vin}</Link>
         </div>
@@ -123,10 +116,36 @@ export const columns: ColumnDef<CarData>[] = [
   {
     accessorKey: "car.keys",
     header: "Keys",
+    cell: ({ row }) => {
+      const keys = row.getValue("car.keys") as boolean;
+
+      if (!keys) {
+        return <p> - </p>;
+      } else if (keys === true) {
+        return <p className="font-semibold"> YES </p>
+      } else if (keys === false) {
+        return <p className="font-semibold"> NO </p>
+      } else {
+        return <p> - </p>
+      }
+    },
   },
   {
     accessorKey: "car.title",
     header: "Title",
+    cell: ({ row }) => {
+      const title = row.getValue("car.title") as boolean;
+
+      if (!title) {
+        return <p> - </p>;
+      } else if (title === true) {
+        return <p className="font-semibold"> YES </p>
+      } else if (title === false) {
+        return <p className="font-semibold"> NO </p>
+      } else {
+        return <p> - </p>
+      }
+    },
   },
   {
     accessorKey: "parking_details.status",
@@ -201,8 +220,8 @@ export const columns: ColumnDef<CarData>[] = [
     header: "Destination",
   },
   {
-    accessorKey: "price",
-    header: "Purchase",
+    accessorKey: "purchaseDue",
+    header: "Purchase Due",
     cell: ({ row }) => {
       const price = row.getValue("price") as {
         id: number;
@@ -212,18 +231,7 @@ export const columns: ColumnDef<CarData>[] = [
         currencyId: number;
       };
       return (
-        <div className="flex flex-col gap-1 justify-between">
-          <Accordion type="single" collapsible className="w-[92px]">
-            <AccordionItem value="item-1">
-              <AccordionTrigger>
-                <p className="text-left text-nowrap mr-1"> Total: <span className="font-bold">{price?.auctionFee ? price.auctionFee + "$" : <span className="ml-4"> - </span>}</span> </p>
-              </AccordionTrigger>
-              <AccordionContent>
-                <p className="font-semibold text-sm text-left"> Due: <span className="text-red-500 font-bold text-md">{price?.auctionFee ? price.auctionFee + "$" : "-"}</span> </p>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
+        <p className="text-primary font-bold text-md">{price?.auctionFee ? price.auctionFee + "$" : "-"}</p>
       )
     },
   },
@@ -240,10 +248,7 @@ export const columns: ColumnDef<CarData>[] = [
         currencyId: number;
       };
       return (
-        <div className="flex flex-col gap-1 justify-between">
-          <p> Total: {price?.auctionFee ? price.auctionFee + "$" : "-"} </p>
-          <p className="font-semibold text-sm"> Due: <span className="text-red-500 font-bold text-md">{price?.auctionFee ? price.auctionFee + "$" : "-"}</span> </p>
-        </div>
+        <p className="text-primary font-bold text-md">{price?.shippingFee ? price.shippingFee + "$" : "-"}</p>
       )
     },
   },
@@ -259,10 +264,7 @@ export const columns: ColumnDef<CarData>[] = [
         currencyId: number;
       };
       return (
-        <div className="flex flex-col gap-1 justify-between">
-          <p> Total: {price?.auctionFee ? price.auctionFee + "$" : "-"} </p>
-          <p className="font-semibold text-sm"> Due: <span className="text-red-500 font-bold text-md">{price?.auctionFee ? price.auctionFee + "$" : "-"}</span> </p>
-        </div>
+        <p className="text-primary font-bold text-md">{price?.totalAmount ? price.totalAmount + "$" : "-"}</p>
       )
     },
   },

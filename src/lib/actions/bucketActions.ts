@@ -14,7 +14,7 @@ import { revalidatePath } from "next/cache";
 import { DbImage } from "./dbActions";
 import { db } from "../drizzle/db";
 import { carTable, imageTable } from "../drizzle/schema";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 
 const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
 const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
@@ -210,38 +210,33 @@ async function getSignedUrlForKey(key: string): Promise<string> {
   );
 }
 
-export async function fetchImageForDisplay(vin: string): Promise<Image> {
-  const priorityExists = await db
+export async function fetchImageForDisplay(vins: string[]): Promise<Record<string, Image>> {
+const imageRecords = await db
     .select()
     .from(imageTable)
-    .where(and(eq(imageTable.carVin, vin), eq(imageTable.priority, true)))
-    .limit(1)
+    .where(inArray(imageTable.carVin, vins))
+    .groupBy(imageTable.carVin)
+    .orderBy(desc(imageTable.priority));
 
-  let imageRecords;
+  const imageUrls = await Promise.all(imageRecords.map(async (imageRecord) => {
+    const url = await getSignedUrlForKey(imageRecord.imageKey!);
+    return {
+      vin: imageRecord.carVin,
+      image: {
+        imageUrl: url,
+        imageType: imageRecord.imageType,
+        imageKey: imageRecord.imageKey,
+        priority: imageRecord.priority,
+      } as Image,
+    };
+  }));
 
-  if (priorityExists.length > 0) {
-    imageRecords = await db
-      .select()
-      .from(imageTable)
-      .where(eq(imageTable.carVin, vin))
-      .orderBy(desc(imageTable.priority));
-  } else {
-    imageRecords = await db
-      .select()
-      .from(imageTable)
-      .where(eq(imageTable.carVin, vin));
-  }
+  const images: Record<string, Image> = {};
+  imageUrls.forEach(({ vin, image }) => {
+    images[vin!] = image;
+  });
 
-  const imageRecord = imageRecords[0];
-
-  const url = await getSignedUrlForKey(imageRecord.imageKey!);
-
-  return {
-    imageUrl: url,
-    imageType: imageRecord.imageType,
-    imageKey: imageRecord.imageKey,
-    priority: imageRecord.priority,
-  } as Image;
+  return images;
 }
 
 export async function fetchImagesForDisplay(vin: string): Promise<Image[]> {

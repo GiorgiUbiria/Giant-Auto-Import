@@ -1,7 +1,6 @@
 "use server";
 
 import {
-  Car,
   CarData,
   Note,
   Transaction,
@@ -193,17 +192,13 @@ export async function getCarsFromDatabaseForTables(): Promise<CarData[]> {
       )
       .leftJoin(priceTable, eq(carTable.id, priceTable.carId)) as CarData[];
 
-    if (cars.length === 0) {
-      throw new Error("No cars found");
-    }
+    const vins = cars.map(car => car.car.vin!);
+    const images = await fetchImageForDisplay(vins);
 
-    const updatedCars = await Promise.all(
-      cars.map(async (car) => {
-        const images = await fetchImageForDisplay(car.car.vin!);
-        car.images = [images];
-        return car;
-      }),
-    );
+    const updatedCars = cars.map(car => {
+      car.images = [images[car.car.vin!]];
+      return car;
+    });
 
     return updatedCars;
   } catch (error) {
@@ -284,16 +279,7 @@ export async function getCarsFromDatabaseForUserForTables(
       throw new Error("No cars found");
     }
 
-    const updatedCars = await Promise.all(
-      cars.map(async (car) => {
-        const images = await fetchImageForDisplay(car.car.vin!);
-
-        car.images = [images];
-        return car;
-      }),
-    );
-
-    return updatedCars;
+    return cars;
   } catch (error) {
     console.error("Error fetching cars:", error);
     return [];
@@ -378,6 +364,36 @@ export async function getCarFromDatabase(
 
     const images = await fetchImagesForDisplay(vin);
     car.images = images;
+
+    return car;
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export async function getCarFromDatabaseByVIN(
+  vin: string,
+): Promise<CarData | undefined> {
+  try {
+    const car: CarData = (await db
+      .select()
+      .from(carTable)
+      .leftJoin(
+        specificationsTable,
+        eq(carTable.specificationsId, specificationsTable.id),
+      )
+      .leftJoin(
+        parkingDetailsTable,
+        eq(carTable.parkingDetailsId, parkingDetailsTable.id),
+      )
+      .leftJoin(priceTable, eq(carTable.id, priceTable.carId))
+      .where(eq(carTable.vin, vin))
+      .limit(1)
+      .get()) as CarData;
+
+    if (!car) {
+      return undefined;
+    }
 
     return car;
   } catch (e) {

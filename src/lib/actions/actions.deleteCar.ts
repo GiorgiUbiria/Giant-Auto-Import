@@ -8,26 +8,26 @@ import {
 } from "../drizzle/schema";
 import { db } from "../drizzle/db";
 import { ActionResult } from "../form";
-import { getCarFromDatabaseByID } from "./dbActions";
+import { getCarFromDatabaseByVIN } from "./dbActions";
 import { revalidatePath } from "next/cache";
 
-export async function deleteCarFromDb(id: number): Promise<ActionResult> {
+export async function deleteCarFromDb(vin: string): Promise<ActionResult> {
   try {
-    if (!id) {
+    if (!vin) {
       return {
-        error: "No car ID provided",
+        error: "No car VIN provided",
       };
     }
 
-    const carToFind = await getCarFromDatabaseByID(id);
+    const carToFind = await getCarFromDatabaseByVIN(vin);
     if (!carToFind) {
-      console.log(`Car with ID ${id} not found.`);
+      console.log(`Car with ID ${vin} not found.`);
       return { error: "Car not found" };
     }
 
     const carId: { deletedId: number }[] = await db
       .delete(carTable)
-      .where(eq(carTable.id, id))
+      .where(eq(carTable.vin, vin))
       .returning({ deletedId: carTable.id });
 
     let specsId: { deletedId: number }[] = [];

@@ -7,6 +7,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 };
 
+export interface ActionResult {
+  success: boolean;
+  message?: string;
+  error?: string;
+  data?: any;
+}
+
 export const oceanShippingRates: OceanFee[] = [
   { state: "Los Angeles, CA", shorthand: "CA", rate: 1675 },
   { state: "Houston, TX", shorthand: "TX", rate: 1075 },

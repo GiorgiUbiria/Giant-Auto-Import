@@ -2,40 +2,30 @@
 
 import sharp from "sharp";
 import { db } from "../drizzle/db";
-import { imageTable } from "../drizzle/schema";
-import { ActionResult } from "../form";
+import { images } from "../drizzle/schema";
+import { ActionResult } from "@/lib/utils";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { deleteObjectFromBucket } from "./bucketActions";
 
-export async function deleteImage(imageUrl: string): Promise<ActionResult> {
+export async function deleteImage(imageKey: string): Promise<ActionResult> {
   try {
-    const isFromCloudFlare = imageUrl.includes("cloudflare");
-
-    if (isFromCloudFlare) {
-      const url = new URL(imageUrl);
-      const key = decodeURIComponent(url.pathname.substring(1));
-
-      await deleteObjectFromBucket(key);
-    } else {
-      await db.delete(imageTable).where(eq(imageTable.imageUrl, imageUrl));
-    }
+    await deleteObjectFromBucket(imageKey);
+    await db.delete(images).where(eq(images.imageKey, imageKey));
 
     revalidatePath("/admin/edit");
 
-    return { success: "Image deleted successfully", error: null };
+    return { 
+      success: true, 
+      message: "Image deleted successfully"
+    };
   } catch (error) {
     console.error("Error deleting image:", error);
-    return { error: "Error deleting image" };
+    return { 
+      success: false,
+      error: "Error deleting image",
+    };
   }
-}
-
-export async function convertToWebp(
-  buff: ArrayBuffer,
-  name: string,
-): Promise<File> {
-  const webp = await sharp(buff).webp().toBuffer();
-  return new File([webp], name, { type: "image/webp" });
 }
 
 export async function makeMain(key: string, vin: string) {
@@ -43,23 +33,23 @@ export async function makeMain(key: string, vin: string) {
   try {
     const isMain = await db
       .select({
-        imageKey: imageTable.imageKey
+        imageKey: images.imageKey
       })
-      .from(imageTable)
-      .where(eq(imageTable.priority, true))
+      .from(images)
+      .where(eq(images.priority, true))
 
     if (isMain.length === 0) {
       await db
-        .update(imageTable)
+        .update(images)
         .set({
           priority: true,
         })
-        .where(eq(imageTable.imageKey, key))
+        .where(eq(images.imageKey, key))
     } else {
       await db
         .transaction(async (tx) => {
-          await tx.update(imageTable).set({ priority: null }).where(eq(imageTable.imageKey, isMain[0].imageKey!));
-          await tx.update(imageTable).set({ priority: true }).where(eq(imageTable.imageKey, key));
+          await tx.update(images).set({ priority: null }).where(eq(images.imageKey, isMain[0].imageKey!));
+          await tx.update(images).set({ priority: true }).where(eq(images.imageKey, key));
         })
     }
 

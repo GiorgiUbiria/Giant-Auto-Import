@@ -21,7 +21,7 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
       url,
       authToken
     }),
-    { schema }
+    { schema, logger: true }
   );
 }
 

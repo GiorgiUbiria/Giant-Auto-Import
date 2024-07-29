@@ -47,6 +47,7 @@
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.31.0",
+    "drizzle-zod": "^0.5.1",
     "embla-carousel-react": "^8.1.6",
     "file-saver": "^2.0.5",
     "flowbite-react": "^0.10.1",

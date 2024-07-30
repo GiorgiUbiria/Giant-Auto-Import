@@ -5,99 +5,15 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1720111163465,
-      "tag": "0000_concerned_maria_hill",
+      "when": 1722363899736,
+      "tag": "0000_military_ego",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "6",
-      "when": 1720113501423,
-      "tag": "0001_aspiring_mercury",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1720168337655,
-      "tag": "0002_gorgeous_supreme_intelligence",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1720168374766,
-      "tag": "0003_tiny_gladiator",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1720168424852,
-      "tag": "0004_fast_nightcrawler",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1720172466544,
-      "tag": "0005_nappy_impossible_man",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "6",
-      "when": 1720715953435,
-      "tag": "0006_careful_captain_marvel",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "6",
-      "when": 1720720451731,
-      "tag": "0007_clever_susan_delgado",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "6",
-      "when": 1721132123600,
-      "tag": "0008_wooden_tony_stark",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "6",
-      "when": 1721400790826,
-      "tag": "0009_magenta_scourge",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "6",
-      "when": 1721400842672,
-      "tag": "0010_sparkling_madripoor",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "6",
-      "when": 1721906721027,
-      "tag": "0011_aspiring_boomer",
-      "breakpoints": true
-    },
-    {
-      "idx": 12,
-      "version": "6",
-      "when": 1721912775827,
-      "tag": "0012_chemical_dorian_gray",
-      "breakpoints": true
-    },
-    {
-      "idx": 13,
-      "version": "6",
-      "when": 1721987975242,
-      "tag": "0013_parallel_human_torch",
+      "when": 1722364111435,
+      "tag": "0001_bent_morg",
       "breakpoints": true
     }
   ]

@@ -9,7 +9,7 @@ import { DrizzleSQLiteAdapter } from "@lucia-auth/adapter-drizzle";
 import { z } from "zod";
 
 import { db } from "./drizzle/db";
-import { selectUserSchema, sessions, users } from "./drizzle/schema";
+import { selectUserSchema, sessions, users} from "./drizzle/schema";
 
 const adapter = new DrizzleSQLiteAdapter(db, sessions, users);
 
@@ -36,8 +36,7 @@ export const getAuth = cache(
   async (): Promise<
     { user: User; session: Session } | { user: null; session: null }
   > => {
-    const sessionId =
-      cookies().get(lucia.sessionCookieName)?.value ?? null;
+    const sessionId = cookies().get(lucia.sessionCookieName)?.value ?? null;
     if (!sessionId) {
       return {
         user: null,
@@ -49,13 +48,11 @@ export const getAuth = cache(
 
     try {
       if (result.session && result.session.fresh) {
-        const sessionCookie = lucia.createSessionCookie(
-          result.session.id
-        );
+        const sessionCookie = lucia.createSessionCookie(result.session.id);
         cookies().set(
           sessionCookie.name,
           sessionCookie.value,
-          sessionCookie.attributes
+          sessionCookie.attributes,
         );
       }
       if (!result.session) {
@@ -63,12 +60,12 @@ export const getAuth = cache(
         cookies().set(
           sessionCookie.name,
           sessionCookie.value,
-          sessionCookie.attributes
+          sessionCookie.attributes,
         );
       }
-    } catch { }
+    } catch {}
     return result;
-  }
+  },
 );
 
 declare module "lucia" {

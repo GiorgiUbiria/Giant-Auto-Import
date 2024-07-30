@@ -21,14 +21,13 @@ export const sessions = sqliteTable("sessions", {
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
-  customId: text("custom_id").notNull().default("0000"),
   fullName: text("full_name").notNull(),
   email: text("email").notNull().unique(),
   phone: text("phone").notNull().unique(),
   password: text("password").notNull(),
-  passwordText: text("password_text").notNull(),
-  deposit: integer("deposit").notNull().default(0),
-  balance: integer("balance").notNull().default(0),
+  passwordText: text("password_text"),
+  deposit: integer("deposit").default(0),
+  balance: integer("balance").default(0),
   priceList: text("price_list", { mode: "json" }).$type<PriceList[]>(),
   role: text("role", {
     enum: ["CUSTOMER", "MODERATOR", "ACCOUNTANT", "ADMIN"],
@@ -42,22 +41,20 @@ export const users = sqliteTable("users", {
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
-  cars: many(cars),
+  ownedCars: many(cars),
 }));
 
 export const insertUserSchema = createInsertSchema(users, {
   email: (schema) => schema.email.email(),
   phone: (schema) => schema.phone.regex(
     new RegExp(
-      "\\+(9[976]\\d|8[987530]\\d|6[987]\\d|5[90]\\d|42\\d|3[875]\\d|2[98654321]\\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)\\W*\\d\\W*\\d\\W*\\d\\W*\\d\\W*\\d\\W*\\d\\W*\\d\\W*\\d\\W*(\\d{1,2})$"
+      "\\+(9[976]\\d|8[987530]\\d|6[987]\\d|5[90]\\d|42\\d|3[875]\\d|2[98654321]\\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)(\\W*\\d){9,10}$"
     )
   ),
   deposit: (schema) => schema.deposit.gte(0),
   balance: (schema) => schema.balance.gte(0),
   fullName: (schema) => schema.fullName.regex(
-    new RegExp(
-      "^[A-Za-z]+[\s-'][A-Za-z]+$"
-    )
+    new RegExp("^[A-Za-z]+[\\s\\-'A-Za-z]+$")
   ),
   password: (schema) => schema.password.regex(
     new RegExp(
@@ -69,10 +66,9 @@ export const selectUserSchema = createSelectSchema(users);
 
 export const cars = sqliteTable("cars", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-  moderatorId: text("moderator_id").notNull().references(() => users.id),
   ownerId: text("owner_id").references(() => users.id),
   vin: text("vin").notNull().unique(),
-  year: text("year").notNull(),
+  year: integer("year").notNull(),
   make: text("make").notNull(),
   model: text("model").notNull(),
   color: text("color"),
@@ -118,8 +114,10 @@ export const cars = sqliteTable("cars", {
 });
 
 export const carsRelations = relations(cars, ({ one }) => ({
-  owner: one(users, { fields: [cars.ownerId], references: [users.id] }),
-  moderator: one(users, { fields: [cars.moderatorId], references: [users.id] }),
+  owner: one(users, {
+    fields: [cars.ownerId],
+    references: [users.id],
+  }),
 }));
 
 export const insertCarSchema = createInsertSchema(cars);
@@ -143,8 +141,7 @@ export const payments = sqliteTable("payments", {
 });
 
 export const paymentsRelations = relations(payments, ({ one, many }) => ({
-  customer: one(users, { fields: [payments.customerId], references: [users.id] }),
-  cars: many(paymentCars),
+  customer: one(users, { fields: [payments.customerId], references: [users.id], relationName: "customer_payment" }),
 }));
 
 export const insertPaymentSchema = createInsertSchema(payments);
@@ -160,8 +157,8 @@ export const paymentCars = sqliteTable("payment_cars", {
 });
 
 export const paymentCarsRelations = relations(paymentCars, ({ one }) => ({
-  payment: one(payments, { fields: [paymentCars.paymentId], references: [payments.id] }),
-  car: one(cars, { fields: [paymentCars.carId], references: [cars.id] }),
+  payment: one(payments, { fields: [paymentCars.paymentId], references: [payments.id], relationName: "payment_for_car" }),
+  car: one(cars, { fields: [paymentCars.carId], references: [cars.id], relationName: "car_of_payment" }),
 }));
 
 export const insertPaymentCarSchema = createInsertSchema(paymentCars);

@@ -72,16 +72,6 @@ export async function login(values: LoginValues): Promise<ActionResult> {
 }
 
 export async function signup(values: RegisterValues): Promise<ActionResult> {
-  // const { user } = await getAuth();
-  // if (!user || user.role !== "MODERATOR" && user.role !== "ADMIN") {
-  //   return {
-  //     success: false,
-  //     error: "Only admin or moderators can register new users.",
-  //   };
-  // }
-  
-  console.log(values)
-
   const result = RegisterSchema.safeParse(values);
   if (!result.success) {
     return {

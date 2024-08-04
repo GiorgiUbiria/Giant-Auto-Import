@@ -44,7 +44,6 @@ export default function RegisterForm() {
   })
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
-    console.log("Hit the onSubmit");
     setSubmitting(true);
 
     const result: ActionResult = await signup(values);

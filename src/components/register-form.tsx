@@ -24,14 +24,12 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { insertUserSchema } from "@/lib/drizzle/schema";
-import { useState } from "react";
-import { ActionResult } from "@/lib/utils";
-import { signup } from "@/lib/actions/authActions";
+import { useServerAction } from "zsa-react";
+import { registerAction as action } from "@/lib/actions/authActions";
 
 const FormSchema = insertUserSchema.omit({ id: true });
 
 export default function RegisterForm() {
-  const [submitting, setSubmitting] = useState(false);
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -43,17 +41,15 @@ export default function RegisterForm() {
     },
   })
 
+  const { isPending, execute } = useServerAction(action);
+
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
-    setSubmitting(true);
+    const [data, error] = await execute(values);
 
-    const result: ActionResult = await signup(values);
-
-    setSubmitting(false);
-
-    if (result.success === false) {
-      toast.error(result.error);
+    if (data?.success === false) {
+      toast.error(error?.message);
     } else {
-      toast.success(result.message);
+      toast.success(data?.message);
     }
   }
 
@@ -152,9 +148,9 @@ export default function RegisterForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" onClick={() => { console.log("Clicked")}}>
+        <Button type="submit" onClick={() => { console.log("Clicked") }} disabled={isPending}>
           {
-            submitting ? "Submitting..." : "Register"
+            isPending ? "Submitting..." : "Register"
           }
         </Button>
       </form>

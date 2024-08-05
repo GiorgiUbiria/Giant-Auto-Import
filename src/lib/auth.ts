@@ -1,7 +1,6 @@
 import { Lucia } from "lucia";
 import { cookies } from "next/headers";
 import { cache } from "react";
-import { randomBytes } from "crypto";
 
 import type { Session, User } from "lucia";
 import { DrizzleSQLiteAdapter } from "@lucia-auth/adapter-drizzle";
@@ -12,8 +11,6 @@ import { db } from "./drizzle/db";
 import { selectUserSchema, sessions, users} from "./drizzle/schema";
 
 const adapter = new DrizzleSQLiteAdapter(db, sessions, users);
-
-const generateToken = randomBytes(32).toString("hex");
 
 export const lucia = new Lucia(adapter, {
   sessionCookie: {
@@ -27,7 +24,6 @@ export const lucia = new Lucia(adapter, {
       fullName: attributes.fullName,
       email: attributes.email,
       role: attributes.role,
-      pdf_token: generateToken,
     };
   },
 });

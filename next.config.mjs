@@ -1,15 +1,8 @@
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
-})
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config) => {
-    config.externals.push("@node-rs/argon2", "@node-rs/bcrypt");
-    return config;
-  },
   experimental: {
     serverComponentsExternalPackages: ["oslo", "lucia"],
+    esmExternals: false,
   },
   images: {
     unoptimized: true,
@@ -42,4 +35,4 @@ const nextConfig = {
   },
 };
 
-module.exports = withBundleAnalyzer(nextConfig)
+export default nextConfig;

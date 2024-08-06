@@ -5,17 +5,23 @@ import * as React from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
-  flexRender,
   SortingState,
-  getCoreRowModel,
   VisibilityState,
-  useReactTable,
-  getSortedRowModel,
+  flexRender,
+  getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
 } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -24,12 +30,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { DataTablePagination } from "./data-table-pagination";
 
 interface DataTableProps<TData, TValue> {
@@ -71,9 +71,9 @@ export function DataTable<TData, TValue>({
   return (
     <div className="mx-auto container-fluid">
       <div className="flex gap-4 pb-4">
-      <div className="flex flex-col gap-2.5 container pl-2">
-        <DataTablePagination table={table} />
-      </div>
+        <div className="flex flex-col gap-2.5 container pl-2">
+          <DataTablePagination table={table} />
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">

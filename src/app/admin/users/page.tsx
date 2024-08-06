@@ -1,23 +1,23 @@
-import { UserDataTable } from "@/components/user-data-table";
-import { DbUser, getUsers } from "@/lib/actions/dbActions";
-import { validateRequest } from "@/lib/auth";
+import { DataTable } from "@/components/data-table";
+import { getAuth } from "@/lib/auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { columns } from "./columns";
+import { getUsersAction } from "@/lib/actions/userActions";
 
 export default async function Page() {
-  const { user } = await validateRequest();
-  if (!user || (user && user.role_id !== 2)) {
+  const { user } = await getAuth();
+  if (!user || user.role !== "ADMIN") {
     return redirect("/");
   }
 
-  const users: DbUser[] | undefined = await getUsers();
-
+  const [users] = await getUsersAction();
+  
   return (
     <div className="container mx-auto py-10 text-primary">
       <h1 className="text-3xl font-bold pb-8">Users</h1>
-      {users !== undefined && users.length > 0 ? (
-        <UserDataTable columns={columns} data={users!} />
+      {users !== null && users.length > 0 ? (
+        <DataTable columns={columns} data={users} />
       ) : (
         <>
           <p> No users found </p>

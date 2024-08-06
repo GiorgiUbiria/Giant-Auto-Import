@@ -5,7 +5,6 @@ import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import React from "react";
 import { removeUser } from "@/lib/actions/userActions";
-import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,78 +14,37 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { DbUser } from "@/lib/actions/dbActions";
+import { selectUserSchema } from "@/lib/drizzle/schema";
+import { z } from "zod";
 
-export const columns: ColumnDef<Omit<DbUser, "passowrd">>[] = [
+const SelectSchema = selectUserSchema.omit({ password: true, passwordText: true, priceList: true, })
+
+type SelectSchemaType = z.infer<typeof SelectSchema>
+
+export const columns: ColumnDef<SelectSchemaType>[] = [
   {
     accessorKey: "id",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          ID
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const id = row.getValue("id") as string;
-      return <p className="">{id}</p>;
-    },
+    header: "ID",
   },
   {
-    accessorKey: "customId",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Custom ID
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const id = row.getValue("id") as string;
-      const customId = row.getValue("customId") as string;
-      return <p>{customId}</p>;
-    },
-  },
-  {
-    accessorKey: "name",
-    header: "Name",
-    cell: ({ row }) => {
-      const name = row.getValue("name") as string;
-      return <div className="flex gap-2">{name}</div>;
-    },
+    accessorKey: "fullName",
+    header: "Full Name",
   },
   {
     accessorKey: "email",
     header: "Email",
-    id: "email",
   },
   {
     accessorKey: "phone",
     header: "Phone",
   },
   {
-    accessorKey: "roleId",
+    accessorKey: "role",
     header: "Role",
-    id: "roleId",
-    cell: ({ row }) => {
-      const role_id = row.getValue("roleId") as number;
-
-      const role = role_id === 1 ? "User" : "Accountant";
-
-      return <div className="text-left font-medium">{role}</div>;
-    },
   },
   {
     id: "actions",
-    header: ({ column }) => {
+    header: () => {
       return (
         <div className="flex items-center justify-center">
           <span className="text-center">Actions</span>

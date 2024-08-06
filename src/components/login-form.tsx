@@ -1,42 +1,90 @@
+"use client"
+
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { loginAction as action } from "@/lib/actions/authActions";
+import { insertUserSchema } from "@/lib/drizzle/schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { useServerAction } from "zsa-react";
 
-export function LoginForm() {
+const FormSchema = insertUserSchema.pick({ email: true, password: true });
+
+export default function LoginForm() {
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  })
+
+  const { isPending, execute } = useServerAction(action);
+
+  const onSubmit = async (values: z.infer<typeof FormSchema>) => {
+    const [data, error] = await execute(values);
+
+    if (data?.success === false) {
+      toast.error(error?.message);
+    } else {
+      toast.success(data?.message);
+    }
+  }
+
+  const handleSubmit = form.handleSubmit(onSubmit)
+
   return (
-    <Card className="mx-auto max-w-sm w-96">
-      <CardHeader>
-        <CardTitle className="text-3xl pb-4">Login</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-6">
-          <div className="grid gap-4">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              name="email"
-              placeholder="test@example.com"
-              required
-            />
-          </div>
-          <div className="grid gap-4">
-            <div className="flex items-center">
-              <Label htmlFor="password">Password</Label>
-            </div>
-            <Input id="password" type="password" name="password" placeholder="********" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" required />
-          </div>
-          <Button type="submit" className="w-full">
-            Login
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
+    <Form {...form}>
+      <form onSubmit={handleSubmit} className="w-2/3 space-y-6">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input placeholder="example@mail.com" type="email" {...field} required />
+              </FormControl>
+              <FormDescription>
+                Email of the user
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input placeholder="********" type="password" {...field} required />
+              </FormControl>
+              <FormDescription>
+                Password that is at least 8 characters long and contains a number
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit" disabled={isPending}>
+          {
+            isPending ? "Submitting..." : "Login"
+          }
+        </Button>
+      </form>
+    </Form>
+  )
 }

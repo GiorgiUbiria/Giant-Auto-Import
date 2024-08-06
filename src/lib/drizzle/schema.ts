@@ -140,7 +140,7 @@ export const payments = sqliteTable("payments", {
   }).notNull(),
 });
 
-export const paymentsRelations = relations(payments, ({ one, many }) => ({
+export const paymentsRelations = relations(payments, ({ one }) => ({
   customer: one(users, { fields: [payments.customerId], references: [users.id], relationName: "customer_payment" }),
 }));
 

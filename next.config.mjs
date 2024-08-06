@@ -1,13 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ["oslo", "lucia"],
-    esmExternals: false,
+  webpack: (config) => {
+    config.externals.push("@node-rs/argon2", "@node-rs/bcrypt");
+    return config;
   },
+  // experimental: {
+  //   serverComponentsExternalPackages: ["oslo", "lucia"],
+  //   esmExternals: false,
+  // },
   images: {
     unoptimized: true,
     remotePatterns: [
-       {
+      {
         protocol: "https",
         hostname: "giantautoimportimages.ec17bb88a597d2c1d369945a578a8403.r2.cloudflarestorage.com",
         port: "",

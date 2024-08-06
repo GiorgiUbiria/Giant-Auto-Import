@@ -9,21 +9,24 @@ import { generateId } from "lucia";
 
 import { getAuth, lucia } from "@/lib/auth";
 import { db } from "../drizzle/db";
-import { insertUserSchema, selectUserSchema, users } from "../drizzle/schema";
+import { insertUserSchema, users } from "../drizzle/schema";
 
 import { SqliteError } from "better-sqlite3";
 import { z } from "zod";
 import { createServerAction, createServerActionProcedure } from "zsa";
 
-const LoginSchema = selectUserSchema.pick({ email: true, password: true });
+const LoginSchema = insertUserSchema.pick({ email: true, password: true });
 const RegisterSchema = insertUserSchema.omit({ id: true });
 
 const authedProcedure = createServerActionProcedure()
   .handler(async () => {
     try {
-      const { user } = await getAuth();
+      const { user, session } = await getAuth();
 
-      return user;
+      return {
+        user,
+        session,
+      };
     } catch {
       throw new Error("User not authenticated")
     }
@@ -71,8 +74,7 @@ export const loginAction = createServerAction()
     return redirect("/");
   });
 
-export const registerAction = authedProcedure
-  .createServerAction()
+export const registerAction = createServerAction()
   .input(RegisterSchema)
   .output(z.object({
     message: z.string().optional(),
@@ -115,8 +117,27 @@ export const registerAction = authedProcedure
         error: JSON.stringify(error),
       };
     }
+  });
 
-    return redirect("/admin/users");
+export const logoutAction = authedProcedure
+  .createServerAction()
+  .handler(async ({ ctx }) => {
+    const { session } = ctx;
+
+    if (session === null) {
+      throw new Error("Session not found")
+    }
+
+    await lucia.invalidateSession(session.id);
+
+    const sessionCookie = lucia.createBlankSessionCookie();
+    cookies().set(
+      sessionCookie.name,
+      sessionCookie.value,
+      sessionCookie.attributes,
+    );
+
+    return redirect("/login");
   });
 
 //TODO: Update User action

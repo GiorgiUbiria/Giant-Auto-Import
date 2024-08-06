@@ -2,15 +2,14 @@ import Image from "next/image";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { lucia, getAuth } from "@/lib/auth";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { getAuth } from "@/lib/auth";
 import NavigationLinks from "./navigation-links";
 import NavbarLogo from "../../public/logo.png";
 import CopartLogo from "../../public/copart-logo.png";
 import IAAILogo from "../../public/iaai-logo.png";
 import Link from "next/link";
 import DynamicHeader from "./dynamic-header";
+import Avatar from "./avatar";
 
 const Navbar = async () => {
   const { user } = await getAuth();
@@ -102,6 +101,7 @@ const Navbar = async () => {
         </Sheet>
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
           <div className="ml-auto"></div>
+          <Avatar user={user} />
         </div>
       </DynamicHeader>
       <NavigationLinks links={navigationLinks} />

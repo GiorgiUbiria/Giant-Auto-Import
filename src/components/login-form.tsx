@@ -33,10 +33,12 @@ export default function LoginForm() {
   const { isPending, execute } = useServerAction(action);
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
+    console.log(values);
     const [data, error] = await execute(values);
 
     if (data?.success === false) {
       toast.error(error?.message);
+      console.error(error?.message);
     } else {
       toast.success(data?.message);
     }

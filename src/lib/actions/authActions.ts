@@ -41,37 +41,48 @@ export const loginAction = createServerAction()
     success: z.boolean(),
   }))
   .handler(async ({ input }) => {
-    const { email, password } = input;
+    try {
+      const { email, password } = input;
 
-    const [existingUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email));
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email));
 
-    if (!existingUser) {
-      return {
-        success: false,
-        error: "User not found",
+      if (!existingUser) {
+        return {
+          success: false,
+          error: "Invalid credentials",
+        };
       }
-    }
 
-    const validPassword = await new Argon2id().verify(existingUser.password, password);
-    if (!validPassword) {
+      const validPassword = await new Argon2id().verify(existingUser.password, password);
+      if (!validPassword) {
+        return {
+          success: false,
+          error: "Invalid credentials",
+        };
+      }
+
+      const session = await lucia.createSession(existingUser.id, {});
+      const sessionCookie = lucia.createSessionCookie(session.id);
+      cookies().set(
+        sessionCookie.name,
+        sessionCookie.value,
+        sessionCookie.attributes,
+      );
+
+      return {
+        success: true,
+        message: "Login successful",
+      };
+    } catch (error) {
+      console.error("Login error:", error);
       return {
         success: false,
-        error: "Incorrect email or password",
+        error: "An unexpected error occurred. Please try again later.",
       };
     }
-
-    const session = await lucia.createSession(existingUser.id, {});
-    const sessionCookie = lucia.createSessionCookie(session.id);
-    cookies().set(
-      sessionCookie.name,
-      sessionCookie.value,
-      sessionCookie.attributes,
-    );
-
-    return redirect("/");
   });
 
 export const registerAction = createServerAction()
@@ -103,7 +114,7 @@ export const registerAction = createServerAction()
 
       return {
         success: true,
-        error: "User registered successfully",
+        message: "User registered successfully",
       };
     } catch (error) {
       if (error instanceof SqliteError && error.code === "SQLITE_CONSTRAINT_UNIQUE") {

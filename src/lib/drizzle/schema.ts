@@ -10,6 +10,7 @@ import {
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 
 import { PriceList } from "./types";
+import { z } from "zod";
 
 export const sessions = sqliteTable("sessions", {
   id: text("id").notNull().primaryKey(),
@@ -71,7 +72,6 @@ export const cars = sqliteTable("cars", {
   year: integer("year").notNull(),
   make: text("make").notNull(),
   model: text("model").notNull(),
-  color: text("color"),
   holder: text("holder"),
   bookingNumber: text("booking_number").unique(),
   containerNumber: text("container_number"),
@@ -97,7 +97,7 @@ export const cars = sqliteTable("cars", {
   title: text("title", {
     enum: ["YES", "NO", "PENDING"],
   }).notNull(),
-  shipping_status: text("shipping_status", {
+  shippingStatus: text("shipping_status", {
     enum: ["AUCTION", "INNER_TRANSIT", "WAREHOUSE", "LOADED", "INTERNATIONAL_TRANSIT", "DELIVERED"],
   }).notNull(),
   bodyType: text("body_type", {
@@ -120,7 +120,12 @@ export const carsRelations = relations(cars, ({ one }) => ({
   }),
 }));
 
-export const insertCarSchema = createInsertSchema(cars);
+export const insertCarSchema = createInsertSchema(cars, {
+  departureDate: z.date().optional(),
+  arrivalDate: z.date().optional(),
+  purchaseDate: z.date(),
+  createdAt: z.date(),
+});
 export const selectCarSchema = createSelectSchema(cars);
 
 export const payments = sqliteTable("payments", {

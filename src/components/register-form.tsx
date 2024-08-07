@@ -47,7 +47,8 @@ export default function RegisterForm() {
     const [data, error] = await execute(values);
 
     if (data?.success === false) {
-      toast.error(error?.message);
+      toast.error(data?.message);
+      console.error(error)
     } else {
       toast.success(data?.message);
     }

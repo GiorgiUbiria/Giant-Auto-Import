@@ -37,8 +37,8 @@ export default function LoginForm() {
     const [data, error] = await execute(values);
 
     if (data?.success === false) {
-      toast.error(error?.message);
-      console.error(error?.message);
+      toast.error(data.message);
+      console.error(error);
     } else {
       toast.success(data?.message);
     }

@@ -37,7 +37,6 @@ export const loginAction = createServerAction()
   .output(z.object({
     message: z.string().optional(),
     data: z.any().optional(),
-    error: z.string().optional(),
     success: z.boolean(),
   }))
   .handler(async ({ input }) => {
@@ -52,7 +51,7 @@ export const loginAction = createServerAction()
       if (!existingUser) {
         return {
           success: false,
-          error: "Invalid credentials",
+          message: "Invalid credentials",
         };
       }
 
@@ -60,7 +59,7 @@ export const loginAction = createServerAction()
       if (!validPassword) {
         return {
           success: false,
-          error: "Invalid credentials",
+          message: "Invalid credentials",
         };
       }
 
@@ -80,7 +79,7 @@ export const loginAction = createServerAction()
       console.error("Login error:", error);
       return {
         success: false,
-        error: "An unexpected error occurred. Please try again later.",
+        message: "An unexpected error occurred. Please try again later.",
       };
     }
   });
@@ -90,7 +89,6 @@ export const registerAction = createServerAction()
   .output(z.object({
     message: z.string().optional(),
     data: z.any().optional(),
-    error: z.string().optional(),
     success: z.boolean(),
   }))
   .handler(async ({ input }) => {
@@ -120,12 +118,12 @@ export const registerAction = createServerAction()
       if (error instanceof SqliteError && error.code === "SQLITE_CONSTRAINT_UNIQUE") {
         return {
           success: false,
-          error: "Email or Phone number already used",
+          message: "Email or Phone number already used",
         };
       }
       return {
         success: false,
-        error: JSON.stringify(error),
+        message: JSON.stringify(error),
       };
     }
   });

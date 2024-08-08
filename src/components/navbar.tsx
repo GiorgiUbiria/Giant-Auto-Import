@@ -40,7 +40,7 @@ const Navbar = async () => {
         label: "Cars",
       },
       {
-        href: "/admin/add",
+        href: "/admin/add_car",
         label: "Add Car",
       },
       {

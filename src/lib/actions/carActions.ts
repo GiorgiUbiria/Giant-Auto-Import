@@ -1,8 +1,7 @@
 "use server";
 
-import { desc, eq, ne, or } from "drizzle-orm";
+import { desc, eq, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { db } from "../drizzle/db";
 import { cars, insertCarSchema, selectCarSchema } from "../drizzle/schema";
 import { createServerActionProcedure } from "zsa";
@@ -10,7 +9,7 @@ import { getAuth } from "../auth";
 import { z } from "zod";
 
 const AddCarFormSchema = insertCarSchema.omit({ id: true, ownerId: true, createdAt: true, totalFee: true, shippingFee: true, destinationPort: true, });
-const SelectSchema = selectCarSchema.omit({ bodyType: true, destinationPort: true, createdAt: true, });
+const SelectSchema = selectCarSchema.omit({ destinationPort: true, createdAt: true, });
 
 const authedProcedure = createServerActionProcedure()
 	.handler(async () => {
@@ -49,25 +48,24 @@ export const addCarAction = isAdminProcedure
 		success: z.boolean(),
 	}))
 	.handler(async ({ input }) => {
-		console.log("input", input);
 		try {
 			const [vin] = await db
 				.insert(cars)
 				.values(input)
-				.returning({ vin: cars.vin })
+				.returning({ vin: cars.vin });
 
 			if (!vin || vin === null) {
 				throw new Error("Could not add a car")
-			}
+			};
+
+			revalidatePath("/admin/cars");
 
 			return {
 				success: true,
-				data: vin,
 				message: `Car with vin code ${vin} was added successfully`,
-			}
+			};
 		} catch (error) {
 			console.error(error);
-
 			const errorMessage = error instanceof Error ? error.message : String(error);
 
 			return {
@@ -93,6 +91,7 @@ export const getCarsAction = isAdminProcedure
 					shippingFee: cars.shippingFee,
 					purchaseFee: cars.purchaseFee,
 					totalFee: cars.totalFee,
+					bodyType: cars.bodyType,
 					fuelType: cars.fuelType,
 					holder: cars.holder,
 					ownerId: cars.ownerId,
@@ -111,7 +110,7 @@ export const getCarsAction = isAdminProcedure
 				.from(cars)
 				.orderBy(desc(cars.purchaseDate));
 
-			return carsQuery;
+				return carsQuery.length ? carsQuery : [];
 		} catch (error) {
 			console.error("Error fetching cars:", error);
 			throw new Error("Failed to fetch cars");
@@ -151,6 +150,7 @@ export const getCarAction = isAdminProcedure
 					auction: cars.auction,
 					shippingFee: cars.shippingFee,
 					purchaseFee: cars.purchaseFee,
+					bodyType: cars.bodyType,
 					totalFee: cars.totalFee,
 					fuelType: cars.fuelType,
 					holder: cars.holder,
@@ -176,3 +176,59 @@ export const getCarAction = isAdminProcedure
 			throw new Error("Failed to fetch car");
 		}
 	});
+
+export const deleteCarAction = isAdminProcedure
+	.createServerAction()
+	.input(z.object({
+		vin: z.string().optional(),
+		id: z.number().optional(),
+	}))
+	.output(z.object({
+		message: z.string().optional(),
+		data: z.any().optional(),
+		success: z.boolean(),
+	}))
+	.handler(async ({ input }) => {
+		const { vin, id } = input;
+
+		if (!id && !vin) {
+			return ({
+				success: false,
+				message: "Provide car's vin code or id",
+			})
+		}
+
+		try {
+			const whereClause = [];
+			if (id !== undefined) {
+				whereClause.push(eq(cars.id, id));
+			}
+			if (vin !== undefined) {
+				whereClause.push(eq(cars.vin, vin));
+			}
+
+			const [isDeleted] = await db
+				.delete(cars)
+				.where(or(...whereClause))
+				.returning({ vin: cars.vin });
+
+			if (!isDeleted) {
+				return ({
+					success: false,
+					message: "Could not delete the car",
+				})
+			}
+
+			revalidatePath("/admin/cars");
+
+			return {
+				success: true,
+				message: `Car with vin code ${isDeleted.vin} was added successfully`,
+			};
+		} catch (error) {
+			console.error("Error fetching car:", error);
+			throw new Error("Failed to fetch car");
+		}
+	});
+
+

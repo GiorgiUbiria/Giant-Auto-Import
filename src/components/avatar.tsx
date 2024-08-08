@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { User } from "lucia";
 
-import { ChevronDown, CircleUser } from "lucide-react";
+import { ChevronDown, CircleUser, LogOut } from "lucide-react";
 
 import {
 	DropdownMenu,
@@ -57,7 +57,7 @@ const Avatar = ({ user }: AvatarProps) => {
 							<DropdownMenuItem className="text-md">
 								<Button
 									disabled={isPending}
-									variant="ghost"
+									variant="link"
 									onClick={async () => {
 										const [_, error] = await execute();
 
@@ -66,7 +66,7 @@ const Avatar = ({ user }: AvatarProps) => {
 										}
 									}}
 								>
-									Sign out
+									<LogOut className="size-4" />
 								</Button>
 							</DropdownMenuItem>
 						</>

@@ -11,7 +11,10 @@ export default async function Page() {
     return redirect("/");
   }
 
-  const [users] = await getUsersAction();
+  const [users, err] = await getUsersAction();
+  if (err) {
+    console.error(err);
+  }
   
   return (
     <div className="container mx-auto py-10 text-primary">

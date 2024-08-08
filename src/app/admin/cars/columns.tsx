@@ -1,29 +1,19 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
 import IAAILogo from "../../../../public/iaai-logo.png";
 import CopartLogo from "../../../../public/copart-logo.png";
 
 import Link from "next/link";
 import Image from "next/image";
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
 import CopyToClipBoard from "@/components/copy-to-clipboard";
 
 import { selectCarSchema } from "@/lib/drizzle/schema";
 import { z } from "zod";
+import { Actions } from "./actions";
 
-const SelectSchema = selectCarSchema.omit({ bodyType: true, destinationPort: true, createdAt: true, });
+const SelectSchema = selectCarSchema.omit({ destinationPort: true, createdAt: true, });
 type SelectSchemaType = z.infer<typeof SelectSchema>;
 
 export const columns: ColumnDef<SelectSchemaType>[] = [
@@ -85,6 +75,16 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   {
     accessorKey: "vin",
     header: "VIN#",
+    cell: ({ row }) => {
+      const vin = row.getValue("vin") as SelectSchemaType["vin"];
+
+      return (
+        <div className="flex gap-2 items-center">
+          <Link href={`/car/${vin}`}> {vin} </Link>
+          <CopyToClipBoard text={vin} />
+        </div>
+      )
+    },
   },
   {
     accessorKey: "year",
@@ -195,11 +195,9 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   },
   {
     id: "actions",
+    header: "Actions",
     cell: ({ row }) => {
-      const vin = row.getValue("vin") as string;
-      return (
-        <Link href={`/admin/edit/${vin}`} className="hover:text-blue-500 hover:underline">Edit Car</Link>
-      );
+      return <Actions vin={row.getValue("vin") as string} />
     },
   },
 ];

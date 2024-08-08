@@ -1,4 +1,4 @@
-import { AddCarForm } from "@/components/addCar/form";
+import { AddCarForm } from "@/components/add-car-form";
 import { getAuth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 

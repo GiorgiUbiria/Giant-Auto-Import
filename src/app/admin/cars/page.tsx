@@ -10,11 +10,14 @@ export default async function Page() {
     return redirect("/");
   }
 
-  const [cars] = await getCarsAction();
+  const [cars, err] = await getCarsAction();
+  if (err) {
+    console.error(err);
+  }
 
   return (
     <div className="py-10 text-primary">
-      <DataTable columns={columns} data={cars} />
+      <DataTable columns={columns} data={cars!} />
     </div>
   );
 }

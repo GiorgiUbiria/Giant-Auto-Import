@@ -66,48 +66,48 @@ export const getUsersAction = isAdminProcedure
     }
   });
 
-export async function removeUser(id: string): Promise<ActionResult> {
-  try {
-    if (!id) {
-      return {
-        success: false,
-        error: "No user ID provided",
-      };
-    }
+export const deleteUserAction = isAdminProcedure
+	.createServerAction()
+	.input(z.object({
+		id: z.string(),
+	}))
+	.output(z.object({
+		message: z.string().optional(),
+		data: z.any().optional(),
+		success: z.boolean(),
+	}))
+	.handler(async ({ input }) => {
+		const { id } = input;
 
-    const userToFind = await db.select().from(users).where(eq(users.id, id));
+		if (!id) {
+			return ({
+				success: false,
+				message: "Provide the user's id",
+			})
+		}
 
-    if (userToFind.length === 0) {
-      return {
-        success: false,
-        error: `User with id-{${id}} not found`,
-      };
-    }
+		try {
+			const [isDeleted] = await db
+				.delete(users)
+				.where(eq(users.id, id))
+				.returning({ fullName: users.fullName });
 
-    const [deleted] = await db
-      .delete(users)
-      .where(eq(users.id, id))
-      .returning({ id: users.id });
+			if (!isDeleted) {
+				return ({
+					success: false,
+					message: "Could not delete the user",
+				})
+			}
 
-    if (!deleted.id) {
-      return {
-        success: false,
-        error: "Deletion failed",
-      };
-    }
+			revalidatePath("/admin/users");
 
-    return {
-      success: true,
-      message: `User with id-{${id}} deleted successfully`,
-    };
-  } catch (error) {
-    console.error("Error deleting user:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  } finally {
-    revalidatePath("/admin/users/");
-    redirect("/admin/users/");
-  }
-}
+			return {
+				success: true,
+				message: `User ${isDeleted.fullName} was deleted successfully`,
+			};
+		} catch (error) {
+			console.error("Error deleting the user:", error);
+			throw new Error("Error deleting the user");
+		}
+	});
+

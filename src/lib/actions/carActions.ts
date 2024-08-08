@@ -223,11 +223,11 @@ export const deleteCarAction = isAdminProcedure
 
 			return {
 				success: true,
-				message: `Car with vin code ${isDeleted.vin} was added successfully`,
+				message: `Car with vin code ${isDeleted.vin} was deleted successfully`,
 			};
 		} catch (error) {
-			console.error("Error fetching car:", error);
-			throw new Error("Failed to fetch car");
+			console.error("Error deleting car:", error);
+			throw new Error("Failed to delete car");
 		}
 	});
 

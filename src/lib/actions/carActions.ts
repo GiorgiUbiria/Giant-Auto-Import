@@ -1,6 +1,6 @@
 "use server";
 
-import { desc, eq, ne } from "drizzle-orm";
+import { desc, eq, ne, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "../drizzle/db";
@@ -10,7 +10,7 @@ import { getAuth } from "../auth";
 import { z } from "zod";
 
 const AddCarFormSchema = insertCarSchema.omit({ id: true, ownerId: true, createdAt: true, totalFee: true, shippingFee: true, destinationPort: true, });
-const SelectSchema = selectCarSchema.omit({ bodyType: true, destinationPort: true, createdAt: true,  });
+const SelectSchema = selectCarSchema.omit({ bodyType: true, destinationPort: true, createdAt: true, });
 
 const authedProcedure = createServerActionProcedure()
 	.handler(async () => {
@@ -78,14 +78,14 @@ export const addCarAction = isAdminProcedure
 	});
 
 export const getCarsAction = isAdminProcedure
-  .createServerAction()
-  .output(z.array(SelectSchema))
-  .handler(async () => {
-    try {
-      const carsQuery = await db
-        .select({
-          id: cars.id,
-          vin: cars.vin,
+	.createServerAction()
+	.output(z.array(SelectSchema))
+	.handler(async () => {
+		try {
+			const carsQuery = await db
+				.select({
+					id: cars.id,
+					vin: cars.vin,
 					year: cars.year,
 					model: cars.model,
 					make: cars.make,
@@ -107,14 +107,72 @@ export const getCarsAction = isAdminProcedure
 					trackingLink: cars.trackingLink,
 					originPort: cars.originPort,
 					shippingStatus: cars.shippingStatus,
-        })
-        .from(cars)
-        .orderBy(desc(cars.purchaseDate));
+				})
+				.from(cars)
+				.orderBy(desc(cars.purchaseDate));
 
-      return carsQuery;
-    } catch (error) {
-      console.error(error);
-      return [];
-    }
-  });
+			return carsQuery;
+		} catch (error) {
+			console.error("Error fetching cars:", error);
+			throw new Error("Failed to fetch cars");
+		}
+	});
 
+export const getCarAction = isAdminProcedure
+	.createServerAction()
+	.input(z.object({
+		vin: z.string().optional(),
+		id: z.number().optional(),
+	}))
+	.output(z.union([SelectSchema, z.null()]))
+	.handler(async ({ input }) => {
+		const { vin, id } = input;
+
+		if (!id && !vin) {
+			return null;
+		}
+
+		try {
+			const whereClause = [];
+			if (id !== undefined) {
+				whereClause.push(eq(cars.id, id));
+			}
+			if (vin !== undefined) {
+				whereClause.push(eq(cars.vin, vin));
+			}
+
+			const [carQuery] = await db
+				.select({
+					id: cars.id,
+					vin: cars.vin,
+					year: cars.year,
+					model: cars.model,
+					make: cars.make,
+					auction: cars.auction,
+					shippingFee: cars.shippingFee,
+					purchaseFee: cars.purchaseFee,
+					totalFee: cars.totalFee,
+					fuelType: cars.fuelType,
+					holder: cars.holder,
+					ownerId: cars.ownerId,
+					keys: cars.keys,
+					title: cars.title,
+					departureDate: cars.departureDate,
+					arrivalDate: cars.arrivalDate,
+					purchaseDate: cars.purchaseDate,
+					bookingNumber: cars.bookingNumber,
+					lotNumber: cars.lotNumber,
+					containerNumber: cars.containerNumber,
+					trackingLink: cars.trackingLink,
+					originPort: cars.originPort,
+					shippingStatus: cars.shippingStatus,
+				})
+				.from(cars)
+				.where(or(...whereClause));
+
+			return carQuery ?? null;
+		} catch (error) {
+			console.error("Error fetching car:", error);
+			throw new Error("Failed to fetch car");
+		}
+	});

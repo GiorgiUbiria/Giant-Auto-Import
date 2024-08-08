@@ -1,11 +1,9 @@
 "use server";
 
-import { ActionResult } from "@/lib/utils";
 import { eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { db } from "../drizzle/db";
-import { selectUserSchema, users } from "../drizzle/schema";
+import { selectCarSchema, selectUserSchema, users } from "../drizzle/schema";
 import { createServerActionProcedure } from "zsa";
 import { getAuth } from "../auth";
 import { z } from "zod";
@@ -67,47 +65,90 @@ export const getUsersAction = isAdminProcedure
   });
 
 export const deleteUserAction = isAdminProcedure
-	.createServerAction()
-	.input(z.object({
-		id: z.string(),
-	}))
-	.output(z.object({
-		message: z.string().optional(),
-		data: z.any().optional(),
-		success: z.boolean(),
-	}))
-	.handler(async ({ input }) => {
-		const { id } = input;
+  .createServerAction()
+  .input(z.object({
+    id: z.string(),
+  }))
+  .output(z.object({
+    message: z.string().optional(),
+    data: z.any().optional(),
+    success: z.boolean(),
+  }))
+  .handler(async ({ input }) => {
+    const { id } = input;
 
-		if (!id) {
-			return ({
-				success: false,
-				message: "Provide the user's id",
-			})
-		}
+    if (!id) {
+      return ({
+        success: false,
+        message: "Provide the user's id",
+      })
+    }
 
-		try {
-			const [isDeleted] = await db
-				.delete(users)
-				.where(eq(users.id, id))
-				.returning({ fullName: users.fullName });
+    try {
+      const [isDeleted] = await db
+        .delete(users)
+        .where(eq(users.id, id))
+        .returning({ fullName: users.fullName });
 
-			if (!isDeleted) {
-				return ({
-					success: false,
-					message: "Could not delete the user",
-				})
-			}
+      if (!isDeleted) {
+        return ({
+          success: false,
+          message: "Could not delete the user",
+        })
+      }
 
-			revalidatePath("/admin/users");
+      revalidatePath("/admin/users");
 
-			return {
-				success: true,
-				message: `User ${isDeleted.fullName} was deleted successfully`,
-			};
-		} catch (error) {
-			console.error("Error deleting the user:", error);
-			throw new Error("Error deleting the user");
-		}
-	});
+      return {
+        success: true,
+        message: `User ${isDeleted.fullName} was deleted successfully`,
+      };
+    } catch (error) {
+      console.error("Error deleting the user:", error);
+      throw new Error("Error deleting the user");
+    }
+  });
+
+export const getUserAction = isAdminProcedure
+  .createServerAction()
+  .input(z.object({
+    id: z.string(),
+  }))
+  .output(z.union([
+    z.object({
+      user: SelectSchema,
+      cars: z.array(selectCarSchema),
+    }),
+    z.null()
+  ]))
+  .handler(async ({ input }) => {
+    const { id } = input;
+
+    if (!id) {
+      return null;
+    }
+
+    try {
+      const [result] = await db
+        .query.users.findMany({
+          where: eq(users.id, id),
+          with: {
+            ownedCars: true,
+          },
+          limit: 1,
+        });
+
+      if (!result) return null
+
+      const { ownedCars: cars, ...user } = result;
+
+      return {
+        user,
+        cars: cars ?? [],
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      throw new Error("Failed to fetch user");
+    }
+  });
 

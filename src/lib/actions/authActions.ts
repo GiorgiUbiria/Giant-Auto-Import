@@ -32,6 +32,20 @@ const authedProcedure = createServerActionProcedure()
     }
   });
 
+const isAdminProcedure = createServerActionProcedure(authedProcedure)
+	.handler(async ({ ctx }) => {
+		const { user, session } = ctx;
+
+		if (user?.role !== "ADMIN") {
+			throw new Error("User is not an admin")
+		}
+
+		return {
+			user,
+			session,
+		}
+	});
+
 export const loginAction = createServerAction()
   .input(LoginSchema)
   .output(z.object({
@@ -84,7 +98,8 @@ export const loginAction = createServerAction()
     }
   });
 
-export const registerAction = createServerAction()
+export const registerAction = isAdminProcedure
+  .createServerAction()
   .input(RegisterSchema)
   .output(z.object({
     message: z.string().optional(),

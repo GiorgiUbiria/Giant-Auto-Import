@@ -192,10 +192,10 @@ export const deleteCarAction = isAdminProcedure
 		const { vin, id } = input;
 
 		if (!id && !vin) {
-			return ({
+			return {
 				success: false,
 				message: "Provide car's vin code or id",
-			})
+			};
 		}
 
 		try {
@@ -207,16 +207,29 @@ export const deleteCarAction = isAdminProcedure
 				whereClause.push(eq(cars.vin, vin));
 			}
 
+			const carExists = await db
+				.select()
+				.from(cars)
+				.where(or(...whereClause))
+				.limit(1);
+
+			if (!carExists.length) {
+				return {
+					success: false,
+					message: "Car does not exist",
+				};
+			}
+
 			const [isDeleted] = await db
 				.delete(cars)
 				.where(or(...whereClause))
 				.returning({ vin: cars.vin });
 
 			if (!isDeleted) {
-				return ({
+				return {
 					success: false,
 					message: "Could not delete the car",
-				})
+				};
 			}
 
 			revalidatePath("/admin/cars");
@@ -247,10 +260,10 @@ export const assignOwnerAction = isAdminProcedure
 		const { vin, carId, userId } = input;
 
 		if (!carId && !vin) {
-			return ({
+			return {
 				success: false,
 				message: "Provide car's vin code or id, and user's id",
-			})
+			};
 		}
 
 		try {
@@ -262,6 +275,19 @@ export const assignOwnerAction = isAdminProcedure
 				whereClause.push(eq(cars.vin, vin));
 			}
 
+			const carExists = await db
+				.select()
+				.from(cars)
+				.where(or(...whereClause))
+				.limit(1);
+
+			if (!carExists.length) {
+				return {
+					success: false,
+					message: "Car does not exist",
+				};
+			}
+
 			const [isAssigned] = await db
 				.update(cars)
 				.set({
@@ -271,10 +297,10 @@ export const assignOwnerAction = isAdminProcedure
 				.returning({ vin: cars.vin });
 
 			if (!isAssigned) {
-				return ({
+				return {
 					success: false,
 					message: "Could not assign the owner to car",
-				})
+				};
 			}
 
 			revalidatePath(`/admin/users/${userId}`);
@@ -284,7 +310,7 @@ export const assignOwnerAction = isAdminProcedure
 				message: userId ? `Car with vin code ${isAssigned.vin} was successfully assigned to the user with id ${userId}` : `Car's owner cleared`,
 			};
 		} catch (error) {
-			console.error("Error assgining owner:", error);
+			console.error("Error assigning owner:", error);
 			throw new Error("Failed to assign the owner to car");
 		}
 	});

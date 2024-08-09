@@ -165,7 +165,6 @@ export const logoutAction = authedProcedure
     return redirect("/login");
   });
 
-//TODO: Update User action
 export const updateUserAction = isAdminProcedure
   .createServerAction()
   .input(z.object({

@@ -56,51 +56,6 @@ export const getUsersAction = isAdminProcedure
     }
   });
 
-export const deleteUserAction = isAdminProcedure
-  .createServerAction()
-  .input(z.object({
-    id: z.string(),
-  }))
-  .output(z.object({
-    message: z.string().optional(),
-    data: z.any().optional(),
-    success: z.boolean(),
-  }))
-  .handler(async ({ input }) => {
-    const { id } = input;
-
-    if (!id) {
-      return ({
-        success: false,
-        message: "Provide the user's id",
-      })
-    }
-
-    try {
-      const [isDeleted] = await db
-        .delete(users)
-        .where(eq(users.id, id))
-        .returning({ fullName: users.fullName });
-
-      if (!isDeleted) {
-        return ({
-          success: false,
-          message: "Could not delete the user",
-        })
-      }
-
-      revalidatePath("/admin/users");
-
-      return {
-        success: true,
-        message: `User ${isDeleted.fullName} was deleted successfully`,
-      };
-    } catch (error) {
-      console.error("Error deleting the user:", error);
-      throw new Error("Error deleting the user");
-    }
-  });
-
 export const getUserAction = isAdminProcedure
   .createServerAction()
   .input(z.object({
@@ -121,6 +76,16 @@ export const getUserAction = isAdminProcedure
     }
 
     try {
+      const userExists = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, id))
+        .limit(1);
+
+      if (!userExists.length) {
+        return null;
+      }
+
       const [result] = await db
         .query.users.findMany({
           where: eq(users.id, id),
@@ -130,17 +95,74 @@ export const getUserAction = isAdminProcedure
           limit: 1,
         });
 
-      if (!result) return null
+      if (!result) return null;
 
       const { ownedCars: cars, ...user } = result;
 
       return {
         user,
         cars: cars ?? [],
-      }
+      };
     } catch (error) {
       console.error("Error fetching user:", error);
       throw new Error("Failed to fetch user");
     }
   });
 
+export const deleteUserAction = isAdminProcedure
+  .createServerAction()
+  .input(z.object({
+    id: z.string(),
+  }))
+  .output(z.object({
+    message: z.string().optional(),
+    data: z.any().optional(),
+    success: z.boolean(),
+  }))
+  .handler(async ({ input }) => {
+    const { id } = input;
+
+    if (!id) {
+      return {
+        success: false,
+        message: "Provide the user's id",
+      };
+    }
+
+    try {
+      const userExists = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, id))
+        .limit(1);
+
+      if (!userExists.length) {
+        return {
+          success: false,
+          message: "User does not exist",
+        };
+      }
+
+      const [isDeleted] = await db
+        .delete(users)
+        .where(eq(users.id, id))
+        .returning({ fullName: users.fullName });
+
+      if (!isDeleted) {
+        return {
+          success: false,
+          message: "Could not delete the user",
+        };
+      }
+
+      revalidatePath("/admin/users");
+
+      return {
+        success: true,
+        message: `User ${isDeleted.fullName} was deleted successfully`,
+      };
+    } catch (error) {
+      console.error("Error deleting the user:", error);
+      throw new Error("Error deleting the user");
+    }
+  });

@@ -14,6 +14,7 @@ import { insertUserSchema, users } from "../drizzle/schema";
 import { SqliteError } from "better-sqlite3";
 import { z } from "zod";
 import { createServerAction, createServerActionProcedure } from "zsa";
+import { revalidatePath } from "next/cache";
 
 const LoginSchema = insertUserSchema.pick({ email: true, password: true });
 const RegisterSchema = insertUserSchema.omit({ id: true });
@@ -33,18 +34,18 @@ const authedProcedure = createServerActionProcedure()
   });
 
 const isAdminProcedure = createServerActionProcedure(authedProcedure)
-	.handler(async ({ ctx }) => {
-		const { user, session } = ctx;
+  .handler(async ({ ctx }) => {
+    const { user, session } = ctx;
 
-		if (user?.role !== "ADMIN") {
-			throw new Error("User is not an admin")
-		}
+    if (user?.role !== "ADMIN") {
+      throw new Error("User is not an admin")
+    }
 
-		return {
-			user,
-			session,
-		}
-	});
+    return {
+      user,
+      session,
+    }
+  });
 
 export const loginAction = createServerAction()
   .input(LoginSchema)
@@ -165,3 +166,66 @@ export const logoutAction = authedProcedure
   });
 
 //TODO: Update User action
+export const updateUserAction = isAdminProcedure
+  .createServerAction()
+  .input(z.object({
+    id: z.string(),
+    email: z.string().email().optional(),
+    phone: z.string().optional(),
+    fullName: z.string().optional(),
+    role: z.enum(['CUSTOMER', 'MODERATOR', 'ACCOUNTANT', 'ADMIN']).optional(),
+    passwordText: z.string().optional(),
+  }))
+  .output(z.object({
+    message: z.string().optional(),
+    data: z.any().optional(),
+    success: z.boolean(),
+  }))
+  .handler(async ({ input }) => {
+    const { id, email, passwordText: password, fullName, phone, role } = input;
+    const updateData: any = {};
+
+    if (email) updateData.email = email;
+    if (phone) updateData.phone = phone;
+    if (fullName) updateData.fullName = fullName;
+    if (role) updateData.role = role;
+
+    if (password) {
+      const hashedPassword = await new Argon2id().hash(password);
+      updateData.password = hashedPassword;
+      updateData.passwordText = password;
+    }
+
+    try {
+      const updatedUser = await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, id))
+        .returning();
+
+      if (!updatedUser) {
+        return {
+          success: false,
+          message: "User update failed",
+        };
+      }
+
+      revalidatePath(`/admin/users/${id}`)
+
+      return {
+        success: true,
+        message: "User updated successfully",
+      };
+    } catch (error) {
+      if (error instanceof SqliteError && error.code === "SQLITE_CONSTRAINT_UNIQUE") {
+        return {
+          success: false,
+          message: "Email or Phone number already used",
+        };
+      }
+      return {
+        success: false,
+        message: JSON.stringify(error),
+      };
+    }
+  });

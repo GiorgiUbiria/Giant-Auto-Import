@@ -110,7 +110,7 @@ export const getCarsAction = isAdminProcedure
 				.from(cars)
 				.orderBy(desc(cars.purchaseDate));
 
-				return carsQuery.length ? carsQuery : [];
+			return carsQuery.length ? carsQuery : [];
 		} catch (error) {
 			console.error("Error fetching cars:", error);
 			throw new Error("Failed to fetch cars");
@@ -231,4 +231,60 @@ export const deleteCarAction = isAdminProcedure
 		}
 	});
 
+export const assignOwnerAction = isAdminProcedure
+	.createServerAction()
+	.input(z.object({
+		vin: z.string().optional(),
+		carId: z.number().optional(),
+		userId: z.string().nullable(),
+	}))
+	.output(z.object({
+		message: z.string().optional(),
+		data: z.any().optional(),
+		success: z.boolean(),
+	}))
+	.handler(async ({ input }) => {
+		const { vin, carId, userId } = input;
 
+		if (!carId && !vin) {
+			return ({
+				success: false,
+				message: "Provide car's vin code or id, and user's id",
+			})
+		}
+
+		try {
+			const whereClause = [];
+			if (carId !== undefined) {
+				whereClause.push(eq(cars.id, carId));
+			}
+			if (vin !== undefined) {
+				whereClause.push(eq(cars.vin, vin));
+			}
+
+			const [isAssigned] = await db
+				.update(cars)
+				.set({
+					ownerId: userId,
+				})
+				.where(or(...whereClause))
+				.returning({ vin: cars.vin });
+
+			if (!isAssigned) {
+				return ({
+					success: false,
+					message: "Could not assign the owner to car",
+				})
+			}
+
+			revalidatePath(`/admin/users/${userId}`);
+
+			return {
+				success: true,
+				message: userId ? `Car with vin code ${isAssigned.vin} was successfully assigned to the user with id ${userId}` : `Car's owner cleared`,
+			};
+		} catch (error) {
+			console.error("Error assgining owner:", error);
+			throw new Error("Failed to assign the owner to car");
+		}
+	});

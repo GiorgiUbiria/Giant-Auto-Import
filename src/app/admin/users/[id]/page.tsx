@@ -3,6 +3,8 @@ import { getAuth } from "@/lib/auth";
 import { getUserAction } from "@/lib/actions/userActions";
 import { DataTable } from "@/components/data-table";
 import { columns } from "./columns";
+import { AssignOwner } from "./assign-owner";
+import { UpdateProfileForm } from "./edit-profile-form";
 
 export default async function Page({ params }: { params: { id: string } }) {
   const { user: admin } = await getAuth();
@@ -21,8 +23,9 @@ export default async function Page({ params }: { params: { id: string } }) {
   return (
     <div>
       <h1 className="text-3xl my-8"> Profile of - {user.fullName} </h1>
-      {/* TODO: Edit profile form */}
+      <UpdateProfileForm user={user} />
       <DataTable columns={columns} data={cars} />
+      <AssignOwner userId={user.id} />
     </div>
   );
 }

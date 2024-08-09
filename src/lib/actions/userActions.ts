@@ -8,7 +8,7 @@ import { createServerActionProcedure } from "zsa";
 import { getAuth } from "../auth";
 import { z } from "zod";
 
-const SelectSchema = selectUserSchema.omit({ password: true, passwordText: true, priceList: true, })
+const SelectSchema = selectUserSchema;
 
 const authedProcedure = createServerActionProcedure()
   .handler(async () => {
@@ -44,15 +44,7 @@ export const getUsersAction = isAdminProcedure
   .handler(async () => {
     try {
       const userQuery = await db
-        .select({
-          id: users.id,
-          email: users.email,
-          fullName: users.fullName,
-          phone: users.phone,
-          balance: users.balance,
-          deposit: users.deposit,
-          role: users.role
-        })
+        .select()
         .from(users)
         .where(ne(users.role, "ADMIN"))
         .orderBy(users.role);

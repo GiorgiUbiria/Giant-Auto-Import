@@ -25,14 +25,6 @@ type AvatarProps = {
 const Avatar = ({ user }: AvatarProps) => {
 	const { isPending, execute } = useServerAction(logoutAction);
 
-	const userMenuItem = user ? (
-		<DropdownMenuItem asChild className="text-md">
-			<Link href={user.role === "CUSTOMER" ? "/dashboard" : "/admin"} className="cursor-pointer">
-				{user.role === "CUSTOMER" ? "Personal Cabinet" : "Admin Panel"}
-			</Link>
-		</DropdownMenuItem>
-	) : null;
-
 	return (
 		<>
 			<DropdownMenu>
@@ -49,7 +41,6 @@ const Avatar = ({ user }: AvatarProps) => {
 				<DropdownMenuContent align="end">
 					<DropdownMenuLabel className="text-lg">My Account</DropdownMenuLabel>
 					<DropdownMenuSeparator />
-					{userMenuItem}
 					{user ? (
 						<>
 							{" "}
@@ -66,7 +57,7 @@ const Avatar = ({ user }: AvatarProps) => {
 										}
 									}}
 								>
-									<LogOut className="size-4" />
+									Sign Out <LogOut className="size-4 ml-2" />
 								</Button>
 							</DropdownMenuItem>
 						</>

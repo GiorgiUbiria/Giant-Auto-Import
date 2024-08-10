@@ -7,25 +7,25 @@ import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
-    Form,
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select"
 import { addCarAction } from "@/lib/actions/carActions"
-import { insertCarSchema } from "@/lib/drizzle/schema"
+import { insertCarSchema, users } from "@/lib/drizzle/schema"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { CalendarIcon, Loader2 } from "lucide-react"
@@ -33,7 +33,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useServerAction } from "zsa-react"
 
-const FormSchema = insertCarSchema.omit({ id: true, ownerId: true, createdAt: true, totalFee: true, shippingFee: true, destinationPort: true, });
+const FormSchema = insertCarSchema.omit({ id: true, createdAt: true, totalFee: true, shippingFee: true, destinationPort: true, });
 
 export function AddCarForm() {
   const router = useRouter();

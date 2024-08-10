@@ -4,6 +4,7 @@ import { eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "../drizzle/db";
 import { selectCarSchema, selectUserSchema, users } from "../drizzle/schema";
+import { formatISO } from 'date-fns';
 import { createServerActionProcedure } from "zsa";
 import { getAuth } from "../auth";
 import { z } from "zod";
@@ -64,7 +65,7 @@ export const getUserAction = isAdminProcedure
   .output(z.union([
     z.object({
       user: SelectSchema,
-      cars: z.array(selectCarSchema),
+      cars: z.array(selectCarSchema.omit({ createdAt: true })),
     }),
     z.null()
   ]))
@@ -72,20 +73,11 @@ export const getUserAction = isAdminProcedure
     const { id } = input;
 
     if (!id) {
+      console.log("No id");
       return null;
     }
 
     try {
-      const userExists = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, id))
-        .limit(1);
-
-      if (!userExists.length) {
-        return null;
-      }
-
       const [result] = await db
         .query.users.findMany({
           where: eq(users.id, id),
@@ -97,11 +89,10 @@ export const getUserAction = isAdminProcedure
 
       if (!result) return null;
 
-      const { ownedCars: cars, ...user } = result;
-
+      const { ownedCars, ...user } = result;
       return {
         user,
-        cars: cars ?? [],
+        cars: ownedCars ?? [],
       };
     } catch (error) {
       console.error("Error fetching user:", error);

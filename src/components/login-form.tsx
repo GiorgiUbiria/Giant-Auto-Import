@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { loginAction as action } from "@/lib/actions/authActions";
 import { insertUserSchema } from "@/lib/drizzle/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -48,7 +49,7 @@ export default function LoginForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit} className="w-2/3 space-y-6">
+      <form onSubmit={handleSubmit} className="w-1/3 space-y-6 my-8 bg-gray-700 p-3 rounded-md text-primary">
         <FormField
           control={form.control}
           name="email"
@@ -81,9 +82,9 @@ export default function LoginForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit" className="w-full" disabled={isPending}>
           {
-            isPending ? "Submitting..." : "Login"
+            isPending ? <Loader2 className="animate-spin" /> : "Log In"
           }
         </Button>
       </form>

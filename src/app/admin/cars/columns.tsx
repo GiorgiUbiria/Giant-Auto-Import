@@ -74,14 +74,25 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   // },
   {
     accessorKey: "vin",
-    header: "VIN#",
+    header: "VIN# LOT#",
     cell: ({ row }) => {
       const vin = row.getValue("vin") as SelectSchemaType["vin"];
+      const lotNumber = row.original.lotNumber as SelectSchemaType["lotNumber"];
 
       return (
-        <div className="flex gap-2 items-center">
-          <Link href={`/car/${vin}`}> {vin} </Link>
-          <CopyToClipBoard text={vin} />
+        <div>
+          <div className="flex gap-x-2 items-center">
+            <Link href={`/car/${vin}`}> {vin} </Link>
+            <CopyToClipBoard text={vin} />
+          </div>
+          {lotNumber ? (
+            <div className="flex gap-x-2 items-center">
+              <p> {lotNumber}</p>
+              <CopyToClipBoard text={lotNumber} />
+            </div>
+          ) : (
+            <p> - </p>
+          )}
         </div>
       )
     },

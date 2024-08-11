@@ -15,19 +15,36 @@ import { cars, images, insertImageSchema, selectImageSchema } from "../drizzle/s
 import { desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 
-const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
-const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
-const secretAccessKey = process.env.CLOUDFLARE_SECRET_ACCESS_KEY as string;
-const bucketName = process.env.CLOUDFLARE_BUCKET_NAME as string;
 
-const S3Client = new S3({
-  region: "auto",
-  endpoint: endpoint,
-  credentials: {
-    accessKeyId: accessKeyId,
-    secretAccessKey: secretAccessKey,
-  },
-});
+export async function cleanUpBucketTwo(): Promise<void> {
+  try {
+    const listObjectsParams = {
+      Bucket: bucketName,
+    };
+
+    let continuationToken;
+
+    do {
+      const listCommand = new ListObjectsV2Command({
+        ...listObjectsParams,
+        ContinuationToken: continuationToken,
+      });
+      const listedObjects: any = await S3Client.send(listCommand);
+
+      if (listedObjects.Contents) {
+        for (const item of listedObjects.Contents) {
+          if (item.Key) {
+            await deleteObjectFromBucket(item.Key);
+          }
+        }
+      }
+
+      continuationToken = listedObjects.NextContinuationToken;
+    } while (continuationToken);
+  } catch (error) {
+    console.error("Error cleaning up the bucket:", error);
+  }
+}
 
 export async function cleanUpBucket(): Promise<void> {
   try {
@@ -84,26 +101,7 @@ export async function deleteObjectFromBucket(key: string): Promise<void> {
   }
 }
 
-async function getFileCount(prefix: string): Promise<number> {
-  const command = new ListObjectsV2Command({
-    Bucket: bucketName,
-    Prefix: prefix,
-  });
 
-  let fileCount = 0;
-  let truncated: boolean = true;
-
-  while (truncated) {
-    const response = await S3Client.send(command);
-    fileCount += response.Contents?.length ?? 0;
-    truncated = response.IsTruncated as boolean;
-    if (truncated) {
-      command.input.ContinuationToken = response.NextContinuationToken;
-    }
-  }
-
-  return fileCount;
-}
 
 export async function handleUploadImages(
   type: "WAREHOUSE" | "PICK_UP" | "DELIVERED" | "AUCTION",

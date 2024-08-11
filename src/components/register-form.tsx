@@ -26,6 +26,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useServerAction } from "zsa-react";
+import { Loader2 } from "lucide-react";
 
 const FormSchema = insertUserSchema.omit({ id: true });
 
@@ -58,7 +59,7 @@ export default function RegisterForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit} className="w-2/3 space-y-6">
+      <form onSubmit={handleSubmit} className="w-1/3 space-y-6 my-8 bg-gray-700 p-3 rounded-md">
         <FormField
           control={form.control}
           name="fullName"
@@ -149,9 +150,9 @@ export default function RegisterForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" onClick={() => { console.log("Clicked") }} disabled={isPending}>
+        <Button type="submit" className="w-full" disabled={isPending}>
           {
-            isPending ? "Submitting..." : "Register"
+            isPending ? <Loader2 className="animate-spin" /> : "Register"
           }
         </Button>
       </form>

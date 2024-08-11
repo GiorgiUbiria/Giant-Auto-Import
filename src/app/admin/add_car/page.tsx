@@ -8,5 +8,9 @@ export default async function Page() {
     return redirect("/");
   }
 
-  return <AddCarForm />;
+  return (
+    <div className="w-full grid place-items-center">
+      <AddCarForm />
+    </div>
+  )
 }

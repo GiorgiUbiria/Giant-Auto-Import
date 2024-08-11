@@ -24,197 +24,71 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { addCarAction, handleUploadImages } from "@/lib/actions/carActions"
-import { insertCarSchema } from "@/lib/drizzle/schema"
+import { updateCarAction } from "@/lib/actions/carActions"
+import { insertCarSchema, selectCarSchema } from "@/lib/drizzle/schema"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { CalendarIcon, Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useServerAction } from "zsa-react"
 import { getUsersAction } from "@/lib/actions/userActions"
+import { useEffect } from "react"
 
-const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpg", "image/jpeg", "image/webp"];
-const MAX_IMAGE_SIZE = 4;
+const FormSchema = insertCarSchema.omit({ id: true, createdAt: true, totalFee: true, shippingFee: true, destinationPort: true, });
+const CarSchema = selectCarSchema.omit({ destinationPort: true, createdAt: true })
+type Car = z.infer<typeof  CarSchema>;
 
-const sizeInMB = (sizeInBytes: number, decimalsNum = 2) => {
-  const result = sizeInBytes / (1024 * 1024);
-  return +result.toFixed(decimalsNum);
-};
-
-const ImageSchema = {
-  auction_images: z
-    .custom<FileList>()
-    .refine((files) => {
-      return Array.from(files ?? []).every(
-        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE,
-      );
-    }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
-    .refine((files) => {
-      return Array.from(files ?? []).every((file) =>
-        ACCEPTED_IMAGE_TYPES.includes(file.type),
-      );
-    }, "File type is not supported")
-    .optional(),
-  pick_up_images: z
-    .custom<FileList>()
-    .refine((files) => {
-      return Array.from(files ?? []).every(
-        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE,
-      );
-    }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
-    .refine((files) => {
-      return Array.from(files ?? []).every((file) =>
-        ACCEPTED_IMAGE_TYPES.includes(file.type),
-      );
-    }, "File type is not supported")
-    .optional(),
-  warehouse_images: z
-    .custom<FileList>()
-    .refine((files) => {
-      return Array.from(files ?? []).every(
-        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE,
-      );
-    }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
-    .refine((files) => {
-      return Array.from(files ?? []).every((file) =>
-        ACCEPTED_IMAGE_TYPES.includes(file.type),
-      );
-    }, "File type is not supported")
-    .optional(),
-  delivery_images: z
-    .custom<FileList>()
-    .refine((files) => {
-      return Array.from(files ?? []).every(
-        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE,
-      );
-    }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
-    .refine((files) => {
-      return Array.from(files ?? []).every((file) =>
-        ACCEPTED_IMAGE_TYPES.includes(file.type),
-      );
-    }, "File type is not supported")
-    .optional(),
-}
-
-const FormInitialSchema = insertCarSchema.omit({ id: true, createdAt: true, totalFee: true, shippingFee: true, destinationPort: true, });
-const FormSchema = FormInitialSchema.extend(ImageSchema)
-
-const processAndUploadImages = async (
-  images: FileList | undefined,
-  type: string,
-  vin: string,
-) => {
-  if (!images || images.length === 0) return;
-
-  const fileData = await Promise.all(
-    Array.from(images).map(async (file: File) => {
-      const ArrayBuffer = await file.arrayBuffer();
-      return {
-        buffer: new Uint8Array(ArrayBuffer),
-        size: file.size,
-        type: file.type,
-        name: file.name,
-      };
-    }),
-  );
-
-  const urls = await handleUploadImages(
-    type as "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP",
-    vin,
-    fileData.map((file) => file.size),
-  );
-
-  await Promise.all(
-    urls.map((url: string, index: number) =>
-      fetch(url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": images[index].type,
-        },
-        body: fileData[index].buffer,
-      }),
-    ),
-  );
-};
-
-export function AddCarForm() {
-  const router = useRouter();
+export function EditCarForm({ car } : { car: Car}) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      vin: "",
-      year: new Date().getFullYear(),
-      make: "",
-      model: "",
-      auction: "Copart",
-      originPort: "NJ",
-      keys: "YES",
-      title: "YES",
-      shippingStatus: "AUCTION",
-      bodyType: "SEDAN",
-      fuelType: "DIESEL",
-      bookingNumber: "",
-      containerNumber: "",
-      lotNumber: "",
-      trackingLink: "",
-      holder: "",
-      purchaseFee: 0,
-      departureDate: null,
-      arrivalDate: null,
+      vin: car.vin,
+      year: car.year,
+      make: car.make, 
+      model: car.model,
+      auction: car.auction,
+      originPort: car.originPort,
+      keys: car.keys,
+      title: car.title,
+      shippingStatus: car.shippingStatus,
+      bodyType: car.bodyType,
+      fuelType: car.fuelType,
+      bookingNumber: car.bookingNumber,
+      containerNumber: car.containerNumber,
+      lotNumber: car.lotNumber,
+      trackingLink: car.trackingLink,
+      holder: car.holder,
+      purchaseFee: car.purchaseFee,
+      departureDate: car.departureDate,
+      arrivalDate: car.arrivalDate,
+			purchaseDate: car.purchaseDate,
+			ownerId: car.ownerId,
     },
   })
 
-  const { isPending: isPendingUsers, execute: executeUsers, data: users } = useServerAction(getUsersAction);
-  const { execute, isPending } = useServerAction(addCarAction, {
-    onStart: () => {
-      console.log("Server action started");
-    },
-    onSuccess: ({ data }) => {
-      console.log("Server action success:", data);
-    },
-    onError: ({ err }) => {
-      console.error("Server action error:", err);
-    },
-    onFinish: async ([data, err]) => {
-      try {
-        if (data?.success === false) {
-          throw new Error(data.message);
-        }
-
-        const { delivery_images, pick_up_images, warehouse_images, auction_images, vin } = data?.data;
-
-        await Promise.all([
-          processAndUploadImages(warehouse_images, "WAREHOUSE", vin),
-          processAndUploadImages(auction_images, "AUCTION", vin),
-          processAndUploadImages(pick_up_images, "PICK_UP", vin),
-          processAndUploadImages(delivery_images, "DELIVERED", vin),
-        ]);
-
-        toast.success(data?.message);
-        router.push("/admin/cars");
-      } catch (error) {
-        console.error(error);
-        toast.error("An error occurred while submitting the form");
-      }
-    },
-  });
+  const { isPending, execute } = useServerAction(updateCarAction);
+  const { isPending: isPendingUsers, execute: executeUsers, data: users} = useServerAction(getUsersAction);
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
-    try {
-      const { warehouse_images, pick_up_images, auction_images, delivery_images, ...carData } = values;
-      execute(carData);
-    } catch (error) {
+    const [data, error] = await execute(values);
+
+    if (data?.success === false) {
+      toast.error(data.message);
       console.error(error);
-      toast.error("An error occurred while submitting the form");
+    } else {
+      toast.success(data?.message);
     }
-  };
+  }
 
   const handleSubmit = form.handleSubmit(onSubmit)
 
+	useEffect(() => {
+		executeUsers();
+	}, [executeUsers])
+
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit} className="w-2/3 space-y-6 my-8 bg-gray-700 p-3 rounded-md">
+      <form onSubmit={handleSubmit} className="w-full space-y-6 my-8 bg-gray-700 p-3 rounded-md">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
           <FormField
             control={form.control}
@@ -679,115 +553,22 @@ export function AddCarForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Owner</FormLabel>
-                <Select onValueChange={field.onChange} onOpenChange={async () => { await executeUsers(); }}>
+                <Select onValueChange={field.onChange} defaultValue={car.ownerId || "none"}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select the owner of the car" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {isPendingUsers && <Loader2 className="animate-spin" />}
+                    {isPendingUsers && <Loader2 className="animate-spin" />} 
+										<SelectItem value="none">None</SelectItem>
                     {users && users.map((user) => (
-                      <SelectItem value={user.id} key={user.id}>{user.fullName}</SelectItem>
+                      <SelectItem value={user.id} key={user.id}>{ user.fullName }</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  Car Owner
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
-          <FormField
-            control={form.control}
-            name="auction_images"
-            render={({ field: { value, onChange, ...fieldProps } }) => (
-              <FormItem>
-                <FormLabel>Auction Images</FormLabel>
-                <FormControl>
-                  <Input type="file"
-                    {...fieldProps}
-                    multiple
-                    accept={ACCEPTED_IMAGE_TYPES.join(", ")}
-                    onChange={(event) =>
-                      onChange(event.target.files)
-                    }
-                  />
-                </FormControl>
-                <FormDescription>
-                  Auction Images
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="warehouse_images"
-            render={({ field: { value, onChange, ...fieldProps } }) => (
-              <FormItem>
-                <FormLabel>Warehouse Images</FormLabel>
-                <FormControl>
-                  <Input type="file"
-                    {...fieldProps}
-                    multiple
-                    accept={ACCEPTED_IMAGE_TYPES.join(", ")}
-                    onChange={(event) =>
-                      onChange(event.target.files)
-                    }
-                  />
-                </FormControl>
-                <FormDescription>
-                  Warehouse Images
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="delivery_images"
-            render={({ field: { value, onChange, ...fieldProps } }) => (
-              <FormItem>
-                <FormLabel>Delivery Images</FormLabel>
-                <FormControl>
-                  <Input type="file"
-                    {...fieldProps}
-                    multiple
-                    accept={ACCEPTED_IMAGE_TYPES.join(", ")}
-                    onChange={(event) =>
-                      onChange(event.target.files)
-                    }
-                  />
-                </FormControl>
-                <FormDescription>
-                  Delivery Images
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="pick_up_images"
-            render={({ field: { value, onChange, ...fieldProps } }) => (
-              <FormItem>
-                <FormLabel>Pick Up Images</FormLabel>
-                <FormControl>
-                  <Input type="file"
-                    {...fieldProps}
-                    multiple
-                    accept={ACCEPTED_IMAGE_TYPES.join(", ")}
-                    onChange={(event) =>
-                      onChange(event.target.files)
-                    }
-                  />
-                </FormControl>
-                <FormDescription>
-                  Pick Up Images
+									Car Owner
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -802,7 +583,7 @@ export function AddCarForm() {
           {
             isPending ? (
               <Loader2 className="animate-spin" />
-            ) : "Add Car"
+            ) : "Edit Car"
           }
         </Button>
       </form>

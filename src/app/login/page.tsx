@@ -10,7 +10,7 @@ export default async function Page() {
     return redirect("/");
   }
   return (
-    <div className="min-h-max py-16 lg:py-28 flex flex-col items-center justify-center gap-2">
+    <div className="w-full grid place-items-center">
       <Image src={Logo} alt="Company Logo" width={150} height={150} />
       <LoginForm />
     </div>

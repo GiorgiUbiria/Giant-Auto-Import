@@ -3,12 +3,90 @@
 import { desc, eq, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "../drizzle/db";
-import { cars, insertCarSchema, selectCarSchema } from "../drizzle/schema";
+import { cars, images, insertCarSchema, insertImageSchema, selectCarSchema } from "../drizzle/schema";
 import { createServerActionProcedure } from "zsa";
 import { getAuth } from "../auth";
 import { z } from "zod";
+import { ListObjectsV2Command, PutObjectCommand, S3 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const AddCarFormSchema = insertCarSchema.omit({ id: true, ownerId: true, createdAt: true, totalFee: true, shippingFee: true, destinationPort: true, });
+const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpg", "image/jpeg"];
+const MAX_IMAGE_SIZE = 4;
+const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
+const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
+const secretAccessKey = process.env.CLOUDFLARE_SECRET_ACCESS_KEY as string;
+const bucketName = process.env.CLOUDFLARE_BUCKET_NAME as string;
+
+const S3Client = new S3({
+	region: "auto",
+	endpoint: endpoint,
+	credentials: {
+		accessKeyId: accessKeyId,
+		secretAccessKey: secretAccessKey,
+	},
+});
+
+const sizeInMB = (sizeInBytes: number, decimalsNum = 2) => {
+	const result = sizeInBytes / (1024 * 1024);
+	return +result.toFixed(decimalsNum);
+};
+
+const AddCarInitialFormSchema = insertCarSchema.omit({ id: true, createdAt: true, totalFee: true, shippingFee: true, destinationPort: true, });
+const ImageSchema = {
+	auction_images: z
+		.custom<FileList>()
+		.refine((files) => {
+			return Array.from(files ?? []).every(
+				(file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE,
+			);
+		}, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
+		.refine((files) => {
+			return Array.from(files ?? []).every((file) =>
+				ACCEPTED_IMAGE_TYPES.includes(file.type),
+			);
+		}, "File type is not supported")
+		.optional(),
+	pick_up_images: z
+		.custom<FileList>()
+		.refine((files) => {
+			return Array.from(files ?? []).every(
+				(file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE,
+			);
+		}, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
+		.refine((files) => {
+			return Array.from(files ?? []).every((file) =>
+				ACCEPTED_IMAGE_TYPES.includes(file.type),
+			);
+		}, "File type is not supported")
+		.optional(),
+	warehouse_images: z
+		.custom<FileList>()
+		.refine((files) => {
+			return Array.from(files ?? []).every(
+				(file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE,
+			);
+		}, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
+		.refine((files) => {
+			return Array.from(files ?? []).every((file) =>
+				ACCEPTED_IMAGE_TYPES.includes(file.type),
+			);
+		}, "File type is not supported")
+		.optional(),
+	delivery_images: z
+		.custom<FileList>()
+		.refine((files) => {
+			return Array.from(files ?? []).every(
+				(file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE,
+			);
+		}, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
+		.refine((files) => {
+			return Array.from(files ?? []).every((file) =>
+				ACCEPTED_IMAGE_TYPES.includes(file.type),
+			);
+		}, "File type is not supported")
+		.optional(),
+}
+const AddCarFormSchema = AddCarInitialFormSchema.extend(ImageSchema);
 const SelectSchema = selectCarSchema.omit({ destinationPort: true, createdAt: true, });
 
 const authedProcedure = createServerActionProcedure()
@@ -39,6 +117,107 @@ const isAdminProcedure = createServerActionProcedure(authedProcedure)
 		}
 	});
 
+async function getFileCount(prefix: string): Promise<number> {
+	const command = new ListObjectsV2Command({
+		Bucket: bucketName,
+		Prefix: prefix,
+	});
+
+	let fileCount = 0;
+	let truncated: boolean = true;
+
+	while (truncated) {
+		const response = await S3Client.send(command);
+		fileCount += response.Contents?.length ?? 0;
+		truncated = response.IsTruncated as boolean;
+		if (truncated) {
+			command.input.ContinuationToken = response.NextContinuationToken;
+		}
+	}
+
+	return fileCount;
+}
+
+export async function handleUploadImages(
+	type: "WAREHOUSE" | "PICK_UP" | "DELIVERED" | "AUCTION",
+	vin: string,
+	sizes: number[],
+): Promise<string[]> {
+	const prefix = `${vin}/${type}/`;
+	const existingFileCount = await getFileCount(prefix);
+
+	const keys = sizes.map((_size, index) => {
+		const newIndex = existingFileCount + index + 1;
+		return `${prefix}${newIndex}.png`;
+	});
+
+	const urls = await Promise.all(
+		keys.map(async (key, index) => {
+			const command = new PutObjectCommand({
+				Bucket: bucketName,
+				Key: key,
+				ContentLength: sizes[index],
+				ContentType: "image/png",
+			});
+
+			const signedUrl = await getSignedUrl(S3Client, command, {
+				expiresIn: 3600,
+			});
+
+			const insertValues: z.infer<typeof insertImageSchema> = {
+				carVin: vin,
+				imageType: type as "AUCTION" | "DELIVERED" | "WAREHOUSE" | "PICK_UP",
+				imageKey: key,
+				priority: null,
+			}
+
+			await db.insert(images).values(insertValues);
+
+			return signedUrl;
+		}),
+	);
+
+	return urls;
+}
+
+// async function uploadImages(vin: string, imageFiles: Record<string, FileList | undefined>) {
+// 	const imageTypes = {
+// 		auction_images: "AUCTION",
+// 		pick_up_images: "PICK_UP",
+// 		warehouse_images: "WAREHOUSE",
+// 		delivery_images: "DELIVERED",
+// 	};
+//
+// 	for (const [category, fileList] of Object.entries(imageFiles)) {
+// 		if (fileList) {
+// 			const type = imageTypes[category as keyof typeof imageTypes];
+// 			const prefix = `${vin}/${type}/`;
+// 			const existingFileCount = await getFileCount(prefix);
+//
+// 			await Promise.all(Array.from(fileList).map(async (file, index) => {
+// 				const newIndex = existingFileCount + index + 1;
+// 				const key = `${prefix}${newIndex}.png`;
+//
+// 				await S3Client.putObject({
+// 					Bucket: bucketName,
+// 					Key: key,
+// 					Body: file,
+// 					ContentType: file.type,
+// 				});
+//
+// 				const insertValues: z.infer<typeof insertImageSchema> = {
+// 					carVin: vin,
+// 					imageType: type as "AUCTION" | "DELIVERED" | "WAREHOUSE" | "PICK_UP",
+// 					imageKey: key,
+// 					priority: null,
+// 				}
+//
+// 				await db.insert(images).values(insertValues);
+// 			}));
+// 		}
+// 	}
+// }
+
 export const addCarAction = isAdminProcedure
 	.createServerAction()
 	.input(AddCarFormSchema)
@@ -49,20 +228,31 @@ export const addCarAction = isAdminProcedure
 	}))
 	.handler(async ({ input }) => {
 		try {
-			const [vin] = await db
+			const {
+				warehouse_images,
+				pick_up_images,
+				auction_images,
+				delivery_images,
+				...carData
+			} = input;
+
+			const result = await db
 				.insert(cars)
-				.values(input)
+				.values(carData)
 				.returning({ vin: cars.vin });
 
-			if (!vin || vin === null) {
-				throw new Error("Could not add a car")
-			};
+			const vin = result[0]?.vin;
+
+			if (!vin) {
+				throw new Error("Could not add a car");
+			}
 
 			revalidatePath("/admin/cars");
 
 			return {
 				success: true,
-				message: `Car with vin code ${vin} was added successfully`,
+				message: `Car with VIN code ${vin} was added successfully`,
+				data: { warehouse_images, pick_up_images, auction_images, delivery_images, vin }
 			};
 		} catch (error) {
 			console.error(error);
@@ -75,7 +265,7 @@ export const addCarAction = isAdminProcedure
 		}
 	});
 
-export const getCarsAction = isAdminProcedure
+export const getCarsAction = authedProcedure
 	.createServerAction()
 	.output(z.array(SelectSchema))
 	.handler(async () => {
@@ -117,7 +307,7 @@ export const getCarsAction = isAdminProcedure
 		}
 	});
 
-export const getCarAction = isAdminProcedure
+export const getCarAction = authedProcedure
 	.createServerAction()
 	.input(z.object({
 		vin: z.string().optional(),
@@ -247,9 +437,9 @@ export const deleteCarAction = isAdminProcedure
 export const assignOwnerAction = isAdminProcedure
 	.createServerAction()
 	.input(z.object({
-		vin: z.string().optional(),
-		carId: z.number().optional(),
-		userId: z.string().nullable(),
+		vin: z.string(),
+		carId: z.number(),
+		ownerId: z.string().nullable(),
 	}))
 	.output(z.object({
 		message: z.string().optional(),
@@ -257,9 +447,9 @@ export const assignOwnerAction = isAdminProcedure
 		success: z.boolean(),
 	}))
 	.handler(async ({ input }) => {
-		const { vin, carId, userId } = input;
+		const { vin, carId, ownerId } = input;
 
-		if (!carId && !vin) {
+		if (!carId || !vin) {
 			return {
 				success: false,
 				message: "Provide car's vin code or id, and user's id",
@@ -291,7 +481,7 @@ export const assignOwnerAction = isAdminProcedure
 			const [isAssigned] = await db
 				.update(cars)
 				.set({
-					ownerId: userId,
+					ownerId: ownerId,
 				})
 				.where(or(...whereClause))
 				.returning({ vin: cars.vin });
@@ -303,14 +493,59 @@ export const assignOwnerAction = isAdminProcedure
 				};
 			}
 
-			revalidatePath(`/admin/users/${userId}`);
+			revalidatePath(`/admin/users/${ownerId}`);
 
 			return {
 				success: true,
-				message: userId ? `Car with vin code ${isAssigned.vin} was successfully assigned to the user with id ${userId}` : `Car's owner cleared`,
+				message: ownerId !== "none" ? `Car with vin code ${isAssigned.vin} was successfully assigned to the user with id ${ownerId}` : `Car's owner cleared`,
 			};
 		} catch (error) {
 			console.error("Error assigning owner:", error);
 			throw new Error("Failed to assign the owner to car");
+		}
+	});
+
+export const updateCarAction = isAdminProcedure
+	.createServerAction()
+	.input(insertCarSchema)
+	.output(z.object({
+		message: z.string().optional(),
+		data: z.any().optional(),
+		success: z.boolean(),
+	}))
+	.handler(async ({ input }) => {
+		const car = input;
+
+		car.ownerId = car.ownerId !== "none" ? car.ownerId : null;
+
+		try {
+			const updatedCar = await db
+				.update(cars)
+				.set(car)
+				.where(eq(cars.vin, car.vin))
+				.returning();
+
+			if (!updatedCar) {
+				return {
+					success: false,
+					message: "Car update failed",
+				};
+			}
+
+			revalidatePath(`/admin/cars/edit/${car.vin}`);
+			revalidatePath(`/admin/cars/`);
+
+			return {
+				success: true,
+				message: `Car with vin ${car.vin} was updated successfully`,
+			};
+		} catch (error) {
+			console.error(error);
+			const errorMessage = error instanceof Error ? error.message : String(error);
+
+			return {
+				success: false,
+				message: errorMessage,
+			};
 		}
 	});

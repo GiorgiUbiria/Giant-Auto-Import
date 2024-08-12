@@ -1,8 +1,6 @@
-import { DataTable } from "@/components/data-table";
-import { getCarsAction } from "@/lib/actions/carActions";
 import { getAuth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { columns } from "./columns";
+import { Client } from "./client";
 
 export default async function Page() {
   const { user } = await getAuth();
@@ -10,14 +8,7 @@ export default async function Page() {
     return redirect("/");
   }
 
-  const [cars, err] = await getCarsAction();
-  if (err) {
-    console.error(err);
-  }
-
   return (
-    <div className="py-10 text-primary">
-      <DataTable columns={columns} data={cars!} />
-    </div>
+    <Client />
   );
 }

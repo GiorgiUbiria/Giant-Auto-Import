@@ -29,6 +29,9 @@ const S3Client = new S3({
   },
 });
 
+const SelectImageSchema = selectImageSchema.omit({ id: true, })
+type SelectImageType = z.infer<typeof SelectImageSchema>;
+
 async function getFileCount(prefix: string): Promise<number> {
   const command = new ListObjectsV2Command({
     Bucket: bucketName,
@@ -184,7 +187,7 @@ export async function deleteObjectFromBucket(key: string): Promise<void> {
   }
 }
 
-async function getSignedUrlForKey(key: string): Promise<string> {
+export async function getSignedUrlForKey(key: string): Promise<string> {
   return getSignedUrl(
     S3Client,
     new GetObjectCommand({
@@ -195,7 +198,7 @@ async function getSignedUrlForKey(key: string): Promise<string> {
   );
 }
 
-export async function fetchImagesForDisplay(vin: string): Promise<z.infer<typeof selectImageSchema>> {
+export async function fetchImagesForDisplay(vin: string): Promise<SelectImageType[]> {
   const imageRecords = await db
     .select()
     .from(images)
@@ -206,6 +209,7 @@ export async function fetchImagesForDisplay(vin: string): Promise<z.infer<typeof
     imageRecords.map(async (record) => {
       const url = await getSignedUrlForKey(record.imageKey!);
       return {
+        url: url,
         carVin: vin,
         imageKey: record.imageKey,
         imageType: record.imageType,

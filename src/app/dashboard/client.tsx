@@ -6,9 +6,11 @@ import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { Loader2 } from "lucide-react";
 import { columns } from "./columns";
 
-export const Client = () => {
+export const Client = ({ userId }: { userId: string }) => {
 	const { isLoading, data } = useServerActionQuery(getCarsAction, {
-		input: {},
+		input: {
+			id: userId,
+		},
 		queryKey: ["getCars"],
 	})
 

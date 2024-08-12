@@ -1,15 +1,15 @@
 "use client";
 
-import { DataTable } from "@/components/data-table";
-import { getCarsAction } from "@/lib/actions/carActions";
+import { getUserAction } from "@/lib/actions/userActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { Loader2 } from "lucide-react";
-import { columns } from "./columns";
 
-export const Client = () => {
-	const { isLoading, data } = useServerActionQuery(getCarsAction, {
-		input: {},
-		queryKey: ["getCars"],
+export const Owner = ({ id } : { id: string }) => {
+	const { isLoading, data } = useServerActionQuery(getUserAction, {
+		input: {
+			id: id,
+		},
+		queryKey: ["getUser", id],
 	})
 
 	const LoadingState = () => {
@@ -22,7 +22,9 @@ export const Client = () => {
 
 	return (
 		<div className="py-10 text-primary">
-			{isLoading ? <LoadingState /> : <DataTable columns={columns} data={data!} />}
+			{isLoading ? <LoadingState /> : (
+				<p> { data?.user.fullName }</p>
+			)}
 		</div>
 	)
 }

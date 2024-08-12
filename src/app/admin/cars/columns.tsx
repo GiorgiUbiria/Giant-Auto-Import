@@ -1,22 +1,36 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import IAAILogo from "../../../../public/iaai-logo.png";
 import CopartLogo from "../../../../public/copart-logo.png";
+import IAAILogo from "../../../../public/iaai-logo.png";
 
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 
 import CopyToClipBoard from "@/components/copy-to-clipboard";
 
 import { selectCarSchema } from "@/lib/drizzle/schema";
 import { z } from "zod";
 import { Actions } from "./actions";
+import { Owner } from "./owner";
 
-const SelectSchema = selectCarSchema.omit({ destinationPort: true, createdAt: true, });
+const SelectSchema = selectCarSchema;
 type SelectSchemaType = z.infer<typeof SelectSchema>;
 
 export const columns: ColumnDef<SelectSchemaType>[] = [
+  {
+    accessorKey: "ownerId",
+    header: "Owner",
+    cell: ({ row }) => {
+      const ownerId = row.getValue("ownerId") as SelectSchemaType["ownerId"];
+
+      if (!ownerId || ownerId === "") {
+        return <p> - </p>;
+      }
+
+      return <Owner id={ownerId} />;
+    }
+  },
   {
     accessorKey: "purchaseDate",
     header: "PD",
@@ -46,32 +60,6 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       return <p> {formattedDate} </p>;
     }
   },
-  // {
-  //   accessorKey: "images",
-  //   id: "images",
-  //   header: "Photo",
-  //   cell: ({ row }) => {
-  //     const images = row.getValue("images") as ImageType[];
-  //     if (!images || images.length === 0) {
-  //       return (
-  //         <div className="w-[128px] flex justify-center ml-8">
-  //           <div className="bg-gray-300 rounded-md size-16 w-full"></div>
-  //         </div>
-  //       );
-  //     }
-  //     return (
-  //       <div className="w-full flex justify-center">
-  //         <Image
-  //           alt="Product image"
-  //           className="w-full h-[92px] aspect-square rounded-md object-cover"
-  //           height="300"
-  //           src={images[0]?.imageUrl!}
-  //           width="300"
-  //         />
-  //       </div>
-  //     );
-  //   },
-  // },
   {
     accessorKey: "vin",
     header: "VIN# LOT#",
@@ -191,6 +179,10 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   {
     accessorKey: "originPort",
     header: "Origin Port",
+  },
+  {
+    accessorKey: "destinationPort",
+    header: "Destination Port",
   },
   {
     accessorKey: "purchaseFee",

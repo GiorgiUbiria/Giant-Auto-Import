@@ -29,6 +29,13 @@
       "when": 1723476079892,
       "tag": "0003_new_metal_master",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1723479598656,
+      "tag": "0004_classy_nick_fury",
+      "breakpoints": true
     }
   ]
 }

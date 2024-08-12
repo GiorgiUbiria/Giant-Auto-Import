@@ -4,7 +4,6 @@ import { eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "../drizzle/db";
 import { selectCarSchema, selectUserSchema, users } from "../drizzle/schema";
-import { formatISO } from 'date-fns';
 import { createServerActionProcedure } from "zsa";
 import { getAuth } from "../auth";
 import { z } from "zod";
@@ -65,7 +64,7 @@ export const getUserAction = isAdminProcedure
   .output(z.union([
     z.object({
       user: SelectSchema,
-      cars: z.array(selectCarSchema.omit({ createdAt: true })),
+      cars: z.array(selectCarSchema),
     }),
     z.null()
   ]))

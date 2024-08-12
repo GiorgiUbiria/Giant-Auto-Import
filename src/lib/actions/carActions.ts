@@ -9,8 +9,8 @@ import { db } from "../drizzle/db";
 import { cars, insertCarSchema, selectCarSchema } from "../drizzle/schema";
 import { handleUploadImages } from "./bucketActions";
 
-const AddCarSchema = insertCarSchema.omit({ id: true, createdAt: true, totalFee: true, shippingFee: true, destinationPort: true, });
-const SelectSchema = selectCarSchema.omit({ destinationPort: true, createdAt: true, });
+const AddCarSchema = insertCarSchema.omit({ id: true, totalFee: true, shippingFee: true, destinationPort: true, });
+const SelectSchema = selectCarSchema;
 
 const authedProcedure = createServerActionProcedure()
 	.handler(async () => {
@@ -41,99 +41,88 @@ const isAdminProcedure = createServerActionProcedure(authedProcedure)
 	});
 
 const Uint8ArraySchema = z
-  .array(z.number())
-  .transform((arr) => new Uint8Array(arr));
+	.array(z.number())
+	.transform((arr) => new Uint8Array(arr));
 
 export const addCarAction = isAdminProcedure
-  .createServerAction()
-  .input(z.object({
-    ...AddCarSchema.shape,
-    images: z.array(z.object({
-      buffer: Uint8ArraySchema,
-      size: z.number(),
-      name: z.string(),
-      type: z.enum(["AUCTION", "WAREHOUSE", "DELIVERED", "PICK_UP"]),
-    })).optional(),
-  }))
-  .output(z.object({
-    message: z.string().optional(),
-    data: z.any().optional(),
-    success: z.boolean(),
-  }))
-  .handler(async ({ input }) => {
-    try {
-      const result = await db.transaction(async (tx) => {
-        const insertedCars = await tx
-          .insert(cars)
-          .values(input)
-          .returning({ vin: cars.vin });
+	.createServerAction()
+	.input(z.object({
+		...AddCarSchema.shape,
+		images: z.array(z.object({
+			buffer: Uint8ArraySchema,
+			size: z.number(),
+			name: z.string(),
+			type: z.enum(["AUCTION", "WAREHOUSE", "DELIVERED", "PICK_UP"]),
+		})).optional(),
+	}))
+	.output(z.object({
+		message: z.string().optional(),
+		data: z.any().optional(),
+		success: z.boolean(),
+	}))
+	.handler(async ({ input }) => {
+		try {
+			const result = await db.transaction(async (tx) => {
+				const insertedCars = await tx
+					.insert(cars)
+					.values(input)
+					.returning({ vin: cars.vin });
 
-        const vin = insertedCars[0]?.vin;
+				const vin = insertedCars[0]?.vin;
 
-        if (!vin) {
-          throw new Error("Could not add a car");
-        }
+				if (!vin) {
+					throw new Error("Could not add a car");
+				}
 
-        if (input.images && input.images.length > 0) {
-          await handleUploadImages(vin, input.images, tx);
-        }
+				if (input.images && input.images.length > 0) {
+					await handleUploadImages(vin, input.images, tx);
+				}
 
-        return vin;
-      });
+				return vin;
+			});
 
-      revalidatePath("/admin/cars");
+			revalidatePath("/admin/cars");
 
-      return {
-        success: true,
-        message: `Car with VIN code ${result} was added successfully`,
-      };
-    } catch (error) {
-      console.error(error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
+			return {
+				success: true,
+				message: `Car with VIN code ${result} was added successfully`,
+			};
+		} catch (error) {
+			console.error(error);
+			const errorMessage = error instanceof Error ? error.message : String(error);
 
-      return {
-        success: false,
-        message: errorMessage,
-      };
-    }
-  });
+			return {
+				success: false,
+				message: errorMessage,
+			};
+		}
+	});
 
 export const getCarsAction = authedProcedure
 	.createServerAction()
+	.input(z.object({
+		id: z.string().optional(),
+	}))
 	.output(z.array(SelectSchema))
-	.handler(async () => {
+	.handler(async ({ input }) => {
+		const { id: userId } = input;
 		try {
-			const carsQuery = await db
-				.select({
-					id: cars.id,
-					vin: cars.vin,
-					year: cars.year,
-					model: cars.model,
-					make: cars.make,
-					auction: cars.auction,
-					shippingFee: cars.shippingFee,
-					purchaseFee: cars.purchaseFee,
-					totalFee: cars.totalFee,
-					bodyType: cars.bodyType,
-					fuelType: cars.fuelType,
-					holder: cars.holder,
-					ownerId: cars.ownerId,
-					keys: cars.keys,
-					title: cars.title,
-					departureDate: cars.departureDate,
-					arrivalDate: cars.arrivalDate,
-					purchaseDate: cars.purchaseDate,
-					bookingNumber: cars.bookingNumber,
-					lotNumber: cars.lotNumber,
-					containerNumber: cars.containerNumber,
-					trackingLink: cars.trackingLink,
-					originPort: cars.originPort,
-					shippingStatus: cars.shippingStatus,
-				})
-				.from(cars)
-				.orderBy(desc(cars.purchaseDate));
+			let query;
 
-			return carsQuery.length ? carsQuery : [];
+			if (!userId) {
+				query = await db
+					.select()
+					.from(cars)
+					.orderBy(desc(cars.purchaseDate));
+			} else {
+				query = await db
+					.select()
+					.from(cars)
+					.where(eq(cars.ownerId, userId))
+					.orderBy(desc(cars.purchaseDate));
+			}
+
+			return query.length ? query : [];
 		} catch (error) {
 			console.error("Error fetching cars:", error);
 			throw new Error("Failed to fetch cars");
@@ -164,32 +153,7 @@ export const getCarAction = authedProcedure
 			}
 
 			const [carQuery] = await db
-				.select({
-					id: cars.id,
-					vin: cars.vin,
-					year: cars.year,
-					model: cars.model,
-					make: cars.make,
-					auction: cars.auction,
-					shippingFee: cars.shippingFee,
-					purchaseFee: cars.purchaseFee,
-					bodyType: cars.bodyType,
-					totalFee: cars.totalFee,
-					fuelType: cars.fuelType,
-					holder: cars.holder,
-					ownerId: cars.ownerId,
-					keys: cars.keys,
-					title: cars.title,
-					departureDate: cars.departureDate,
-					arrivalDate: cars.arrivalDate,
-					purchaseDate: cars.purchaseDate,
-					bookingNumber: cars.bookingNumber,
-					lotNumber: cars.lotNumber,
-					containerNumber: cars.containerNumber,
-					trackingLink: cars.trackingLink,
-					originPort: cars.originPort,
-					shippingStatus: cars.shippingStatus,
-				})
+				.select()
 				.from(cars)
 				.where(or(...whereClause));
 

@@ -84,7 +84,6 @@ export const cars = sqliteTable("cars", {
   arrivalDate: integer("arrival_date", { mode: "timestamp" }),
   departureDate: integer("departure_date", { mode: "timestamp" }),
   purchaseDate: integer("purchase_date", { mode: "timestamp" }).notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(CURRENT_DATE)`),
   auction: text("auction", {
     enum: ["Copart", "IAAI", "Other"],
   }).notNull(),
@@ -124,7 +123,6 @@ export const insertCarSchema = createInsertSchema(cars, {
   departureDate: z.date().optional(),
   arrivalDate: z.date().optional(),
   purchaseDate: z.date(),
-  createdAt: z.date(),
 });
 export const selectCarSchema = createSelectSchema(cars);
 

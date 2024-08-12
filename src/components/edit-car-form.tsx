@@ -32,7 +32,7 @@ import { CalendarIcon, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useServerAction } from "zsa-react"
 import { getUsersAction } from "@/lib/actions/userActions"
-import { useEffect } from "react"
+import { useServerActionQuery } from "@/lib/hooks/server-action-hooks"
 
 const FormSchema = insertCarSchema.omit({ id: true, createdAt: true, totalFee: true, shippingFee: true, destinationPort: true, });
 const CarSchema = selectCarSchema.omit({ destinationPort: true, createdAt: true })
@@ -67,7 +67,10 @@ export function EditCarForm({ car } : { car: Car}) {
   })
 
   const { isPending, execute } = useServerAction(updateCarAction);
-  const { isPending: isPendingUsers, execute: executeUsers, data: users} = useServerAction(getUsersAction);
+  const { isLoading, data } = useServerActionQuery(getUsersAction, {
+    input: undefined,
+    queryKey: ["getUsers"],
+  })
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
     const [data, error] = await execute(values);
@@ -81,10 +84,6 @@ export function EditCarForm({ car } : { car: Car}) {
   }
 
   const handleSubmit = form.handleSubmit(onSubmit)
-
-	useEffect(() => {
-		executeUsers();
-	}, [executeUsers])
 
   return (
     <Form {...form}>
@@ -560,11 +559,12 @@ export function EditCarForm({ car } : { car: Car}) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {isPendingUsers && <Loader2 className="animate-spin" />} 
-										<SelectItem value="none">None</SelectItem>
-                    {users && users.map((user) => (
-                      <SelectItem value={user.id} key={user.id}>{ user.fullName }</SelectItem>
-                    ))}
+                    <SelectItem value="none">None</SelectItem>
+                    {isLoading ? <Loader2 className="animate-spin" /> : (
+                      data?.map((user) => (
+                        <SelectItem value={user.id} key={user.id}>{user.fullName}</SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
                 <FormDescription>

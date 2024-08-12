@@ -6,10 +6,10 @@ import {
 
 export const QueryKeyFactory = createServerActionsKeyFactory({
 	getCars: () => ["getCars"],
-	getUsers: () => ["users"],
-	getImages: () => ["users"],
-	getCar: (vin: string) => ["car", vin],
-	getUser: (id: string) => ["user", id],
+	getUsers: () => ["getUsers"],
+	getImages: () => ["getImages"],
+	getCar: (vin: string) => ["getCar", vin],
+	getUser: (id: string) => ["getUser", id],
 });
 
 const {

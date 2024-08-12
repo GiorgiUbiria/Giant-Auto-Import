@@ -33,6 +33,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useServerAction } from "zsa-react"
 import { getUsersAction } from "@/lib/actions/userActions"
+import { useServerActionQuery } from "@/lib/hooks/server-action-hooks"
 
 const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpg", "image/jpeg", "image/webp"];
 const MAX_IMAGE_SIZE = 4;
@@ -140,6 +141,7 @@ const processAndUploadImages = async (
 
 export function AddCarForm() {
   const router = useRouter();
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -165,18 +167,8 @@ export function AddCarForm() {
     },
   })
 
-  const { isPending: isPendingUsers, execute: executeUsers, data: users } = useServerAction(getUsersAction);
   const { execute, isPending } = useServerAction(addCarAction, {
-    onStart: () => {
-      console.log("Server action started");
-    },
-    onSuccess: ({ data }) => {
-      console.log("Server action success:", data);
-    },
-    onError: ({ err }) => {
-      console.error("Server action error:", err);
-    },
-    onFinish: async ([data, err]) => {
+    onSuccess: async ({ data }) => {
       try {
         if (data?.success === false) {
           throw new Error(data.message);
@@ -199,6 +191,11 @@ export function AddCarForm() {
       }
     },
   });
+
+  const { isLoading, data } = useServerActionQuery(getUsersAction, {
+    input: undefined,
+    queryKey: ["getUsers"],
+  })
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
     try {
@@ -679,17 +676,18 @@ export function AddCarForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Owner</FormLabel>
-                <Select onValueChange={field.onChange} onOpenChange={async () => { await executeUsers(); }}>
+                <Select onValueChange={field.onChange}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select the owner of the car" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {isPendingUsers && <Loader2 className="animate-spin" />}
-                    {users && users.map((user) => (
-                      <SelectItem value={user.id} key={user.id}>{user.fullName}</SelectItem>
-                    ))}
+                    {isLoading ? <Loader2 className="animate-spin" /> : (
+                      data?.map((user) => (
+                        <SelectItem value={user.id} key={user.id}>{user.fullName}</SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
                 <FormDescription>

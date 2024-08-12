@@ -9,12 +9,95 @@ import {
 } from "@aws-sdk/client-s3";
 import "dotenv/config";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { revalidatePath } from "next/cache";
 import { db } from "../drizzle/db";
 import { cars, images, insertImageSchema, selectImageSchema } from "../drizzle/schema";
-import { desc, eq, inArray } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
+import { SQLiteTransaction } from "drizzle-orm/sqlite-core";
 
+const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
+const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
+const secretAccessKey = process.env.CLOUDFLARE_SECRET_ACCESS_KEY as string;
+const bucketName = process.env.CLOUDFLARE_BUCKET_NAME as string;
+
+const S3Client = new S3({
+  region: "auto",
+  endpoint: endpoint,
+  credentials: {
+    accessKeyId: accessKeyId,
+    secretAccessKey: secretAccessKey,
+  },
+});
+
+async function getFileCount(prefix: string): Promise<number> {
+  const command = new ListObjectsV2Command({
+    Bucket: bucketName,
+    Prefix: prefix,
+  });
+
+  let fileCount = 0;
+  let truncated: boolean = true;
+
+  while (truncated) {
+    const response = await S3Client.send(command);
+    fileCount += response.Contents?.length ?? 0;
+    truncated = response.IsTruncated as boolean;
+    if (truncated) {
+      command.input.ContinuationToken = response.NextContinuationToken;
+    }
+  }
+
+  return fileCount;
+}
+
+export async function handleUploadImages(
+  vin: string,
+  fileData: { type: "WAREHOUSE" | "PICK_UP" | "DELIVERED" | "AUCTION", buffer: Uint8Array, size: number, name: string }[],
+  tx: SQLiteTransaction<"async", any, any, any>
+) {
+  const promises = fileData.map(async (file) => {
+    const prefix = `${vin}/${file.type}/`;
+    const existingFileCount = await getFileCount(prefix);
+
+    const key = `${prefix}${existingFileCount + 1}.png`;
+
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+      ContentLength: file.size,
+      ContentType: "image/png",
+    });
+
+    const signedUrl = await getSignedUrl(S3Client, command, {
+      expiresIn: 3600,
+    });
+
+    const insertValues: z.infer<typeof insertImageSchema> = {
+      carVin: vin,
+      imageType: file.type,
+      imageKey: key,
+      priority: null,
+    }
+
+    await tx.insert(images).values(insertValues);
+
+    return signedUrl;
+  });
+
+  const urls = await Promise.all(promises);
+
+  await Promise.all(
+    urls.map((url: string, index: number) =>
+      fetch(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "image/png",
+        },
+        body: fileData[index].buffer,
+      }),
+    ),
+  );
+}
 
 export async function cleanUpBucketTwo(): Promise<void> {
   try {
@@ -101,51 +184,6 @@ export async function deleteObjectFromBucket(key: string): Promise<void> {
   }
 }
 
-
-
-export async function handleUploadImages(
-  type: "WAREHOUSE" | "PICK_UP" | "DELIVERED" | "AUCTION",
-  vin: string,
-  sizes: number[],
-): Promise<string[]> {
-  const prefix = `${vin}/${type}/`;
-  const existingFileCount = await getFileCount(prefix);
-
-  const keys = sizes.map((_size, index) => {
-    const newIndex = existingFileCount + index + 1;
-    return `${prefix}${newIndex}.png`;
-  });
-
-  const urls = await Promise.all(
-    keys.map(async (key, index) => {
-      const command = new PutObjectCommand({
-        Bucket: bucketName,
-        Key: key,
-        ContentLength: sizes[index],
-        ContentType: "image/png",
-      });
-
-      const signedUrl = await getSignedUrl(S3Client, command, {
-        expiresIn: 3600,
-      });
-
-      return signedUrl;
-    }),
-  );
-
-  const insertUrls: z.infer<typeof insertImageSchema>[] = keys.map((key) => ({
-    carVin: vin,
-    imageType: type,
-    imageKey: key,
-  }));
-
-  await db.insert(images).values(insertUrls);
-
-  revalidatePath("/admin/edit");
-
-  return urls;
-}
-
 async function getSignedUrlForKey(key: string): Promise<string> {
   return getSignedUrl(
     S3Client,
@@ -156,35 +194,6 @@ async function getSignedUrlForKey(key: string): Promise<string> {
     { expiresIn: 3600 },
   );
 }
-
-// export async function fetchImageForDisplay(vins: string[]): Promise<Record<string, Image>> {
-//   const imageRecords = await db
-//     .select()
-//     .from(images)
-//     .where(inArray(images.carVin, vins))
-//     .groupBy(images.carVin)
-//     .orderBy(desc(images.priority));
-//
-//   const imageUrls = await Promise.all(imageRecords.map(async (imageRecord) => {
-//     const url = await getSignedUrlForKey(imageRecord.imageKey!);
-//     return {
-//       vin: imageRecord.carVin,
-//       image: {
-//         imageUrl: url,
-//         imageType: imageRecord.imageType,
-//         imageKey: imageRecord.imageKey,
-//         priority: imageRecord.priority,
-//       } as Image,
-//     };
-//   }));
-//
-//   const images: Record<string, Image> = {};
-//   imageUrls.forEach(({ vin, image }) => {
-//     images[vin!] = image;
-//   });
-//
-//   return images;
-// }
 
 export async function fetchImagesForDisplay(vin: string): Promise<z.infer<typeof selectImageSchema>> {
   const imageRecords = await db
@@ -204,8 +213,6 @@ export async function fetchImagesForDisplay(vin: string): Promise<z.infer<typeof
       };
     }),
   );
-
-  //TODO: Reconstruct image fetching logic
 
   return imageData;
 }

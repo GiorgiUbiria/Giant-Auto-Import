@@ -5,12 +5,11 @@ const nextConfig = {
     return config;
   },
   experimental: {
-    serverComponentsExternalPackages: ["@node-rs/argon2"]
+    serverComponentsExternalPackages: ["@node-rs/argon2"],
+    serverActions: {
+      bodySizeLimit: "5mb",
+    },
   },
-  // experimental: {
-  //   serverComponentsExternalPackages: ["oslo", "lucia"],
-  //   esmExternals: false,
-  // },
   images: {
     unoptimized: true,
     remotePatterns: [

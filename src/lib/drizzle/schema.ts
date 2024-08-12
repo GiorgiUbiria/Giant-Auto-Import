@@ -73,10 +73,10 @@ export const cars = sqliteTable("cars", {
   make: text("make").notNull(),
   model: text("model").notNull(),
   holder: text("holder"),
-  bookingNumber: text("booking_number").unique(),
+  bookingNumber: text("booking_number"),
   containerNumber: text("container_number"),
-  lotNumber: text("lot_number").unique(),
-  trackingLink: text("tracking_link").unique(),
+  lotNumber: text("lot_number"),
+  trackingLink: text("tracking_link"),
   destinationPort: text("destination_port").default("Poti"),
   shippingFee: integer("shipping_fee"),
   purchaseFee: integer("purchase_fee").notNull(),
@@ -177,7 +177,7 @@ export const images = sqliteTable("images", {
   imageType: text("image_type", {
     enum: ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERED"],
   }).notNull(),
-  imageKey: text("image_key").notNull().unique(),
+  imageKey: text("image_key").notNull(),
   priority: integer("priority", { mode: "boolean" }),
 }, (table) => {
   return {

@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { addCarAction, handleUploadImages } from "@/lib/actions/carActions"
+import { addCarAction } from "@/lib/actions/carActions"
 import { insertCarSchema } from "@/lib/drizzle/schema"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
@@ -97,46 +97,29 @@ const ImageSchema = {
     }, "File type is not supported")
     .optional(),
 }
-
 const FormInitialSchema = insertCarSchema.omit({ id: true, createdAt: true, totalFee: true, shippingFee: true, destinationPort: true, });
 const FormSchema = FormInitialSchema.extend(ImageSchema)
 
-const processAndUploadImages = async (
+const processImages = async (
   images: FileList | undefined,
-  type: string,
-  vin: string,
-) => {
-  if (!images || images.length === 0) return;
+  type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP",
+): Promise<Array<{ buffer: number[]; size: number; name: string; type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP"; }>> => {
+  if (!images || images.length === 0) return [];
 
   const fileData = await Promise.all(
     Array.from(images).map(async (file: File) => {
-      const ArrayBuffer = await file.arrayBuffer();
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
       return {
-        buffer: new Uint8Array(ArrayBuffer),
+        buffer: Array.from(uint8Array),
         size: file.size,
-        type: file.type,
+        type: type,
         name: file.name,
       };
     }),
   );
 
-  const urls = await handleUploadImages(
-    type as "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP",
-    vin,
-    fileData.map((file) => file.size),
-  );
-
-  await Promise.all(
-    urls.map((url: string, index: number) =>
-      fetch(url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": images[index].type,
-        },
-        body: fileData[index].buffer,
-      }),
-    ),
-  );
+  return fileData;
 };
 
 export function AddCarForm() {
@@ -168,20 +151,12 @@ export function AddCarForm() {
   })
 
   const { execute, isPending } = useServerAction(addCarAction, {
+    onError: (err) => { console.error(err.err.data)},
     onSuccess: async ({ data }) => {
       try {
         if (data?.success === false) {
           throw new Error(data.message);
         }
-
-        const { delivery_images, pick_up_images, warehouse_images, auction_images, vin } = data?.data;
-
-        await Promise.all([
-          processAndUploadImages(warehouse_images, "WAREHOUSE", vin),
-          processAndUploadImages(auction_images, "AUCTION", vin),
-          processAndUploadImages(pick_up_images, "PICK_UP", vin),
-          processAndUploadImages(delivery_images, "DELIVERED", vin),
-        ]);
 
         toast.success(data?.message);
         router.push("/admin/cars");
@@ -200,7 +175,24 @@ export function AddCarForm() {
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
     try {
       const { warehouse_images, pick_up_images, auction_images, delivery_images, ...carData } = values;
-      execute(carData);
+
+      const imagePromises = [
+        processImages(warehouse_images, "WAREHOUSE"),
+        processImages(auction_images, "AUCTION"),
+        processImages(pick_up_images, "PICK_UP"),
+        processImages(delivery_images, "DELIVERED"),
+      ];
+
+      const imageResults = await Promise.all(imagePromises);
+
+      const imagesData = imageResults.flat().filter(Boolean);
+
+      const inputData = {
+        ...carData,
+        ...(imagesData.length > 0 && { images: imagesData }),
+      };
+
+      await execute(inputData);
     } catch (error) {
       console.error(error);
       toast.error("An error occurred while submitting the form");

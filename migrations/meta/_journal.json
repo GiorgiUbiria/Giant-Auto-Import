@@ -22,6 +22,13 @@
       "when": 1723062197165,
       "tag": "0002_first_champions",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1723476079892,
+      "tag": "0003_new_metal_master",
+      "breakpoints": true
     }
   ]
 }

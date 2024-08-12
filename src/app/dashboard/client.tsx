@@ -11,7 +11,7 @@ export const Client = ({ userId }: { userId: string }) => {
 		input: {
 			id: userId,
 		},
-		queryKey: ["getCars"],
+		queryKey: ["getCarsForUser", userId],
 	})
 
 	const LoadingState = () => {

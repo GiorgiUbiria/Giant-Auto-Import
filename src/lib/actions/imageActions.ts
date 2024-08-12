@@ -1,12 +1,36 @@
 "use server";
 
-import sharp from "sharp";
 import { db } from "../drizzle/db";
 import { images } from "../drizzle/schema";
 import { ActionResult } from "@/lib/utils";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { deleteObjectFromBucket } from "./bucketActions";
+import { deleteObjectFromBucket, fetchImagesForDisplay } from "./bucketActions";
+import { createServerAction } from "zsa";
+import { z } from "zod";
+
+export const getImagesAction = createServerAction()
+  .input(z.object({
+    vin: z.string(),
+  }))
+  .output(z.array(z.object({
+    carVin: z.string(),
+    imageType: z.enum(["WAREHOUSE", "PICK_UP", "DELIVERED", "AUCTION"]),
+    priority: z.boolean().nullable(),
+    imageKey: z.string(),
+    url: z.string(),
+  })))
+  .handler(async ({ input }) => {
+    const { vin } = input;
+    try {
+      const query = await fetchImagesForDisplay(vin);
+
+      return query.length ? query : [];
+    } catch (error) {
+      console.error("Error fetching cars:", error);
+      throw new Error("Failed to fetch cars");
+    }
+  });
 
 export async function deleteImage(imageKey: string): Promise<ActionResult> {
   try {
@@ -15,13 +39,13 @@ export async function deleteImage(imageKey: string): Promise<ActionResult> {
 
     revalidatePath("/admin/edit");
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: "Image deleted successfully"
     };
   } catch (error) {
     console.error("Error deleting image:", error);
-    return { 
+    return {
       success: false,
       error: "Error deleting image",
     };

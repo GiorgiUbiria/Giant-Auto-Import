@@ -29,7 +29,9 @@ const S3Client = new S3({
   },
 });
 
-const SelectImageSchema = selectImageSchema.omit({ id: true, })
+const SelectImageSchema = selectImageSchema.omit({ id: true, }).merge(z.object({
+  url: z.string(),
+}))
 type SelectImageType = z.infer<typeof SelectImageSchema>;
 
 async function getFileCount(prefix: string): Promise<number> {
@@ -102,7 +104,7 @@ export async function handleUploadImages(
   );
 }
 
-export async function cleanUpBucketTwo(): Promise<void> {
+export async function cleanUpBucket(): Promise<void> {
   try {
     const listObjectsParams = {
       Bucket: bucketName,
@@ -121,44 +123,6 @@ export async function cleanUpBucketTwo(): Promise<void> {
         for (const item of listedObjects.Contents) {
           if (item.Key) {
             await deleteObjectFromBucket(item.Key);
-          }
-        }
-      }
-
-      continuationToken = listedObjects.NextContinuationToken;
-    } while (continuationToken);
-  } catch (error) {
-    console.error("Error cleaning up the bucket:", error);
-  }
-}
-
-export async function cleanUpBucket(): Promise<void> {
-  try {
-    const currentCars = await db.select().from(cars);
-    const currentVins = new Set(currentCars.map((car) => car.vin));
-
-    const listObjectsParams = {
-      Bucket: bucketName,
-    };
-
-    let continuationToken;
-
-    do {
-      const listCommand = new ListObjectsV2Command({
-        ...listObjectsParams,
-        ContinuationToken: continuationToken,
-      });
-      const listedObjects: any = await S3Client.send(listCommand);
-
-      if (listedObjects.Contents) {
-        for (const item of listedObjects.Contents) {
-          if (item.Key) {
-            const keyVinMatch = item.Key.match(/^(.*?\/)/);
-            const keyVin = keyVinMatch ? keyVinMatch[1].slice(0, -1) : null;
-
-            if (keyVin && !currentVins.has(keyVin)) {
-              await deleteObjectFromBucket(item.Key);
-            }
           }
         }
       }

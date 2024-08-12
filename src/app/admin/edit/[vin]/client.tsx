@@ -6,6 +6,7 @@ import { getCarAction } from "@/lib/actions/carActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { EditImages } from "./edit-images";
 
 export const Client = ({ vin }: { vin: string }) => {
 	const { isLoading, data } = useServerActionQuery(getCarAction, {
@@ -32,11 +33,15 @@ export const Client = ({ vin }: { vin: string }) => {
 			{
 				isLoading ? <LoadingState /> : (
 					<Tabs defaultValue="form" searchParam="type">
-						<TabsList className="grid w-full grid-cols-1">
+						<TabsList className="grid w-full grid-cols-1 lg:grid-cols-2">
 							<TabsTrigger value="form">Form</TabsTrigger>
+							<TabsTrigger value="images">Images</TabsTrigger>
 						</TabsList>
 						<TabsContent value="form">
 							<EditCarForm car={data!} />
+						</TabsContent>
+						<TabsContent value="images">
+							<EditImages vin={vin} />
 						</TabsContent>
 					</Tabs>
 				)

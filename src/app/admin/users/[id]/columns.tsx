@@ -13,7 +13,7 @@ import { selectCarSchema } from "@/lib/drizzle/schema";
 import { z } from "zod";
 import { Actions } from "./actions";
 
-const SelectSchema = selectCarSchema.omit({ destinationPort: true, createdAt: true, });
+const SelectSchema = selectCarSchema;
 type SelectSchemaType = z.infer<typeof SelectSchema>;
 
 export const columns: ColumnDef<SelectSchemaType>[] = [
@@ -180,6 +180,10 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   {
     accessorKey: "originPort",
     header: "Origin Port",
+  },
+  {
+    accessorKey: "destinationPort",
+    header: "Destination Port",
   },
   {
     accessorKey: "purchaseFee",

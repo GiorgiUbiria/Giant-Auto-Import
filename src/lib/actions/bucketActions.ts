@@ -14,6 +14,9 @@ import { cars, images, insertImageSchema, selectImageSchema } from "../drizzle/s
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { SQLiteTransaction } from "drizzle-orm/sqlite-core";
+import { createServerActionProcedure } from "zsa";
+import { getAuth } from "../auth";
+import { revalidatePath } from "next/cache";
 
 const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
 const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
@@ -33,6 +36,34 @@ const SelectImageSchema = selectImageSchema.omit({ id: true, }).merge(z.object({
   url: z.string(),
 }))
 type SelectImageType = z.infer<typeof SelectImageSchema>;
+
+const authedProcedure = createServerActionProcedure()
+  .handler(async () => {
+    try {
+      const { user, session } = await getAuth();
+
+      return {
+        user,
+        session,
+      };
+    } catch {
+      throw new Error("User not authenticated")
+    }
+  });
+
+const isAdminProcedure = createServerActionProcedure(authedProcedure)
+  .handler(async ({ ctx }) => {
+    const { user, session } = ctx;
+
+    if (user?.role !== "ADMIN") {
+      throw new Error("User is not an admin")
+    }
+
+    return {
+      user,
+      session,
+    }
+  });
 
 async function getFileCount(prefix: string): Promise<number> {
   const command = new ListObjectsV2Command({
@@ -55,7 +86,68 @@ async function getFileCount(prefix: string): Promise<number> {
   return fileCount;
 }
 
-export async function handleUploadImages(
+const Uint8ArraySchema = z
+  .array(z.number())
+  .transform((arr) => new Uint8Array(arr));
+
+export const handleUploadImagesAction = isAdminProcedure
+  .createServerAction()
+  .input(z.object({
+    vin: z.string(),
+    images: z.array(z.object({
+      buffer: Uint8ArraySchema,
+      size: z.number(),
+      name: z.string(),
+      type: z.enum(["AUCTION", "WAREHOUSE", "DELIVERED", "PICK_UP"]),
+    })),
+  }))
+  .handler(async ({ input }) => {
+    const { vin, images: imageData } = input;
+    const promises = imageData.map(async (file) => {
+      const prefix = `${vin}/${file.type}/`;
+      const existingFileCount = await getFileCount(prefix);
+
+      const key = `${prefix}${existingFileCount + 1}.png`;
+
+      const command = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: key,
+        ContentLength: file.size,
+        ContentType: "image/png",
+      });
+
+      const signedUrl = await getSignedUrl(S3Client, command, {
+        expiresIn: 3600,
+      });
+
+      const insertValues: z.infer<typeof insertImageSchema> = {
+        carVin: vin,
+        imageType: file.type,
+        imageKey: key,
+        priority: null,
+      }
+
+      await db.insert(images).values(insertValues);
+
+      return signedUrl;
+    });
+
+    const urls = await Promise.all(promises);
+
+    await Promise.all(
+      urls.map((url: string, index: number) =>
+        fetch(url, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "image/png",
+          },
+          body: imageData[index].buffer,
+        }),
+      ),
+    );
+  });
+
+export async function handleAddImages(
   vin: string,
   fileData: { type: "WAREHOUSE" | "PICK_UP" | "DELIVERED" | "AUCTION", buffer: Uint8Array, size: number, name: string }[],
   tx: SQLiteTransaction<"async", any, any, any>

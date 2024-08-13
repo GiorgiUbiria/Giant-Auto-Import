@@ -8,7 +8,7 @@ import { FeaturedImages } from "./featured-images";
 
 export const ImageGallery = ({ vin }: { vin: string }) => {
   const imageTypes = ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERY"];
-  const { isLoading, data } = useServerActionQuery(getImagesAction, {
+  const { data } = useServerActionQuery(getImagesAction, {
     input: {
       vin: vin,
     },

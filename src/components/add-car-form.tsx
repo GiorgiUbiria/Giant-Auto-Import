@@ -97,7 +97,7 @@ const ImageSchema = {
     }, "File type is not supported")
     .optional(),
 }
-const FormInitialSchema = insertCarSchema.omit({ id: true, createdAt: true, totalFee: true, shippingFee: true, destinationPort: true, });
+const FormInitialSchema = insertCarSchema.omit({ id: true, totalFee: true, shippingFee: true, destinationPort: true, });
 const FormSchema = FormInitialSchema.extend(ImageSchema)
 
 const processImages = async (

@@ -34,8 +34,8 @@ import { useServerAction } from "zsa-react"
 import { getUsersAction } from "@/lib/actions/userActions"
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks"
 
-const FormSchema = insertCarSchema.omit({ id: true, createdAt: true, totalFee: true, shippingFee: true, destinationPort: true, });
-const CarSchema = selectCarSchema.omit({ destinationPort: true, createdAt: true })
+const FormSchema = insertCarSchema.omit({ id: true, totalFee: true, shippingFee: true, destinationPort: true, });
+const CarSchema = selectCarSchema.omit({ destinationPort: true })
 type Car = z.infer<typeof  CarSchema>;
 
 export function EditCarForm({ car } : { car: Car}) {

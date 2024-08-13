@@ -4,6 +4,7 @@ import { getImagesAction } from "@/lib/actions/imageActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
+import { ImagesForm } from "./images-form";
 
 export const EditImages = ({ vin }: { vin: string }) => {
 	const { isLoading, data } = useServerActionQuery(getImagesAction, {
@@ -22,20 +23,23 @@ export const EditImages = ({ vin }: { vin: string }) => {
 	}
 
 	return (
-		<div className="w-full grid grid-cols-1 lg:grid-cols-4">
-			{
-				isLoading ? <LoadingState /> : (
-					data?.map((image) => (
-						<Image
-							key={image.imageKey}
-							src={image.url}
-							alt="Image"
-							height="300"
-							width="300"
-						/>
-					))
-				)
-			}
+		<div className="flex flex-col">
+			<ImagesForm vin={vin} />
+			<div className="w-full grid grid-cols-1 lg:grid-cols-4">
+				{
+					isLoading ? <LoadingState /> : (
+						data?.map((image) => (
+							<Image
+								key={image.imageKey}
+								src={image.url}
+								alt="Image"
+								height="300"
+								width="300"
+							/>
+						))
+					)
+				}
+			</div>
 		</div>
 	)
 }

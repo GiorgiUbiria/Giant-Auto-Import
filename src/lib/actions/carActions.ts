@@ -7,7 +7,7 @@ import { createServerActionProcedure } from "zsa";
 import { getAuth } from "../auth";
 import { db } from "../drizzle/db";
 import { cars, insertCarSchema, selectCarSchema } from "../drizzle/schema";
-import { handleUploadImages } from "./bucketActions";
+import { handleAddImages } from "./bucketActions";
 
 const AddCarSchema = insertCarSchema.omit({ id: true, totalFee: true, shippingFee: true, destinationPort: true, });
 const SelectSchema = selectCarSchema;
@@ -75,7 +75,7 @@ export const addCarAction = isAdminProcedure
 				}
 
 				if (input.images && input.images.length > 0) {
-					await handleUploadImages(vin, input.images, tx);
+					await handleAddImages(vin, input.images, tx);
 				}
 
 				return vin;

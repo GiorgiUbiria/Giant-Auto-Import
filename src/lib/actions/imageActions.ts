@@ -1,13 +1,40 @@
 "use server";
 
+import { eq } from "drizzle-orm";
+import { z } from "zod";
+import { createServerAction, createServerActionProcedure } from "zsa";
+import { getAuth } from "../auth";
 import { db } from "../drizzle/db";
 import { images } from "../drizzle/schema";
-import { ActionResult } from "@/lib/utils";
-import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 import { deleteObjectFromBucket, fetchImageForDisplay, fetchImagesForDisplay } from "./bucketActions";
-import { createServerAction } from "zsa";
-import { z } from "zod";
+
+const authedProcedure = createServerActionProcedure()
+  .handler(async () => {
+    try {
+      const { user, session } = await getAuth();
+
+      return {
+        user,
+        session,
+      };
+    } catch {
+      throw new Error("User not authenticated")
+    }
+  });
+
+const isAdminProcedure = createServerActionProcedure(authedProcedure)
+  .handler(async ({ ctx }) => {
+    const { user, session } = ctx;
+
+    if (user?.role !== "ADMIN") {
+      throw new Error("User is not an admin")
+    }
+
+    return {
+      user,
+      session,
+    }
+  });
 
 export const getImagesAction = createServerAction()
   .input(z.object({
@@ -55,29 +82,24 @@ export const getImageAction = createServerAction()
     }
   });
 
-export async function deleteImage(imageKey: string): Promise<ActionResult> {
-  try {
+export const deleteImageAction = isAdminProcedure
+  .createServerAction()
+  .input(z.object({
+    imageKey: z.string()
+  }))
+  .handler(async ({ input }) => {
+    const { imageKey } = input;
     await deleteObjectFromBucket(imageKey);
     await db.delete(images).where(eq(images.imageKey, imageKey));
+  });
 
-    revalidatePath("/admin/edit");
-
-    return {
-      success: true,
-      message: "Image deleted successfully"
-    };
-  } catch (error) {
-    console.error("Error deleting image:", error);
-    return {
-      success: false,
-      error: "Error deleting image",
-    };
-  }
-}
-
-export async function makeMain(key: string, vin: string) {
-  console.log("Making main", key, vin)
-  try {
+export const makeImageMainAction = isAdminProcedure
+  .createServerAction()
+  .input(z.object({
+    imageKey: z.string(),
+  }))
+  .handler(async ({ input }) => {
+    const { imageKey } = input;
     const isMain = await db
       .select({
         imageKey: images.imageKey
@@ -91,19 +113,12 @@ export async function makeMain(key: string, vin: string) {
         .set({
           priority: true,
         })
-        .where(eq(images.imageKey, key))
+        .where(eq(images.imageKey, imageKey))
     } else {
       await db
         .transaction(async (tx) => {
           await tx.update(images).set({ priority: null }).where(eq(images.imageKey, isMain[0].imageKey!));
-          await tx.update(images).set({ priority: true }).where(eq(images.imageKey, key));
+          await tx.update(images).set({ priority: true }).where(eq(images.imageKey, imageKey));
         })
     }
-
-  } catch (error) {
-    console.error(error)
-  } finally {
-    revalidatePath("/admin/edit")
-    revalidatePath("/car/" + vin)
-  }
-}
+  });

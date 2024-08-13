@@ -30,6 +30,7 @@ export const EditImages = ({ vin }: { vin: string }) => {
 					isLoading ? <LoadingState /> : (
 						data?.map((image) => (
 							<Image
+								style={{ transform: "translate3d(0, 0, 0)" }}
 								key={image.imageKey}
 								src={image.url}
 								alt="Image"

@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Image as ImageType } from "@/lib/interfaces";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
@@ -9,7 +8,7 @@ export default function DownloadButton({
   content,
   vin,
 }: {
-  content: ImageType[] | undefined;
+  content: {imageKey: string, url: string}[] | undefined;
   vin: string;
 }) {
   const handleDownload = async () => {
@@ -17,10 +16,10 @@ export default function DownloadButton({
       const zip = new JSZip();
 
       content.forEach((image, index) => {
-        if (image.imageUrl) {
+        if (image.url) {
           zip.file(
             `image_${index + 1}.jpg`,
-            fetch(image.imageUrl).then((response) => response.blob()),
+            fetch(image.url).then((response) => response.blob()),
           );
         }
       });

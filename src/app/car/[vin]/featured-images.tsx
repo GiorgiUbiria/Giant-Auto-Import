@@ -1,39 +1,51 @@
-import dynamic from 'next/dynamic';
-import { Image } from "@/lib/interfaces";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import DownloadButton from "./download-button";
+"use client";
 
-const FeaturedImageGallery = dynamic(() => import('@/components/gallery/image-gallery'));
+import { Carousel, Modal } from "flowbite-react";
+import Image from "next/image";
+import { useState } from "react";
 
-export default function Gallery({
-  images,
-  vin,
-}: {
-  images: Image[];
-  vin: string;
-}) {
-  const imageTypes = ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERY"];
+export const FeaturedImages = ({ data }: { data: { imageKey: string, url: string, imageType: string }[] }) => {
+  const [openModal, setOpenModal] = useState(false);
 
-  const filterImagesByType = (images: Image[], imageType: string) =>
-    images.filter((image) => image.imageType === imageType);
+  if (data.length === 0) {
+    return (
+      <div className="w-full">
+        <div className="grid gap-4">
+          <div className="flex flex-col items-center justify-center h-[640px] w-full max-w-full rounded-lg bg-gray-200">
+            <p className="text-gray-600">No images found</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="grid place-items-center">
-      <Tabs defaultValue="AUCTION" className="w-full text-black dark:text-white gap-2">
-        <TabsList className="grid w-full grid-cols-4 bg-gray-300 dark:bg-gray-700 dark:text-white mb-10">
-          {imageTypes.map((type) => (
-            <TabsTrigger key={type} value={type}>
-              {type}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        {imageTypes.map((type) => (
-          <TabsContent key={type} value={type}>
-            <FeaturedImageGallery data={filterImagesByType(images, type)} />
-          </TabsContent>
+    <div className="sm:h-64 md:h-[640px]">
+      <Carousel slide={false} indicators={false}>
+        {data.map((image) => (
+          <Image
+            key={image.url}
+            src={image.url!}
+            alt={"Image"}
+            width="500"
+            height="500"
+            onClick={() => setOpenModal(true)}
+            priority
+          />
         ))}
-      </Tabs>
-      <DownloadButton content={images} vin={vin} />
+      </Carousel>
+      <Modal show={openModal} onClose={() => setOpenModal(false)} size="7xl">
+        <Modal.Body>
+          <Image
+            key={data.at(0)!.url}
+            src={data.at(0)!.url!}
+            className="w-full h-auto object-cover"
+            alt={"Image"}
+            width="500"
+            height="500"
+          />
+        </Modal.Body>
+      </Modal>
     </div>
   );
 }

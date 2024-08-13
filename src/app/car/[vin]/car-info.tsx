@@ -10,9 +10,9 @@ import { selectCarSchema } from "@/lib/drizzle/schema";
 import { Truck } from "lucide-react";
 import Link from "next/link";
 import { z } from "zod";
-import CopyToClipBoard from "./copy-to-clipboard";
+import CopyToClipBoard from "@/components/copy-to-clipboard";
 
-const SelectSchema = selectCarSchema.omit({ destinationPort: true, createdAt: true, });
+const SelectSchema = selectCarSchema.omit({ destinationPort: true });
 type Props = {
   car: z.infer<typeof SelectSchema>
 }

@@ -13,6 +13,7 @@ import { selectCarSchema } from "@/lib/drizzle/schema";
 import { z } from "zod";
 import { Actions } from "./actions";
 import { Owner } from "./owner";
+import { TableImage } from "./table-image";
 
 const SelectSchema = selectCarSchema;
 type SelectSchemaType = z.infer<typeof SelectSchema>;
@@ -58,6 +59,16 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       })
 
       return <p> {formattedDate} </p>;
+    }
+  },
+  {
+    header: "Photo",
+    cell: ({ row }) => {
+      const vin = row.original.vin as SelectSchemaType["vin"];
+
+      return (
+        <TableImage vin={vin} />
+      )
     }
   },
   {

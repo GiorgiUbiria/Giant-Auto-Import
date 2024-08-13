@@ -184,3 +184,24 @@ export async function fetchImagesForDisplay(vin: string): Promise<SelectImageTyp
 
   return imageData;
 }
+
+export async function fetchImageForDisplay(vin: string): Promise<SelectImageType | null> {
+  const [imageRecord] = await db
+    .select()
+    .from(images)
+    .where(eq(images.carVin, vin))
+    .orderBy(desc(images.priority))
+    .limit(1);
+
+  if (!imageRecord) return null;
+
+  const url = await getSignedUrlForKey(imageRecord.imageKey!)
+
+  return {
+    url: url,
+    carVin: vin,
+    imageKey: imageRecord.imageKey,
+    imageType: imageRecord.imageType,
+    priority: imageRecord.priority,
+  };
+}

@@ -12,6 +12,7 @@ import CopyToClipBoard from "@/components/copy-to-clipboard";
 import { selectCarSchema } from "@/lib/drizzle/schema";
 import { z } from "zod";
 import { Actions } from "./actions";
+import { TableImage } from "./table-image";
 
 const SelectSchema = selectCarSchema;
 type SelectSchemaType = z.infer<typeof SelectSchema>;
@@ -46,32 +47,16 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       return <p> {formattedDate} </p>;
     }
   },
-  // {
-  //   accessorKey: "images",
-  //   id: "images",
-  //   header: "Photo",
-  //   cell: ({ row }) => {
-  //     const images = row.getValue("images") as ImageType[];
-  //     if (!images || images.length === 0) {
-  //       return (
-  //         <div className="w-[128px] flex justify-center ml-8">
-  //           <div className="bg-gray-300 rounded-md size-16 w-full"></div>
-  //         </div>
-  //       );
-  //     }
-  //     return (
-  //       <div className="w-full flex justify-center">
-  //         <Image
-  //           alt="Product image"
-  //           className="w-full h-[92px] aspect-square rounded-md object-cover"
-  //           height="300"
-  //           src={images[0]?.imageUrl!}
-  //           width="300"
-  //         />
-  //       </div>
-  //     );
-  //   },
-  // },
+  {
+    header: "Photo",
+    cell: ({ row }) => {
+      const vin = row.original.vin as SelectSchemaType["vin"];
+
+      return (
+        <TableImage vin={vin} />
+      )
+    }
+  },
   {
     accessorKey: "vin",
     header: "VIN#",

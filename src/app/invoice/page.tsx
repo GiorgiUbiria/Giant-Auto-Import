@@ -1,10 +1,10 @@
 import PdfSelect from "@/components/pdf-select";
-import { validateRequest } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 export default async function Page() {
-  const { user } = await validateRequest();
-  if (!user) {
+  const { user } = await getAuth();
+  if (!user || user.role !== "ADMIN") {
     return redirect("/");
   }
 

@@ -26,7 +26,7 @@ export default function PdfSelect({ user }: Props) {
     const form = pdfDoc.getForm();
 
     const invoiceNumber = form.getTextField("Text1");
-    invoiceNumber.setText(user.name);
+    invoiceNumber.setText(user.fullName);
 
     const salesPrice = form.getTextField("Text3");
     salesPrice.setText("$$$ Sales Price");

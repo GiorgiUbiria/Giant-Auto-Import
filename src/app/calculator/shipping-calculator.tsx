@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { auctionData, oceanShippingRates, extraFees } from "@/lib/utils";
+import Image from "next/image";
+import Ship from "../../../public/ship.png"
 
 export function ShippingCalculator() {
 	const [carType, setCarType] = useState('');
@@ -34,30 +36,34 @@ export function ShippingCalculator() {
 	const availablePorts = auctionData.filter((data) => data.auctionLocation === auctionLocation).map((data) => data.port);
 
 	return (
-		<div>
-			<div className="max-w-md mx-auto p-4 pt-6">
-				<h2 className="text-2xl font-bold mb-4">Shipping Calculator</h2>
-				<form>
-					<label className="block mb-2">
-						Car Type:
+		<div className="w-full grid place-items-center">
+			<h2 className="text-4xl font-bold mb-4">Shipping Calculator</h2>
+			<form className="w-full flex justify-center">
+				<div className="w-1/3 p-3 rounded-l-md bg-white flex flex-col justify-evenly items-stretch gap-2">
+					<div>
+						<label className="text-nowrap mb-0.5 text-xl text-black">
+							Car Type
+						</label>
 						<select
 							value={carType}
 							onChange={(e) => setCarType(e.target.value)}
-							className="block w-full p-2 pl-10 text-sm text-gray-700"
+							className="block w-full p-2 pl-10 text-sm text-white"
 						>
 							<option value="">Select Car Type</option>
 							<option value="Sedan">Sedan</option>
 							<option value="SUV">SUV</option>
 							<option value="Truck">Truck</option>
 						</select>
-					</label>
+					</div>
 					<br />
-					<label className="block mb-2">
-						Auction Location:
+					<div>
+						<label className="text-nowrap mb-0.5 text-xl text-black">
+							Location
+						</label>
 						<select
 							onChange={(e) => handleAuctionLocationChange(e.target.value)}
 							value={auctionLocation}
-							className="block w-full p-2 pl-10 text-sm text-gray-700"
+							className="block w-full p-2 pl-10 text-sm text-white"
 						>
 							<option value="">Select Auction Location</option>
 							{Array.from(new Set(auctionData.map((data) => data.auctionLocation))).map((location) => (
@@ -66,14 +72,16 @@ export function ShippingCalculator() {
 								</option>
 							))}
 						</select>
-					</label>
+					</div>
 					<br />
-					<label className="block mb-2">
-						Auction:
+					<div>
+						<label className="text-nowrap mb-0.5 text-xl text-black block">
+							Auction
+						</label>
 						<select
 							value={auction}
 							onChange={(e) => setAuction(e.target.value)}
-							className="block w-full p-2 pl-10 text-sm text-gray-700"
+							className="block w-full p-2 pl-10 text-sm text-white"
 						>
 							<option value="">Select Auction</option>
 							{auctionData.filter((data) => data.auctionLocation === auctionLocation).map((data) => (
@@ -82,14 +90,16 @@ export function ShippingCalculator() {
 								</option>
 							))}
 						</select>
-					</label>
+					</div>
 					<br />
-					<label className="block mb-2">
-						USA Port:
+					<div>
+						<label className="text-nowrap mb-0.5 text-xl text-black">
+							USA Port
+						</label>
 						<select
 							value={port}
 							onChange={(e) => setPort(e.target.value)}
-							className="block w-full p-2 pl-10 text-sm text-gray-700"
+							className="block w-full p-2 pl-10 text-sm text-white"
 						>
 							<option value="">Select USA Port</option>
 							{availablePorts.map((port) => (
@@ -98,10 +108,19 @@ export function ShippingCalculator() {
 								</option>
 							))}
 						</select>
-					</label>
-					<br />
-					<label className="block mb-2">
-						Additional Fees:
+					</div>
+					<Image
+						src={Ship}
+						alt="Logo"
+						width={250}
+						style={{ alignSelf: "center" }}
+					/>
+				</div>
+				<div className="flex flex-col p-3 rounded-r-md bg-blue-500 justify-between">
+					<div>
+						<label className="block mb-2 text-lg">
+							Additional Fees
+						</label>
 						{extraFees.map((fee) => (
 							<div key={fee.type} className="flex items-center mb-2">
 								<input
@@ -119,7 +138,9 @@ export function ShippingCalculator() {
 								<span>{fee.type} (${fee.rate})</span>
 							</div>
 						))}
-					</label>
+					</div>
+					<br />
+					<p className="text-lg font-semibold">Estimated Fee: <span className="text-xl font-bold">${estimatedFee}</span></p>
 					<br />
 					<button
 						onClick={handleCalculate}
@@ -127,9 +148,8 @@ export function ShippingCalculator() {
 					>
 						Calculate Estimated Fee
 					</button>
-					<p className="text-lg font-bold">Estimated Fee: ${estimatedFee}</p>
-				</form>
-			</div>
+				</div>
+			</form>
 		</div>
 	);
 }

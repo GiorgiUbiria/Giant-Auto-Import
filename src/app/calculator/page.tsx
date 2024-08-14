@@ -1,10 +1,10 @@
+import { ShippingCalculator } from "./shipping-calculator";
+
 export default function Page() {
   return (
-    <div>
+    <div className="text-primary">
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-        <div className="text-center">
-          <h1> Terms of Service </h1>
-        </div>
+        <ShippingCalculator />
       </div>
     </div>
   );

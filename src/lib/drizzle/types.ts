@@ -25,3 +25,13 @@ const ExtraFee = z.object({
 })
 
 export type ExtraFee = z.infer<typeof ExtraFee>;
+
+const AuctionData = z.object({
+	auction: z.string(),
+	auctionLocation: z.string(),
+	port: z.string(),
+	zip: z.string(),
+	rate: z.number().gt(0),
+})
+
+export type AuctionData = z.infer<typeof AuctionData>;

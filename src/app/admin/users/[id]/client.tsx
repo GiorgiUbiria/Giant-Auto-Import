@@ -9,7 +9,6 @@ import { UpdateProfileForm } from "./edit-profile-form";
 import {
 	Dialog,
 	DialogContent,
-	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,

@@ -4,6 +4,7 @@ import { getImageAction } from "@/lib/actions/imageActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
+import NoImage from "../../../../public/no-car-image.jpg"
 
 export const TableImage = ({ vin }: { vin: string }) => {
 	const { isLoading, data } = useServerActionQuery(getImageAction, {
@@ -11,35 +12,41 @@ export const TableImage = ({ vin }: { vin: string }) => {
 			vin: vin,
 		},
 		queryKey: ["getImage", vin],
-	})
+	});
 
-	if (!data) {
+	if (!data && !isLoading) {
 		return (
-			<div className="w-[154px] flex justify-center ml-8">
-				<div className="bg-gray-300 rounded-md size-16 w-full"></div>
+			<div className="w-[154px] h-[72px] flex justify-center ml-8">
+				<Image
+					alt="Car Image"
+					className="rounded-md object-cover"
+					height={72}
+					width={154}
+					src={NoImage}
+					placeholder="blur"
+					blurDataURL="https://motozitelive.blob.core.windows.net/motozite-live/newcars_images/1670408218No-Image.jpg"
+					loading="lazy"
+				/>
 			</div>
 		);
 	}
 
-	const LoadingState = () => {
-		return (
-			<div className="w-full h-full grid place-items-center">
-				<Loader2 className="animate-spin text-center" />
-			</div>
-		)
-	}
-
 	return (
-		<div className="w-[154px] grid place-items-center ml-8">
-			{isLoading ? <LoadingState /> : (
+		<div className="w-[154px] h-[72px] flex justify-center ml-8">
+			{isLoading ? (
+				<Loader2 className="animate-spin" />
+			) : (
 				<Image
 					alt="Car Image"
-					className="w-full h-[92px] aspect-square rounded-md object-cover"
-					height="300"
-					src={data.url}
-					width="300"
+					className="rounded-md object-cover"
+					height={72}
+					width={154}
+					src={data?.url!}
+					placeholder="blur"
+					blurDataURL="https://motozitelive.blob.core.windows.net/motozite-live/newcars_images/1670408218No-Image.jpg"
+					loading="lazy"
 				/>
 			)}
 		</div>
-	)
-}
+	);
+};

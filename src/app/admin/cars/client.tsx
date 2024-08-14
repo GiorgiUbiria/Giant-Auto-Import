@@ -14,7 +14,7 @@ export const Client = () => {
 
 	const LoadingState = () => {
 		return (
-			<div className="w-full h-full grid place-items-center">
+			<div className="w-full h-[400px] flex justify-center items-center">
 				<Loader2 className="animate-spin text-center" />
 			</div>
 		)

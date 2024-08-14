@@ -3,8 +3,9 @@
 import { getUserAction } from "@/lib/actions/userActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 
-export const Owner = ({ id } : { id: string }) => {
+export const Owner = ({ id }: { id: string }) => {
 	const { isLoading, data } = useServerActionQuery(getUserAction, {
 		input: {
 			id: id,
@@ -14,16 +15,14 @@ export const Owner = ({ id } : { id: string }) => {
 
 	const LoadingState = () => {
 		return (
-			<div className="w-full h-full grid place-items-center">
-				<Loader2 className="animate-spin text-center" />
-			</div>
+			<Link href=""><Loader2 className="animate-spin text-center" /></Link>
 		)
 	}
 
 	return (
 		<div className="py-10 text-primary">
 			{isLoading ? <LoadingState /> : (
-				<p> { data?.user.fullName }</p>
+				<Link href={data?.user.id!} className="font-semibold hover:underline"> {data?.user.fullName} </Link>
 			)}
 		</div>
 	)

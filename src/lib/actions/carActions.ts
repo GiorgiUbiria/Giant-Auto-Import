@@ -219,8 +219,6 @@ export const deleteCarAction = isAdminProcedure
 				};
 			}
 
-			revalidatePath("/admin/cars");
-
 			return {
 				success: true,
 				message: `Car with vin code ${isDeleted.vin} was deleted successfully`,

@@ -81,7 +81,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       return (
         <div>
           <div className="flex gap-x-2 items-center">
-            <Link href={`/car/${vin}`}> {vin} </Link>
+            <Link href={`/car/${vin}`} className="hover:underline"> {vin} </Link>
             <CopyToClipBoard text={vin} />
           </div>
           {lotNumber ? (
@@ -107,8 +107,12 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
 
       return (
         <div className="flex items-center justify-between w-[84px]">
-          <p className="text-left"> {year + " " + make + " " + model} </p>
-          {auction !== "Copart" ? <Image src={IAAILogo} alt="IAAI" className="size-8" /> : <Image src={CopartLogo} alt="IAAI" className="size-8" />}
+          <div className="flex flex-col gap-0.5">
+            <p className="text-left"> {year} </p>
+            <p className="text-left"> {make} </p>
+            <p className="text-left"> {model} </p>
+            {auction !== "Copart" ? <Image src={IAAILogo} alt="IAAI" className="size-8" /> : <Image src={CopartLogo} alt="IAAI" className="size-8" />}
+          </div>
         </div>
       )
     },

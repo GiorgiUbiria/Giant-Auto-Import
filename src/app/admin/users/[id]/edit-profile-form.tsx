@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Form,
 	FormControl,
@@ -11,7 +12,6 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import {
 	Select,
 	SelectContent,
@@ -19,15 +19,15 @@ import {
 	SelectTrigger,
 	SelectValue
 } from "@/components/ui/select";
-
 import { updateUserAction } from "@/lib/actions/authActions";
 import { selectUserSchema } from "@/lib/drizzle/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { useServerAction } from "zsa-react";
-import { useState } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
 
 const FormSchema = z.object({
 	id: z.string(),
@@ -73,7 +73,7 @@ export function UpdateProfileForm({ user }: Props) {
 
 	return (
 		<Form {...form}>
-			<form onSubmit={handleSubmit} className="w-2/3 space-y-6">
+      <form onSubmit={handleSubmit} className="w-full space-y-6 my-8 bg-gray-700 p-3 rounded-md">
 				<FormField
 					control={form.control}
 					name="fullName"
@@ -174,11 +174,11 @@ export function UpdateProfileForm({ user }: Props) {
 						</FormItem>
 					)}
 				/>
-				<Button type="submit" onClick={() => { console.log("Clicked") }} disabled={isPending}>
-					{
-						isPending ? "Submitting..." : "Update"
-					}
-				</Button>
+        <Button type="submit" className="w-full" disabled={isPending}>
+          {
+            isPending ? <Loader2 className="animate-spin" /> : "Update User"
+          }
+        </Button>
 			</form>
 		</Form>
 	)

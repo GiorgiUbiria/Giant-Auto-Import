@@ -25,11 +25,10 @@ export const Client = ({ vin }: { vin: string }) => {
 	}
 
 	return (
-		<div className="container mx-auto px-4 py-8">
-			<h2 className="text-4xl font-bold mb-4 text-primary">
-				Edit Car with VIN -
-				<Link href={`/car/${vin}`}>{vin}</Link>
-			</h2>
+		<div className="w-full grid place-items-center">
+			<h1 className="text-3xl text-primary my-4">
+				Edit Car with VIN - {" "} <Link href={`/car/${vin}`}>{vin}</Link> 
+			</h1>
 			{
 				isLoading ? <LoadingState /> : (
 					<Tabs defaultValue="form" searchParam="type">

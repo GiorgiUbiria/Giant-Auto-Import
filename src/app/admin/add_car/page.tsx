@@ -10,6 +10,7 @@ export default async function Page() {
 
   return (
     <div className="w-full grid place-items-center">
+      <h1 className="text-3xl text-primary my-4"> Add Car </h1>
       <AddCarForm />
     </div>
   )

@@ -11,22 +11,21 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue
-} from "./ui/select";
-
+} from "@/components/ui/select";
 import { registerAction as action } from "@/lib/actions/authActions";
 import { insertUserSchema } from "@/lib/drizzle/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { useServerAction } from "zsa-react";
-import { Loader2 } from "lucide-react";
 
 const FormSchema = insertUserSchema.omit({ id: true });
 

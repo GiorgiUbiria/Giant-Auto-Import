@@ -14,6 +14,7 @@ import { z } from "zod";
 import { Actions } from "./actions";
 import { Owner } from "./owner";
 import { TableImage } from "./table-image";
+import { AdminHolder } from "./admin-holder";
 
 const SelectSchema = selectCarSchema;
 type SelectSchemaType = z.infer<typeof SelectSchema>;
@@ -114,6 +115,18 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             {auction !== "Copart" ? <Image src={IAAILogo} alt="IAAI" className="size-8" /> : <Image src={CopartLogo} alt="IAAI" className="size-8" />}
           </div>
         </div>
+      )
+    },
+  },
+  {
+    accessorKey: "holder",
+    header: "Holder",
+    cell: ({ row }) => {
+      const holder = row.getValue("holder") as SelectSchemaType["holder"];
+      const vin = row.getValue("vin") as SelectSchemaType["vin"];
+
+      return (
+        <AdminHolder holder={holder} vin={vin} />
       )
     },
   },

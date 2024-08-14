@@ -300,6 +300,73 @@ export const assignOwnerAction = isAdminProcedure
 		}
 	});
 
+export const assignHolderAction = authedProcedure 
+	.createServerAction()
+	.input(z.object({
+		vin: z.string(),
+		holder: z.string(),
+	}))
+	.output(z.object({
+		message: z.string().optional(),
+		data: z.any().optional(),
+		success: z.boolean(),
+	}))
+	.handler(async ({ input }) => {
+		const { vin, holder } = input;
+
+		if (!vin || !holder) {
+			return {
+				success: false,
+				message: "Provide car's vin code",
+			};
+		}
+
+		try {
+			const whereClause = [];
+			if (vin !== undefined) {
+				whereClause.push(eq(cars.vin, vin));
+			}
+
+			const carExists = await db
+				.select()
+				.from(cars)
+				.where(or(...whereClause))
+				.limit(1);
+
+			if (!carExists.length) {
+				return {
+					success: false,
+					message: "Car does not exist",
+				};
+			}
+
+			const [isAssigned] = await db
+				.update(cars)
+				.set({
+					holder: holder,
+				})
+				.where(or(...whereClause))
+				.returning({ vin: cars.vin });
+
+			if (!isAssigned) {
+				return {
+					success: false,
+					message: "Could not assign the owner to car",
+				};
+			}
+
+			revalidatePath(`/admin/cars`);
+
+			return {
+				success: true,
+				message: `Car with vin code ${isAssigned.vin} was successfully assigned to the holder ${holder}`,
+			};
+		} catch (error) {
+			console.error("Error assigning holder:", error);
+			throw new Error("Failed to assign the holder to car");
+		}
+	});
+
 export const updateCarAction = isAdminProcedure
 	.createServerAction()
 	.input(insertCarSchema)

@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select"
 import { addCarAction } from "@/lib/actions/carActions"
 import { insertCarSchema } from "@/lib/drizzle/schema"
-import { cn } from "@/lib/utils"
+import { cn, oceanShippingRates } from "@/lib/utils"
 import { format } from "date-fns"
 import { CalendarIcon, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -34,6 +34,8 @@ import { toast } from "sonner"
 import { useServerAction } from "zsa-react"
 import { getUsersAction } from "@/lib/actions/userActions"
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks"
+import { auctionData } from "@/lib/utils"
+import { useState } from "react"
 
 const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpg", "image/jpeg", "image/webp"];
 const MAX_IMAGE_SIZE = 4;
@@ -97,6 +99,7 @@ const ImageSchema = {
     }, "File type is not supported")
     .optional(),
 }
+
 const FormInitialSchema = insertCarSchema.omit({ id: true, totalFee: true, shippingFee: true, destinationPort: true, });
 const FormSchema = FormInitialSchema.extend(ImageSchema)
 
@@ -124,7 +127,7 @@ const processImages = async (
 
 export function AddCarForm() {
   const router = useRouter();
-
+  const [selectedAuctionLocation, setSelectedAuctionLocation] = useState("");
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -133,7 +136,6 @@ export function AddCarForm() {
       make: "",
       model: "",
       auction: "Copart",
-      originPort: "NJ",
       keys: "YES",
       title: "YES",
       shippingStatus: "AUCTION",
@@ -147,11 +149,12 @@ export function AddCarForm() {
       purchaseFee: 0,
       departureDate: null,
       arrivalDate: null,
+      auctionLocation: "",
     },
   })
 
   const { execute, isPending } = useServerAction(addCarAction, {
-    onError: (err) => { console.error(err.err.data)},
+    onError: (err) => { console.error(err.err.data) },
     onSuccess: async ({ data }) => {
       try {
         if (data?.success === false) {
@@ -198,6 +201,15 @@ export function AddCarForm() {
       toast.error("An error occurred while submitting the form");
     }
   };
+
+  const handleAuctionLocationChange = (location: string) => {
+    setSelectedAuctionLocation(location);
+  };
+
+  const originPorts = oceanShippingRates;
+  const filteredOriginPorts = originPorts.filter(port =>
+    auctionData.some(data => data.auctionLocation === selectedAuctionLocation && data.port === port.shorthand)
+  );
 
   const handleSubmit = form.handleSubmit(onSubmit)
 
@@ -610,7 +622,7 @@ export function AddCarForm() {
             )}
           />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
           <FormField
             control={form.control}
             name="auction"
@@ -638,21 +650,47 @@ export function AddCarForm() {
           />
           <FormField
             control={form.control}
+            name="auctionLocation"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Auction Location*</FormLabel>
+                <Select onValueChange={(value) => handleAuctionLocationChange(value)} defaultValue={field.value!} required>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an auction location" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {
+                      Array.from(new Set(auctionData.map((data) => data.auctionLocation))).map((location) => (
+                        <SelectItem value={location} key={location}>{location}</SelectItem>
+                      ))
+                    }
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Auction Location
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="originPort"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Port of Origin</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormLabel>Port of Origin*</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value} required>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select the origin port for ground fee calculation" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="NJ">New Jersey (NJ)</SelectItem>
-                    <SelectItem value="TX">Texas (TX)</SelectItem>
-                    <SelectItem value="GA">Georgia (GA)</SelectItem>
-                    <SelectItem value="CA">California (CA)</SelectItem>
+                    {filteredOriginPorts.map((port) => (
+                      <SelectItem value={port.shorthand} key={port.state}>{port.state}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormDescription>

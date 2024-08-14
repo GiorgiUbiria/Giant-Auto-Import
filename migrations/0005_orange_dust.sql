@@ -1,0 +1,1 @@
+ALTER TABLE `cars` ADD `auction_location` text;

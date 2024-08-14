@@ -8,8 +8,9 @@ import { getAuth } from "../auth";
 import { db } from "../drizzle/db";
 import { cars, insertCarSchema, selectCarSchema } from "../drizzle/schema";
 import { handleAddImages } from "./bucketActions";
+import { auctionData, oceanShippingRates } from "../utils";
 
-const AddCarSchema = insertCarSchema.omit({ id: true, totalFee: true, shippingFee: true, destinationPort: true, });
+const AddCarSchema = insertCarSchema.omit({ id: true,  destinationPort: true, });
 const SelectSchema = selectCarSchema;
 
 const authedProcedure = createServerActionProcedure()
@@ -40,6 +41,7 @@ const isAdminProcedure = createServerActionProcedure(authedProcedure)
 		}
 	});
 
+
 const Uint8ArraySchema = z
 	.array(z.number())
 	.transform((arr) => new Uint8Array(arr));
@@ -62,6 +64,14 @@ export const addCarAction = isAdminProcedure
 	}))
 	.handler(async ({ input }) => {
 		try {
+			const auctionRate = auctionData.find((data) => data.auction === input.auction && data.auctionLocation === input.auctionLocation)?.rate ?? 0;
+			const oceanRate = oceanShippingRates.find((rate) => rate.shorthand === input.originPort)?.rate ?? 0;
+
+			const shippingFee = auctionRate + oceanRate;
+			
+			input.shippingFee = shippingFee;
+			input.totalFee = shippingFee + input.purchaseFee;	
+
 			const result = await db.transaction(async (tx) => {
 				const insertedCars = await tx
 					.insert(cars)

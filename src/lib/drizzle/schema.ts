@@ -76,6 +76,7 @@ export const cars = sqliteTable("cars", {
   bookingNumber: text("booking_number"),
   containerNumber: text("container_number"),
   lotNumber: text("lot_number"),
+  auctionLocation: text("auction_location"),
   trackingLink: text("tracking_link"),
   destinationPort: text("destination_port").default("Poti"),
   shippingFee: integer("shipping_fee"),

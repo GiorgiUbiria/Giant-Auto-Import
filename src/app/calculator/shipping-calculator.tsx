@@ -55,8 +55,8 @@ export function ShippingCalculator() {
 					<label className="block mb-2">
 						Auction Location:
 						<select
-							value={auctionLocation}
 							onChange={(e) => handleAuctionLocationChange(e.target.value)}
+							value={auctionLocation}
 							className="block w-full p-2 pl-10 text-sm text-gray-700"
 						>
 							<option value="">Select Auction Location</option>

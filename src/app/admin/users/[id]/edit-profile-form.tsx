@@ -21,13 +21,14 @@ import {
 } from "@/components/ui/select";
 import { updateUserAction } from "@/lib/actions/authActions";
 import { selectUserSchema } from "@/lib/drizzle/schema";
+import { useServerActionMutation } from "@/lib/hooks/server-action-hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { useServerAction } from "zsa-react";
 
 const FormSchema = z.object({
 	id: z.string(),
@@ -56,17 +57,26 @@ export function UpdateProfileForm({ user }: Props) {
 		},
 	})
 
-	const { isPending, execute } = useServerAction(updateUserAction);
+	const queryClient = useQueryClient();
+	
+	const { isPending, mutate } = useServerActionMutation(updateUserAction, {
+		onError: (error) => {
+			const errorMessage = error?.data || "Failed to update the user";
+			toast.error(errorMessage);
+		},
+		onSuccess: async ({ data }) => {
+			const successMessage = data?.message || "User updated successfully!";
+			toast.success(successMessage);
 
-	const onSubmit = async (values: z.infer<typeof FormSchema>) => {
-		const [data, error] = await execute(values);
+			await queryClient.invalidateQueries({
+				queryKey: ["getUser", user.id],
+				refetchType: "active",
+			});
+		},
+	});
 
-		if (data?.success === false) {
-			toast.error(data?.message);
-			console.error(error)
-		} else {
-			toast.success(data?.message);
-		}
+	const onSubmit = (values: z.infer<typeof FormSchema>) => {
+		mutate(values)
 	}
 
 	const handleSubmit = form.handleSubmit(onSubmit)

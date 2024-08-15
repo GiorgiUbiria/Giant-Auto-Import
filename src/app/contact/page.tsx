@@ -207,7 +207,7 @@ export default function Page() {
                     </div>
                   </div>
                   <div className="text-center">
-                    <Button type="submit" className="w-full">
+                    <Button type="submit" className="w-full light:bg-blue-900">
                       Send Message
                     </Button>
                   </div>

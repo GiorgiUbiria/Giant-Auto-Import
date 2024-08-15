@@ -37,17 +37,17 @@ export function ShippingCalculator() {
 
 	return (
 		<div className="w-full grid place-items-center">
-			<h2 className="text-4xl font-bold mb-4">Shipping Calculator</h2>
+			<h2 className="text-4xl font-bold my-4">Shipping Calculator</h2>
 			<form className="w-full flex justify-center">
-				<div className="w-1/3 p-3 rounded-l-md bg-white flex flex-col justify-evenly items-stretch gap-2">
-					<div>
-						<label className="text-nowrap mb-0.5 text-xl text-black">
+				<div className="w-1/3 p-3 rounded-l-md dark:bg-gray-300 bg-gray-100 flex flex-col justify-evenly items-stretch gap-2">
+					<div className="flex flex-col gap-2">
+						<label className="text-nowrap  text-xl text-black">
 							Car Type
 						</label>
 						<select
 							value={carType}
 							onChange={(e) => setCarType(e.target.value)}
-							className="block w-full p-2 pl-10 text-sm text-white"
+							className="block w-full p-2 pl-10 text-sm text-black bg-white rounded-md"
 						>
 							<option value="">Select Car Type</option>
 							<option value="Sedan">Sedan</option>
@@ -56,14 +56,14 @@ export function ShippingCalculator() {
 						</select>
 					</div>
 					<br />
-					<div>
-						<label className="text-nowrap mb-0.5 text-xl text-black">
+					<div className="flex flex-col gap-2">
+						<label className="text-nowrap  text-xl text-black">
 							Location
 						</label>
 						<select
 							onChange={(e) => handleAuctionLocationChange(e.target.value)}
 							value={auctionLocation}
-							className="block w-full p-2 pl-10 text-sm text-white"
+							className="block w-full p-2 pl-10 text-sm text-black bg-white rounded-md"
 						>
 							<option value="">Select Auction Location</option>
 							{Array.from(new Set(auctionData.map((data) => data.auctionLocation))).map((location) => (
@@ -74,14 +74,14 @@ export function ShippingCalculator() {
 						</select>
 					</div>
 					<br />
-					<div>
-						<label className="text-nowrap mb-0.5 text-xl text-black block">
+					<div className="flex flex-col gap-2">
+						<label className="text-nowrap  text-xl text-black block">
 							Auction
 						</label>
 						<select
 							value={auction}
 							onChange={(e) => setAuction(e.target.value)}
-							className="block w-full p-2 pl-10 text-sm text-white"
+							className="block w-full p-2 pl-10 text-sm text-black bg-white rounded-md"
 						>
 							<option value="">Select Auction</option>
 							{auctionData.filter((data) => data.auctionLocation === auctionLocation).map((data) => (
@@ -92,14 +92,14 @@ export function ShippingCalculator() {
 						</select>
 					</div>
 					<br />
-					<div>
-						<label className="text-nowrap mb-0.5 text-xl text-black">
+					<div className="flex flex-col gap-2">
+						<label className="text-nowrap  text-xl text-black">
 							USA Port
 						</label>
 						<select
 							value={port}
 							onChange={(e) => setPort(e.target.value)}
-							className="block w-full p-2 pl-10 text-sm text-white"
+							className="block w-full p-2 pl-10 text-sm text-black bg-white rounded-md"
 						>
 							<option value="">Select USA Port</option>
 							{availablePorts.map((port) => (
@@ -116,13 +116,13 @@ export function ShippingCalculator() {
 						style={{ alignSelf: "center" }}
 					/>
 				</div>
-				<div className="flex flex-col p-3 rounded-r-md bg-blue-500 justify-between">
-					<div>
-						<label className="block mb-2 text-lg">
+				<div className="flex flex-col p-3 rounded-r-md bg-darkfg justify-between">
+					<div className="flex flex-col gap-2">
+						<label className="block text-lg text-white">
 							Additional Fees
 						</label>
 						{extraFees.map((fee) => (
-							<div key={fee.type} className="flex items-center mb-2">
+							<div key={fee.type} className="flex items-center text-white">
 								<input
 									type="checkbox"
 									checked={additionalFees.includes(fee.type)}
@@ -140,7 +140,7 @@ export function ShippingCalculator() {
 						))}
 					</div>
 					<br />
-					<p className="text-lg font-semibold">Estimated Fee: <span className="text-xl font-bold">${estimatedFee}</span></p>
+					<p className="text-lg font-semibold text-white">Estimated Fee: <span className="text-xl font-bold">${estimatedFee}</span></p>
 					<br />
 					<button
 						onClick={handleCalculate}

@@ -58,7 +58,7 @@ export default function RegisterForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit} className="w-1/3 space-y-6 my-8 bg-gray-700 p-3 rounded-md">
+      <form onSubmit={handleSubmit} className="w-1/3 space-y-6 my-4 bg-gray-200/90 dark:bg-gray-700 p-3 rounded-md">
         <FormField
           control={form.control}
           name="fullName"

@@ -30,9 +30,9 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { CalendarIcon, Loader2 } from "lucide-react"
 import { toast } from "sonner"
-import { useServerAction } from "zsa-react"
 import { getUsersAction } from "@/lib/actions/userActions"
-import { useServerActionQuery } from "@/lib/hooks/server-action-hooks"
+import { useServerActionMutation, useServerActionQuery } from "@/lib/hooks/server-action-hooks"
+import { useQueryClient } from "@tanstack/react-query"
 
 const FormSchema = insertCarSchema.omit({ id: true, totalFee: true, shippingFee: true, destinationPort: true, });
 const CarSchema = selectCarSchema.omit({ destinationPort: true })
@@ -66,28 +66,37 @@ export function EditCarForm({ car } : { car: Car}) {
     },
   })
 
-  const { isPending, execute } = useServerAction(updateCarAction);
   const { isLoading, data } = useServerActionQuery(getUsersAction, {
     input: undefined,
     queryKey: ["getUsers"],
   })
+	const queryClient = useQueryClient();
+	
+	const { isPending, mutate } = useServerActionMutation(updateCarAction, {
+		onError: (error) => {
+			const errorMessage = error?.data || "Failed to update the car";
+			toast.error(errorMessage);
+		},
+		onSuccess: async ({ data }) => {
+			const successMessage = data?.message || "Car updated successfully!";
+			toast.success(successMessage);
 
-  const onSubmit = async (values: z.infer<typeof FormSchema>) => {
-    const [data, error] = await execute(values);
+			await queryClient.invalidateQueries({
+				queryKey: ["getCar", car.vin],
+				refetchType: "active",
+			});
+		},
+	});
 
-    if (data?.success === false) {
-      toast.error(data.message);
-      console.error(error);
-    } else {
-      toast.success(data?.message);
-    }
+  const onSubmit = (values: z.infer<typeof FormSchema>) => {
+    mutate(values)
   }
 
   const handleSubmit = form.handleSubmit(onSubmit)
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit} className="w-full space-y-6 my-8 bg-gray-700 p-3 rounded-md">
+      <form onSubmit={handleSubmit} className="w-full space-y-6 my-4 bg-gray-200/90 dark:bg-gray-700 p-3 rounded-md">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
           <FormField
             control={form.control}

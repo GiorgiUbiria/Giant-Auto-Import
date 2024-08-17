@@ -100,3 +100,11 @@
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
     transform: translateY(-4px);
 }
+
+#calc-bg {
+  background: url("../../public/bgcal.png");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
+  margin-bottom: -2rem;
+}

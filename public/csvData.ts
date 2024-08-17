@@ -1,7 +1,5 @@
 export const csvData = `
 Auction,Auction Name,Location,Zip,Port,Rate
-Copart,AB - Calgary,Rocky View County,T1X 0K2,"Toronto, Canada",$1600
-Copart,AB - Edmonton,Nisku,T9E 8L1,"Toronto, Canada",$1600
 Copart,AK - Anchorage,Anchorage,99501,"Los Angeles, CA",$2320
 Copart,AL - Birmingham,Hueytown,35023,"Savannah, GA",$445
 Copart,AL - Dothan,Newton,36352,"Savannah, GA",$445

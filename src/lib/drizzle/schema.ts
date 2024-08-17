@@ -54,14 +54,6 @@ export const insertUserSchema = createInsertSchema(users, {
   ),
   deposit: (schema) => schema.deposit.gte(0),
   balance: (schema) => schema.balance.gte(0),
-  fullName: (schema) => schema.fullName.regex(
-    new RegExp("^[A-Za-z]+[\\s\\-'A-Za-z]+$")
-  ),
-  password: (schema) => schema.password.regex(
-    new RegExp(
-      "^(?=.*\d).{8,15}$"
-    )
-  ),
 });
 export const selectUserSchema = createSelectSchema(users);
 

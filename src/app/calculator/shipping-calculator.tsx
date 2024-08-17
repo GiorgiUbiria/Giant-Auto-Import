@@ -2,9 +2,6 @@
 
 import { useState } from "react";
 import { auctionData, oceanShippingRates, extraFees } from "@/lib/utils";
-import Image from "next/image";
-import Ship from "../../../public/ship.png";
-import CaclBg from "../../../public/calcbg.webp";
 
 export function ShippingCalculator() {
 	const [carType, setCarType] = useState('');
@@ -38,11 +35,11 @@ export function ShippingCalculator() {
 
 	return (
 		<div className="w-full grid place-items-center">
-			<h2 className="text-4xl font-bold my-4">Shipping Calculator</h2>
-			<form className="w-full flex flex-col md:flex-row justify-center">
-				<div className="w-full md:w-1/3 p-3 rounded-t-md md:rounded-l-md dark:bg-gray-300 bg-gray-100 flex flex-col justify-evenly items-stretch gap-2">
+			<h2 className="text-4xl font-bold my-4 text-white drop-shadow-[0_1.3px_1.3px_rgba(0,0,0,1)]">Shipping Calculator</h2>
+			<form className="w-full flex flex-col items-center">
+				<div className="w-full md:w-1/3 p-3 rounded-t-md md:rounded-l-md bg-gray-900/40 flex flex-col justify-evenly items-stretch gap-2">
 					<div className="flex flex-col gap-2">
-						<label className="text-nowrap  text-xl text-black">
+						<label className="text-nowrap text-xl text-white font-bold shadow-sm">
 							Car Type
 						</label>
 						<select
@@ -58,7 +55,7 @@ export function ShippingCalculator() {
 					</div>
 					<br />
 					<div className="flex flex-col gap-2">
-						<label className="text-nowrap  text-xl text-black">
+						<label className="text-nowrap  text-xl text-white font-bold shadow-sm">
 							Location
 						</label>
 						<select
@@ -76,7 +73,7 @@ export function ShippingCalculator() {
 					</div>
 					<br />
 					<div className="flex flex-col gap-2">
-						<label className="text-nowrap  text-xl text-black block">
+						<label className="text-nowrap  text-xl text-white font-bold shadow-sm block">
 							Auction
 						</label>
 						<select
@@ -94,7 +91,7 @@ export function ShippingCalculator() {
 					</div>
 					<br />
 					<div className="flex flex-col gap-2">
-						<label className="text-nowrap  text-xl text-black">
+						<label className="text-nowrap  text-xl text-white font-bold shadow-sm">
 							USA Port
 						</label>
 						<select
@@ -110,14 +107,8 @@ export function ShippingCalculator() {
 							))}
 						</select>
 					</div>
-					<Image
-						src={Ship}
-						alt="Logo"
-						width={250}
-						style={{ alignSelf: "center" }}
-					/>
 				</div>
-				<div className="flex flex-col p-3 rounded-b-md md:rounded-r-md bg-darkfg justify-between">
+				<div className="flex md:w-1/3 flex-col p-3 rounded-b-md bg-black/40 justify-between">
 					<div className="flex flex-col gap-2">
 						<label className="block text-lg text-white">
 							Additional Fees

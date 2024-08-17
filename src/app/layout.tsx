@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";

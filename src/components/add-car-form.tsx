@@ -215,7 +215,7 @@ export function AddCarForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit} className="w-2/3 space-y-6 my-4 bg-gray-200/90 dark:bg-gray-700 p-3 rounded-md">
+      <form onSubmit={handleSubmit} className="w-full md:w-2/3 space-y-6 my-4 bg-gray-200/90 dark:bg-gray-700 p-3 rounded-md">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
           <FormField
             control={form.control}

@@ -38,8 +38,8 @@ export function ShippingCalculator() {
 	return (
 		<div className="w-full grid place-items-center">
 			<h2 className="text-4xl font-bold my-4">Shipping Calculator</h2>
-			<form className="w-full flex justify-center">
-				<div className="w-1/3 p-3 rounded-l-md dark:bg-gray-300 bg-gray-100 flex flex-col justify-evenly items-stretch gap-2">
+			<form className="w-full flex flex-col md:flex-row justify-center">
+				<div className="w-full md:w-1/3 p-3 rounded-t-md md:rounded-l-md dark:bg-gray-300 bg-gray-100 flex flex-col justify-evenly items-stretch gap-2">
 					<div className="flex flex-col gap-2">
 						<label className="text-nowrap  text-xl text-black">
 							Car Type
@@ -116,7 +116,7 @@ export function ShippingCalculator() {
 						style={{ alignSelf: "center" }}
 					/>
 				</div>
-				<div className="flex flex-col p-3 rounded-r-md bg-darkfg justify-between">
+				<div className="flex flex-col p-3 rounded-b-md md:rounded-r-md bg-darkfg justify-between">
 					<div className="flex flex-col gap-2">
 						<label className="block text-lg text-white">
 							Additional Fees

@@ -64,7 +64,7 @@ export function UpdateAdminForm({ user }: Props) {
 
 	return (
 		<Form {...form}>
-      <form onSubmit={handleSubmit} className="w-1/3 space-y-6 my-8 bg-gray-200 dark:bg-gray-700 p-3 rounded-md">
+      <form onSubmit={handleSubmit} className="w-full md:w-1/2 lg:w-1/3 space-y-6 my-8 bg-gray-200 dark:bg-gray-700 p-3 rounded-md">
 				<FormField
 					control={form.control}
 					name="fullName"

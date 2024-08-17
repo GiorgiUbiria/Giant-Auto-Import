@@ -68,7 +68,7 @@ export const EditImages = ({ vin }: { vin: string }) => {
 	return (
 		<div className="flex flex-col">
 			<ImagesForm vin={vin} />
-			<div className="w-full grid grid-cols-1 lg:grid-cols-4">
+			<div className="w-full grid grid-cols-1 lg:grid-cols-3 place-items-center gap-2">
 				{
 					isLoading ? <LoadingState /> : (
 						data?.map((image) => (

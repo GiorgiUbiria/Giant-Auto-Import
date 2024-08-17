@@ -1,15 +1,15 @@
-import Image from "next/image";
-import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import Link from "next/link";
+import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { getAuth } from "@/lib/auth";
-import NavigationLinks from "./navigation-links";
-import NavbarLogo from "../../public/logo.png";
+import { Menu } from "lucide-react";
+import Image from "next/image";
 import CopartLogo from "../../public/copart-logo.png";
 import IAAILogo from "../../public/iaai-logo.png";
-import Link from "next/link";
-import DynamicHeader from "./dynamic-header";
+import NavbarLogo from "../../public/logo.png";
 import Avatar from "./avatar";
+import DynamicHeader from "./dynamic-header";
+import NavigationLinks from "./navigation-links";
 
 const Navbar = async () => {
   const { user } = await getAuth();
@@ -57,7 +57,7 @@ const Navbar = async () => {
   return (
     <div>
       <DynamicHeader>
-        <nav className="hidden flex-col gap-12 font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+        <nav className="hidden flex-col gap-12 font-medium lg:flex lg:flex-row lg:items-center lg:text-sm lg:gap-6">
           <Link href="/" className="w-max">
             <Image
               src={NavbarLogo}
@@ -82,15 +82,22 @@ const Navbar = async () => {
               size="icon"
               className="shrink-0 h-14 w-14 md:hidden"
             >
-              <Menu className="h-8 w-8" />
+              <Menu className="h-8 w-8 text-primary" />
               <span className="sr-only">Toggle navigation menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left">
+          <SheetContent side="left" className="text-primary">
             <div className="flex flex-col justify-between h-full">
-              <nav className="grid gap-6 text-lg font-medium">
-                <NavigationLinks links={navigationLinks} />
-              </nav>
+              {navigationLinks.map((link) => (
+                <SheetClose asChild key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="flex items-center text-black dark:text-white dark:focus-text-yellow-300 text-nowrap font-semibold focus:text-yellow-300 text-2xl md:text-lg transition-colors hover:text-yellow-500 dark:hover:text-yellow-500"
+                  >
+                    <span>{link.label}</span>
+                  </Link>
+                </SheetClose>
+              ))}
               <Image
                 src={NavbarLogo}
                 alt="Company logo"
@@ -104,7 +111,9 @@ const Navbar = async () => {
           <Avatar user={user} />
         </div>
       </DynamicHeader>
-      <NavigationLinks links={navigationLinks} />
+      <div className="hidden md:flex">
+        <NavigationLinks links={navigationLinks} />
+      </div>
     </div>
   );
 };

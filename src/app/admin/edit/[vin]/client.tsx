@@ -26,13 +26,13 @@ export const Client = ({ vin }: { vin: string }) => {
 
 	return (
 		<div className="w-full grid place-items-center">
-			<h1 className="text-3xl text-primary my-4">
+			<h1 className="text-3xl text-primary my-4 text-center">
 				Edit Car with VIN - {" "} <Link href={`/car/${vin}`}>{vin}</Link> 
 			</h1>
 			{
 				isLoading ? <LoadingState /> : (
-					<Tabs defaultValue="form" searchParam="type">
-						<TabsList className="grid w-full grid-cols-1 lg:grid-cols-2">
+					<Tabs defaultValue="form" searchParam="type" className="w-full md:w-1/2 lg:w-1/3">
+						<TabsList className="grid w-full grid-cols-1 lg:grid-cols-2 gap-2">
 							<TabsTrigger value="form">Form</TabsTrigger>
 							<TabsTrigger value="images">Images</TabsTrigger>
 						</TabsList>

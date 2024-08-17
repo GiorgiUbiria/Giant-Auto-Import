@@ -2,39 +2,11 @@
 
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { createServerAction, createServerActionProcedure } from "zsa";
-import { getAuth } from "../auth";
+import { createServerAction } from "zsa";
 import { db } from "../drizzle/db";
 import { images } from "../drizzle/schema";
+import { isAdminProcedure } from "./authProcedures";
 import { deleteObjectFromBucket, fetchImageForDisplay, fetchImagesForDisplay } from "./bucketActions";
-
-const authedProcedure = createServerActionProcedure()
-  .handler(async () => {
-    try {
-      const { user, session } = await getAuth();
-
-      return {
-        user,
-        session,
-      };
-    } catch {
-      throw new Error("User not authenticated")
-    }
-  });
-
-const isAdminProcedure = createServerActionProcedure(authedProcedure)
-  .handler(async ({ ctx }) => {
-    const { user, session } = ctx;
-
-    if (user?.role !== "ADMIN") {
-      throw new Error("User is not an admin")
-    }
-
-    return {
-      user,
-      session,
-    }
-  });
 
 export const getImagesAction = createServerAction()
   .input(z.object({

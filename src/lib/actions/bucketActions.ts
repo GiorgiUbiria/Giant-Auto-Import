@@ -1,27 +1,34 @@
 "use server";
 
 import {
-  S3,
-  PutObjectCommand,
-  GetObjectCommand,
-  ListObjectsV2Command,
-  DeleteObjectCommand,
+    DeleteObjectCommand,
+    GetObjectCommand,
+    ListObjectsV2Command,
+    PutObjectCommand,
+    S3,
 } from "@aws-sdk/client-s3";
-import "dotenv/config";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { db } from "../drizzle/db";
-import { cars, images, insertImageSchema, selectImageSchema } from "../drizzle/schema";
+import "dotenv/config";
 import { desc, eq } from "drizzle-orm";
-import { z } from "zod";
 import { SQLiteTransaction } from "drizzle-orm/sqlite-core";
-import { createServerActionProcedure } from "zsa";
-import { getAuth } from "../auth";
-import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { db } from "../drizzle/db";
+import { images, insertImageSchema, selectImageSchema } from "../drizzle/schema";
+import { isAdminProcedure } from "./authProcedures";
 
 const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
 const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
 const secretAccessKey = process.env.CLOUDFLARE_SECRET_ACCESS_KEY as string;
 const bucketName = process.env.CLOUDFLARE_BUCKET_NAME as string;
+
+const SelectImageSchema = selectImageSchema.omit({ id: true, }).merge(z.object({
+  url: z.string(),
+}))
+type SelectImageType = z.infer<typeof SelectImageSchema>;
+
+const Uint8ArraySchema = z
+  .array(z.number())
+  .transform((arr) => new Uint8Array(arr));
 
 const S3Client = new S3({
   region: "auto",
@@ -31,39 +38,6 @@ const S3Client = new S3({
     secretAccessKey: secretAccessKey,
   },
 });
-
-const SelectImageSchema = selectImageSchema.omit({ id: true, }).merge(z.object({
-  url: z.string(),
-}))
-type SelectImageType = z.infer<typeof SelectImageSchema>;
-
-const authedProcedure = createServerActionProcedure()
-  .handler(async () => {
-    try {
-      const { user, session } = await getAuth();
-
-      return {
-        user,
-        session,
-      };
-    } catch {
-      throw new Error("User not authenticated")
-    }
-  });
-
-const isAdminProcedure = createServerActionProcedure(authedProcedure)
-  .handler(async ({ ctx }) => {
-    const { user, session } = ctx;
-
-    if (user?.role !== "ADMIN") {
-      throw new Error("User is not an admin")
-    }
-
-    return {
-      user,
-      session,
-    }
-  });
 
 async function getFileCount(prefix: string): Promise<number> {
   const command = new ListObjectsV2Command({
@@ -85,10 +59,6 @@ async function getFileCount(prefix: string): Promise<number> {
 
   return fileCount;
 }
-
-const Uint8ArraySchema = z
-  .array(z.number())
-  .transform((arr) => new Uint8Array(arr));
 
 export const handleUploadImagesAction = isAdminProcedure
   .createServerAction()

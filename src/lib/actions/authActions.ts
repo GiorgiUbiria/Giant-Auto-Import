@@ -1,51 +1,22 @@
 "use server";
 
+import { lucia } from "@/lib/auth";
+import { SqliteError } from "better-sqlite3";
 import { eq } from "drizzle-orm";
+import { generateId } from "lucia";
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Argon2id } from "oslo/password";
-
-import { generateId } from "lucia";
-
-import { getAuth, lucia } from "@/lib/auth";
+import { z } from "zod";
+import { createServerAction } from "zsa";
 import { db } from "../drizzle/db";
 import { insertUserSchema, users } from "../drizzle/schema";
-
-import { SqliteError } from "better-sqlite3";
-import { z } from "zod";
-import { createServerAction, createServerActionProcedure } from "zsa";
-import { revalidatePath } from "next/cache";
+import { authedProcedure, isAdminProcedure } from "./authProcedures";
 
 const LoginSchema = insertUserSchema.pick({ email: true, password: true });
 const RegisterSchema = insertUserSchema.omit({ id: true });
 
-const authedProcedure = createServerActionProcedure()
-  .handler(async () => {
-    try {
-      const { user, session } = await getAuth();
-
-      return {
-        user,
-        session,
-      };
-    } catch {
-      throw new Error("User not authenticated")
-    }
-  });
-
-const isAdminProcedure = createServerActionProcedure(authedProcedure)
-  .handler(async ({ ctx }) => {
-    const { user, session } = ctx;
-
-    if (user?.role !== "ADMIN") {
-      throw new Error("User is not an admin")
-    }
-
-    return {
-      user,
-      session,
-    }
-  });
 
 export const loginAction = createServerAction()
   .input(LoginSchema)

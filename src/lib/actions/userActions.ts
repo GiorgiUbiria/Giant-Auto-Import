@@ -1,42 +1,12 @@
 "use server";
 
 import { eq, ne } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { db } from "../drizzle/db";
 import { selectCarSchema, selectUserSchema, users } from "../drizzle/schema";
-import { createServerActionProcedure } from "zsa";
-import { getAuth } from "../auth";
-import { z } from "zod";
+import { isAdminProcedure } from "./authProcedures";
 
 const SelectSchema = selectUserSchema;
-
-const authedProcedure = createServerActionProcedure()
-  .handler(async () => {
-    try {
-      const { user, session } = await getAuth();
-
-      return {
-        user,
-        session,
-      };
-    } catch {
-      throw new Error("User not authenticated")
-    }
-  });
-
-const isAdminProcedure = createServerActionProcedure(authedProcedure)
-  .handler(async ({ ctx }) => {
-    const { user, session } = ctx;
-
-    if (user?.role !== "ADMIN") {
-      throw new Error("User is not an admin")
-    }
-
-    return {
-      user,
-      session,
-    }
-  });
 
 export const getUsersAction = isAdminProcedure
   .createServerAction()
@@ -144,8 +114,6 @@ export const deleteUserAction = isAdminProcedure
           message: "Could not delete the user",
         };
       }
-
-      revalidatePath("/admin/users");
 
       return {
         success: true,

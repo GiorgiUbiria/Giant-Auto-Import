@@ -3,45 +3,14 @@
 import { desc, eq, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createServerActionProcedure } from "zsa";
-import { getAuth } from "../auth";
 import { db } from "../drizzle/db";
 import { cars, insertCarSchema, selectCarSchema } from "../drizzle/schema";
-import { handleAddImages } from "./bucketActions";
 import { auctionData, oceanShippingRates } from "../utils";
+import { authedProcedure, isAdminProcedure } from "./authProcedures";
+import { handleAddImages } from "./bucketActions";
 
 const AddCarSchema = insertCarSchema.omit({ id: true,  destinationPort: true, });
 const SelectSchema = selectCarSchema;
-
-const authedProcedure = createServerActionProcedure()
-	.handler(async () => {
-		try {
-			const { user, session } = await getAuth();
-
-			return {
-				user,
-				session,
-			};
-		} catch {
-			throw new Error("User not authenticated")
-		}
-	});
-
-const isAdminProcedure = createServerActionProcedure(authedProcedure)
-	.handler(async ({ ctx }) => {
-		const { user, session } = ctx;
-
-		if (user?.role !== "ADMIN") {
-			throw new Error("User is not an admin")
-		}
-
-		return {
-			user,
-			session,
-		}
-	});
-
-
 const Uint8ArraySchema = z
 	.array(z.number())
 	.transform((arr) => new Uint8Array(arr));
@@ -90,8 +59,6 @@ export const addCarAction = isAdminProcedure
 
 				return vin;
 			});
-
-			revalidatePath("/admin/cars");
 
 			return {
 				success: true,

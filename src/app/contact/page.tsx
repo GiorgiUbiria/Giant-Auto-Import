@@ -117,7 +117,7 @@ export default function Page() {
                       <p className="text-gray-600 dark:text-slate-400">
                         Mail:{" "}
                         <a href="mailto:someone@example.com?subject=Meeting%20Request&body=Hi%20there,%0A%0ACan%20we%20schedule%20a%20meeting%20next%20week?%0A%0AThank%20you!&cc=ccperson@example.com&bcc=bccperson@example.com">
-                          giantautoimport@gmail.com
+                          giant.autoimporti@gmail.com
                         </a>
                       </p>
                     </div>

@@ -7,10 +7,8 @@ import { db } from "../drizzle/db";
 import { images } from "../drizzle/schema";
 import { isAdminProcedure } from "./authProcedures";
 import { deleteObjectFromBucket, fetchImageForDisplay, fetchImagesForDisplay } from "./bucketActions";
-import { ratelimitProcedure } from "./ratelimitProcedure";
 
-export const getImagesAction =  ratelimitProcedure
-  .createServerAction()
+export const getImagesAction = createServerAction()
   .input(z.object({
     vin: z.string(),
   }))
@@ -37,8 +35,7 @@ export const getImagesAction =  ratelimitProcedure
     }
   });
 
-export const getImageAction = ratelimitProcedure
-  .createServerAction()
+export const getImageAction = createServerAction()
   .input(z.object({
     vin: z.string(),
   }))

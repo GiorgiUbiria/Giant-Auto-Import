@@ -19,7 +19,7 @@ const statuses: Status[] = [
   { status: "INNER_TRANSIT", name: "In Transit", index: 1, icon: <Truck className="invert dark:invert-0" /> },
   { status: "WAREHOUSE", name: "Warehouse", index: 2, icon: <Warehouse className="invert dark:invert-0" /> },
   { status: "LOADED", name: "Loaded", index: 3, icon: <Container className="invert dark:invert-0" /> },
-  { status: "INTERNATIONAL_TRANSIT", name: "In Transit", index: 4, icon: <Ship className="invert dark:invert-0" /> },
+  { status: "SAILING", name: "Sailing", index: 4, icon: <Ship className="invert dark:invert-0" /> },
   { status: "DELIVERED", name: "Delivered", index: 5, icon: <CircleCheckBig className="invert dark:invert-0" /> },
 ];
 

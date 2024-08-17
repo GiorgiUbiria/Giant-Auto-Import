@@ -98,7 +98,7 @@ export const cars = sqliteTable("cars", {
     enum: ["YES", "NO", "PENDING"],
   }).notNull(),
   shippingStatus: text("shipping_status", {
-    enum: ["AUCTION", "INNER_TRANSIT", "WAREHOUSE", "LOADED", "INTERNATIONAL_TRANSIT", "DELIVERED"],
+    enum: ["AUCTION", "INNER_TRANSIT", "WAREHOUSE", "LOADED", "SAILING", "DELIVERED"],
   }).notNull(),
   bodyType: text("body_type", {
     enum: ["SEDAN", "ATV", "SUV", "PICKUP", "BIKE"],

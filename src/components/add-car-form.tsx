@@ -353,7 +353,7 @@ export function AddCarForm() {
             )}
           />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
           <FormField
             control={form.control}
             name="holder"
@@ -365,6 +365,34 @@ export function AddCarForm() {
                 </FormControl>
                 <FormDescription>
                   Car Holder
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="shippingStatus"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select the shipping status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="AUCTION">Auction</SelectItem>
+                    <SelectItem value="INNER_TRANSIT">In Transit</SelectItem>
+                    <SelectItem value="WAREHOUSE">Warehouse</SelectItem>
+                    <SelectItem value="LOADED">Loaded</SelectItem>
+                    <SelectItem value="SAILING">Sailing</SelectItem>
+                    <SelectItem value="DELIVERED">Delivered</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Car shipping status
                 </FormDescription>
                 <FormMessage />
               </FormItem>

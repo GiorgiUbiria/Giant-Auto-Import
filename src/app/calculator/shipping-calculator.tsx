@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { auctionData, oceanShippingRates, extraFees } from "@/lib/utils";
 import Image from "next/image";
-import Ship from "../../../public/ship.png"
+import Ship from "../../../public/ship.png";
+import CaclBg from "../../../public/calcbg.webp";
 
 export function ShippingCalculator() {
 	const [carType, setCarType] = useState('');

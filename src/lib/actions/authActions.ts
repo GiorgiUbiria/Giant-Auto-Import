@@ -12,14 +12,12 @@ import { z } from "zod";
 import { db } from "../drizzle/db";
 import { insertUserSchema, users } from "../drizzle/schema";
 import { authedProcedure, isAdminProcedure } from "./authProcedures";
-import { ratelimitProcedure } from "./ratelimitProcedure";
+import { createServerAction } from "zsa";
 
 const LoginSchema = insertUserSchema.pick({ email: true, password: true });
 const RegisterSchema = insertUserSchema.omit({ id: true });
 
-
-export const loginAction = ratelimitProcedure
-  .createServerAction()
+export const loginAction = createServerAction()
   .input(LoginSchema)
   .output(z.object({
     message: z.string().optional(),

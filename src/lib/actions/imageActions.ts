@@ -7,8 +7,10 @@ import { db } from "../drizzle/db";
 import { images } from "../drizzle/schema";
 import { isAdminProcedure } from "./authProcedures";
 import { deleteObjectFromBucket, fetchImageForDisplay, fetchImagesForDisplay } from "./bucketActions";
+import { ratelimitProcedure } from "./ratelimitProcedure";
 
-export const getImagesAction = createServerAction()
+export const getImagesAction =  ratelimitProcedure
+  .createServerAction()
   .input(z.object({
     vin: z.string(),
   }))
@@ -19,10 +21,14 @@ export const getImagesAction = createServerAction()
     imageKey: z.string(),
     url: z.string(),
   })))
-  .handler(async ({ input }) => {
+  .handler(async ({ input, ctx }) => {
     const { vin } = input;
+    const rateLimitInfo = ctx;
+
     try {
       const query = await fetchImagesForDisplay(vin);
+
+      console.log(rateLimitInfo)
 
       return query.length ? query : [];
     } catch (error) {
@@ -31,7 +37,8 @@ export const getImagesAction = createServerAction()
     }
   });
 
-export const getImageAction = createServerAction()
+export const getImageAction = ratelimitProcedure
+  .createServerAction()
   .input(z.object({
     vin: z.string(),
   }))

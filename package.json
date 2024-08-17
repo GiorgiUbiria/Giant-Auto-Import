@@ -39,6 +39,8 @@
     "@tanstack/react-table": "^8.17.3",
     "@types/better-sqlite3": "^7.6.10",
     "@types/file-saver": "^2.0.7",
+    "@upstash/ratelimit": "^2.0.1",
+    "@upstash/redis": "^1.34.0",
     "@vercel/speed-insights": "^1.0.12",
     "aws-sdk": "^2.1659.0",
     "axios": "^1.7.2",

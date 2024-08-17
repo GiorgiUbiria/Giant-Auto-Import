@@ -56,10 +56,7 @@ export const addCarAction = isAdminProcedure
 				if (input.images && input.images.length > 0) {
 					await handleAddImages(vin, input.images, tx);
 				}
-
-				return vin;
-			});
-
+return vin; });
 			return {
 				success: true,
 				message: `Car with VIN code ${result} was added successfully`,
@@ -370,9 +367,6 @@ export const updateCarAction = isAdminProcedure
 					message: "Car update failed",
 				};
 			}
-
-			revalidatePath(`/admin/cars/edit/${car.vin}`);
-			revalidatePath(`/admin/cars/`);
 
 			return {
 				success: true,

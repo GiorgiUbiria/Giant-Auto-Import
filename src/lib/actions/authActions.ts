@@ -9,16 +9,17 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Argon2id } from "oslo/password";
 import { z } from "zod";
-import { createServerAction } from "zsa";
 import { db } from "../drizzle/db";
 import { insertUserSchema, users } from "../drizzle/schema";
 import { authedProcedure, isAdminProcedure } from "./authProcedures";
+import { ratelimitProcedure } from "./ratelimitProcedure";
 
 const LoginSchema = insertUserSchema.pick({ email: true, password: true });
 const RegisterSchema = insertUserSchema.omit({ id: true });
 
 
-export const loginAction = createServerAction()
+export const loginAction = ratelimitProcedure
+  .createServerAction()
   .input(LoginSchema)
   .output(z.object({
     message: z.string().optional(),

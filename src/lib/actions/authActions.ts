@@ -142,7 +142,7 @@ export const updateUserAction = isAdminProcedure
     email: z.string().email().optional(),
     phone: z.string().optional(),
     fullName: z.string().optional(),
-    role: z.enum(['CUSTOMER', 'MODERATOR', 'ACCOUNTANT', 'ADMIN']).optional(),
+    role: z.enum(['CUSTOMER_DEALER', 'CUSTOMER_SINGULAR', 'MODERATOR', 'ACCOUNTANT', 'ADMIN']).optional(),
     passwordText: z.string().optional(),
   }))
   .output(z.object({

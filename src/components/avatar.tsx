@@ -34,7 +34,7 @@ const Avatar = ({ user }: AvatarProps) => {
 							<CircleUser className="h-[2rem] w-[2rem]" />
 							<span className="sr-only">Toggle user menu</span>
 						</Button>
-						<p className="text-white text-xl font-bold ml-4"> {user?.role === "CUSTOMER" ? user?.fullName : user?.role}</p>
+						<p className="text-white text-xl font-bold ml-4"> {user?.role.includes("CUSTOMER") ? user?.fullName : user?.role}</p>
 						<ChevronDown className="size-4 ml-1 mt-1 text-white font-bold" />
 					</div>
 				</DropdownMenuTrigger>

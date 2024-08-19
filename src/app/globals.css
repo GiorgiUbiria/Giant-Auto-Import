@@ -105,6 +105,6 @@
   background: url("../../public/bgcal.png");
   background-repeat: no-repeat;
   background-position: center center;
-  background-size: contain;
+  background-size: cover;
   margin-bottom: -2rem;
 }

@@ -35,7 +35,7 @@ const FormSchema = z.object({
 	email: z.string().email().optional(),
 	phone: z.string().optional(),
 	fullName: z.string().optional(),
-	role: z.enum(['CUSTOMER', 'MODERATOR', 'ACCOUNTANT', 'ADMIN']).optional(),
+	role: z.enum(['CUSTOMER_DEALER', 'CUSTOMER_SINGULAR', 'MODERATOR', 'ACCOUNTANT', 'ADMIN']).optional(),
 	passwordText: z.string().optional(),
 })
 
@@ -171,7 +171,8 @@ export function UpdateProfileForm({ user }: Props) {
 									</SelectTrigger>
 								</FormControl>
 								<SelectContent>
-									<SelectItem value="CUSTOMER">Customer</SelectItem>
+									<SelectItem value="CUSTOMER_SINGULAR">Customer (Singular)</SelectItem>
+									<SelectItem value="CUSTOMER_DEALER">Customer (Dealer)</SelectItem>
 									<SelectItem value="MODERATOR">Moderator</SelectItem>
 									<SelectItem value="ACCOUNTANT">Accountant</SelectItem>
 									<SelectItem value="ADMIN">Admin</SelectItem>

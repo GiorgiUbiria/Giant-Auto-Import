@@ -9,7 +9,7 @@ import { auctionData, oceanShippingRates } from "../utils";
 import { authedProcedure, isAdminProcedure } from "./authProcedures";
 import { handleAddImages } from "./bucketActions";
 
-const AddCarSchema = insertCarSchema.omit({ id: true,  destinationPort: true, });
+const AddCarSchema = insertCarSchema.omit({ id: true, destinationPort: true, });
 const SelectSchema = selectCarSchema;
 const Uint8ArraySchema = z
 	.array(z.number())
@@ -37,9 +37,9 @@ export const addCarAction = isAdminProcedure
 			const oceanRate = oceanShippingRates.find((rate) => rate.shorthand === input.originPort)?.rate ?? 0;
 
 			const shippingFee = auctionRate + oceanRate;
-			
-			input.shippingFee = shippingFee;
-			input.totalFee = shippingFee + input.purchaseFee;	
+
+			input.shippingFee = shippingFee + 79 + 20 + 10;
+			input.totalFee = shippingFee + input.purchaseFee;
 
 			const result = await db.transaction(async (tx) => {
 				const insertedCars = await tx
@@ -56,7 +56,10 @@ export const addCarAction = isAdminProcedure
 				if (input.images && input.images.length > 0) {
 					await handleAddImages(vin, input.images, tx);
 				}
-return vin; });
+
+				return vin;
+			});
+
 			return {
 				success: true,
 				message: `Car with VIN code ${result} was added successfully`,
@@ -274,7 +277,7 @@ export const assignOwnerAction = isAdminProcedure
 		}
 	});
 
-export const assignHolderAction = authedProcedure 
+export const assignHolderAction = authedProcedure
 	.createServerAction()
 	.input(z.object({
 		vin: z.string(),

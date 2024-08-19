@@ -33,7 +33,7 @@ export default function RegisterForm() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      role: "CUSTOMER",
+      role: "CUSTOMER_SINGULAR",
       fullName: "",
       email: "",
       password: "",
@@ -136,7 +136,8 @@ export default function RegisterForm() {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="CUSTOMER">Customer</SelectItem>
+                  <SelectItem value="CUSTOMER_SINGULAR">Customer (Singular)</SelectItem>
+                  <SelectItem value="CUSTOMER_DEALER">Customer (Dealer)</SelectItem>
                   <SelectItem value="MODERATOR">Moderator</SelectItem>
                   <SelectItem value="ACCOUNTANT">Accountant</SelectItem>
                   <SelectItem value="ADMIN">Admin</SelectItem>

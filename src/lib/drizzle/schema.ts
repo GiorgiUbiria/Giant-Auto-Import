@@ -31,7 +31,7 @@ export const users = sqliteTable("users", {
   balance: integer("balance").default(0),
   priceList: text("price_list", { mode: "json" }).$type<PriceList[]>(),
   role: text("role", {
-    enum: ["CUSTOMER", "MODERATOR", "ACCOUNTANT", "ADMIN"],
+    enum: ["CUSTOMER_SINGULAR", "CUSTOMER_DEALER", "MODERATOR", "ACCOUNTANT", "ADMIN"],
   }).notNull(),
 }, (table) => {
   return {

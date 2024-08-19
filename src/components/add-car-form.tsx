@@ -146,7 +146,7 @@ export function AddCarForm() {
       lotNumber: "",
       trackingLink: "",
       holder: "",
-      purchaseFee: 0,
+      purchaseFee: undefined,
       departureDate: null,
       arrivalDate: null,
       auctionLocation: "",
@@ -406,7 +406,6 @@ export function AddCarForm() {
                 <FormLabel>Purchase Fee*</FormLabel>
                 <FormControl>
                   <Input
-                    type="number"
                     {...field}
                     required
                     onChange={(e) => field.onChange(Number(e.target.value))}

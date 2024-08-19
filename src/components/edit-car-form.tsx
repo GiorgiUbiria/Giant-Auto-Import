@@ -287,7 +287,6 @@ export function EditCarForm({ car } : { car: Car}) {
                 <FormLabel>Purchase Fee*</FormLabel>
                 <FormControl>
                   <Input
-                    type="number"
                     {...field}
                     required
                     onChange={(e) => field.onChange(Number(e.target.value))}

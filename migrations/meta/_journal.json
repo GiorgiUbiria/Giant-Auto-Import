@@ -43,6 +43,20 @@
       "when": 1723641148372,
       "tag": "0005_orange_dust",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1724093896604,
+      "tag": "0006_numerous_living_tribunal",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1724093912393,
+      "tag": "0007_good_sally_floyd",
+      "breakpoints": true
     }
   ]
 }

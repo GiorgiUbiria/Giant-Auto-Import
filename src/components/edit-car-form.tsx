@@ -57,7 +57,6 @@ export function EditCarForm({ car } : { car: Car}) {
       containerNumber: car.containerNumber,
       lotNumber: car.lotNumber,
       trackingLink: car.trackingLink,
-      holder: car.holder,
       purchaseFee: car.purchaseFee,
       departureDate: car.departureDate,
       arrivalDate: car.arrivalDate,
@@ -234,23 +233,7 @@ export function EditCarForm({ car } : { car: Car}) {
             )}
           />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
-          <FormField
-            control={form.control}
-            name="holder"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Holder</FormLabel>
-                <FormControl>
-                  <Input {...field} value={field.value || ""} />
-                </FormControl>
-                <FormDescription>
-                  Car Holder
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
           <FormField
             control={form.control}
             name="shippingStatus"

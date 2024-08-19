@@ -277,11 +277,11 @@ export const assignOwnerAction = isAdminProcedure
 		}
 	});
 
-export const assignHolderAction = authedProcedure
+export const assignRecieverAction = authedProcedure
 	.createServerAction()
 	.input(z.object({
 		vin: z.string(),
-		holder: z.string(),
+		reciever: z.string(),
 	}))
 	.output(z.object({
 		message: z.string().optional(),
@@ -289,9 +289,9 @@ export const assignHolderAction = authedProcedure
 		success: z.boolean(),
 	}))
 	.handler(async ({ input }) => {
-		const { vin, holder } = input;
+		const { vin, reciever } = input;
 
-		if (!vin || !holder) {
+		if (!vin || !reciever) {
 			return {
 				success: false,
 				message: "Provide car's vin code",
@@ -320,7 +320,7 @@ export const assignHolderAction = authedProcedure
 			const [isAssigned] = await db
 				.update(cars)
 				.set({
-					holder: holder,
+					reciever: reciever,
 				})
 				.where(or(...whereClause))
 				.returning({ vin: cars.vin });
@@ -336,11 +336,11 @@ export const assignHolderAction = authedProcedure
 
 			return {
 				success: true,
-				message: `Car with vin code ${isAssigned.vin} was successfully assigned to the holder ${holder}`,
+				message: `Car with vin code ${isAssigned.vin} was successfully assigned to the reciever ${reciever}`,
 			};
 		} catch (error) {
-			console.error("Error assigning holder:", error);
-			throw new Error("Failed to assign the holder to car");
+			console.error("Error assigning reciever:", error);
+			throw new Error("Failed to assign the reciever to car");
 		}
 	});
 

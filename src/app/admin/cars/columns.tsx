@@ -14,7 +14,7 @@ import { z } from "zod";
 import { Actions } from "./actions";
 import { Owner } from "./owner";
 import { TableImage } from "./table-image";
-import { AdminHolder } from "./admin-holder";
+import { Adminreciever } from "./admin-reciever";
 
 const SelectSchema = selectCarSchema;
 type SelectSchemaType = z.infer<typeof SelectSchema>;
@@ -119,14 +119,14 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     },
   },
   {
-    accessorKey: "holder",
-    header: "Holder",
+    accessorKey: "reciever",
+    header: "Reciever",
     cell: ({ row }) => {
-      const holder = row.getValue("holder") as SelectSchemaType["holder"];
+      const reciever = row.getValue("reciever") as SelectSchemaType["reciever"];
       const vin = row.getValue("vin") as SelectSchemaType["vin"];
 
       return (
-        <AdminHolder holder={holder} vin={vin} />
+        <AdminReciever reciever={reciever} vin={vin} />
       )
     },
   },

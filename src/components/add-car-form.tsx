@@ -145,7 +145,6 @@ export function AddCarForm() {
       containerNumber: "",
       lotNumber: "",
       trackingLink: "",
-      holder: "",
       purchaseFee: undefined,
       departureDate: null,
       arrivalDate: null,
@@ -353,23 +352,7 @@ export function AddCarForm() {
             )}
           />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
-          <FormField
-            control={form.control}
-            name="holder"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Holder</FormLabel>
-                <FormControl>
-                  <Input {...field} value={field.value || ""} />
-                </FormControl>
-                <FormDescription>
-                  Car Holder
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
           <FormField
             control={form.control}
             name="shippingStatus"

@@ -14,7 +14,7 @@ import { z } from "zod";
 import { Actions } from "./actions";
 import { Owner } from "./owner";
 import { TableImage } from "./table-image";
-import { Adminreciever } from "./admin-reciever";
+import { AdminReciever } from "./admin-reciever";
 
 const SelectSchema = selectCarSchema;
 type SelectSchemaType = z.infer<typeof SelectSchema>;

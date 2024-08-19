@@ -8,7 +8,7 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export const Adminreciever = ({ reciever, vin }: { reciever: string | null, vin: string }) => {
+export const AdminReciever = ({ reciever, vin }: { reciever: string | null, vin: string }) => {
 	const queryClient = useQueryClient();
 	const [isEditing, setIsEditing] = useState(false);
 	const [newReciever, setNewReciever] = useState(reciever || "");

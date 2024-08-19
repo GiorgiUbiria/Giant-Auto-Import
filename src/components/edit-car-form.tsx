@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -28,17 +27,21 @@ import { updateCarAction } from "@/lib/actions/carActions"
 import { getUsersAction } from "@/lib/actions/userActions"
 import { insertCarSchema, selectCarSchema } from "@/lib/drizzle/schema"
 import { useServerActionMutation, useServerActionQuery } from "@/lib/hooks/server-action-hooks"
-import { cn } from "@/lib/utils"
+import { cn, oceanShippingRates, auctionData } from "@/lib/utils"
 import { useQueryClient } from "@tanstack/react-query"
 import { format } from "date-fns"
 import { CalendarIcon, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { useState } from "react"
 
 const FormSchema = insertCarSchema.omit({ id: true, totalFee: true, shippingFee: true, destinationPort: true, });
 const CarSchema = selectCarSchema.omit({ destinationPort: true })
 type Car = z.infer<typeof  CarSchema>;
 
 export function EditCarForm({ car } : { car: Car}) {
+  const [selectedAuctionLocation, setSelectedAuctionLocation] = useState("");
+  const [selectedAuction, setSelectedAuction] = useState("Copart");
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -49,6 +52,7 @@ export function EditCarForm({ car } : { car: Car}) {
       auction: car.auction,
       originPort: car.originPort,
       keys: car.keys,
+      auctionLocation: car.auctionLocation,
       title: car.title,
       shippingStatus: car.shippingStatus,
       bodyType: car.bodyType,
@@ -90,6 +94,20 @@ export function EditCarForm({ car } : { car: Car}) {
   const onSubmit = (values: z.infer<typeof FormSchema>) => {
     mutate(values)
   }
+
+  const handleAuctionLocationChange = (location: string) => {
+    setSelectedAuctionLocation(location);
+  };
+
+  const handleAuctionChange = (auction: string) => {
+    setSelectedAuction(auction);
+    setSelectedAuctionLocation("");
+  };
+
+  const originPorts = oceanShippingRates;
+  const filteredOriginPorts = originPorts.filter(port =>
+    auctionData.some(data => data.auctionLocation === selectedAuctionLocation && data.port === port.shorthand)
+  );
 
   const handleSubmit = form.handleSubmit(onSubmit)
 
@@ -499,10 +517,8 @@ export function EditCarForm({ car } : { car: Car}) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="DIESEL">Diesel</SelectItem>
-                    <SelectItem value="GASOLINE">Gasoline</SelectItem>
+                    <SelectItem value="GASOLINE">Gas</SelectItem>
                     <SelectItem value="HYBRID_ELECTRIC">Hybric (Electric)</SelectItem>
-                    <SelectItem value="OTHER">Other</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormDescription>
@@ -513,14 +529,14 @@ export function EditCarForm({ car } : { car: Car}) {
             )}
           />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
           <FormField
             control={form.control}
             name="auction"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Auction</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={(value) => handleAuctionChange(value)} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select the auction where the car was bought" />
@@ -529,11 +545,37 @@ export function EditCarForm({ car } : { car: Car}) {
                   <SelectContent>
                     <SelectItem value="Copart">Copart</SelectItem>
                     <SelectItem value="IAAI">IAAI</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormDescription>
                   Auction
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="auctionLocation"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Auction Location*</FormLabel>
+                <Select onValueChange={(value) => handleAuctionLocationChange(value)} defaultValue={field.value!} required>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an auction location" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {
+                      Array.from(new Set(auctionData.filter((data) => data.auction === selectedAuction).map((data) => data.auctionLocation))).map((location) => (
+                        <SelectItem value={location} key={location}>{location}</SelectItem>
+                      ))
+                    }
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Auction Location
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -552,10 +594,9 @@ export function EditCarForm({ car } : { car: Car}) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="NJ">New Jersey (NJ)</SelectItem>
-                    <SelectItem value="TX">Texas (TX)</SelectItem>
-                    <SelectItem value="GA">Georgia (GA)</SelectItem>
-                    <SelectItem value="CA">California (CA)</SelectItem>
+                    {filteredOriginPorts.map((port) => (
+                      <SelectItem value={port.shorthand} key={port.state}>{port.state}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormDescription>

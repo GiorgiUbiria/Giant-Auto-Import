@@ -127,7 +127,10 @@ const processImages = async (
 
 export function AddCarForm() {
   const router = useRouter();
+
   const [selectedAuctionLocation, setSelectedAuctionLocation] = useState("");
+  const [selectedAuction, setSelectedAuction] = useState("Copart");
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -203,6 +206,11 @@ export function AddCarForm() {
 
   const handleAuctionLocationChange = (location: string) => {
     setSelectedAuctionLocation(location);
+  };
+
+  const handleAuctionChange = (auction: string) => {
+    setSelectedAuction(auction);
+    setSelectedAuctionLocation("");
   };
 
   const originPorts = oceanShippingRates;
@@ -618,10 +626,8 @@ export function AddCarForm() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="DIESEL">Diesel</SelectItem>
-                    <SelectItem value="GASOLINE">Gasoline</SelectItem>
+                    <SelectItem value="GASOLINE">Gas</SelectItem>
                     <SelectItem value="HYBRID_ELECTRIC">Hybric (Electric)</SelectItem>
-                    <SelectItem value="OTHER">Other</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormDescription>
@@ -639,7 +645,7 @@ export function AddCarForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Auction</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={(value) => handleAuctionChange(value)} defaultValue="Copart" required>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select the auction where the car was bought" />
@@ -648,7 +654,6 @@ export function AddCarForm() {
                   <SelectContent>
                     <SelectItem value="Copart">Copart</SelectItem>
                     <SelectItem value="IAAI">IAAI</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormDescription>
@@ -672,7 +677,7 @@ export function AddCarForm() {
                   </FormControl>
                   <SelectContent>
                     {
-                      Array.from(new Set(auctionData.map((data) => data.auctionLocation))).map((location) => (
+                      Array.from(new Set(auctionData.filter((data) => data.auction === selectedAuction).map((data) => data.auctionLocation))).map((location) => (
                         <SelectItem value={location} key={location}>{location}</SelectItem>
                       ))
                     }

@@ -25,7 +25,7 @@ export const Client = ({ vin }: { vin: string }) => {
 	}
 
 	return (
-		<div className="w-full grid place-items-center">
+		<div className="w-full grid place-items-center mt-8">
 			<h1 className="text-3xl text-primary my-4 text-center">
 				Edit Car with VIN - {" "} <Link href={`/car/${vin}`}>{vin}</Link> 
 			</h1>

@@ -33,7 +33,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           >
             <div className="flex min-h-screen w-full flex-col dark:bg-gray-900 bg-gray-300">
               <Navbar />
-              <main className="flex flex-1 flex-col gap-4 md:gap-8">
+              <main className="flex flex-1 flex-col gap-4 md:gap-8 mt-12 md:mt-0">
                 {children}
               </main>
               <Footer />

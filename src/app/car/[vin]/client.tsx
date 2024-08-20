@@ -24,7 +24,7 @@ export const Client = ({ vin }: { vin: string }) => {
 	}
 
 	return (
-		<div className="flex flex-col">
+		<div className="flex flex-col mb-4 mt-8 md:mt-4">
 			{
 				isLoading ? <LoadingState /> : (
 					<div>

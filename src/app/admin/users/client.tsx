@@ -7,7 +7,7 @@ import { columns } from "./columns";
 import { getUsersAction } from "@/lib/actions/userActions";
 
 export const Client = () => {
-	const { isLoading, data } = useServerActionQuery(getUsersAction, {
+	const { isLoading, data, error } = useServerActionQuery(getUsersAction, {
 		input: undefined,
 		queryKey: ["getUsers"],
 	})
@@ -20,10 +20,20 @@ export const Client = () => {
 		)
 	}
 
+	if (error) {
+		return <div>Error loading users: {error.message}</div>
+	}
+
 	return (
     <div className="container mx-auto py-10 text-primary">
       <h1 className="text-3xl font-bold pb-8">Users</h1>
-			{isLoading ? <LoadingState /> : <DataTable columns={columns} data={data!} />}
+			{isLoading ? <LoadingState /> : (
+				data && data.length > 0 ? (
+					<DataTable columns={columns} data={data} />
+				) : (
+					<div>No users found</div>
+				)
+			)}
     </div>
 	)
 }

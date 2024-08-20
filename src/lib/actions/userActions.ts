@@ -19,9 +19,9 @@ export const getUsersAction = isAdminProcedure
         .where(ne(users.role, "ADMIN"))
         .orderBy(users.role);
 
-      return userQuery;
+      return userQuery || [];
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching users:", error);
       return [];
     }
   });

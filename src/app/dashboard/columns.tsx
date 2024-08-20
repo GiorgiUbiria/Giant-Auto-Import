@@ -12,7 +12,7 @@ import CopyToClipBoard from "@/components/copy-to-clipboard";
 import { selectCarSchema } from "@/lib/drizzle/schema";
 import { z } from "zod";
 import { TableImage } from "./table-image";
-import { Holder } from "./holder";
+import { Reciever } from "./reciever";
 
 const SelectSchema = selectCarSchema;
 type SelectSchemaType = z.infer<typeof SelectSchema>;
@@ -100,14 +100,14 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     },
   },
   {
-    accessorKey: "holder",
-    header: "Holder",
+    accessorKey: "reciever",
+    header: "Reciever",
     cell: ({ row }) => {
-      const holder = row.getValue("holder") as SelectSchemaType["holder"];
+      const reciever = row.getValue("reciever") as SelectSchemaType["reciever"];
       const vin = row.getValue("vin") as SelectSchemaType["vin"];
 
       return (
-        <Holder holder={holder} vin={vin} />
+        <Reciever reciever={reciever} vin={vin} />
       )
     },
   },

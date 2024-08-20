@@ -1,22 +1,22 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { assignHolderAction } from "@/lib/actions/carActions";
+import { assignRecieverAction } from "@/lib/actions/carActions";
 import { useServerActionMutation } from "@/lib/hooks/server-action-hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-export const Holder = ({ holder, vin }: { holder: string | null, vin: string }) => {
+export const Reciever = ({ reciever, vin }: { reciever: string | null, vin: string }) => {
 	const queryClient = useQueryClient();
 
-	const { isPending, mutate } = useServerActionMutation(assignHolderAction, {
+	const { isPending, mutate } = useServerActionMutation(assignRecieverAction, {
 		onError: (error) => {
-			const errorMessage = error?.data || "Failed to assign holder";
+			const errorMessage = error?.data || "Failed to assign reciever";
 			toast.error(errorMessage);
 		},
 		onSuccess: async ({ data }) => {
-			const successMessage = data?.message || "Holder assigned successfully!";
+			const successMessage = data?.message || "Reciever assigned successfully!";
 			toast.success(successMessage);
 
 			await queryClient.invalidateQueries({
@@ -36,9 +36,9 @@ export const Holder = ({ holder, vin }: { holder: string | null, vin: string }) 
 
 	const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === 'Enter') {
-			const newHolder = (e.target as HTMLInputElement).value;
-			if (newHolder) {
-				mutate({ holder: newHolder, vin: vin });
+			const newReciever = (e.target as HTMLInputElement).value;
+			if (newReciever) {
+				mutate({ reciever: newReciever, vin: vin });
 			}
 		}
 	};
@@ -48,14 +48,14 @@ export const Holder = ({ holder, vin }: { holder: string | null, vin: string }) 
 			{isPending ? (
 				<LoadingState />
 			) : (
-				holder === null || holder === undefined ? (
+				reciever === null || reciever === undefined ? (
 					<Input
 						type="text"
-						placeholder="Set holder"
+						placeholder="Set reciever"
 						onKeyDown={handleKeyPress}
 					/>
 				) : (
-					<p>{holder}</p>
+					<p>{reciever}</p>
 				)
 			)}
 		</div>

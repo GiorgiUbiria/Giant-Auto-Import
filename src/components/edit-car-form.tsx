@@ -6,22 +6,22 @@ import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
-    Form,
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select"
 import { updateCarAction } from "@/lib/actions/carActions"
 import { getUsersAction } from "@/lib/actions/userActions"
@@ -34,20 +34,22 @@ import { CalendarIcon, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useState } from "react"
 
-const FormSchema = insertCarSchema.omit({ id: true, totalFee: true, shippingFee: true, destinationPort: true, });
+const FormSchema = insertCarSchema.omit({ id: true, auctionFee: true, gateFee: true, titleFee: true, environmentalFee: true, virtualBidFee: true, groundFee: true, oceanFee: true, totalFee: true, shippingFee: true, destinationPort: true, });
 const CarSchema = selectCarSchema.omit({ destinationPort: true })
-type Car = z.infer<typeof  CarSchema>;
+type Car = z.infer<typeof CarSchema>;
 
-export function EditCarForm({ car } : { car: Car}) {
-  const [selectedAuctionLocation, setSelectedAuctionLocation] = useState("");
-  const [selectedAuction, setSelectedAuction] = useState("Copart");
+export function EditCarForm({ car }: { car: Car }) {
+  const queryClient = useQueryClient();
+
+  const [selectedAuctionLocation, setSelectedAuctionLocation] = useState(car.auctionLocation)
+  const [selectedAuction, setSelectedAuction] = useState(car.auction);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       vin: car.vin,
       year: car.year,
-      make: car.make, 
+      make: car.make,
       model: car.model,
       auction: car.auction,
       originPort: car.originPort,
@@ -64,8 +66,9 @@ export function EditCarForm({ car } : { car: Car}) {
       purchaseFee: car.purchaseFee,
       departureDate: car.departureDate,
       arrivalDate: car.arrivalDate,
-			purchaseDate: car.purchaseDate,
-			ownerId: car.ownerId,
+      purchaseDate: car.purchaseDate,
+      ownerId: car.ownerId,
+      insurance: car.insurance,
     },
   })
 
@@ -73,23 +76,22 @@ export function EditCarForm({ car } : { car: Car}) {
     input: undefined,
     queryKey: ["getUsers"],
   })
-	const queryClient = useQueryClient();
-	
-	const { isPending, mutate } = useServerActionMutation(updateCarAction, {
-		onError: (error) => {
-			const errorMessage = error?.data || "Failed to update the car";
-			toast.error(errorMessage);
-		},
-		onSuccess: async ({ data }) => {
-			const successMessage = data?.message || "Car updated successfully!";
-			toast.success(successMessage);
 
-			await queryClient.invalidateQueries({
-				queryKey: ["getCar", car.vin],
-				refetchType: "active",
-			});
-		},
-	});
+  const { isPending, mutate } = useServerActionMutation(updateCarAction, {
+    onError: (error) => {
+      const errorMessage = error?.data || "Failed to update the car";
+      toast.error(errorMessage);
+    },
+    onSuccess: async ({ data }) => {
+      const successMessage = data?.message || "Car updated successfully!";
+      toast.success(successMessage);
+
+      await queryClient.invalidateQueries({
+        queryKey: ["getCar", car.vin],
+        refetchType: "active",
+      });
+    },
+  });
 
   const onSubmit = (values: z.infer<typeof FormSchema>) => {
     mutate(values)
@@ -99,7 +101,7 @@ export function EditCarForm({ car } : { car: Car}) {
     setSelectedAuctionLocation(location);
   };
 
-  const handleAuctionChange = (auction: string) => {
+  const handleAuctionChange = (auction: "Copart" | "IAAI") => {
     setSelectedAuction(auction);
     setSelectedAuctionLocation("");
   };
@@ -251,7 +253,35 @@ export function EditCarForm({ car } : { car: Car}) {
             )}
           />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+          <FormField
+            control={form.control}
+            name="ownerId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Owner</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={car.ownerId || "none"}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select the owner of the car" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {isLoading ? <Loader2 className="animate-spin" /> : (
+                      data?.map((user) => (
+                        <SelectItem value={user.id} key={user.id}>{user.fullName}</SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Car Owner
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="shippingStatus"
@@ -536,7 +566,7 @@ export function EditCarForm({ car } : { car: Car}) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Auction</FormLabel>
-                <Select onValueChange={(value) => handleAuctionChange(value)} defaultValue={field.value}>
+                <Select onValueChange={(value) => { field.onChange(value); handleAuctionChange(value as "Copart" | "IAAI") }} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select the auction where the car was bought" />
@@ -560,7 +590,7 @@ export function EditCarForm({ car } : { car: Car}) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Auction Location*</FormLabel>
-                <Select onValueChange={(value) => handleAuctionLocationChange(value)} defaultValue={field.value!} required>
+                <Select onValueChange={(value) => { field.onChange(value); handleAuctionLocationChange(value); }} defaultValue={field.value!} required>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select an auction location" />
@@ -608,27 +638,23 @@ export function EditCarForm({ car } : { car: Car}) {
           />
           <FormField
             control={form.control}
-            name="ownerId"
+            name="insurance"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Owner</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={car.ownerId || "none"}>
+                <FormLabel>Insurance</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value as string}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select the owner of the car" />
+                      <SelectValue placeholder="Select if the car is insured" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {isLoading ? <Loader2 className="animate-spin" /> : (
-                      data?.map((user) => (
-                        <SelectItem value={user.id} key={user.id}>{user.fullName}</SelectItem>
-                      ))
-                    )}
+                    <SelectItem value="YES">YES</SelectItem>
+                    <SelectItem value="NO">NO</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormDescription>
-									Car Owner
+                  Insurance
                 </FormDescription>
                 <FormMessage />
               </FormItem>

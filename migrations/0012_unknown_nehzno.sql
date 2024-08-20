@@ -1,0 +1,1 @@
+ALTER TABLE `cars` ADD `insurance` text NOT NULL;

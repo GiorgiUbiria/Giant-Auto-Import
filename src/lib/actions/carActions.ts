@@ -5,15 +5,77 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "../drizzle/db";
 import { cars, insertCarSchema, selectCarSchema } from "../drizzle/schema";
-import { auctionData, oceanShippingRates } from "../utils";
+import { auctionData, oceanShippingRates, parseVirtualBidData, styleToJson } from "../utils";
 import { authedProcedure, isAdminProcedure } from "./authProcedures";
-import { handleAddImages } from "./bucketActions";
 
 const AddCarSchema = insertCarSchema.omit({ id: true, destinationPort: true, });
 const SelectSchema = selectCarSchema;
 const Uint8ArraySchema = z
 	.array(z.number())
 	.transform((arr) => new Uint8Array(arr));
+
+const calculateAuctionFee = (feeData: any[], purchaseFee: number): number => {
+	for (const entry of feeData) {
+		const isInRange =
+			purchaseFee >= entry.minPrice &&
+			(typeof entry.maxPrice === 'string' || purchaseFee <= entry.maxPrice);
+
+		if (isInRange) {
+			if (typeof entry.fee === 'string') {
+				return purchaseFee * parseFloat(entry.fee) / 100;
+			} else {
+				return entry.fee;
+			}
+		}
+	}
+	return 0;
+};
+
+const calculateVirtualBidFee = (feeData: any[], purchasePrice: number): number => {
+	for (const entry of feeData) {
+		if (purchasePrice >= entry.minPrice && purchasePrice <= entry.maxPrice) {
+			return entry.fee;
+		}
+	}
+	return 0;
+};
+
+function calculateCarFees(auction: string, auctionLocation: string, port: string, body: string, fuel: string, purchaseFee: number, insurance: "YES" | "NO", owner?: string) {
+	const styleData = styleToJson("a");
+	const auctionFee = calculateAuctionFee(styleData, purchaseFee);
+	const gateFee = 79;
+	const titleFee = 20;
+	const environmentalFee = 10;
+	const virtualBidData = parseVirtualBidData();
+	const virtualBidFee = calculateVirtualBidFee(virtualBidData, purchaseFee);
+
+	const totalPurchaseFee = purchaseFee + auctionFee + gateFee + titleFee + environmentalFee + virtualBidFee;
+
+	const groundFee = auctionData.find((data) => data.auction === auction && data.auctionLocation === auctionLocation)?.rate || 0;
+	const oceanFee = oceanShippingRates.find((rate) => rate.shorthand === port)?.rate || 0;
+	const extraFeePickUp = body === "PICKUP" ? 300 : 0;
+	const extraFeeHybrid = fuel === "HYBRID_ELECTRIC" ? 150 : 0;
+
+	const shippingFee = groundFee + oceanFee + extraFeePickUp + extraFeeHybrid;
+
+	let totalFee = totalPurchaseFee + shippingFee;
+
+	if (insurance === "YES") {
+		totalFee = totalFee + ((totalFee * 1.5) / 100);
+	}
+
+	return {
+		totalFee: totalFee,
+		shippingFee: shippingFee,
+		auctionFee: auctionFee,
+		gateFee: gateFee,
+		titleFee: titleFee,
+		environmentalFee: environmentalFee,
+		virtualBidFee: virtualBidFee,
+		groundFee: groundFee,
+		oceanFee: oceanFee,
+	}
+}
 
 export const addCarAction = isAdminProcedure
 	.createServerAction()
@@ -33,13 +95,17 @@ export const addCarAction = isAdminProcedure
 	}))
 	.handler(async ({ input }) => {
 		try {
-			const auctionRate = auctionData.find((data) => data.auction === input.auction && data.auctionLocation === input.auctionLocation)?.rate ?? 0;
-			const oceanRate = oceanShippingRates.find((rate) => rate.shorthand === input.originPort)?.rate ?? 0;
+			const calculation = calculateCarFees(input.auction, input.auctionLocation!, input.originPort, input.bodyType, input.fuelType, input.purchaseFee, input.insurance);
 
-			const shippingFee = auctionRate + oceanRate;
-
-			input.shippingFee = shippingFee + 79 + 20 + 10;
-			input.totalFee = shippingFee + input.purchaseFee;
+			input.totalFee = calculation.totalFee;
+			input.auctionFee = calculation.auctionFee;
+			input.gateFee = calculation.gateFee;
+			input.titleFee = calculation.titleFee;
+			input.environmentalFee = calculation.environmentalFee;
+			input.virtualBidFee = calculation.virtualBidFee;
+			input.groundFee = calculation.groundFee;
+			input.oceanFee = calculation.oceanFee;
+			input.shippingFee = calculation.shippingFee;
 
 			const result = await db.transaction(async (tx) => {
 				const insertedCars = await tx
@@ -51,10 +117,6 @@ export const addCarAction = isAdminProcedure
 
 				if (!vin) {
 					throw new Error("Could not add a car");
-				}
-
-				if (input.images && input.images.length > 0) {
-					await handleAddImages(vin, input.images, tx);
 				}
 
 				return vin;
@@ -353,15 +415,33 @@ export const updateCarAction = isAdminProcedure
 		success: z.boolean(),
 	}))
 	.handler(async ({ input }) => {
-		const car = input;
+		input.ownerId = input.ownerId !== "none" ? input.ownerId : null;
 
-		car.ownerId = car.ownerId !== "none" ? car.ownerId : null;
+		const calculation = calculateCarFees(
+			input.auction,
+			input.auctionLocation!,
+			input.originPort,
+			input.bodyType,
+			input.fuelType,
+			input.purchaseFee,
+			input.insurance
+		);
+
+		input.totalFee = calculation.totalFee;
+		input.auctionFee = calculation.auctionFee;
+		input.gateFee = calculation.gateFee;
+		input.titleFee = calculation.titleFee;
+		input.environmentalFee = calculation.environmentalFee;
+		input.virtualBidFee = calculation.virtualBidFee;
+		input.groundFee = calculation.groundFee;
+		input.oceanFee = calculation.oceanFee;
+		input.shippingFee = calculation.shippingFee;
 
 		try {
 			const updatedCar = await db
 				.update(cars)
-				.set(car)
-				.where(eq(cars.vin, car.vin))
+				.set(input)
+				.where(eq(cars.vin, input.vin))
 				.returning();
 
 			if (!updatedCar) {
@@ -373,7 +453,7 @@ export const updateCarAction = isAdminProcedure
 
 			return {
 				success: true,
-				message: `Car with vin ${car.vin} was updated successfully`,
+				message: `Car with VIN ${input.vin} was updated successfully`,
 			};
 		} catch (error) {
 			console.error(error);

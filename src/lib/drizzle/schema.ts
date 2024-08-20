@@ -9,8 +9,8 @@ import {
 } from "drizzle-orm/sqlite-core";
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 
-import { PriceList } from "./types";
 import { z } from "zod";
+import { PriceList } from "./types";
 
 export const sessions = sqliteTable("sessions", {
   id: text("id").notNull().primaryKey(),
@@ -58,6 +58,7 @@ export const insertUserSchema = createInsertSchema(users, {
 export const selectUserSchema = createSelectSchema(users);
 
 export const cars = sqliteTable("cars", {
+  // General Information
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   ownerId: text("owner_id").references(() => users.id),
   vin: text("vin").notNull().unique(),
@@ -71,14 +72,26 @@ export const cars = sqliteTable("cars", {
   auctionLocation: text("auction_location"),
   trackingLink: text("tracking_link"),
   destinationPort: text("destination_port").default("Poti"),
-  shippingFee: integer("shipping_fee"),
+  // Purchase/Auction Fees
   purchaseFee: integer("purchase_fee").notNull(),
+  auctionFee: integer("auction_fee"),
+  gateFee: integer("gate_fee"),
+  titleFee: integer("title_fee"),
+  environmentalFee: integer("environmental_fee"),
+  virtualBidFee: integer("virtual_bid_fee"),
+  // Shipping Fees
+  shippingFee: integer("shipping_fee"),
+  groundFee: integer("ground_fee"),
+  oceanFee: integer("ocean_fee"),
+  // Total Fee
   totalFee: integer("total_fee"),
+  // Dates
   arrivalDate: integer("arrival_date", { mode: "timestamp" }),
   departureDate: integer("departure_date", { mode: "timestamp" }),
   purchaseDate: integer("purchase_date", { mode: "timestamp" }).notNull(),
+  // Selects
   auction: text("auction", {
-    enum: ["Copart", "IAAI", "Other"],
+    enum: ["Copart", "IAAI",],
   }).notNull(),
   originPort: text("origin_port", {
     enum: ["NJ", "TX", "GA", "CA"],
@@ -89,6 +102,9 @@ export const cars = sqliteTable("cars", {
   title: text("title", {
     enum: ["YES", "NO", "PENDING"],
   }).notNull(),
+  insurance: text("insurance", {
+    enum: ["YES", "NO"],
+  }).notNull(),
   shippingStatus: text("shipping_status", {
     enum: ["AUCTION", "INNER_TRANSIT", "WAREHOUSE", "LOADED", "SAILING", "DELIVERED"],
   }).notNull(),
@@ -96,7 +112,7 @@ export const cars = sqliteTable("cars", {
     enum: ["SEDAN", "ATV", "SUV", "PICKUP", "BIKE"],
   }).notNull(),
   fuelType: text("fuel_type", {
-    enum: ["DIESEL", "GASOLINE", "HYBRID_ELECTRIC", "OTHER"],
+    enum: ["GASOLINE", "HYBRID_ELECTRIC"],
   }).notNull(),
 }, (table) => {
   return {

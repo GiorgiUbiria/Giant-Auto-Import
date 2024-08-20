@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-import { csvData, a_styleData, c_styleData } from "../../public/csvData";
+import { csvData, a_styleData, c_styleData, virtualBidData } from "../../public/csvData";
 import { AuctionData, ExtraFee, OceanFee } from "./drizzle/types";
 
 export function cn(...inputs: ClassValue[]) {
@@ -29,6 +29,26 @@ export const extraFees: ExtraFee[] = [
 ];
 
 export const auctionData: AuctionData[] = csvToJson();
+
+export function parseVirtualBidData(): any[] {
+  const rows = virtualBidData.trim().split("\n").slice(1);
+  const jsonData: any[] = [];
+
+  for (const row of rows) {
+    const [range, fee] = row.split(",");
+    const [minRange, maxRange] = range.split("-");
+
+    const obj = {
+      minPrice: parseFloat(minRange.replace(/[^0-9.-]+/g, "")),
+      maxPrice: parseFloat(maxRange.replace(/[^0-9.-]+/g, "")),
+      fee: parseFloat(fee),
+    };
+
+    jsonData.push(obj);
+  }
+
+  return jsonData;
+}
 
 export function styleToJson(style: string): any[] {
   const data = style === "a" ? a_styleData : c_styleData;

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { auctionData, oceanShippingRates, extraFees, styleToJson } from "@/lib/utils";
 
-export function ShippingCalculator() {
+export function ShippingCalculator({ style }: { style: string }) {
 	const [auctionLocation, setAuctionLocation] = useState('');
 	const [auction, setAuction] = useState('');
 	const [purchaseFee, setPurchaseFee] = useState(0);
@@ -12,8 +12,7 @@ export function ShippingCalculator() {
 	const [insurance, setInsurance] = useState(false);
 	const [estimatedFee, setEstimatedFee] = useState(0);
 
-	const aStyleData = styleToJson("a");
-	const cStyleData = styleToJson("c");
+	const styleData = styleToJson(style);
 
 	const calculateFee = (feeData: any[], purchaseFee: number): number => {
 		for (const entry of feeData) {
@@ -33,7 +32,7 @@ export function ShippingCalculator() {
 		const oceanRate = oceanShippingRates.find((rate) => rate.shorthand === availablePort)?.rate;
 		const extraFeesTotal = additionalFees.reduce((total, fee) => total + (extraFees.find((extraFee) => extraFee.type === fee)?.rate ?? 0), 0);
 
-		let fee = auction === "a" ? calculateFee(aStyleData, purchaseFee) : calculateFee(cStyleData, purchaseFee);
+		let fee = calculateFee(styleData, purchaseFee);
 
 		const gateFee = 79;
 		const titleFee = 20;
@@ -45,9 +44,7 @@ export function ShippingCalculator() {
 				totalFee = totalFee + (totalFee * 1.5 / 100)
 			}
 			setEstimatedFee(totalFee);
-		} else {
-			setEstimatedFee(0);
-		}
+		} else { setEstimatedFee(0); }
 	};
 
 	const handleAuctionLocationChange = (location: string) => {

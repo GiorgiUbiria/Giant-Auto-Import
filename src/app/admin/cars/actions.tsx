@@ -31,7 +31,7 @@ export function Actions({ vin }: Props) {
 			const errorMessage = error?.data || "Failed to delete the car";
 			toast.error(errorMessage);
 		},
-		onSuccess: async ({ data }) => {
+		onSuccess: async (data) => {
 			const successMessage = data?.message || "Car deleted successfully!";
 			toast.success(successMessage);
 

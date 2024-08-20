@@ -4,9 +4,10 @@ import { desc, eq, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "../drizzle/db";
-import { cars, insertCarSchema, selectCarSchema } from "../drizzle/schema";
+import { cars, images, insertCarSchema, selectCarSchema } from "../drizzle/schema";
 import { auctionData, oceanShippingRates, parseVirtualBidData, styleToJson } from "../utils";
 import { authedProcedure, isAdminProcedure } from "./authProcedures";
+import { deleteObjectFromBucket } from "./bucketActions";
 
 const AddCarSchema = insertCarSchema.omit({ id: true, destinationPort: true, });
 const SelectSchema = selectCarSchema;
@@ -204,69 +205,55 @@ export const getCarAction = authedProcedure
 	});
 
 export const deleteCarAction = isAdminProcedure
-	.createServerAction()
-	.input(z.object({
-		vin: z.string().optional(),
-		id: z.number().optional(),
-	}))
-	.output(z.object({
-		message: z.string().optional(),
-		data: z.any().optional(),
-		success: z.boolean(),
-	}))
-	.handler(async ({ input }) => {
-		const { vin, id } = input;
+  .createServerAction()
+  .input(z.object({
+    vin: z.string(),
+  }))
+  .output(z.object({
+    message: z.string().optional(),
+    success: z.boolean(),
+  }))
+  .handler(async ({ input }) => {
+    const { vin } = input;
 
-		if (!id && !vin) {
-			return {
-				success: false,
-				message: "Provide car's vin code or id",
-			};
-		}
+    try {
+      const imageRecords = await db
+        .select({ imageKey: images.imageKey })
+        .from(images)
+        .where(eq(images.carVin, vin));
 
-		try {
-			const whereClause = [];
-			if (id !== undefined) {
-				whereClause.push(eq(cars.id, id));
-			}
-			if (vin !== undefined) {
-				whereClause.push(eq(cars.vin, vin));
-			}
+      await Promise.all(
+        imageRecords.map(async (record) => {
+          if (record.imageKey) {
+            await deleteObjectFromBucket(record.imageKey);
+          }
+        })
+      );
 
-			const carExists = await db
-				.select()
-				.from(cars)
-				.where(or(...whereClause))
-				.limit(1);
+      const deletedCar = await db
+        .delete(cars)
+        .where(eq(cars.vin, vin))
+        .returning({ vin: cars.vin });
 
-			if (!carExists.length) {
-				return {
-					success: false,
-					message: "Car does not exist",
-				};
-			}
+      if (!deletedCar.length) {
+        return {
+          success: false,
+          message: "Car not found or could not be deleted",
+        };
+      }
 
-			const [isDeleted] = await db
-				.delete(cars)
-				.where(or(...whereClause))
-				.returning({ vin: cars.vin });
-
-			if (!isDeleted) {
-				return {
-					success: false,
-					message: "Could not delete the car",
-				};
-			}
-
-			return {
-				success: true,
-				message: `Car with vin code ${isDeleted.vin} was deleted successfully`,
-			};
-		} catch (error) {
-			console.error("Error deleting car:", error);
-			throw new Error("Failed to delete car");
-		}
-	});
+      return {
+        success: true,
+        message: `Car with VIN ${vin} and its associated images were successfully deleted`,
+      };
+    } catch (error) {
+      console.error("Error deleting car:", error);
+      return {
+        success: false,
+        message: "An error occurred while deleting the car and its images",
+      };
+    }
+  });
 
 export const assignOwnerAction = isAdminProcedure
 	.createServerAction()

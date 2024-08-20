@@ -117,53 +117,46 @@ export const handleUploadImagesAction = isAdminProcedure
     );
   });
 
-export async function handleAddImages(
+export async function handleImages(
+  type: string,
   vin: string,
-  fileData: { type: "WAREHOUSE" | "PICK_UP" | "DELIVERED" | "AUCTION", buffer: Uint8Array, size: number, name: string }[],
-  tx: SQLiteTransaction<"async", any, any, any>
-) {
-  const promises = fileData.map(async (file) => {
-    const prefix = `${vin}/${file.type}/`;
-    const existingFileCount = await getFileCount(prefix);
+  sizes: number[],
+): Promise<string[]> {
+  const prefix = `${vin}/${type}/`;
+  const existingFileCount = await getFileCount(prefix);
 
-    const key = `${prefix}${existingFileCount + 1}.png`;
-
-    const command = new PutObjectCommand({
-      Bucket: bucketName,
-      Key: key,
-      ContentLength: file.size,
-      ContentType: "image/png",
-    });
-
-    const signedUrl = await getSignedUrl(S3Client, command, {
-      expiresIn: 3600,
-    });
-
-    const insertValues: z.infer<typeof insertImageSchema> = {
-      carVin: vin,
-      imageType: file.type,
-      imageKey: key,
-      priority: null,
-    }
-
-    await tx.insert(images).values(insertValues);
-
-    return signedUrl;
+  const keys = sizes.map((_, index) => {
+    const newIndex = existingFileCount + index + 1;
+    return `${prefix}${newIndex}.png`;
   });
 
-  const urls = await Promise.all(promises);
+  const urls = await Promise.all(
+    keys.map(async (key, index) => {
+      const command = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: key,
+        ContentLength: sizes[index],
+        ContentType: "image/png",
+      });
 
-  await Promise.all(
-    urls.map((url: string, index: number) =>
-      fetch(url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "image/png",
-        },
-        body: fileData[index].buffer,
-      }),
-    ),
+      const signedUrl = await getSignedUrl(S3Client, command, {
+        expiresIn: 3600,
+      });
+
+      return signedUrl;
+    }),
   );
+
+  const insertUrls = keys.map((key, index) => ({
+    carVin: vin,
+    imageType: type as "WAREHOUSE" | "AUCTION" | "DELIVERED" | "PICK_UP",
+    imageKey: key,
+    imageUrl: urls[index],
+  }));
+
+  await db.insert(images).values(insertUrls);
+
+  return urls;
 }
 
 export async function cleanUpBucket(): Promise<void> {

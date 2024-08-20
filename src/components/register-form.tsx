@@ -26,17 +26,19 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useServerAction } from "zsa-react";
+import { Checkbox } from "./ui/checkbox";
+import { useState } from "react";
 
 const FormSchema = insertUserSchema.omit({ id: true });
 
 export default function RegisterForm() {
+	const [showPassword, setShowPassword] = useState(false);
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       role: "CUSTOMER_SINGULAR",
       fullName: "",
-      email: "",
-      password: "",
+      email: "", password: "",
       phone: "",
     },
   })
@@ -61,8 +63,7 @@ export default function RegisterForm() {
       <form onSubmit={handleSubmit} className="w-full md:w-1/3 space-y-6 my-4 bg-gray-200/90 dark:bg-gray-700 p-3 rounded-md">
         <FormField
           control={form.control}
-          name="fullName"
-          render={({ field }) => (
+          name="fullName" render={({ field }) => (
             <FormItem>
               <FormLabel>Full Name</FormLabel>
               <FormControl>
@@ -114,7 +115,7 @@ export default function RegisterForm() {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input placeholder="********" type="password" {...field} required />
+                <Input placeholder="********" type={showPassword ? "text" : "password"} {...field} required />
               </FormControl>
               <FormDescription>
                 Password that is at least 8 characters long and contains a number
@@ -123,6 +124,16 @@ export default function RegisterForm() {
             </FormItem>
           )}
         />
+				<div className="flex items-center space-x-2">
+					<Checkbox
+						id="showPassword"
+						checked={showPassword}
+						onCheckedChange={() => setShowPassword(!showPassword)}
+					/>
+					<label htmlFor="showPassword" className="text-sm">
+						Show Password
+					</label>
+				</div>
         <FormField
           control={form.control}
           name="role"

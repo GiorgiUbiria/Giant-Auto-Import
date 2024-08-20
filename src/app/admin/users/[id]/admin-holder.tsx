@@ -1,25 +1,26 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { assignHolderAction } from "@/lib/actions/carActions";
+import { assignRecieverAction } from "@/lib/actions/carActions";
 import { useServerActionMutation } from "@/lib/hooks/server-action-hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export const AdminHolder = ({ holder, vin }: { holder: string | null, vin: string }) => {
+export const AdminReciever = ({ reciever, vin }: { reciever: string | null, vin: string }) => {
 	const queryClient = useQueryClient();
-	const [isEditing, setIsEditing] = useState(false);
-	const [newHolder, setNewHolder] = useState(holder || "");
 
-	const { isPending, mutate } = useServerActionMutation(assignHolderAction, {
+	const [isEditing, setIsEditing] = useState(false);
+	const [newReciever, setNewReciever] = useState(reciever || "");
+
+	const { isPending, mutate } = useServerActionMutation(assignRecieverAction, {
 		onError: (error) => {
-			const errorMessage = error?.data || "Failed to assign holder";
+			const errorMessage = error?.data || "Failed to assign reciever";
 			toast.error(errorMessage);
 		},
 		onSuccess: async ({ data }) => {
-			const successMessage = data?.message || "Holder assigned successfully!";
+			const successMessage = data?.message || "Receiver assigned successfully!";
 			toast.success(successMessage);
 
 			await queryClient.invalidateQueries({
@@ -32,17 +33,14 @@ export const AdminHolder = ({ holder, vin }: { holder: string | null, vin: strin
 	});
 
 	const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === 'Enter' && newHolder.trim()) {
-			mutate({ holder: newHolder, vin });
+		if (e.key === 'Enter') {
+			mutate({ reciever: newReciever.trim() === "" ? null : newReciever, vin });
 		}
 	};
 
 	const handleBlur = () => {
-		if (newHolder.trim()) {
-			mutate({ holder: newHolder, vin });
-		} else {
-			setIsEditing(false);
-		}
+		mutate({ reciever: newReciever.trim() === "" ? null : newReciever, vin });
+		setIsEditing(false);
 	};
 
 	return (
@@ -55,8 +53,8 @@ export const AdminHolder = ({ holder, vin }: { holder: string | null, vin: strin
 				isEditing ? (
 					<Input
 						type="text"
-						value={newHolder}
-						onChange={(e) => setNewHolder(e.target.value)}
+						value={newReciever}
+						onChange={(e) => setNewReciever(e.target.value)}
 						onKeyDown={handleKeyPress}
 						onBlur={handleBlur}
 						autoFocus
@@ -66,7 +64,7 @@ export const AdminHolder = ({ holder, vin }: { holder: string | null, vin: strin
 						onClick={() => setIsEditing(true)}
 						className="cursor-pointer hover:underline"
 					>
-						{holder || "No holder assigned"}
+						{reciever || "No receiver assigned"}
 					</p>
 				)
 			)}

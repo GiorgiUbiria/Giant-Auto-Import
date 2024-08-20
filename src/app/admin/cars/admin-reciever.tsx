@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 export const AdminReciever = ({ reciever, vin }: { reciever: string | null, vin: string }) => {
 	const queryClient = useQueryClient();
+
 	const [isEditing, setIsEditing] = useState(false);
 	const [newReciever, setNewReciever] = useState(reciever || "");
 
@@ -19,7 +20,7 @@ export const AdminReciever = ({ reciever, vin }: { reciever: string | null, vin:
 			toast.error(errorMessage);
 		},
 		onSuccess: async ({ data }) => {
-			const successMessage = data?.message || "reciever assigned successfully!";
+			const successMessage = data?.message || "Receiver assigned successfully!";
 			toast.success(successMessage);
 
 			await queryClient.invalidateQueries({
@@ -32,17 +33,14 @@ export const AdminReciever = ({ reciever, vin }: { reciever: string | null, vin:
 	});
 
 	const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === 'Enter' && newReciever.trim()) {
-			mutate({ reciever: newReciever, vin });
+		if (e.key === 'Enter') {
+			mutate({ reciever: newReciever.trim() === "" ? null : newReciever, vin });
 		}
 	};
 
 	const handleBlur = () => {
-		if (newReciever.trim()) {
-			mutate({ reciever: newReciever, vin });
-		} else {
-			setIsEditing(false);
-		}
+		mutate({ reciever: newReciever.trim() === "" ? null : newReciever, vin });
+		setIsEditing(false);
 	};
 
 	return (
@@ -66,7 +64,7 @@ export const AdminReciever = ({ reciever, vin }: { reciever: string | null, vin:
 						onClick={() => setIsEditing(true)}
 						className="cursor-pointer hover:underline"
 					>
-						{reciever || "No reciever assigned"}
+						{reciever || "No receiver assigned"}
 					</p>
 				)
 			)}

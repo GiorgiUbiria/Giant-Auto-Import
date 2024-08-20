@@ -343,7 +343,7 @@ export const assignRecieverAction = authedProcedure
 	.createServerAction()
 	.input(z.object({
 		vin: z.string(),
-		reciever: z.string(),
+		reciever: z.string().nullable(),
 	}))
 	.output(z.object({
 		message: z.string().optional(),
@@ -353,7 +353,7 @@ export const assignRecieverAction = authedProcedure
 	.handler(async ({ input }) => {
 		const { vin, reciever } = input;
 
-		if (!vin || !reciever) {
+		if (!vin) {
 			return {
 				success: false,
 				message: "Provide car's vin code",

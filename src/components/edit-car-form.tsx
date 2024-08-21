@@ -30,9 +30,10 @@ import { useServerActionMutation, useServerActionQuery } from "@/lib/hooks/serve
 import { cn, oceanShippingRates, auctionData } from "@/lib/utils"
 import { useQueryClient } from "@tanstack/react-query"
 import { format } from "date-fns"
-import { CalendarIcon, Loader2 } from "lucide-react"
+import { CalendarIcon, Check, ChevronsUpDown, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useState } from "react"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command"
 
 const FormSchema = insertCarSchema.omit({ id: true, auctionFee: true, gateFee: true, titleFee: true, environmentalFee: true, virtualBidFee: true, groundFee: true, oceanFee: true, totalFee: true, shippingFee: true, destinationPort: true, });
 const CarSchema = selectCarSchema.omit({ destinationPort: true })
@@ -588,25 +589,69 @@ export function EditCarForm({ car }: { car: Car }) {
             control={form.control}
             name="auctionLocation"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex flex-col mt-2.5">
                 <FormLabel>Auction Location*</FormLabel>
-                <Select onValueChange={(value) => { field.onChange(value); handleAuctionLocationChange(value); }} defaultValue={field.value!} required>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an auction location" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {
-                      Array.from(new Set(auctionData.filter((data) => data.auction === selectedAuction).map((data) => data.auctionLocation))).map((location) => (
-                        <SelectItem value={location} key={location}>{location}</SelectItem>
-                      ))
-                    }
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Auction Location
-                </FormDescription>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className={cn(
+                          "w-full justify-between",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value
+                          ? Array.from(
+                            new Set(
+                              auctionData
+                                .filter((data) => data.auction === selectedAuction)
+                                .map((data) => data.auctionLocation)
+                            )
+                          ).find((location) => location === field.value) || "Select an auction location"
+                          : "Select an auction location"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command className="text-primary">
+                      <CommandInput placeholder="Search auction location..." />
+                      <CommandList>
+                        <CommandEmpty>No auction location found.</CommandEmpty>
+                        <CommandGroup>
+                          {Array.from(
+                            new Set(
+                              auctionData
+                                .filter((data) => data.auction === selectedAuction)
+                                .map((data) => data.auctionLocation)
+                            )
+                          ).map((location) => (
+                            <CommandItem
+                              key={location}
+                              value={location}
+                              onSelect={(value) => {
+                                field.onChange(value);
+                                handleAuctionLocationChange(value);
+                              }}
+                              className="text-primary"
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  field.value === location ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {location}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <FormDescription>Auction Location</FormDescription>
                 <FormMessage />
               </FormItem>
             )}

@@ -5,7 +5,7 @@ const nextConfig = {
     return config;
   },
   experimental: {
-    serverComponentsExternalPackages: ["@node-rs/argon2"],
+    serverComponentsExternalPackages: ["@node-rs/argon2", "nodemailer"],
     serverActions: {
       bodySizeLimit: "10mb",
     },

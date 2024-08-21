@@ -29,7 +29,7 @@ export const Client = () => {
       <h1 className="text-3xl font-bold pb-8">Users</h1>
 			{isLoading ? <LoadingState /> : (
 				data && data.length > 0 ? (
-					<DataTable columns={columns} data={data} />
+					<DataTable columns={columns} data={data} filterKey="fullName" />
 				) : (
 					<div>No users found</div>
 				)

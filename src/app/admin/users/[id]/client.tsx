@@ -47,7 +47,7 @@ export const Client = ({ id }: { id: string }) => {
 							</DialogContent>
 						</Dialog>
 					</h1>
-					<DataTable columns={columns} data={data?.cars!} />
+					<DataTable columns={columns} data={data?.cars!} filterKey="vin" />
 				</>
 			)}
 		</div>

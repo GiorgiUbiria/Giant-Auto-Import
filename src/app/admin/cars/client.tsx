@@ -22,7 +22,7 @@ export const Client = () => {
 
 	return (
 		<div className="py-10 text-primary">
-			{isLoading ? <LoadingState /> : <DataTable columns={columns} data={data!} />}
+			{isLoading ? <LoadingState /> : <DataTable columns={columns} data={data!} filterKey="vin" />}
 		</div>
 	)
 }

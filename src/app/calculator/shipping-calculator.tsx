@@ -8,6 +8,16 @@ import {
   styleToJson,
   parseVirtualBidData,
 } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function ShippingCalculator({ style }: { style: string }) {
   const [auctionLocation, setAuctionLocation] = useState("");
@@ -23,7 +33,10 @@ export function ShippingCalculator({ style }: { style: string }) {
 
   const calculateFee = (feeData: any[], value: number): number => {
     for (const entry of feeData) {
-      if (value >= entry.minPrice && (entry.maxPrice === "%" || value <= entry.maxPrice)) {
+      if (
+        value >= entry.minPrice &&
+        (entry.maxPrice === "%" || value <= entry.maxPrice)
+      ) {
         if (typeof entry.fee === "string" && entry.fee.includes("%")) {
           const percentage = parseFloat(entry.fee) / 100;
           return value * percentage;
@@ -39,32 +52,48 @@ export function ShippingCalculator({ style }: { style: string }) {
     const auctionFee = calculateFee(styleData, purchasePrice);
     const virtualBidFee = calculateFee(virtualBidData, purchasePrice);
     const fixedFees = 79 + 20 + 10;
-    return purchasePrice + auctionFee + virtualBidFee + fixedFees;
+    if (insurance) {  
+      return purchasePrice * 1.015 + auctionFee + virtualBidFee + fixedFees;
+    } else {
+      return purchasePrice + auctionFee + virtualBidFee + fixedFees;
+    }
   };
 
-  const calculateShippingFee = (auctionLoc: string, auctionName: string, portName: string, additionalFeeTypes: string[]): number => {
-    const groundFee = auctionData.find(data => data.auction === auctionName && data.auctionLocation === auctionLoc)?.rate || 0;
-    const oceanFee = oceanShippingRates.find(rate => rate.shorthand === portName)?.rate || 0;
+  const calculateShippingFee = (
+    auctionLoc: string,
+    auctionName: string,
+    portName: string,
+    additionalFeeTypes: string[]
+  ): number => {
+    const groundFee =
+      auctionData.find(
+        (data) =>
+          data.auction === auctionName && data.auctionLocation === auctionLoc
+      )?.rate || 0;
+    const oceanFee =
+      oceanShippingRates.find((rate) => rate.shorthand === portName)?.rate || 0;
     const extraFeesTotal = additionalFeeTypes.reduce(
-      (total, fee) => total + (extraFees.find(extraFee => extraFee.type === fee)?.rate ?? 0),
+      (total, fee) =>
+        total +
+        (extraFees.find((extraFee) => extraFee.type === fee)?.rate ?? 0),
       0
     );
     return groundFee + oceanFee + extraFeesTotal;
-  };
-
-  const applyInsurance = (totalFee: number): number => {
-    return insurance ? totalFee * 1.015 : totalFee;
   };
 
   const handleCalculate = (e: React.FormEvent) => {
     e.preventDefault();
 
     const totalPurchaseFee = calculateTotalPurchaseFee(purchaseFee);
-    const shippingFee = calculateShippingFee(auctionLocation, auction, port, additionalFees);
+    const shippingFee = calculateShippingFee(
+      auctionLocation,
+      auction,
+      port,
+      additionalFees
+    );
     const totalFee = totalPurchaseFee + shippingFee;
-    const finalFee = applyInsurance(totalFee);
 
-    setEstimatedFee(finalFee);
+    setEstimatedFee(totalFee);
   };
 
   const handleAuctionLocationChange = (location: string) => {
@@ -83,90 +112,115 @@ export function ShippingCalculator({ style }: { style: string }) {
   };
 
   return (
-    <div className="w-full flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
-      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-white drop-shadow-[0_1.3px_1.3px_rgba(0,0,0,1)]">
-        Shipping Calculator
-      </h2>
-      <form className="w-full max-w-4xl">
-        <div className="flex flex-col md:flex-row">
-          <div className="w-full md:w-1/2 p-3 bg-gray-900/40 flex flex-col justify-evenly items-stretch gap-2 rounded-t-lg md:rounded-l-lg md:rounded-tr-none">
-            <div className="flex flex-col gap-2">
-              <label className="text-nowrap text-lg sm:text-xl text-white font-bold shadow-sm block">
-                Enter your bid
-              </label>
-              <input
-                value={purchaseFee}
-                onChange={(e) => setPurchaseFee(parseFloat(e.target.value))}
-                type="number"
-                className="block w-full p-2 pl-3 text-sm text-black bg-white rounded-md"
-              />
+    <Card className="w-full max-w-4xl">
+      <CardHeader>
+        <CardTitle className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-primary dark:drop-shadow-[0_1.3px_1.3px_rgba(0,0,0,1)]">
+          Shipping Calculator
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleCalculate} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="bid">Enter your bid</Label>
+                <Input
+                  id="bid"
+                  value={purchaseFee}
+                  onChange={(e) => setPurchaseFee(parseFloat(e.target.value))}
+                  type="number"
+                />
+              </div>
+              <div>
+                <Label htmlFor="auction">Select auction</Label>
+                <Select onValueChange={handleAuctionChange} value={auction}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Auction" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Copart">Copart</SelectItem>
+                    <SelectItem value="IAAI">IAAI</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="auctionLocation">Select an auction location</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className={cn(
+                        "w-full justify-between",
+                        !auctionLocation && "text-muted-foreground"
+                      )}
+                    >
+                      {auctionLocation || "Select an auction location"}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput placeholder="Search auction location..." />
+                      <CommandList>
+                        <CommandEmpty>No auction location found.</CommandEmpty>
+                        <CommandGroup>
+                          {Array.from(
+                            new Set(
+                              auctionData
+                                .filter((data) => data.auction === auction)
+                                .map((data) => data.auctionLocation)
+                            )
+                          ).map((location) => (
+                            <CommandItem
+                              key={location}
+                              value={location}
+                              onSelect={(value) => {
+                                handleAuctionLocationChange(value);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  auctionLocation === location ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {location}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <Label htmlFor="fromPort">From USA Port</Label>
+                <Select value={port} disabled>
+                  <SelectTrigger>
+                    <SelectValue>{port}</SelectValue>
+                  </SelectTrigger>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="destinationPort">Destination Port</Label>
+                <Select value="Poti" disabled>
+                  <SelectTrigger>
+                    <SelectValue>Poti</SelectValue>
+                  </SelectTrigger>
+                </Select>
+              </div>
             </div>
-            <div className="flex flex-col gap-2 mt-4">
-              <label className="text-nowrap text-lg sm:text-xl text-white font-bold shadow-sm block">
-                Select auction
-              </label>
-              <select
-                value={auction}
-                onChange={(e) => handleAuctionChange(e.target.value)}
-                className="block w-full p-2 pl-3 text-sm text-black bg-white rounded-md" > <option value="">Select Auction</option> <option value="Copart"> Copart </option> <option value="IAAI"> IAAI </option> </select> </div> <div className="flex flex-col gap-2 mt-4"> <label className="text-nowrap text-lg sm:text-xl text-white font-bold shadow-sm"> Select an auction location </label>
-              <select
-                onChange={(e) => handleAuctionLocationChange(e.target.value)}
-                value={auctionLocation}
-                className="block w-full p-2 pl-3 text-sm text-black bg-white rounded-md"
-              >
-                <option value="">Select Auction Location</option>
-                {Array.from(
-                  new Set(
-                    auctionData
-                      .filter((data) => data.auction === auction)
-                      .map((data) => data.auctionLocation)
-                  )
-                ).map((location) => (
-                  <option key={location} value={location}>
-                    {location}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-2 mt-4">
-              <label className="text-nowrap text-lg sm:text-xl text-white font-bold shadow-sm">
-                From USA Port
-              </label>
-              <select
-                value={port}
-                onChange={(e) => setPort(e.target.value)}
-                className="block w-full p-2 pl-3 text-sm text-black bg-white rounded-md"
-                disabled
-              >
-                <option value={port}>{port}</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-2 mt-4">
-              <label className="text-nowrap text-lg sm:text-xl text-white font-bold shadow-sm">
-                Destination Port
-              </label>
-              <select
-                value="Poti"
-                className="block w-full p-2 pl-3 text-sm text-black bg-white rounded-md"
-                disabled
-              >
-                <option value="Poti"> Poti </option>
-              </select>
-            </div>
-          </div>
-          <div className="w-full md:w-1/2 flex flex-col p-3 bg-black/40 justify-between rounded-b-lg md:rounded-r-lg md:rounded-bl-none">
-            <div className="flex flex-col gap-2">
-              <label className="block text-lg text-white font-semibold">
-                Additional Fees
-              </label>
-              <div className="flex flex-wrap gap-2">
+            <div className="space-y-4">
+              <Label>Additional Fees</Label>
+              <div className="space-y-2">
                 {extraFees.map((fee) => (
-                  <div key={fee.type} className="flex items-center text-white">
-                    <input
-                      type="checkbox"
+                  <div key={fee.type} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={fee.type}
                       checked={additionalFees.includes(fee.type)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
+                      onCheckedChange={(checked) => {
+                        if (checked) {
                           setAdditionalFees([...additionalFees, fee.type]);
                         } else {
                           setAdditionalFees(
@@ -174,47 +228,44 @@ export function ShippingCalculator({ style }: { style: string }) {
                           );
                         }
                       }}
-                      className="mr-1"
                     />
-                    <span className="text-sm">
+                    <label
+                      htmlFor={fee.type}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
                       {fee.type} (${fee.rate})
-                    </span>
+                    </label>
                   </div>
                 ))}
-                <div className="flex items-center text-white">
-                  <input
-                    type="checkbox"
-                    checked={insurance === true}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setInsurance(true);
-                      } else {
-                        setInsurance(false);
-                      }
-                    }}
-                    className="mr-2"
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="insurance"
+                    checked={insurance}
+                    onCheckedChange={(checked) => setInsurance(checked as boolean)}
                   />
-                  <span className="text-sm">Insurance (1.5%)</span>
+                  <label
+                    htmlFor="insurance"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Insurance (1.5%)
+                  </label>
                 </div>
               </div>
-            </div>
-            <div className="mt-4">
-              <p className="text-lg font-semibold text-white">
-                Estimated Total Fee:{" "}
-                <span className="text-xl font-bold">
-                  ${estimatedFee.toFixed(2)}
-                </span>
-              </p>
-              <button
-                onClick={handleCalculate}
-                className="mt-4 w-full bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
-              >
-                Calculate
-              </button>
+              <div className="mt-4">
+                <p className="text-lg font-semibold">
+                  Estimated Total Fee:{" "}
+                  <span className="text-xl font-bold">
+                    ${estimatedFee.toFixed(2)}
+                  </span>
+                </p>
+                <Button type="submit" className="w-full mt-4">
+                  Calculate
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </form>
-    </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

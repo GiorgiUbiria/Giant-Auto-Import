@@ -5,7 +5,7 @@ export default async function Page() {
   const { user } = await getAuth();
 
   return (
-    <div className="flex-1 flex items-stretch" id="calc-bg">
+    <div className="flex items-center justify-center" id="calc-bg">
       <ShippingCalculator style={user?.role === "CUSTOMER_DEALER" ? "c" : "a"} />
     </div>
   );

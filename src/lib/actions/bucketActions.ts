@@ -19,7 +19,6 @@ import {
   selectImageSchema,
 } from "../drizzle/schema";
 import { isAdminProcedure } from "./authProcedures";
-import { redis } from "../redis";
 
 const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
 const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
@@ -132,11 +131,6 @@ export const handleUploadImagesAction = isAdminProcedure
       }
     }
 
-    if (uploadedImages.length > 0) {
-      await redis.del(`images:${vin}`);
-      await redis.del(`image:${vin}`);
-    }
-
     return uploadedImages;
   });
 
@@ -178,9 +172,6 @@ export async function handleImages(
   }));
 
   await db.insert(images).values(insertUrls);
-
-  await redis.del(`images:${vin}`);
-  await redis.del(`image:${vin}`);
 
   return urls;
 }
@@ -246,11 +237,6 @@ export async function getSignedUrlForKey(key: string): Promise<string> {
 export async function fetchImagesForDisplay(
   vin: string
 ): Promise<SelectImageType[]> {
-  const cachedData = await redis.get<SelectImageType[]>(`images:${vin}`);
-  if (cachedData) {
-    return cachedData;
-  }
-
   const imageRecords = await db
     .select()
     .from(images)
@@ -270,19 +256,12 @@ export async function fetchImagesForDisplay(
     })
   );
 
-  await redis.set(`images:${vin}`, JSON.stringify(imageData), { ex: 3600 });
-
   return imageData;
 }
 
 export async function fetchImageForDisplay(
   vin: string
 ): Promise<SelectImageType | null> {
-  const cachedData = await redis.get<SelectImageType>(`image:${vin}`);
-  if (cachedData) {
-    return cachedData;
-  }
-
   const [imageRecord] = await db
     .select()
     .from(images)
@@ -301,8 +280,6 @@ export async function fetchImageForDisplay(
     imageType: imageRecord.imageType,
     priority: imageRecord.priority,
   };
-
-  await redis.set(`image:${vin}`, JSON.stringify(result), { ex: 3600 });
 
   return result;
 }

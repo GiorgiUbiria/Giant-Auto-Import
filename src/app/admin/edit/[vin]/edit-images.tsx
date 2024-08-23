@@ -2,7 +2,7 @@
 
 import {
   deleteImageAction,
-  getImagesAction,
+  getImageKeys,
   makeImageMainAction,
 } from "@/lib/actions/imageActions";
 import {
@@ -25,7 +25,7 @@ import { useQueryClient } from "@tanstack/react-query";
 export const EditImages = ({ vin }: { vin: string }) => {
   const queryClient = useQueryClient();
 
-  const { isLoading, data } = useServerActionQuery(getImagesAction, {
+  const { isLoading, data } = useServerActionQuery(getImageKeys, {
     input: {
       vin: vin,
     },
@@ -87,7 +87,7 @@ export const EditImages = ({ vin }: { vin: string }) => {
                 <TooltipTrigger className="w-full">
                   <div className="w-full aspect-[3/2] relative rounded-lg overflow-hidden">
                     <Image
-                      src={image.url}
+                      src={`https://pub-790f032d851548ee80b9672b151ea280.r2.dev/${image.imageKey}`}
                       alt="Image"
                       layout="fill"
                       objectFit="cover"

@@ -19,16 +19,38 @@ export const getImagesAction = createServerAction()
     imageKey: z.string(),
     url: z.string(),
   })))
-  .handler(async ({ input, ctx }) => {
+  .handler(async ({ input }) => {
     const { vin } = input;
-    const rateLimitInfo = ctx;
 
     try {
       const query = await fetchImagesForDisplay(vin);
 
-      console.log(rateLimitInfo)
-
       return query.length ? query : [];
+    } catch (error) {
+      console.error("Error fetching images:", error);
+      throw new Error("Failed to fetch images");
+    }
+  });
+
+export const getImageKeys = createServerAction()
+  .input(z.object({
+    vin: z.string(),
+  }))
+  .output(z.array(z.object({
+    imageKey: z.string(),
+  })))
+  .handler(async ({ input }) => {
+    const { vin } = input;
+
+    try {
+      const keys = await db
+        .select({
+          imageKey: images.imageKey
+        })
+        .from(images)
+        .where(eq(images.carVin, vin));
+
+      return keys.length ? keys : [];
     } catch (error) {
       console.error("Error fetching images:", error);
       throw new Error("Failed to fetch images");

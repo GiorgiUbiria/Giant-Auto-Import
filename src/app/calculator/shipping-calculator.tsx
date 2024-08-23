@@ -6,6 +6,7 @@ import {
   oceanShippingRates,
   extraFees,
   styleToJson,
+  parseVirtualBidData,
 } from "@/lib/utils";
 
 export function ShippingCalculator({ style }: { style: string }) {
@@ -18,66 +19,61 @@ export function ShippingCalculator({ style }: { style: string }) {
   const [estimatedFee, setEstimatedFee] = useState(0);
 
   const styleData = styleToJson(style);
+  const virtualBidData = parseVirtualBidData();
 
-  const calculateFee = (feeData: any[], purchaseFee: number): number => {
+  const calculateFee = (feeData: any[], value: number): number => {
     for (const entry of feeData) {
-      if (
-        purchaseFee >= entry.minPrice &&
-        (typeof entry.maxPrice === "string" || purchaseFee <= entry.maxPrice)
-      ) {
-        return typeof entry.fee === "string"
-          ? (purchaseFee * parseFloat(entry.fee)) / 100
-          : entry.fee;
+      if (value >= entry.minPrice && (entry.maxPrice === "%" || value <= entry.maxPrice)) {
+        if (typeof entry.fee === "string" && entry.fee.includes("%")) {
+          const percentage = parseFloat(entry.fee) / 100;
+          return value * percentage;
+        } else {
+          return entry.fee;
+        }
       }
     }
     return 0;
   };
 
-  const handleCalculate = (e: any) => {
-    e.preventDefault();
+  const calculateTotalPurchaseFee = (purchasePrice: number): number => {
+    const auctionFee = calculateFee(styleData, purchasePrice);
+    const virtualBidFee = calculateFee(virtualBidData, purchasePrice);
+    const fixedFees = 79 + 20 + 10;
+    return purchasePrice + auctionFee + virtualBidFee + fixedFees;
+  };
 
-    const auctionRate = auctionData.find(
-      (data) =>
-        data.auction === auction && data.auctionLocation === auctionLocation
-    )?.rate;
-    const oceanRate = oceanShippingRates.find(
-      (rate) => rate.shorthand === availablePort
-    )?.rate;
-    const extraFeesTotal = additionalFees.reduce(
-      (total, fee) =>
-        total +
-        (extraFees.find((extraFee) => extraFee.type === fee)?.rate ?? 0),
+  const calculateShippingFee = (auctionLoc: string, auctionName: string, portName: string, additionalFeeTypes: string[]): number => {
+    const groundFee = auctionData.find(data => data.auction === auctionName && data.auctionLocation === auctionLoc)?.rate || 0;
+    const oceanFee = oceanShippingRates.find(rate => rate.shorthand === portName)?.rate || 0;
+    const extraFeesTotal = additionalFeeTypes.reduce(
+      (total, fee) => total + (extraFees.find(extraFee => extraFee.type === fee)?.rate ?? 0),
       0
     );
+    return groundFee + oceanFee + extraFeesTotal;
+  };
 
-    let fee = calculateFee(styleData, purchaseFee);
+  const applyInsurance = (totalFee: number): number => {
+    return insurance ? totalFee * 1.015 : totalFee;
+  };
 
-    const gateFee = 79;
-    const titleFee = 20;
-    const environmentalFee = 10;
+  const handleCalculate = (e: React.FormEvent) => {
+    e.preventDefault();
 
-    if (auctionRate && oceanRate && purchaseFee && fee) {
-      let totalFee =
-        auctionRate +
-        oceanRate +
-        extraFeesTotal +
-        fee +
-        purchaseFee +
-        gateFee +
-        titleFee +
-        environmentalFee;
-      if (insurance === true) {
-        totalFee = totalFee + (totalFee * 1.5) / 100;
-      }
-      setEstimatedFee(totalFee);
-    } else {
-      setEstimatedFee(0);
-    }
+    const totalPurchaseFee = calculateTotalPurchaseFee(purchaseFee);
+    const shippingFee = calculateShippingFee(auctionLocation, auction, port, additionalFees);
+    const totalFee = totalPurchaseFee + shippingFee;
+    const finalFee = applyInsurance(totalFee);
+
+    setEstimatedFee(finalFee);
   };
 
   const handleAuctionLocationChange = (location: string) => {
     setAuctionLocation(location);
-    setPort("");
+    const availablePorts = auctionData
+      .filter((data) => data.auctionLocation === location)
+      .map((data) => data.port);
+    const [availablePort] = availablePorts;
+    setPort(availablePort || "");
   };
 
   const handleAuctionChange = (auction: string) => {
@@ -86,10 +82,6 @@ export function ShippingCalculator({ style }: { style: string }) {
     setPort("");
   };
 
-  const availablePorts = auctionData
-    .filter((data) => data.auctionLocation === auctionLocation)
-    .map((data) => data.port);
-  const [availablePort] = availablePorts;
   return (
     <div className="w-full flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
       <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-white drop-shadow-[0_1.3px_1.3px_rgba(0,0,0,1)]">
@@ -116,17 +108,7 @@ export function ShippingCalculator({ style }: { style: string }) {
               <select
                 value={auction}
                 onChange={(e) => handleAuctionChange(e.target.value)}
-                className="block w-full p-2 pl-3 text-sm text-black bg-white rounded-md"
-              >
-                <option value="">Select Auction</option>
-                <option value="Copart"> Copart </option>
-                <option value="IAAI"> IAAI </option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-2 mt-4">
-              <label className="text-nowrap text-lg sm:text-xl text-white font-bold shadow-sm">
-                Select an auction location
-              </label>
+                className="block w-full p-2 pl-3 text-sm text-black bg-white rounded-md" > <option value="">Select Auction</option> <option value="Copart"> Copart </option> <option value="IAAI"> IAAI </option> </select> </div> <div className="flex flex-col gap-2 mt-4"> <label className="text-nowrap text-lg sm:text-xl text-white font-bold shadow-sm"> Select an auction location </label>
               <select
                 onChange={(e) => handleAuctionLocationChange(e.target.value)}
                 value={auctionLocation}
@@ -156,11 +138,7 @@ export function ShippingCalculator({ style }: { style: string }) {
                 className="block w-full p-2 pl-3 text-sm text-black bg-white rounded-md"
                 disabled
               >
-                {availablePorts.map((port) => (
-                  <option key={port} value={port}>
-                    {port}
-                  </option>
-                ))}
+                <option value={port}>{port}</option>
               </select>
             </div>
             <div className="flex flex-col gap-2 mt-4">

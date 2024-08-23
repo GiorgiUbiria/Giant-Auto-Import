@@ -1,0 +1,10 @@
+{
+	"Auth": {
+		"logout": "Sign Out"
+	},
+	"LocaleSwitcher": {
+		"ge": "Georgian",
+		"en": "English",
+		"label": "Language"
+	}
+}

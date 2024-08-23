@@ -6,10 +6,10 @@ import { Menu } from "lucide-react";
 import Image from "next/image";
 import CopartLogo from "../../public/copart-logo.png";
 import IAAILogo from "../../public/iaai-logo.png";
-import NavbarLogo from "../../public/logo.png";
-import Avatar from "./avatar";
+import NavbarLogo from "../../public/logo.png"; import Avatar from "./avatar";
 import DynamicHeader from "./dynamic-header";
 import NavigationLinks from "./navigation-links";
+import LocaleSwitcher from "./LocaleSwitcher";
 
 const Navbar = async () => {
   const { user } = await getAuth();
@@ -116,7 +116,7 @@ const Navbar = async () => {
               </Link>
             </div>
           </div>
-
+          <LocaleSwitcher />
           <Avatar user={user} />
         </nav>
       </DynamicHeader>

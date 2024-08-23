@@ -1,22 +1,21 @@
 "use client";
 
-import Link from "next/link";
-import type { User } from "lucia";
-
-import { ChevronDown, CircleUser, LogOut } from "lucide-react";
-
+import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
-	DropdownMenuTrigger,
 	DropdownMenuContent,
 	DropdownMenuItem,
-	DropdownMenuSeparator,
 	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { useServerAction } from "zsa-react";
 import { logoutAction } from "@/lib/actions/authActions";
+import type { User } from "lucia";
+import { ChevronDown, CircleUser, LogOut } from "lucide-react";
+import { useTranslations } from 'next-intl';
+import Link from "next/link";
 import { toast } from "sonner";
+import { useServerAction } from "zsa-react";
 
 type AvatarProps = {
 	user: User | null;
@@ -24,6 +23,7 @@ type AvatarProps = {
 
 const Avatar = ({ user }: AvatarProps) => {
 	const { isPending, execute } = useServerAction(logoutAction);
+	const t = useTranslations('Auth');
 
 	return (
 		<>
@@ -57,7 +57,7 @@ const Avatar = ({ user }: AvatarProps) => {
 										}
 									}}
 								>
-									Sign Out <LogOut className="size-4 ml-2" />
+									{t("logout")} <LogOut className="size-4 ml-2" />
 								</Button>
 							</DropdownMenuItem>
 						</>

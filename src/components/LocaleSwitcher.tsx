@@ -16,6 +16,10 @@ export default function LocaleSwitcher() {
         {
           value: 'ge',
           label: t('ge')
+        },
+        {
+          value: 'ru',
+          label: t('ru')
         }
       ]}
       label={t('label')}

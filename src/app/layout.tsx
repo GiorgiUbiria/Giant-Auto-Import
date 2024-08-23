@@ -1,15 +1,13 @@
-import type { Metadata } from "next";
-
-import { SpeedInsights } from "@vercel/speed-insights/next"
-
-import { ThemeProvider } from "@/providers/theme-provider";
-import { Toaster } from "@/components/ui/sonner";
-import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
+import Navbar from "@/components/navbar";
+import { Toaster } from "@/components/ui/sonner";
+import ReactQueryProvider from "@/providers/react-query";
+import { ThemeProvider } from "@/providers/theme-provider";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import type { Metadata } from "next";
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import "./globals.css";
-import ReactQueryProvider from "@/providers/react-query";
 
 export const metadata: Metadata = {
   title: "Giant Auto Import",

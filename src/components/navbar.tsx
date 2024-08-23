@@ -1,63 +1,72 @@
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { getAuth } from "@/lib/auth";
 import { Menu } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import CopartLogo from "../../public/copart-logo.png";
 import IAAILogo from "../../public/iaai-logo.png";
-import NavbarLogo from "../../public/logo.png"; import Avatar from "./avatar";
+import NavbarLogo from "../../public/logo.png";
+import LocaleSwitcher from "./LocaleSwitcher";
+import Avatar from "./avatar";
 import DynamicHeader from "./dynamic-header";
 import NavigationLinks from "./navigation-links";
-import LocaleSwitcher from "./LocaleSwitcher";
+import { getTranslations } from "next-intl/server";
 
 const Navbar = async () => {
   const { user } = await getAuth();
+  const t = await getTranslations('Navbar');
 
   const navigationLinks = [
     {
       href: "/",
-      label: "Home",
+      label: t("home"),
     },
     {
       href: "/contact",
-      label: "Contact",
+      label: t("contact"),
     },
     {
       href: "/about",
-      label: "About Us",
+      label: t("about"),
     },
     {
       href: "/calculator",
-      label: "Calculator",
+      label: t("calculator"),
     },
   ];
 
   if (user?.role === "ADMIN") {
-    navigationLinks.push(
-      {
+    navigationLinks.push( {
         href: "/admin",
-        label: "Admin Panel",
+        label: t("admin_panel"),
       },
       {
         href: "/admin/cars",
-        label: "Cars",
+        label: t("cars"),
       },
       {
         href: "/admin/add_car",
-        label: "Add Car",
+        label: t("add_car"),
       },
       {
         href: "/admin/users",
-        label: "Users",
+        label: t("users"),
       },
       {
         href: "/admin/signup",
-        label: "Register",
+        label: t("register"),
       },
     )
   }
 
+  if (user?.role.includes("CUSTOMER")) {
+    navigationLinks.push( {
+        href: "/dashboard",
+        label: t("dashboard"),
+      },
+    )
+  }
   return (
     <div>
       <DynamicHeader>

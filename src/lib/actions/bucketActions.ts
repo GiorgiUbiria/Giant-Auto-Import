@@ -1,25 +1,34 @@
 "use server";
 
 import {
-  S3,
-  PutObjectCommand,
+  DeleteObjectCommand,
   GetObjectCommand,
   ListObjectsV2Command,
-  DeleteObjectCommand,
+  PutObjectCommand,
+  S3,
 } from "@aws-sdk/client-s3";
-import "dotenv/config";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { Image } from "../interfaces";
-import { revalidatePath } from "next/cache";
-import { DbImage } from "./dbActions";
+import "dotenv/config";
+import { desc, eq } from "drizzle-orm";
+import { SQLiteTransaction } from "drizzle-orm/sqlite-core";
+import { z } from "zod";
 import { db } from "../drizzle/db";
-import { carTable, imageTable } from "../drizzle/schema";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { images, insertImageSchema, selectImageSchema } from "../drizzle/schema";
+import { isAdminProcedure } from "./authProcedures";
 
 const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
 const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
 const secretAccessKey = process.env.CLOUDFLARE_SECRET_ACCESS_KEY as string;
 const bucketName = process.env.CLOUDFLARE_BUCKET_NAME as string;
+
+const SelectImageSchema = selectImageSchema.omit({ id: true, }).merge(z.object({
+  url: z.string(),
+}))
+type SelectImageType = z.infer<typeof SelectImageSchema>;
+
+const Uint8ArraySchema = z
+  .array(z.number())
+  .transform((arr) => new Uint8Array(arr));
 
 const S3Client = new S3({
   region: "auto",
@@ -29,65 +38,6 @@ const S3Client = new S3({
     secretAccessKey: secretAccessKey,
   },
 });
-
-export async function cleanUpBucket(): Promise<void> {
-  try {
-    const currentCars = await db.select().from(carTable);
-    const currentVins = new Set(currentCars.map((car) => car.vin));
-
-    const listObjectsParams = {
-      Bucket: bucketName,
-    };
-
-    let continuationToken;
-
-    do {
-      const listCommand = new ListObjectsV2Command({
-        ...listObjectsParams,
-        ContinuationToken: continuationToken,
-      });
-      const listedObjects: any = await S3Client.send(listCommand);
-
-      if (listedObjects.Contents) {
-        for (const item of listedObjects.Contents) {
-          if (item.Key) {
-            const keyVinMatch = item.Key.match(/^(.*?\/)/);
-            const keyVin = keyVinMatch ? keyVinMatch[1].slice(0, -1) : null;
-
-            if (keyVin && !currentVins.has(keyVin)) {
-              await deleteObjectFromBucket(item.Key);
-            }
-          }
-        }
-      }
-
-      continuationToken = listedObjects.NextContinuationToken;
-    } while (continuationToken);
-
-    console.log("Bucket cleanup completed successfully.");
-  } catch (error) {
-    console.error("Error cleaning up the bucket:", error);
-  }
-}
-
-export async function deleteObjectFromBucket(key: string): Promise<void> {
-  const deleteParams = {
-    Bucket: bucketName,
-    Key: key,
-  };
-
-  const deleteCommand = new DeleteObjectCommand(deleteParams);
-
-  try {
-    await S3Client.send(deleteCommand);
-
-    await db.delete(imageTable).where(eq(imageTable.imageKey, key));
-
-    console.log(`Successfully deleted ${key} from ${bucketName}`);
-  } catch (error) {
-    console.error(`Error deleting ${key} from ${bucketName}:`, error);
-  }
-}
 
 async function getFileCount(prefix: string): Promise<number> {
   const command = new ListObjectsV2Command({
@@ -110,7 +60,64 @@ async function getFileCount(prefix: string): Promise<number> {
   return fileCount;
 }
 
-export async function handleUploadImages(
+export const handleUploadImagesAction = isAdminProcedure
+  .createServerAction()
+  .input(z.object({
+    vin: z.string(),
+    images: z.array(z.object({
+      buffer: Uint8ArraySchema,
+      size: z.number(),
+      name: z.string(),
+      type: z.enum(["AUCTION", "WAREHOUSE", "DELIVERED", "PICK_UP"]),
+    })),
+  }))
+  .handler(async ({ input }) => {
+    const { vin, images: imageData } = input;
+    const promises = imageData.map(async (file) => {
+      const prefix = `${vin}/${file.type}/`;
+      const existingFileCount = await getFileCount(prefix);
+
+      const key = `${prefix}${existingFileCount + 1}.png`;
+
+      const command = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: key,
+        ContentLength: file.size,
+        ContentType: "image/png",
+      });
+
+      const signedUrl = await getSignedUrl(S3Client, command, {
+        expiresIn: 3600,
+      });
+
+      const insertValues: z.infer<typeof insertImageSchema> = {
+        carVin: vin,
+        imageType: file.type,
+        imageKey: key,
+        priority: null,
+      }
+
+      await db.insert(images).values(insertValues);
+
+      return signedUrl;
+    });
+
+    const urls = await Promise.all(promises);
+
+    await Promise.all(
+      urls.map((url: string, index: number) =>
+        fetch(url, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "image/png",
+          },
+          body: imageData[index].buffer,
+        }),
+      ),
+    );
+  });
+
+export async function handleImages(
   type: string,
   vin: string,
   sizes: number[],
@@ -118,7 +125,7 @@ export async function handleUploadImages(
   const prefix = `${vin}/${type}/`;
   const existingFileCount = await getFileCount(prefix);
 
-  const keys = sizes.map((size, index) => {
+  const keys = sizes.map((_, index) => {
     const newIndex = existingFileCount + index + 1;
     return `${prefix}${newIndex}.png`;
   });
@@ -142,64 +149,64 @@ export async function handleUploadImages(
 
   const insertUrls = keys.map((key, index) => ({
     carVin: vin,
-    imageType: type as DbImage,
+    imageType: type as "WAREHOUSE" | "AUCTION" | "DELIVERED" | "PICK_UP",
     imageKey: key,
     imageUrl: urls[index],
   }));
 
-  await db.insert(imageTable).values(insertUrls);
-
-  revalidatePath("/admin/edit");
+  await db.insert(images).values(insertUrls);
 
   return urls;
 }
 
-export async function getImagesFromBucket(vin: string): Promise<Image[]> {
-  const prefix = `${vin}/`;
+export async function cleanUpBucket(): Promise<void> {
+  try {
+    const listObjectsParams = {
+      Bucket: bucketName,
+    };
 
-  const listObjectsParams = {
-    Bucket: bucketName,
-    Prefix: prefix,
-  };
+    let continuationToken;
 
-  const listCommand = new ListObjectsV2Command(listObjectsParams);
-  const listedObjects = await S3Client.send(listCommand);
+    do {
+      const listCommand = new ListObjectsV2Command({
+        ...listObjectsParams,
+        ContinuationToken: continuationToken,
+      });
+      const listedObjects: any = await S3Client.send(listCommand);
 
-  if (!listedObjects.Contents) {
-    console.log("No images found in the specified directory");
-    return [];
-  }
-
-  const imageData = await Promise.all(
-    listedObjects.Contents.map(async (item) => {
-      if (item.Key) {
-        const url = await getSignedUrl(
-          S3Client,
-          new GetObjectCommand({
-            Bucket: bucketName,
-            Key: item.Key,
-          }),
-          { expiresIn: 3600 },
-        );
-
-        const typeMatch = item.Key.match(
-          /\/(AUCTION|PICK_UP|WAREHOUSE|DELIVERY)\//,
-        );
-        const imageType = typeMatch ? (typeMatch[1] as DbImage) : "AUCTION";
-
-        return {
-          imageUrl: url,
-          imageType,
-        } as Image;
+      if (listedObjects.Contents) {
+        for (const item of listedObjects.Contents) {
+          if (item.Key) {
+            await deleteObjectFromBucket(item.Key);
+          }
+        }
       }
-      return undefined;
-    }),
-  );
 
-  return imageData.filter((item): item is Image => item !== undefined);
+      continuationToken = listedObjects.NextContinuationToken;
+    } while (continuationToken);
+  } catch (error) {
+    console.error("Error cleaning up the bucket:", error);
+  }
 }
 
-async function getSignedUrlForKey(key: string): Promise<string> {
+export async function deleteObjectFromBucket(key: string): Promise<void> {
+  const deleteParams = {
+    Bucket: bucketName,
+    Key: key,
+  };
+
+  const deleteCommand = new DeleteObjectCommand(deleteParams);
+
+  try {
+    await S3Client.send(deleteCommand);
+
+    await db.delete(images).where(eq(images.imageKey, key));
+  } catch (error) {
+    console.error(`Error deleting ${key} from ${bucketName}:`, error);
+  }
+}
+
+export async function getSignedUrlForKey(key: string): Promise<string> {
   return getSignedUrl(
     S3Client,
     new GetObjectCommand({
@@ -210,90 +217,46 @@ async function getSignedUrlForKey(key: string): Promise<string> {
   );
 }
 
-export async function fetchImageForDisplay(vins: string[]): Promise<Record<string, Image>> {
-const imageRecords = await db
-    .select()
-    .from(imageTable)
-    .where(inArray(imageTable.carVin, vins))
-    .groupBy(imageTable.carVin)
-    .orderBy(desc(imageTable.priority));
-
-  const imageUrls = await Promise.all(imageRecords.map(async (imageRecord) => {
-    const url = await getSignedUrlForKey(imageRecord.imageKey!);
-    return {
-      vin: imageRecord.carVin,
-      image: {
-        imageUrl: url,
-        imageType: imageRecord.imageType,
-        imageKey: imageRecord.imageKey,
-        priority: imageRecord.priority,
-      } as Image,
-    };
-  }));
-
-  const images: Record<string, Image> = {};
-  imageUrls.forEach(({ vin, image }) => {
-    images[vin!] = image;
-  });
-
-  return images;
-}
-
-export async function fetchImagesForDisplay(vin: string): Promise<Image[]> {
+export async function fetchImagesForDisplay(vin: string): Promise<SelectImageType[]> {
   const imageRecords = await db
     .select()
-    .from(imageTable)
-    .where(eq(imageTable.carVin, vin))
-    .orderBy(desc(imageTable.priority));
+    .from(images)
+    .where(eq(images.carVin, vin))
+    .orderBy(desc(images.priority));
 
-  const images = await Promise.all(
+  const imageData = await Promise.all(
     imageRecords.map(async (record) => {
       const url = await getSignedUrlForKey(record.imageKey!);
       return {
-        imageKey: record.imageKey!,
-        imageUrl: url,
+        url: url,
+        carVin: vin,
+        imageKey: record.imageKey,
         imageType: record.imageType,
         priority: record.priority,
       };
     }),
   );
 
-  return images;
+  return imageData;
 }
 
-export async function syncCarImagesWithDatabase() {
-  try {
-    const cars = await db.select().from(carTable);
+export async function fetchImageForDisplay(vin: string): Promise<SelectImageType | null> {
+  const [imageRecord] = await db
+    .select()
+    .from(images)
+    .where(eq(images.carVin, vin))
+    .orderBy(desc(images.priority))
+    .limit(1);
 
-    for (const car of cars) {
-      const prefix = `${car.vin}/`;
+  if (!imageRecord) return null;
 
-      const listObjectsParams = {
-        Bucket: bucketName,
-        Prefix: prefix,
-      };
-      const listedObjects = await S3Client.send(
-        new ListObjectsV2Command(listObjectsParams),
-      );
+  const url = await getSignedUrlForKey(imageRecord.imageKey!)
 
-      for (const item of listedObjects.Contents || []) {
-        const imageTypeMatch = item.Key?.match(
-          /\/(AUCTION|PICK_UP|WAREHOUSE|DELIVERY)\//,
-        );
-        const imageType = imageTypeMatch
-          ? (imageTypeMatch[1] as DbImage)
-          : "AUCTION";
-
-        await db.insert(imageTable).values({
-          carVin: car.vin!,
-          imageKey: item.Key!,
-          imageType: imageType,
-        });
-      }
-    }
-
-    console.log("Image keys have been successfully synced with the database.");
-  } catch (error) {
-    console.error("Error syncing car images with the database:", error);
-  }
+  return {
+    url: url,
+    carVin: vin,
+    imageKey: imageRecord.imageKey,
+    imageType: imageRecord.imageType,
+    priority: imageRecord.priority,
+  };
 }

@@ -31,15 +31,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DataTablePagination } from "./data-table-pagination";
+import { Input } from "@/components/ui/input";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  filterKey?: string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  filterKey,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -71,9 +74,23 @@ export function DataTable<TData, TValue>({
   return (
     <div className="mx-auto container-fluid">
       <div className="flex gap-4 pb-4">
-      <div className="flex flex-col gap-2.5 container pl-2">
-        <DataTablePagination table={table} />
-      </div>
+        <div className="flex flex-col gap-2.5 container pl-2">
+          <DataTablePagination table={table} />
+        </div>
+        {
+          filterKey && (
+            <div className="flex items-center">
+              <Input
+                placeholder={`Filter by ${filterKey}`}
+                value={(table.getColumn(filterKey)?.getFilterValue() as string) ?? ""}
+                onChange={(event) =>
+                  table.getColumn(filterKey)?.setFilterValue(event.target.value)
+                }
+                className="max-w-sm"
+              />
+            </div>
+          )
+        }
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">

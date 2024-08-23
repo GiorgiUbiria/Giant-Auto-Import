@@ -1,15 +1,14 @@
-import { validateRequest } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { Client } from "./client";
 
 export default async function Page() {
-  const { user } = await validateRequest();
-  if (!user || user?.role_id !== 2) {
+  const { user } = await getAuth();
+  if (!user || user.role !== "ADMIN") {
     return redirect("/");
   }
 
   return (
-    <div>
-      <h1>Admin Page</h1>
-    </div>
+    <Client id={user.id} />
   );
 }

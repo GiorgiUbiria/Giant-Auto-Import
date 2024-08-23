@@ -1,78 +1,172 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { TogglePassword } from "./toggle-password";
-import { 
-  Select,
-  SelectItem,
-  SelectValue,
-  SelectTrigger,
-  SelectContent
-} from "./ui/select";
+"use client"
 
-export function RegisterForm() {
+import { Button } from "@/components/ui/button";
+import {
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
+} from "@/components/ui/select";
+import { registerAction as action } from "@/lib/actions/authActions";
+import { insertUserSchema } from "@/lib/drizzle/schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { useServerAction } from "zsa-react";
+import { Checkbox } from "./ui/checkbox";
+import { useState } from "react";
+
+const FormSchema = insertUserSchema.omit({ id: true });
+
+export default function RegisterForm() {
+	const [showPassword, setShowPassword] = useState(false);
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      role: "CUSTOMER_SINGULAR",
+      fullName: "",
+      email: "", password: "",
+      phone: "",
+    },
+  })
+
+  const { isPending, execute } = useServerAction(action);
+
+  const onSubmit = async (values: z.infer<typeof FormSchema>) => {
+    const [data, error] = await execute(values);
+
+    if (data?.success === false) {
+      toast.error(data?.message);
+      console.error(error)
+    } else {
+      toast.success(data?.message);
+    }
+  }
+
+  const handleSubmit = form.handleSubmit(onSubmit)
+
   return (
-    <Card className="mx-auto max-w-lg dark:bg-gray-700">
-      <CardHeader>
-        <CardTitle className="text-3xl">Sign Up</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" placeholder="Maxim" name="name" required />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                placeholder="+995551001122"
-                name="phone"
-                required
-              />
-            </div>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              name="email"
-              placeholder="test@example.com"
-              required
-            />
-          </div>
-          <TogglePassword />
-          <div className="grid gap-2">
-            <Label htmlFor="customId">Custom ID</Label>
-            <Input
-              id="customId"
-              type="text"
-              name="customId"
-              placeholder="..."
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="role">Role</Label>
-            <Select name="role" required>
-              <SelectTrigger>
-                <SelectValue placeholder="USER" />
-              </SelectTrigger> 
-              <SelectContent>
-                <SelectItem value="1">USER</SelectItem>
-                <SelectItem value="4">MODERATOR</SelectItem>
-                <SelectItem value="3">ACCOUNTANT</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button type="submit" className="w-full">
-            Create an account
-          </Button>
-          </div>
-        </CardContent>
-    </Card>
-  );
+    <Form {...form}>
+      <form onSubmit={handleSubmit} className="w-full md:w-1/3 space-y-6 my-4 bg-gray-200/90 dark:bg-gray-700 p-3 rounded-md">
+        <FormField
+          control={form.control}
+          name="fullName" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Full Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Max Maximov" {...field} required />
+              </FormControl>
+              <FormDescription>
+                Full Name of the user
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input placeholder="example@mail.com" type="email" {...field} required />
+              </FormControl>
+              <FormDescription>
+                Email of the user
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone Number</FormLabel>
+              <FormControl>
+                <Input placeholder="+995 555-55-55-55" type="tel" {...field} required />
+              </FormControl>
+              <FormDescription>
+                Phone number of the user
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input placeholder="********" type={showPassword ? "text" : "password"} {...field} required />
+              </FormControl>
+              <FormDescription>
+                Password that is at least 8 characters long and contains a number
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+				<div className="flex items-center space-x-2">
+					<Checkbox
+						id="showPassword"
+						checked={showPassword}
+						onCheckedChange={() => setShowPassword(!showPassword)}
+					/>
+					<label htmlFor="showPassword" className="text-sm">
+						Show Password
+					</label>
+				</div>
+        <FormField
+          control={form.control}
+          name="role"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>User Role</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value} required>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a role for the new user" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="CUSTOMER_SINGULAR">Customer (Singular)</SelectItem>
+                  <SelectItem value="CUSTOMER_DEALER">Customer (Dealer)</SelectItem>
+                  <SelectItem value="MODERATOR">Moderator</SelectItem>
+                  <SelectItem value="ACCOUNTANT">Accountant</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Role of the user
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit" className="w-full" disabled={isPending}>
+          {
+            isPending ? <Loader2 className="animate-spin" /> : "Register"
+          }
+        </Button>
+      </form>
+    </Form>
+  )
 }

@@ -1,72 +1,100 @@
 "use server";
 
-import sharp from "sharp";
-import { db } from "../drizzle/db";
-import { imageTable } from "../drizzle/schema";
-import { ActionResult } from "../form";
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
-import { deleteObjectFromBucket } from "./bucketActions";
+import { z } from "zod";
+import { createServerAction } from "zsa";
+import { db } from "../drizzle/db";
+import { images } from "../drizzle/schema";
+import { isAdminProcedure } from "./authProcedures";
+import { deleteObjectFromBucket, fetchImageForDisplay, fetchImagesForDisplay } from "./bucketActions";
 
-export async function deleteImage(imageUrl: string): Promise<ActionResult> {
-  try {
-    const isFromCloudFlare = imageUrl.includes("cloudflare");
+export const getImagesAction = createServerAction()
+  .input(z.object({
+    vin: z.string(),
+  }))
+  .output(z.array(z.object({
+    carVin: z.string(),
+    imageType: z.enum(["WAREHOUSE", "PICK_UP", "DELIVERED", "AUCTION"]),
+    priority: z.boolean().nullable(),
+    imageKey: z.string(),
+    url: z.string(),
+  })))
+  .handler(async ({ input, ctx }) => {
+    const { vin } = input;
+    const rateLimitInfo = ctx;
 
-    if (isFromCloudFlare) {
-      const url = new URL(imageUrl);
-      const key = decodeURIComponent(url.pathname.substring(1));
+    try {
+      const query = await fetchImagesForDisplay(vin);
 
-      await deleteObjectFromBucket(key);
-    } else {
-      await db.delete(imageTable).where(eq(imageTable.imageUrl, imageUrl));
+      console.log(rateLimitInfo)
+
+      return query.length ? query : [];
+    } catch (error) {
+      console.error("Error fetching images:", error);
+      throw new Error("Failed to fetch images");
     }
+  });
 
-    revalidatePath("/admin/edit");
+export const getImageAction = createServerAction()
+  .input(z.object({
+    vin: z.string(),
+  }))
+  .output(z.object({
+    carVin: z.string(),
+    imageType: z.enum(["WAREHOUSE", "PICK_UP", "DELIVERED", "AUCTION"]),
+    priority: z.boolean().nullable(),
+    imageKey: z.string(),
+    url: z.string(),
+  }).nullable())
+  .handler(async ({ input }) => {
+    const { vin } = input;
+    try {
+      const query = await fetchImageForDisplay(vin);
 
-    return { success: "Image deleted successfully", error: null };
-  } catch (error) {
-    console.error("Error deleting image:", error);
-    return { error: "Error deleting image" };
-  }
-}
+      return query;
+    } catch (error) {
+      console.error("Error fetching image:", error);
+      throw new Error("Failed to fetch image");
+    }
+  });
 
-export async function convertToWebp(
-  buff: ArrayBuffer,
-  name: string,
-): Promise<File> {
-  const webp = await sharp(buff).webp().toBuffer();
-  return new File([webp], name, { type: "image/webp" });
-}
+export const deleteImageAction = isAdminProcedure
+  .createServerAction()
+  .input(z.object({
+    imageKey: z.string()
+  }))
+  .handler(async ({ input }) => {
+    const { imageKey } = input;
+    await deleteObjectFromBucket(imageKey);
+    await db.delete(images).where(eq(images.imageKey, imageKey));
+  });
 
-export async function makeMain(key: string, vin: string) {
-  console.log("Making main", key, vin)
-  try {
+export const makeImageMainAction = isAdminProcedure
+  .createServerAction()
+  .input(z.object({
+    imageKey: z.string(),
+  }))
+  .handler(async ({ input }) => {
+    const { imageKey } = input;
     const isMain = await db
       .select({
-        imageKey: imageTable.imageKey
+        imageKey: images.imageKey
       })
-      .from(imageTable)
-      .where(eq(imageTable.priority, true))
+      .from(images)
+      .where(eq(images.priority, true))
 
     if (isMain.length === 0) {
       await db
-        .update(imageTable)
+        .update(images)
         .set({
           priority: true,
         })
-        .where(eq(imageTable.imageKey, key))
+        .where(eq(images.imageKey, imageKey))
     } else {
       await db
         .transaction(async (tx) => {
-          await tx.update(imageTable).set({ priority: null }).where(eq(imageTable.imageKey, isMain[0].imageKey!));
-          await tx.update(imageTable).set({ priority: true }).where(eq(imageTable.imageKey, key));
+          await tx.update(images).set({ priority: null }).where(eq(images.imageKey, isMain[0].imageKey!));
+          await tx.update(images).set({ priority: true }).where(eq(images.imageKey, imageKey));
         })
     }
-
-  } catch (error) {
-    console.error(error)
-  } finally {
-    revalidatePath("/admin/edit")
-    revalidatePath("/car/" + vin)
-  }
-}
+  });

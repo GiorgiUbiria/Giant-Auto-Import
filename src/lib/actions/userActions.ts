@@ -1,80 +1,126 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, ne } from "drizzle-orm";
+import { z } from "zod";
 import { db } from "../drizzle/db";
-import { userCarTable, userTable } from "../drizzle/schema";
-import { ActionResult } from "../form";
-import { UserWithCarsAndSpecs } from "../interfaces";
-import { getUser } from "./dbActions";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { selectCarSchema, selectUserSchema, users } from "../drizzle/schema";
+import { isAdminProcedure } from "./authProcedures";
 
-export async function removeUser(
-  id: string,
-): Promise<ActionResult | undefined> {
-  try {
+const SelectSchema = selectUserSchema;
+
+export const getUsersAction = isAdminProcedure
+  .createServerAction()
+  .output(z.array(SelectSchema))
+  .handler(async () => {
+    try {
+      const userQuery = await db
+        .select()
+        .from(users)
+        .where(ne(users.role, "ADMIN"))
+        .orderBy(users.role);
+
+      return userQuery || [];
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      return [];
+    }
+  });
+
+export const getUserAction = isAdminProcedure
+  .createServerAction()
+  .input(z.object({
+    id: z.string(),
+  }))
+  .output(z.union([
+    z.object({
+      user: SelectSchema,
+      cars: z.array(selectCarSchema),
+    }),
+    z.null()
+  ]))
+  .handler(async ({ input }) => {
+    const { id } = input;
+
+    if (!id) {
+      console.log("No id");
+      return null;
+    }
+
+    try {
+      const [result] = await db
+        .query.users.findMany({
+          where: eq(users.id, id),
+          with: {
+            ownedCars: true,
+          },
+          limit: 1,
+        });
+
+      if (!result) return null;
+
+      const { ownedCars, ...user } = result;
+      return {
+        user,
+        cars: ownedCars ?? [],
+      };
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      throw new Error("Failed to fetch user");
+    }
+  });
+
+export const deleteUserAction = isAdminProcedure
+  .createServerAction()
+  .input(z.object({
+    id: z.string(),
+  }))
+  .output(z.object({
+    message: z.string().optional(),
+    data: z.any().optional(),
+    success: z.boolean(),
+  }))
+  .handler(async ({ input }) => {
+    const { id } = input;
+
     if (!id) {
       return {
-        error: "No user ID provided",
+        success: false,
+        message: "Provide the user's id",
       };
     }
 
-    const userToFind: UserWithCarsAndSpecs | undefined = await getUser(id);
+    try {
+      const userExists = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, id))
+        .limit(1);
 
-    if (!userToFind) {
-      console.log(`User with ID ${id} not found.`);
-      return { error: "User not found" };
+      if (!userExists.length) {
+        return {
+          success: false,
+          message: "User does not exist",
+        };
+      }
+
+      const [isDeleted] = await db
+        .delete(users)
+        .where(eq(users.id, id))
+        .returning({ fullName: users.fullName });
+
+      if (!isDeleted) {
+        return {
+          success: false,
+          message: "Could not delete the user",
+        };
+      }
+
+      return {
+        success: true,
+        message: `User ${isDeleted.fullName} was deleted successfully`,
+      };
+    } catch (error) {
+      console.error("Error deleting the user:", error);
+      throw new Error("Error deleting the user");
     }
-
-    const result = await db
-      .delete(userTable)
-      .where(eq(userTable.id, id))
-      .returning({ deletedId: userTable.id });
-
-    if (result.length === 0 || !result[0].deletedId) {
-      console.log(`User with ID ${id} not found or deletion failed.`);
-      return { error: "Deletion failed" };
-    }
-
-    console.log(`User with ID ${result[0].deletedId} removed successfully.`);
-  } catch (error) {
-    console.error(error);
-    throw new Error("Failed to remove user in database");
-  } finally {
-    revalidatePath("/admin/users/");
-    return redirect("/admin/users/");
-  }
-}
-
-export async function getUserByCarId(carId: number): Promise<ActionResult> {
-  try {
-    const userCar = await db
-      .select({ userId: userCarTable.userId })
-      .from(userCarTable)
-      .where(eq(userCarTable.carId, carId))
-      .limit(1)
-      .offset(0);
-
-    if (userCar.length === 0) {
-      return { error: "User not found" };
-    }
-
-    const { userId } = userCar[0];
-
-    const user = await db
-      .select()
-      .from(userTable)
-      .where(eq(userTable.id, userId!))
-      .orderBy()
-      .limit(1);
-
-    if (user.length === 0) {
-      return { error: "User not found" };
-    }
-
-    return { success: "User found", data: user[0], error: null };
-  } catch (error) {
-    console.error(error);
-    return { error: "Failed to get user" };
-  }
-}
+  });

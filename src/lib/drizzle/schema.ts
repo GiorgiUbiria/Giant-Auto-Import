@@ -1,176 +1,209 @@
+import { relations, sql } from "drizzle-orm";
 import {
+  index,
   integer,
+  primaryKey,
   sqliteTable,
   text,
-  primaryKey,
-  real,
-  index,
+  uniqueIndex,
 } from "drizzle-orm/sqlite-core";
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 
-export const rolesTable = sqliteTable("roles", {
-  id: integer("id").primaryKey(),
-  roleName: text("role_name").notNull().unique(),
-  roleDescription: text("role_description"),
-});
+import { z } from "zod";
+import { PriceList } from "./types";
 
-export const userTable = sqliteTable("user", {
-  id: text("id").primaryKey(),
-  customId: text("custom_id").default(""),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  phone: text("phone").notNull().unique(),
-  password: text("password").notNull(),
-  passwordText: text("password_text").default(""),
-  roleId: integer("role_id")
-    .notNull()
-    .references(() => rolesTable.id, { onDelete: "cascade" }),
-});
-
-export const sessionTable = sqliteTable("session", {
+export const sessions = sqliteTable("sessions", {
   id: text("id").notNull().primaryKey(),
   userId: text("user_id")
     .notNull()
-    .references(() => userTable.id, { onDelete: "cascade" }),
+    .references(() => users.id, { onDelete: "cascade" }),
   expiresAt: integer("expires_at").notNull(),
 });
 
-export const specificationsTable = sqliteTable(
-  "specifications",
-  {
-    id: integer("id").primaryKey(),
-    vin: text("vin"),
-    carfax: text("carfax"),
-    year: text("year"),
-    make: text("make"),
-    model: text("model"),
-    bodyType: text("body_type", {
-      enum: ["SEDAN", "CROSSOVER", "SUV", "PICKUP"],
-    }),
-    color: text("color"),
-    fuelType: text("fuel_type", {
-      enum: ["DIESEL", "GASOLINE", "HYBRID", "ELECTRIC", "OTHER"],
-    }),
-  },
-  (table) => {
-    return {
-      vinIdx: index("vin_idx").on(table.vin),
-    };
-  },
-);
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey(),
+  fullName: text("full_name").notNull(),
+  email: text("email").notNull().unique(),
+  phone: text("phone").notNull().unique(),
+  password: text("password").notNull(),
+  passwordText: text("password_text"),
+  deposit: integer("deposit").default(0),
+  balance: integer("balance").default(0),
+  priceList: text("price_list", { mode: "json" }).$type<PriceList[]>(),
+  role: text("role", {
+    enum: ["CUSTOMER_SINGULAR", "CUSTOMER_DEALER", "MODERATOR", "ACCOUNTANT", "ADMIN"],
+  }).notNull(),
+}, (table) => {
+  return {
+    fullNameIdx: index("full_name_idx").on(table.fullName),
+    emailIdx: uniqueIndex("email_idx").on(table.email),
+    phoneIdx: uniqueIndex("phone_idx").on(table.phone),
+  }
+});
 
-export const parkingDetailsTable = sqliteTable("parking_details", {
-  id: integer("id").primaryKey(),
-  containerNumber: text("container_number"),
+export const usersRelations = relations(users, ({ many }) => ({
+  ownedCars: many(cars),
+}));
+
+export const insertUserSchema = createInsertSchema(users, {
+  email: (schema) => schema.email.email(),
+  phone: (schema) => schema.phone.regex(
+    new RegExp(
+      "\\+(9[976]\\d|8[987530]\\d|6[987]\\d|5[90]\\d|42\\d|3[875]\\d|2[98654321]\\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)(\\W*\\d){9,10}$"
+    )
+  ),
+  deposit: (schema) => schema.deposit.gte(0),
+  balance: (schema) => schema.balance.gte(0),
+});
+export const selectUserSchema = createSelectSchema(users);
+
+export const cars = sqliteTable("cars", {
+  // General Information
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  ownerId: text("owner_id").references(() => users.id),
+  vin: text("vin").notNull().unique(),
+  year: integer("year").notNull(),
+  make: text("make").notNull(),
+  model: text("model").notNull(),
+  reciever: text("reciever"),
   bookingNumber: text("booking_number"),
-  trackingLink: text("tracking_link"),
+  containerNumber: text("container_number"),
   lotNumber: text("lot_number"),
-  status: text("status", {
-    enum: ["Pending", "OnHand", "Loaded", "InTransit", "Warehouse"],
-  }),
-});
-
-export const carTable = sqliteTable(
-  "car",
-  {
-    id: integer("id").primaryKey(),
-    vin: text("vin").unique(),
-    originPort: text("origin_port"),
-    destinationPort: text("destination_port"),
-    auction: text("auction"),
-    keys: text("keys", {
-      enum: ["YES", "NO", "UNKNOWN"],
-    }),
-    title: text("title", {
-      enum: ["YES", "NO", "PENDING"],
-    }),
-    departureDate: integer("departure_date", { mode: "timestamp" }),
-    arrivalDate: integer("arrival_date", { mode: "timestamp" }),
-    createdAt: integer("created_at", { mode: "timestamp_ms" }),
-    specificationsId: integer("specifications_id").references(
-      () => specificationsTable.id,
-      { onDelete: "cascade" },
-    ),
-    parkingDetailsId: integer("parking_details_id").references(
-      () => parkingDetailsTable.id,
-      { onDelete: "cascade" },
-    ),
-  },
-  (table) => {
-    return {
-      idIdx: index("id_idx").on(table.id),
-    };
-  },
-);
-
-export const imageTable = sqliteTable(
-  "image",
-  {
-    id: integer("id").primaryKey(),
-    carVin: text("car_vin").references(() => carTable.vin, {
-      onDelete: "cascade",
-    }),
-    imageUrl: text("image_url"),
-    imageType: text("image_type", {
-      enum: ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERY"],
-    }),
-    imageKey: text("image_key"),
-    priority: integer("priority", { mode: "boolean" }),
-  },
-);
-
-export const userCarTable = sqliteTable(
-  "user_car",
-  {
-    carId: integer("car_id").references(() => carTable.id, {
-      onDelete: "cascade",
-    }),
-    userId: text("user_id").references(() => userTable.id, {
-      onDelete: "cascade",
-    }),
-  },
-  (table) => {
-    return {
-      pk: primaryKey({ columns: [table.carId, table.userId] }),
-    };
-  },
-);
-
-export const priceTable = sqliteTable("price", {
-  id: integer("id").primaryKey(),
-  totalAmount: real("total_amount"),
-  shippingFee: integer("shipping_fee"),
-  amountLeft: real("amount_left"),
+  auctionLocation: text("auction_location"),
+  trackingLink: text("tracking_link"),
+  destinationPort: text("destination_port").default("Poti"),
+  // Purchase/Auction Fees
+  purchaseFee: integer("purchase_fee").notNull(),
   auctionFee: integer("auction_fee"),
-  transactionFee: integer("transaction_fee"),
-  totalDue: integer("total_due"),
-  carId: integer("car_id").references(() => carTable.id, {
-    onDelete: "cascade",
-  }),
+  gateFee: integer("gate_fee"),
+  titleFee: integer("title_fee"),
+  environmentalFee: integer("environmental_fee"),
+  virtualBidFee: integer("virtual_bid_fee"),
+  // Shipping Fees
+  shippingFee: integer("shipping_fee"),
+  groundFee: integer("ground_fee"),
+  oceanFee: integer("ocean_fee"),
+  // Total Fee
+  totalFee: integer("total_fee"),
+  // Dates
+  arrivalDate: integer("arrival_date", { mode: "timestamp" }),
+  departureDate: integer("departure_date", { mode: "timestamp" }),
+  purchaseDate: integer("purchase_date", { mode: "timestamp" }).notNull(),
+  // Selects
+  auction: text("auction", {
+    enum: ["Copart", "IAAI",],
+  }).notNull(),
+  originPort: text("origin_port", {
+    enum: ["NJ", "TX", "GA", "CA"],
+  }).notNull(),
+  keys: text("keys", {
+    enum: ["YES", "NO", "UNKNOWN"],
+  }).notNull(),
+  title: text("title", {
+    enum: ["YES", "NO", "PENDING"],
+  }).notNull(),
+  insurance: text("insurance", {
+    enum: ["YES", "NO"],
+  }).notNull(),
+  shippingStatus: text("shipping_status", {
+    enum: ["AUCTION", "INNER_TRANSIT", "WAREHOUSE", "LOADED", "SAILING", "DELIVERED"],
+  }).notNull(),
+  bodyType: text("body_type", {
+    enum: ["SEDAN", "ATV", "SUV", "PICKUP", "BIKE"],
+  }).notNull(),
+  fuelType: text("fuel_type", {
+    enum: ["GASOLINE", "HYBRID_ELECTRIC"],
+  }).notNull(),
+}, (table) => {
+  return {
+    vinIdx: uniqueIndex("vin_idx").on(table.vin),
+    ownerIdx: index("owner_idx").on(table.ownerId),
+  }
 });
 
-export const transactionTable = sqliteTable("transaction", {
-  id: integer("id").primaryKey(),
-  priceId: integer("price_id").references(() => priceTable.id, {
-    onDelete: "cascade",
+export const carsRelations = relations(cars, ({ one }) => ({
+  owner: one(users, {
+    fields: [cars.ownerId],
+    references: [users.id],
   }),
-  userId: text("user_id").references(() => userTable.id, {
-    onDelete: "cascade",
-  }),
-  carId: integer("car_id").references(() => carTable.id, {
-    onDelete: "cascade",
-  }),
-  amount: real("amount"),
-  paymentDate: integer("payment_date", { mode: "timestamp" }),
+}));
+
+export const insertCarSchema = createInsertSchema(cars, {
+  departureDate: z.date().optional(),
+  arrivalDate: z.date().optional(),
+  purchaseDate: z.date(),
+});
+export const selectCarSchema = createSelectSchema(cars);
+
+export const payments = sqliteTable("payments", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  customerId: text("customer_id").notNull().references(() => users.id),
+  paymentDate: integer("payment_date", { mode: "timestamp" }).notNull().default(sql`(CURRENT_DATE)`),
+  memo: text("memo").notNull(),
+  payee: text("payee").notNull(),
+  receivedAmount: integer("received_amount").notNull(),
+  usedAmount: integer("used_amount").notNull().default(0),
+  paymentBalance: integer("payment_balance").notNull().default(0),
+  paymentType: text("payment_type", {
+    enum: ["WIRE", "CASH"],
+  }).notNull(),
+  paymentStatus: text("payment_status", {
+    enum: ["COMPLETE", "ACTIVE", "CLOSED"],
+  }).notNull(),
 });
 
-export const noteTable = sqliteTable("note", {
-  id: integer("id").primaryKey(),
-  userId: text("user_id").references(() => userTable.id, {
-    onDelete: "cascade",
-  }),
-  carId: integer("car_id").references(() => carTable.id, {
-    onDelete: "cascade",
-  }),
-  note: text("note"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }),
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  customer: one(users, { fields: [payments.customerId], references: [users.id], relationName: "customer_payment" }),
+}));
+
+export const insertPaymentSchema = createInsertSchema(payments);
+export const selectPaymentSchema = createSelectSchema(payments);
+
+export const paymentCars = sqliteTable("payment_cars", {
+  paymentId: integer("payment_id").notNull().references(() => payments.id),
+  carId: integer("car_id").notNull().references(() => cars.id),
+}, (table) => {
+  return {
+    pk: primaryKey({ columns: [table.paymentId, table.carId] }),
+  }
 });
+
+export const paymentCarsRelations = relations(paymentCars, ({ one }) => ({
+  payment: one(payments, { fields: [paymentCars.paymentId], references: [payments.id], relationName: "payment_for_car" }),
+  car: one(cars, { fields: [paymentCars.carId], references: [cars.id], relationName: "car_of_payment" }),
+}));
+
+export const insertPaymentCarSchema = createInsertSchema(paymentCars);
+export const selectPaymentCarSchema = createSelectSchema(paymentCars);
+
+export const images = sqliteTable("images", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  carVin: text("car_vin").references(() => cars.vin, {
+    onDelete: "cascade",
+  }).notNull(),
+  imageType: text("image_type", {
+    enum: ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERED"],
+  }).notNull(),
+  imageKey: text("image_key").notNull(),
+  priority: integer("priority", { mode: "boolean" }),
+}, (table) => {
+  return {
+    imageKeyIdx: uniqueIndex("image_key_idx").on(table.imageKey)
+  }
+});
+
+export const insertImageSchema = createInsertSchema(images);
+export const selectImageSchema = createSelectSchema(images);
+
+export const logs = sqliteTable("logs", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  userId: text("user_id").notNull().references(() => users.id),
+  path: text("path").notNull(),
+  level: text("level", {
+    enum: ["INFO", "WARNING", "ERROR"]
+  }).notNull(),
+  description: text("description"),
+});
+
+export const insertLogSchema = createInsertSchema(logs);
+export const selectLogSchema = createSelectSchema(logs);

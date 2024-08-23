@@ -1,135 +1,125 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import IAAILogo from "../../../../../public/iaai-logo.png";
+import CopartLogo from "../../../../../public/copart-logo.png";
 
 import Link from "next/link";
-import { CarData, Image as ImageType } from "@/lib/interfaces";
 import Image from "next/image";
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import DeleteButton from "@/components/deleteCar/deleteButton";
+import CopyToClipBoard from "@/components/copy-to-clipboard";
 
-export const columns: ColumnDef<CarData>[] = [
+import { selectCarSchema } from "@/lib/drizzle/schema";
+import { z } from "zod";
+import { Actions } from "./actions";
+import { TableImage } from "./table-image";
+import { AdminReciever } from "./admin-reciever";
+
+const SelectSchema = selectCarSchema;
+type SelectSchemaType = z.infer<typeof SelectSchema>;
+
+export const columns: ColumnDef<SelectSchemaType>[] = [
   {
-    accessorKey: "images",
-    id: "images",
-    header: "", 
+    accessorKey: "purchaseDate",
+    header: "PD",
     cell: ({ row }) => {
-      const images = row.getValue("images") as ImageType[];
-      if (!images || images.length === 0) {
-        return (
-          <div className="w-[64px] flex justify-center ml-4">
-            <div className="bg-gray-300 rounded-md size-16"></div>
-          </div>
-        );
+      const purchaseDate = row.getValue("purchaseDate") as Date;
+
+      if (!purchaseDate) {
+        return <p> - </p>;
       }
-      return (
-        <div className="w-[128px] flex justify-center ml-8">
-          <Image
-            alt="Product image"
-            className="w-full aspect-square rounded-md object-cover"
-            height="300"
-            src={images.at(0)?.imageUrl!}
-            width="300"
-          />
-        </div>
-      );
-    },
+
+      const date = new Date(purchaseDate);
+
+      const isSpecificDate =
+        date.getFullYear() === 1 &&
+        date.getMonth() === 0 &&
+        date.getDate() === 1;
+
+      if (isSpecificDate) {
+        return <p> - </p>;
+      }
+
+      const formattedDate = date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+      })
+
+      return <p> {formattedDate} </p>;
+    }
   },
   {
-    accessorKey: "car.id",
-    id: "car.id",
-    header: ({ column }) => {
-      return (
-        <div className="text-center">
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            ID
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-      );
-    },
+    header: "Photo",
     cell: ({ row }) => {
-      const id = row.getValue("car.id") as number;
-      return <p className="text-center"> {id} </p>;
-    },
-  },
-  {
-    accessorKey: "specifications.vin",
-    header: "Vin",
-    id: "vin",
-    cell: ({ row }) => {
-      const vin = row.getValue("vin") as string;
-      return <Link href={`/car/${vin}`}>{vin}</Link>;
-    },
-  },
-  {
-    accessorKey: "specifications.year",
-    id: "year",
-    header: ({ column }) => {
+      const vin = row.original.vin as SelectSchemaType["vin"];
+
       return (
-        <div className="text-center">
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Year
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-      );
-    },
+        <TableImage vin={vin} />
+      )
+    }
+  },
+  {
+    accessorKey: "vin",
+    header: "VIN#",
     cell: ({ row }) => {
-      const year = row.getValue("year") as string;
-      return <p className="text-center"> {year} </p>;
+      const vin = row.getValue("vin") as SelectSchemaType["vin"];
+
+      return (
+        <div className="flex gap-2 items-center">
+          <Link href={`/car/${vin}`}> {vin} </Link>
+          <CopyToClipBoard text={vin} />
+        </div>
+      )
     },
   },
   {
-    accessorKey: "specifications.make",
-    header: "Make",
+    accessorKey: "year",
+    header: "Vehicle",
+    cell: ({ row }) => {
+      const year = row.getValue("year") as SelectSchemaType["year"];
+      const make = row.original.make as SelectSchemaType["make"];
+      const model = row.original.model as SelectSchemaType["model"];
+      const auction = row.original.auction as SelectSchemaType["auction"];
+
+      return (
+        <div className="flex items-center justify-between w-[84px]">
+          <p className="text-left"> {year + " " + make + " " + model} </p>
+          {auction !== "Copart" ? <Image src={IAAILogo} alt="IAAI" className="size-8" /> : <Image src={CopartLogo} alt="IAAI" className="size-8" />}
+        </div>
+      )
+    },
   },
   {
-    accessorKey: "specifications.model",
-    header: "Model",
+    accessorKey: "reciever",
+    header: "Reciever",
+    cell: ({ row }) => {
+      const reciever = row.getValue("reciever") as SelectSchemaType["reciever"];
+      const vin = row.getValue("vin") as SelectSchemaType["vin"];
+
+      return (
+        <AdminReciever reciever={reciever} vin={vin} />
+      )
+    },
   },
   {
-    accessorKey: "specifications.fuelType",
-    header: "Fuel Type",
+    accessorKey: "fuelType",
+    header: "Fuel",
   },
   {
-    accessorKey: "specifications.bodyType",
-    header: "Body Type",
+    accessorKey: "keys",
+    header: "Keys",
   },
   {
-    accessorKey: "parking_details.status",
+    accessorKey: "title",
+    header: "Title",
+  },
+  {
+    accessorKey: "shippingStatus",
     header: "Status",
   },
   {
-    accessorKey: "car.departureDate",
-    id: "departureDate",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Departure Date
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    accessorKey: "departureDate",
+    header: "ETD",
     cell: ({ row }) => {
       const departureDate = row.getValue("departureDate") as Date;
 
@@ -145,33 +135,25 @@ export const columns: ColumnDef<CarData>[] = [
         date.getDate() === 1;
 
       if (isSpecificDate) {
-        return <p className="text-center"> - </p>;
+        return <p> - </p>;
       }
 
-      const formattedDate = date.toLocaleDateString();
+      const formattedDate = date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+      })
 
-      return <p className="text-center"> {formattedDate} </p>;
+      return <p> {formattedDate} </p>;
     },
   },
   {
-    accessorKey: "car.arrivalDate",
-    id: "arrivalDate",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Arrival Date
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    accessorKey: "arrivalDate",
+    header: "ETA",
     cell: ({ row }) => {
       const arrivalDate = row.getValue("arrivalDate") as Date;
 
       if (!arrivalDate) {
-        return <p className="text-center"> - </p>;
+        return <p> - </p>;
       }
 
       const date = new Date(arrivalDate);
@@ -182,82 +164,42 @@ export const columns: ColumnDef<CarData>[] = [
         date.getDate() === 1;
 
       if (isSpecificDate) {
-        return <p className="text-center"> - </p>;
+        return <p> - </p>;
       }
 
-      const formattedDate = date.toLocaleDateString();
+      const formattedDate = date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+      })
 
-      return <p className="text-center"> {formattedDate} </p>;
+      return <p> {formattedDate} </p>;
     },
   },
   {
-    accessorKey: "car.originPort",
+    accessorKey: "originPort",
     header: "Origin Port",
   },
   {
-    accessorKey: "car.destinationPort",
+    accessorKey: "destinationPort",
     header: "Destination Port",
   },
   {
-    accessorKey: "price",
-    header: "Price",
-    id: "price",
-    cell: ({ row }) => {
-      const price = row.getValue("price") as {
-        id: number;
-        totalAmount: number;
-        currencyId: number;
-      };
-      return <p> {price?.totalAmount} </p>;
-    },
+    accessorKey: "purchaseFee",
+    header: "Purchase Fee",
   },
   {
-    accessorKey: "price.amountLeft",
-    header: "Amount Left",
-    id: "amount_left",
-    cell: ({ row }) => {
-      const price = row.getValue("amount_left") as number;
-      return <p className="text-red-500"> {price} </p>;
-    },
+    accessorKey: "shippingFee",
+    header: "Shipping Fee",
+  },
+  {
+    accessorKey: "totalFee",
+    header: "Total Fee",
   },
   {
     id: "actions",
+    header: "Actions",
     cell: ({ row }) => {
-      const vin = row.getValue("vin") as string;
-      const carId = row.getValue("car.id") as number;
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>
-              <Button
-                onClick={() => navigator.clipboard.writeText(vin)}
-                variant="outline"
-                className="w-full text-center"
-              >
-                Copy Vin Code
-              </Button>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Button variant="link" className="text-center w-full">
-                <Link href={`/admin/edit/${vin}`}>Edit Car</Link>
-              </Button>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <DeleteButton vin={vin} />
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
+      return <Actions vin={row.getValue("vin") as string} />
     },
   },
 ];
-

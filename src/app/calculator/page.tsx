@@ -1,11 +1,12 @@
-export default function Page() {
+import { getAuth } from "@/lib/auth";
+import { ShippingCalculator } from "./shipping-calculator";
+
+export default async function Page() {
+  const { user } = await getAuth();
+
   return (
-    <div>
-      <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-        <div className="text-center">
-          <h1> Terms of Service </h1>
-        </div>
-      </div>
+    <div className="flex items-center justify-center py-16" id="calc-bg">
+      <ShippingCalculator style={user?.role === "CUSTOMER_DEALER" ? "c" : "a"} />
     </div>
   );
 }

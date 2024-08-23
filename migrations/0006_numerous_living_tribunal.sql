@@ -1,0 +1,1 @@
+ALTER TABLE `cars` DROP COLUMN `holder`;

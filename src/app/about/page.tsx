@@ -5,11 +5,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-import ServiceOne from "../../../public/service1.avif";
-import ServiceTwo from "../../../public/service2.avif";
-import ServiceThree from "../../../public/service3.avif";
-import ServiceFour from "../../../public/service4.avif";
-import ServiceFive from "../../../public/service5.avif";
+import ServiceOne from "../../../public/service1.png";
+import ServiceTwo from "../../../public/service2.png";
+import ServiceThree from "../../../public/service3.png";
+import ServiceFour from "../../../public/service4.png";
+import ServiceFive from "../../../public/service5.png";
 
 import Image from "next/image";
 

@@ -1,7 +1,7 @@
-import 'dotenv/config';
-import * as schema from "./schema";
-import { LibSQLDatabase, drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client/web";
+import 'dotenv/config';
+import { LibSQLDatabase, drizzle } from "drizzle-orm/libsql";
+import * as schema from "./schema";
 
 export function tursoClient(): LibSQLDatabase<typeof schema> {
   const url = process.env.NEXT_PUBLIC_TURSO_DATABASE_URL?.trim();
@@ -21,7 +21,7 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
       url,
       authToken
     }),
-    { schema }
+    { schema, logger: true }
   );
 }
 

@@ -1,1 +1,0 @@
-ALTER TABLE `image` ADD `image_key` text;

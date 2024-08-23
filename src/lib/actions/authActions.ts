@@ -1,383 +1,200 @@
 "use server";
 
-import { Argon2id } from "oslo/password";
-import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
-import { eq } from "drizzle-orm";
-
-import { generateId } from "lucia";
-
-import { db } from "../drizzle/db";
-import { userTable } from "../drizzle/schema";
-import { lucia, validateRequest } from "@/lib/auth";
-
-import type { ActionResult } from "@/lib/form";
+import { lucia } from "@/lib/auth";
 import { SqliteError } from "better-sqlite3";
-import { isValidPhoneNumber } from "libphonenumber-js";
-import isEmail from "validator/lib/isEmail";
-import { validateAdmin } from "../validation";
+import { eq } from "drizzle-orm";
+import { generateId } from "lucia";
 import { revalidatePath } from "next/cache";
-import { DbUser } from "./dbActions";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { Argon2id } from "oslo/password";
+import { z } from "zod";
+import { db } from "../drizzle/db";
+import { insertUserSchema, users } from "../drizzle/schema";
+import { authedProcedure, isAdminProcedure } from "./authProcedures";
+import { createServerAction } from "zsa";
 
-type NewUser = typeof userTable.$inferInsert;
+const LoginSchema = insertUserSchema.pick({ email: true, password: true });
+const RegisterSchema = insertUserSchema.omit({ id: true });
 
-const insertUser = async (user: NewUser) => {
-  return db.insert(userTable).values(user);
-};
+export const loginAction = createServerAction()
+  .input(LoginSchema)
+  .output(z.object({
+    message: z.string().optional(),
+    data: z.any().optional(),
+    success: z.boolean(),
+  }))
+  .handler(async ({ input }) => {
+    try {
+      const { email, password } = input;
 
-export async function getPdfToken(): Promise<string> {
-  const { user } = await validateRequest();
-  if (!user) {
-    return "";
-  }
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email));
 
-  return user.pdf_token;
-}
+      if (!existingUser) {
+        return {
+          success: false,
+          message: "Invalid credentials",
+        };
+      }
 
-interface ValidationResult {
-  valid: boolean;
-  error?: string;
-  data?: DbUser;
-}
+      const validPassword = await new Argon2id().verify(existingUser.password, password);
+      if (!validPassword) {
+        return {
+          success: false,
+          message: "Invalid credentials",
+        };
+      }
 
-async function validateEmail(email: string): Promise<boolean> {
-  return isEmail(email);
-}
+      const session = await lucia.createSession(existingUser.id, {});
+      const sessionCookie = lucia.createSessionCookie(session.id);
+      cookies().set(
+        sessionCookie.name,
+        sessionCookie.value,
+        sessionCookie.attributes,
+      );
 
-async function validatePassword(password: string): Promise<boolean> {
-  const passwordRegex =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-  return passwordRegex.test(password);
-}
-
-async function validateName(name: string): Promise<boolean> {
-  const nameRegex = /^[a-zA-Z ]+$/;
-  return nameRegex.test(name);
-}
-
-async function validatePhone(phone: string): Promise<boolean> {
-  return isValidPhoneNumber(phone, "GE");
-}
-
-export async function validateLogin(
-  email: string,
-  password: string,
-): Promise<ValidationResult> {
-  if (!(await validateEmail(email))) {
-    return {
-      valid: false,
-      error: "Invalid email",
-    };
-  }
-
-  if (!(await validatePassword(password))) {
-    return {
-      valid: false,
-      error: "Invalid password",
-    };
-  }
-
-  const user = await db
-    .select()
-    .from(userTable)
-    .where(eq(userTable.email, email))
-    .limit(1)
-    .get();
-
-  if (!user) {
-    return {
-      valid: false,
-      error: "Incorrect email or password",
-    };
-  }
-
-  const validPassword = await new Argon2id().verify(user.password, password);
-  if (!validPassword) {
-    return {
-      valid: false,
-      error: "Incorrect email or password",
-    };
-  }
-
-  return {
-    valid: true,
-    data: user,
-  };
-}
-
-export async function login(_: any, formData: FormData): Promise<ActionResult> {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
-  if (!(await validateLogin(email, password))) {
-    return {
-      error: "Incorrect email or password",
-    };
-  }
-
-  const { valid, data } = await validateLogin(email, password);
-
-  if (!valid) {
-    return {
-      error: "Incorrect email or password",
-    };
-  }
-
-  if (!data) {
-    return {
-      error: "Incorrect email or password",
-    };
-  }
-
-  const session = await lucia.createSession(data?.id!, {});
-  const sessionCookie = lucia.createSessionCookie(session.id);
-  cookies().set(
-    sessionCookie.name,
-    sessionCookie.value,
-    sessionCookie.attributes,
-  );
-
-  return redirect("/");
-}
-
-async function validateSignUp(
-  name: string,
-  email: string,
-  phone: string,
-  password: string,
-): Promise<ValidationResult> {
-  const user = await db
-    .select()
-    .from(userTable)
-    .where(eq(userTable.email, email))
-    .limit(1)
-    .get();
-
-  if (user) {
-    return {
-      valid: false,
-      error: "User with this email already exists",
-    };
-  }
-
-  if (!(await validateName(name))) {
-    return {
-      valid: false,
-      error: "Invalid name",
-    };
-  }
-  if (!(await validateEmail(email))) {
-    return {
-      valid: false,
-      error: "Invalid email",
-    };
-  }
-  if (!(await validatePhone(phone))) {
-    return {
-      valid: false,
-      error: "Invalid phone",
-    };
-  }
-  if (!(await validatePassword(password))) {
-    return {
-      valid: false,
-      error: "Invalid password",
-    };
-  }
-  return {
-    valid: true,
-  };
-}
-
-export async function signup(
-  _: any,
-  formData: FormData,
-): Promise<ActionResult | undefined> {
-  const { user, valid: validAdmin } = await validateAdmin();
-
-  if (!validAdmin) {
-    return {
-      error: "Only admins can register new users.",
-    };
-  }
-
-  const name = formData.get("name") as string;
-  const customId = formData.get("customId") as string;
-  const email = formData.get("email") as string;
-  const phone = formData.get("phone") as string;
-  const role = formData.get("role") as string;
-  const password = formData.get("password") as string;
-
-  const { valid, error } = await validateSignUp(name, email, phone, password);
-
-  if (!valid) {
-    return {
-      error: error!,
-    };
-  }
-
-  const roleId = Number(role);
-
-  const hashedPassword = (await new Argon2id().hash(password)) as string;
-
-  const userId = generateId(15) as string;
-
-  let currentRoleId = user?.roleId;
-
-  if (currentRoleId !== 2) {
-    return {
-      error: "Only admins can register new users.",
-    };
-  }
-
-  try {
-    if (currentRoleId === 2) {
-      const newUser: NewUser = {
-        id: userId,
-        customId: customId,
-        name,
-        email,
-        phone,
-        password: hashedPassword,
-        passwordText: password,
-        roleId: roleId,
-      };
-      await insertUser(newUser);
-    } else {
       return {
-        error: "Only admins can register new users.",
+        success: true,
+        message: "Login successful",
       };
-    }
-  } catch (e) {
-    console.error(e);
-    if (e instanceof SqliteError && e.code === "SQLITE_CONSTRAINT_UNIQUE") {
+    } catch (error) {
+      console.error("Login error:", error);
       return {
-        error: "Email or Phone number already used",
+        success: false,
+        message: "An unexpected error occurred. Please try again later.",
       };
     }
-    return {
-      error: JSON.stringify(e),
-    };
-  }
+  });
 
-  return redirect("/admin/users");
-}
+export const registerAction = isAdminProcedure
+  .createServerAction()
+  .input(RegisterSchema)
+  .output(z.object({
+    message: z.string().optional(),
+    data: z.any().optional(),
+    success: z.boolean(),
+  }))
+  .handler(async ({ input }) => {
+    const { email, password, fullName, phone, role } = input;
+    const hashedPassword = (await new Argon2id().hash(password));
 
-interface UpdateUserData {
-  name?: string;
-  email?: string;
-  phone?: string;
-  password?: string;
-  customId?: string;
-}
+    const userId = generateId(15) as string;
 
-async function validateUpdateUser(
-  userData: UpdateUserData,
-): Promise<ValidationResult> {
-  console.log(userData);
-  let user: DbUser | undefined;
-
-  const errors: string[] = [];
-
-  if (userData.password && !(await validatePassword(userData.password))) {
-    errors.push("Invalid password");
-  }
-
-  if (userData.name && !(await validateName(userData.name))) {
-    errors.push("Invalid name");
-  }
-
-  if (userData.email && !(await validateEmail(userData.email))) {
-    errors.push("Invalid email");
-  }
-
-  if (userData.phone && !(await validatePhone(userData.phone))) {
-    errors.push("Invalid phone");
-  }
-
-  const isValid = errors.length === 0;
-
-  return {
-    valid: isValid,
-    error: isValid ? "No errors found" : errors.join(", "),
-    data: user,
-  };
-}
-
-export async function updateUser(
-  _: any,
-  formData: FormData,
-): Promise<ActionResult | undefined> {
-  try {
-    const { valid: validAdmin } = await validateAdmin();
-
-    if (!validAdmin) {
-      return {
-        error: "Only admins can update user information.",
-      };
-    }
-
-    const updateFields: Partial<Omit<DbUser, "id">> = {};
-
-    const userId = formData.get("userId") as string;
-
-    if (formData.has("name")) {
-      const name = formData.get("name") as string;
-      updateFields.name = name;
-    }
-
-    if (formData.has("customId")) {
-      const customId = formData.get("customId") as string;
-      updateFields.customId = customId;
-    }
-
-    if (formData.has("email")) {
-      const email = formData.get("email") as string;
-      updateFields.email = email;
-    }
-
-    if (formData.has("phone")) {
-      const phone = formData.get("phone") as string;
-      updateFields.phone = phone;
-    }
-
-    if (formData.has("password")) {
-      const password = formData.get("password") as string;
-      updateFields.passwordText = password;
-      
-      const hashedPassword = (await new Argon2id().hash(
-        updateFields.passwordText!,
-      )) as string;
-      updateFields.password = hashedPassword;
-    }
-
-    if (formData.has("customId")) {
-      const customId = formData.get("customId") as string;
-      updateFields.customId = customId;
-    }
-
-    if (Object.keys(updateFields).length > 0) {
+    try {
       await db
-        .update(userTable)
-        .set(updateFields)
-        .where(eq(userTable.id, userId));
+        .insert(users)
+        .values({
+          id: userId,
+          email,
+          phone,
+          fullName,
+          role,
+          password: hashedPassword,
+          passwordText: password,
+        })
 
-      console.log(`User with ID ${userId} updated successfully.`);
-
-      revalidatePath("/admin/users/");
       return {
-        error: null,
-        success: `User with ID ${userId} updated successfully.`,
+        success: true,
+        message: "User registered successfully",
       };
-    } else {
+    } catch (error) {
+      if (error instanceof SqliteError && error.code === "SQLITE_CONSTRAINT_UNIQUE") {
+        return {
+          success: false,
+          message: "Email or Phone number already used",
+        };
+      }
       return {
-        error: "No fields to update",
+        success: false,
+        message: JSON.stringify(error),
       };
     }
-  } catch (error) {
-    console.error(error);
-    return {
-      error: "Failed to update user in database",
-    };
-  }
-}
+  });
+
+export const logoutAction = authedProcedure
+  .createServerAction()
+  .handler(async ({ ctx }) => {
+    const { session } = ctx;
+
+    if (session === null) {
+      throw new Error("Session not found")
+    }
+
+    await lucia.invalidateSession(session.id);
+
+    const sessionCookie = lucia.createBlankSessionCookie();
+    cookies().set(
+      sessionCookie.name,
+      sessionCookie.value,
+      sessionCookie.attributes,
+    );
+
+    return redirect("/login");
+  });
+
+export const updateUserAction = isAdminProcedure
+  .createServerAction()
+  .input(z.object({
+    id: z.string(),
+    email: z.string().email().optional(),
+    phone: z.string().optional(),
+    fullName: z.string().optional(),
+    role: z.enum(['CUSTOMER_DEALER', 'CUSTOMER_SINGULAR', 'MODERATOR', 'ACCOUNTANT', 'ADMIN']).optional(),
+    passwordText: z.string().optional(),
+  }))
+  .output(z.object({
+    message: z.string().optional(),
+    data: z.any().optional(),
+    success: z.boolean(),
+  }))
+  .handler(async ({ input }) => {
+    const { id, email, passwordText: password, fullName, phone, role } = input;
+    const updateData: any = {};
+
+    if (email) updateData.email = email;
+    if (phone) updateData.phone = phone;
+    if (fullName) updateData.fullName = fullName;
+    if (role) updateData.role = role;
+
+    if (password) {
+      const hashedPassword = await new Argon2id().hash(password);
+      updateData.password = hashedPassword;
+      updateData.passwordText = password;
+    }
+
+    try {
+      const updatedUser = await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, id))
+        .returning();
+
+      if (!updatedUser) {
+        return {
+          success: false,
+          message: "User update failed",
+        };
+      }
+
+      revalidatePath(`/admin/users/${id}`)
+
+      return {
+        success: true,
+        message: "User updated successfully",
+      };
+    } catch (error) {
+      if (error instanceof SqliteError && error.code === "SQLITE_CONSTRAINT_UNIQUE") {
+        return {
+          success: false,
+          message: "Email or Phone number already used",
+        };
+      }
+      return {
+        success: false,
+        message: JSON.stringify(error),
+      };
+    }
+  });

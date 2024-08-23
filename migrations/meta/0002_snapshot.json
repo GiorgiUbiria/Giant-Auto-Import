@@ -1,28 +1,84 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "b07eaee4-c650-4515-8187-f93e1511f9e3",
-  "prevId": "b3c9ef77-6294-40f5-b04a-14e2b4d9a02e",
+  "id": "0ae831dc-327d-492a-9471-dbdc2e328157",
+  "prevId": "1cac798e-27c8-4f20-a1a1-08f0addf720d",
   "tables": {
-    "car": {
-      "name": "car",
+    "cars": {
+      "name": "cars",
       "columns": {
         "id": {
           "name": "id",
           "type": "integer",
           "primaryKey": true,
           "notNull": true,
+          "autoincrement": true
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "vin": {
           "name": "vin",
           "type": "text",
           "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "year": {
+          "name": "year",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "make": {
+          "name": "make",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "model": {
+          "name": "model",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "holder": {
+          "name": "holder",
+          "type": "text",
+          "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "origin_port": {
-          "name": "origin_port",
+        "booking_number": {
+          "name": "booking_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "container_number": {
+          "name": "container_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lot_number": {
+          "name": "lot_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tracking_link": {
+          "name": "tracking_link",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -33,10 +89,25 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false,
+          "autoincrement": false,
+          "default": "'Poti'"
+        },
+        "shipping_fee": {
+          "name": "shipping_fee",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
-        "departure_date": {
-          "name": "departure_date",
+        "purchase_fee": {
+          "name": "purchase_fee",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "total_fee": {
+          "name": "total_fee",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
@@ -49,11 +120,18 @@
           "notNull": false,
           "autoincrement": false
         },
-        "auction": {
-          "name": "auction",
-          "type": "text",
+        "departure_date": {
+          "name": "departure_date",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false,
+          "autoincrement": false
+        },
+        "purchase_date": {
+          "name": "purchase_date",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
           "autoincrement": false
         },
         "created_at": {
@@ -61,17 +139,154 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "(CURRENT_DATE)"
         },
-        "specifications_id": {
-          "name": "specifications_id",
-          "type": "integer",
+        "auction": {
+          "name": "auction",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
-        "parking_details_id": {
-          "name": "parking_details_id",
+        "origin_port": {
+          "name": "origin_port",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "keys": {
+          "name": "keys",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "shipping_status": {
+          "name": "shipping_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "body_type": {
+          "name": "body_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fuel_type": {
+          "name": "fuel_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "cars_vin_unique": {
+          "name": "cars_vin_unique",
+          "columns": [
+            "vin"
+          ],
+          "isUnique": true
+        },
+        "cars_booking_number_unique": {
+          "name": "cars_booking_number_unique",
+          "columns": [
+            "booking_number"
+          ],
+          "isUnique": true
+        },
+        "cars_lot_number_unique": {
+          "name": "cars_lot_number_unique",
+          "columns": [
+            "lot_number"
+          ],
+          "isUnique": true
+        },
+        "cars_tracking_link_unique": {
+          "name": "cars_tracking_link_unique",
+          "columns": [
+            "tracking_link"
+          ],
+          "isUnique": true
+        },
+        "vin_idx": {
+          "name": "vin_idx",
+          "columns": [
+            "vin"
+          ],
+          "isUnique": true
+        },
+        "owner_idx": {
+          "name": "owner_idx",
+          "columns": [
+            "owner_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "cars_owner_id_users_id_fk": {
+          "name": "cars_owner_id_users_id_fk",
+          "tableFrom": "cars",
+          "tableTo": "users",
+          "columnsFrom": [
+            "owner_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "images": {
+      "name": "images",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "car_vin": {
+          "name": "car_vin",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "image_type": {
+          "name": "image_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "image_key": {
+          "name": "image_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "priority": {
+          "name": "priority",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
@@ -79,76 +294,26 @@
         }
       },
       "indexes": {
-        "car_vin_unique": {
-          "name": "car_vin_unique",
+        "images_image_key_unique": {
+          "name": "images_image_key_unique",
           "columns": [
-            "vin"
+            "image_key"
+          ],
+          "isUnique": true
+        },
+        "image_key_idx": {
+          "name": "image_key_idx",
+          "columns": [
+            "image_key"
           ],
           "isUnique": true
         }
       },
       "foreignKeys": {
-        "car_specifications_id_specifications_id_fk": {
-          "name": "car_specifications_id_specifications_id_fk",
-          "tableFrom": "car",
-          "tableTo": "specifications",
-          "columnsFrom": [
-            "specifications_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "car_parking_details_id_parking_details_id_fk": {
-          "name": "car_parking_details_id_parking_details_id_fk",
-          "tableFrom": "car",
-          "tableTo": "parking_details",
-          "columnsFrom": [
-            "parking_details_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "image": {
-      "name": "image",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "car_vin": {
-          "name": "car_vin",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "image_url": {
-          "name": "image_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "image_car_vin_car_vin_fk": {
-          "name": "image_car_vin_car_vin_fk",
-          "tableFrom": "image",
-          "tableTo": "car",
+        "images_car_vin_cars_vin_fk": {
+          "name": "images_car_vin_cars_vin_fk",
+          "tableFrom": "images",
+          "tableTo": "cars",
           "columnsFrom": [
             "car_vin"
           ],
@@ -162,40 +327,40 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "note": {
-      "name": "note",
+    "logs": {
+      "name": "logs",
       "columns": {
         "id": {
           "name": "id",
           "type": "integer",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": true
         },
         "user_id": {
           "name": "user_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
-        "car_id": {
-          "name": "car_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "note": {
-          "name": "note",
+        "path": {
+          "name": "path",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
+        "level": {
+          "name": "level",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -203,143 +368,179 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "note_user_id_user_id_fk": {
-          "name": "note_user_id_user_id_fk",
-          "tableFrom": "note",
-          "tableTo": "user",
+        "logs_user_id_users_id_fk": {
+          "name": "logs_user_id_users_id_fk",
+          "tableFrom": "logs",
+          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "note_car_id_car_id_fk": {
-          "name": "note_car_id_car_id_fk",
-          "tableFrom": "note",
-          "tableTo": "car",
-          "columnsFrom": [
-            "car_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
+          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "parking_details": {
-      "name": "parking_details",
+    "payment_cars": {
+      "name": "payment_cars",
       "columns": {
-        "id": {
-          "name": "id",
+        "payment_id": {
+          "name": "payment_id",
           "type": "integer",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "price": {
-      "name": "price",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "total_amount": {
-          "name": "total_amount",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "amount_left": {
-          "name": "amount_left",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": false,
           "autoincrement": false
         },
         "car_id": {
           "name": "car_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         }
       },
       "indexes": {},
       "foreignKeys": {
-        "price_car_id_car_id_fk": {
-          "name": "price_car_id_car_id_fk",
-          "tableFrom": "price",
-          "tableTo": "car",
+        "payment_cars_payment_id_payments_id_fk": {
+          "name": "payment_cars_payment_id_payments_id_fk",
+          "tableFrom": "payment_cars",
+          "tableTo": "payments",
+          "columnsFrom": [
+            "payment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "payment_cars_car_id_cars_id_fk": {
+          "name": "payment_cars_car_id_cars_id_fk",
+          "tableFrom": "payment_cars",
+          "tableTo": "cars",
           "columnsFrom": [
             "car_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "payment_cars_payment_id_car_id_pk": {
+          "columns": [
+            "car_id",
+            "payment_id"
+          ],
+          "name": "payment_cars_payment_id_car_id_pk"
+        }
+      },
       "uniqueConstraints": {}
     },
-    "roles": {
-      "name": "roles",
+    "payments": {
+      "name": "payments",
       "columns": {
         "id": {
           "name": "id",
           "type": "integer",
           "primaryKey": true,
           "notNull": true,
+          "autoincrement": true
+        },
+        "customer_id": {
+          "name": "customer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
           "autoincrement": false
         },
-        "role_name": {
-          "name": "role_name",
+        "payment_date": {
+          "name": "payment_date",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(CURRENT_DATE)"
+        },
+        "memo": {
+          "name": "memo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "payee": {
+          "name": "payee",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "received_amount": {
+          "name": "received_amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "used_amount": {
+          "name": "used_amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "payment_balance": {
+          "name": "payment_balance",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "payment_type": {
+          "name": "payment_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "payment_status": {
+          "name": "payment_status",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         }
       },
-      "indexes": {
-        "roles_role_name_unique": {
-          "name": "roles_role_name_unique",
-          "columns": [
-            "role_name"
+      "indexes": {},
+      "foreignKeys": {
+        "payments_customer_id_users_id_fk": {
+          "name": "payments_customer_id_users_id_fk",
+          "tableFrom": "payments",
+          "tableTo": "users",
+          "columnsFrom": [
+            "customer_id"
           ],
-          "isUnique": true
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
-      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "session": {
-      "name": "session",
+    "sessions": {
+      "name": "sessions",
       "columns": {
         "id": {
           "name": "id",
@@ -365,10 +566,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "session_user_id_user_id_fk": {
-          "name": "session_user_id_user_id_fk",
-          "tableFrom": "session",
-          "tableTo": "user",
+        "sessions_user_id_users_id_fk": {
+          "name": "sessions_user_id_users_id_fk",
+          "tableFrom": "sessions",
+          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
@@ -382,222 +583,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "specifications": {
-      "name": "specifications",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "vin": {
-          "name": "vin",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "carfax": {
-          "name": "carfax",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "year": {
-          "name": "year",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "make": {
-          "name": "make",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "model": {
-          "name": "model",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "color": {
-          "name": "color",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "runndrive": {
-          "name": "runndrive",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "transaction": {
-      "name": "transaction",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "price_id": {
-          "name": "price_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "car_id": {
-          "name": "car_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "amount": {
-          "name": "amount",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "payment_date": {
-          "name": "payment_date",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "transaction_price_id_price_id_fk": {
-          "name": "transaction_price_id_price_id_fk",
-          "tableFrom": "transaction",
-          "tableTo": "price",
-          "columnsFrom": [
-            "price_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "transaction_user_id_user_id_fk": {
-          "name": "transaction_user_id_user_id_fk",
-          "tableFrom": "transaction",
-          "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "transaction_car_id_car_id_fk": {
-          "name": "transaction_car_id_car_id_fk",
-          "tableFrom": "transaction",
-          "tableTo": "car",
-          "columnsFrom": [
-            "car_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "user_car": {
-      "name": "user_car",
-      "columns": {
-        "car_id": {
-          "name": "car_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "user_car_car_id_car_id_fk": {
-          "name": "user_car_car_id_car_id_fk",
-          "tableFrom": "user_car",
-          "tableTo": "car",
-          "columnsFrom": [
-            "car_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "user_car_user_id_user_id_fk": {
-          "name": "user_car_user_id_user_id_fk",
-          "tableFrom": "user_car",
-          "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "user_car_car_id_user_id_pk": {
-          "columns": [
-            "car_id",
-            "user_id"
-          ],
-          "name": "user_car_car_id_user_id_pk"
-        }
-      },
-      "uniqueConstraints": {}
-    },
-    "user": {
-      "name": "user",
+    "users": {
+      "name": "users",
       "columns": {
         "id": {
           "name": "id",
@@ -606,16 +593,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "custom_id": {
-          "name": "custom_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "''"
-        },
-        "name": {
-          "name": "name",
+        "full_name": {
+          "name": "full_name",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -647,48 +626,77 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false,
-          "default": "''"
+          "autoincrement": false
         },
-        "role_id": {
-          "name": "role_id",
+        "deposit": {
+          "name": "deposit",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "balance": {
+          "name": "balance",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "price_list": {
+          "name": "price_list",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         }
       },
       "indexes": {
-        "user_email_unique": {
-          "name": "user_email_unique",
+        "users_email_unique": {
+          "name": "users_email_unique",
           "columns": [
             "email"
           ],
           "isUnique": true
         },
-        "user_phone_unique": {
-          "name": "user_phone_unique",
+        "users_phone_unique": {
+          "name": "users_phone_unique",
+          "columns": [
+            "phone"
+          ],
+          "isUnique": true
+        },
+        "full_name_idx": {
+          "name": "full_name_idx",
+          "columns": [
+            "full_name"
+          ],
+          "isUnique": false
+        },
+        "email_idx": {
+          "name": "email_idx",
+          "columns": [
+            "email"
+          ],
+          "isUnique": true
+        },
+        "phone_idx": {
+          "name": "phone_idx",
           "columns": [
             "phone"
           ],
           "isUnique": true
         }
       },
-      "foreignKeys": {
-        "user_role_id_roles_id_fk": {
-          "name": "user_role_id_roles_id_fk",
-          "tableFrom": "user",
-          "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     }

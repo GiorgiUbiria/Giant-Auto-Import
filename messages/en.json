@@ -1,0 +1,58 @@
+{
+  "Auth": {
+    "logout": "Log Out",
+    "login": "Login",
+    "myAccount": "My Account",
+    "role_admin": "Admin"
+  },
+  "LocaleSwitcher": {
+    "ge": "Georgian",
+    "en": "English",
+    "ru": "Russian",
+    "label": "Language"
+  },
+  "Navbar": {
+    "home": "Home",
+    "contact": "Contact",
+    "about": "About Us",
+    "calculator": "Calculator",
+    "admin_panel": "Admin Panel",
+    "dashboard": "Dashboard",
+    "cars": "Cars",
+    "add_car": "Add Car",
+    "users": "Users",
+    "register": "Register"
+  },
+  "ShippingCalculator": {
+    "title": "Shipping Calculator",
+    "enterBid": "Enter your bid",
+    "selectAuction": "Select auction",
+    "selectAuctionLocation": "Select an auction location",
+    "fromUSAPort": "From USA Port",
+    "destinationPort": "Destination Port",
+    "additionalFees": "Additional Fees",
+    "insurance": "Insurance (1.5%)",
+    "estimatedTotalFee": "Estimated Total Fee:",
+    "calculate": "Calculate",
+    "noAuctionLocationFound": "No auction location found.",
+    "searchAuctionLocation": "Search auction location..."
+  },
+  "Footer": {
+    "companyLogoAlt": "Company Logo",
+    "companyName": "Giant Auto Import",
+    "phoneIconAlt": "Phone icon",
+    "companyNumber": "Company Number",
+    "mailIconAlt": "Mail icon",
+    "companyEmail": "Company Email",
+    "addressIconAlt": "Address icon",
+    "companyAddress": "Poti, 32 Javakhishvili St., Terminal-Gezi, R. 109",
+    "address": "Address",
+    "pages": "Pages",
+    "home": "Home",
+    "contactUs": "Contact Us",
+    "aboutUs": "About Us",
+    "termsAndConditions": "Terms and conditions",
+    "privacyPolicy": "Privacy policy",
+    "copyright": "©Copyright 2024. Giant Auto Import"
+  }
+}

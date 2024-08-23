@@ -9,8 +9,11 @@ import PhoneIcon from "../../public/icons8-phone.svg";
 import MailIcon from "../../public/icons8-mail.svg";
 import AddressIcon from "../../public/icons8-address-50.png";
 import { ModeToggle } from "./theme-toggle";
+import { getTranslations } from "next-intl/server";
 
 export default async function Footer() {
+  const t = await getTranslations("Footer");
+
   return (
     <div className="dark:bg-gratient-to-r dark:from-darkbg dark:to-darkfg bg-gradient-to-r from-darkbg to-darkfg pt-9">
       <div className="mx-auto w-full max-w-[1166px] px-4 xl:px-0">
@@ -23,7 +26,7 @@ export default async function Footer() {
                 className="w-24 h-24 self-start invert brightness-0"
               />
               <h1 className="text-white font-extrabold text-lg">
-                Giant Auto Import
+                {t("companyName")}
               </h1>
             </div>
             <div className="mt-[18px] flex flex-col">
@@ -70,7 +73,7 @@ export default async function Footer() {
             <div className="mt-[23px] flex">
               <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[75%]">
                 <Image
-                  alt="phone icon"
+                  alt={t('phoneIconAlt')}
                   width="36"
                   height="36"
                   src={PhoneIcon}
@@ -79,20 +82,20 @@ export default async function Footer() {
               </div>
               <div className="ml-[18px]">
                 <a
-                  href="tel:+911800123444"
+                  href="tel:+995555550553"
                   className="font-Inter text-[14px] font-medium text-white"
                 >
                   +995 555 550 553
                 </a>
                 <p className="font-Inter text-[12px] font-medium text-white">
-                  Company Number
+                  {t('companyNumber')}
                 </p>
               </div>
             </div>
             <div className="mt-[23px] flex">
               <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[75%]">
                 <Image
-                  alt="mail icon"
+                  alt={t('mailIconAlt')}
                   width="36"
                   height="36"
                   src={MailIcon}
@@ -101,20 +104,20 @@ export default async function Footer() {
               </div>
               <div className="ml-[18px]">
                 <a
-                  href="mailto:help@lorem.com"
+                  href="mailto:giant.autoimporti@gmail.com"
                   className="font-Inter text-[14px] font-medium text-white"
                 >
                   giant.autoimporti@gmail.com
                 </a>
                 <p className="font-Inter text-[12px] font-medium text-[#fff]">
-                  Company Email
+                  {t('companyEmail')}
                 </p>
               </div>
             </div>
             <div className="mt-[23px] flex">
               <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[75%]">
                 <Image
-                  alt="address icon"
+                  alt={t('addressIconAlt')}
                   width="36"
                   height="36"
                   src={AddressIcon}
@@ -126,10 +129,10 @@ export default async function Footer() {
                   href=""
                   className="font-Inter text-[14px] font-medium text-[#fff]"
                 >
-                  Poti, 32 Javakhishvili St., Terminal-Gezi, R. 109
+                  {t('companyAddress')}
                 </a>
                 <p className="font-Inter text-[12px] font-medium text-white">
-                  Address
+                  {t('address')}
                 </p>
               </div>
             </div>
@@ -137,7 +140,7 @@ export default async function Footer() {
           <div className="mt-6 flex w-full flex-col justify-between text-white sm:flex-row md:mt-0 md:max-w-[341px]">
             <div className="">
               <p className="text-deutziawhite font-inter text-[18px] font-medium leading-normal">
-                Pages
+                {t('pages')}
               </p>
               <ul>
                 <li className="mt-[15px]">
@@ -145,7 +148,7 @@ export default async function Footer() {
                     className="text-deutziawhite hover:text-deutziawhite/80 font-inter text-[15px] font-normal hover:font-semibold"
                     href="/"
                   >
-                    Home
+                    {t('home')}
                   </a>
                 </li>
                 <li className="mt-[15px]">
@@ -153,7 +156,7 @@ export default async function Footer() {
                     className="text-deutziawhite hover:text-deutziawhite/80 font-inter text-[15px] font-normal hover:font-semibold"
                     href="/contact"
                   >
-                    Contact Us
+                    {t('contactUs')}
                   </a>
                 </li>
                 <li className="mt-[15px]">
@@ -161,7 +164,7 @@ export default async function Footer() {
                     className="text-deutziawhite hover:text-deutziawhite/80 font-inter text-[15px] font-normal hover:font-semibold"
                     href="/about"
                   >
-                    About Us
+                    {t('aboutUs')}
                   </a>
                 </li>
                 <li className="mt-[15px]">
@@ -169,7 +172,7 @@ export default async function Footer() {
                     className="text-deutziawhite hover:text-deutziawhite/80 font-inter text-[15px] font-normal hover:font-semibold"
                     href="/terms"
                   >
-                    Terms and conditions
+                    {t('termsAndConditions')}
                   </a>
                 </li>
                 <li className="mt-[15px]">
@@ -177,7 +180,7 @@ export default async function Footer() {
                     className="text-deutziawhite hover:text-deutziawhite/80 font-inter text-[15px] font-normal hover:font-semibold"
                     href="/privacy"
                   >
-                    Privcay policy
+                    {t('privacyPolicy')}
                   </a>
                 </li>
               </ul>
@@ -187,10 +190,10 @@ export default async function Footer() {
         <hr className="mt-[30px] text-white dark:bg-white bg-black h-1" />
         <div className="flex items-center justify-center pb-8 pt-[9px] md:py-8">
           <p className="text-[12px] font-normal text-white md:text-[14px]">
-            ©Copyright 2024. Giant Auto Import
+            {t('copyright')}
           </p>
         </div>
       </div>
     </div>
   );
-}
+};

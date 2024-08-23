@@ -1,23 +1,58 @@
 {
-	"Auth": {
-		"logout": "Выити"
-	},
-	"LocaleSwitcher": {
-		"ge": "Грузинский",
-		"en": "Англиский",
-		"ru": "Русский",
-		"label": "ენა"
-	},
-	"Navbar": {
-		"home": "Домой",
-		"contact": "Контакты",
-		"about": "О нас",
-		"calculator": "Калькулятор",
-		"admin_panel": "Админпанель",
-		"dashboard": "Панель управления",
-		"cars": "Машины",
-		"add_car": "Добавить машину",
-		"users": "Пользователи",
-		"register": "Регистрация"
-	}
+  "Auth": {
+    "logout": "Выити",
+    "login": "Войти",
+    "myAccount": "Мой аккаунт",
+    "role_admin": "Админ"
+  },
+  "LocaleSwitcher": {
+    "ge": "Грузинский",
+    "en": "Англиский",
+    "ru": "Русский",
+    "label": "ენა"
+  },
+  "Navbar": {
+    "home": "Домой",
+    "contact": "Контакты",
+    "about": "О нас",
+    "calculator": "Калькулятор",
+    "admin_panel": "Админпанель",
+    "dashboard": "Панель управления",
+    "cars": "Машины",
+    "add_car": "Добавить машину",
+    "users": "Пользователи",
+    "register": "Регистрация"
+  },
+  "ShippingCalculator": {
+    "title": "Калькулятор доставки",
+    "enterBid": "Введите вашу ставку",
+    "selectAuction": "Выберите аукцион",
+    "selectAuctionLocation": "Выберите место аукциона",
+    "fromUSAPort": "Из порта США",
+    "destinationPort": "Порт назначения",
+    "additionalFees": "Дополнительные сборы",
+    "insurance": "Страховка (1.5%)",
+    "estimatedTotalFee": "Предполагаемая общая стоимость:",
+    "calculate": "Рассчитать",
+    "noAuctionLocationFound": "Место аукциона не найдено.",
+    "searchAuctionLocation": "Поиск места аукциона..."
+  },
+  "Footer": {
+    "companyLogoAlt": "Логотип компании",
+    "companyName": "Giant Auto Import",
+    "phoneIconAlt": "Иконка телефона",
+    "companyNumber": "Номер компании",
+    "mailIconAlt": "Иконка почты",
+    "companyEmail": "Электронная почта компании",
+    "addressIconAlt": "Иконка адреса",
+    "companyAddress": "Поти, ул. Джавахишвили 32, Терминал-Гези, к. 109",
+    "address": "Адрес",
+    "pages": "Страницы",
+    "home": "Главная",
+    "contactUs": "Контакты",
+    "aboutUs": "О нас",
+    "termsAndConditions": "Правила и условия",
+    "privacyPolicy": "Политика конфиденциальности",
+    "copyright": "©Авторское право 2024. Giant Auto Import"
+  }
 }

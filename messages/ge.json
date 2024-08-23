@@ -1,24 +1,58 @@
 {
   "Auth": {
-    "logout": "გასვლა"
+    "logout": "გასვლა",
+    "login": "შესვლა",
+    "myAccount": "ჩემი ანგარიში",
+    "role_admin": "ადმინი"
   },
-	"LocaleSwitcher": {
-		"ge": "ქართული",
-		"en": "ინგლისური",
-		"ru": "რუსული",
-		"label": "ენა"
-	},
-	"Navbar": {
-		"home": "სახლი",
-		"contact": "კონტაქტი",
-		"about": "ჩვენ შესახებ",
-		"calculator": "კალკულატორი",
-		"admin_panel": "ადმინ პანელი",
-		"dashboard": "პირადი სივრცე",
-		"cars": "ავტომობილები",
-		"add_car": "ავტომობილის დამატება",
-		"users": "მომხმარებლები",
-		"register": "რეგისტრაცია"
-	}
-
+  "LocaleSwitcher": {
+    "ge": "ქართული",
+    "en": "ინგლისური",
+    "ru": "რუსული",
+    "label": "ენა"
+  },
+  "Navbar": {
+    "home": "სახლი",
+    "contact": "კონტაქტი",
+    "about": "ჩვენ შესახებ",
+    "calculator": "კალკულატორი",
+    "admin_panel": "ადმინ პანელი",
+    "dashboard": "პირადი სივრცე",
+    "cars": "ავტომობილები",
+    "add_car": "ავტომობილის დამატება",
+    "users": "მომხმარებლები",
+    "register": "რეგისტრაცია"
+  },
+  "ShippingCalculator": {
+    "title": "გადაზიდვის კალკულატორი",
+    "enterBid": "შეიყვანეთ თქვენი ფ��სი",
+    "selectAuction": "აირჩიეთ აუქციონი",
+    "selectAuctionLocation": "აირჩიეთ აუქციონის ადგილმდებარეობა",
+    "fromUSAPort": "აშშ-ს პორტიდან",
+    "destinationPort": "დანიშნულების პორტი",
+    "additionalFees": "დამატებითი გადასახადები",
+    "insurance": "დაზღვევა (1.5%)",
+    "estimatedTotalFee": "სავარაუდო ჯამური ღირებულება:",
+    "calculate": "გამოთვლა",
+    "noAuctionLocationFound": "აუქციონის ადგილმდებარეობა ვერ მოიძებნა.",
+    "searchAuctionLocation": "აუქციონის ადგილმდებარეობის ძიება..."
+  },
+  "Footer": {
+    "companyLogoAlt": "კომპანიის ლოგო",
+    "companyName": "Giant Auto Import",
+    "phoneIconAlt": "ტელეფონის ხატულა",
+    "companyNumber": "კომპანიის ნომერი",
+    "mailIconAlt": "ფოსტის ხატულა",
+    "companyEmail": "კომპანიის ელ-ფოსტა",
+    "addressIconAlt": "მისამართის ხატულა",
+    "companyAddress": "ფოთი, ჯავახიშვილის ქ. 32, ტერმინალი-გეზი, ოთახი 109",
+    "address": "მისამართი",
+    "pages": "გვერდები",
+    "home": "მთავარი",
+    "contactUs": "კონტაქტი",
+    "aboutUs": "ჩვენს შესახებ",
+    "termsAndConditions": "წესები და პირობები",
+    "privacyPolicy": "კონფიდენციალურობის პოლიტიკა",
+    "copyright": "©საავტორო უფლებები 2024. Giant Auto Import"
+  }
 }

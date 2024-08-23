@@ -34,12 +34,12 @@ const Avatar = ({ user }: AvatarProps) => {
 							<CircleUser className="h-[2rem] w-[2rem]" />
 							<span className="sr-only">Toggle user menu</span>
 						</Button>
-						<p className="text-white text-xl font-bold ml-4"> {user?.role.includes("CUSTOMER") ? user?.fullName : user?.role}</p>
+						<p className="text-white text-xl font-bold ml-4"> {user?.role.includes("CUSTOMER") ? user?.fullName : t("role_admin")}</p>
 						<ChevronDown className="size-4 ml-1 mt-1 text-white font-bold" />
 					</div>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">
-					<DropdownMenuLabel className="text-lg">My Account</DropdownMenuLabel>
+					<DropdownMenuLabel className="text-lg"> {t("myAccount")} </DropdownMenuLabel>
 					<DropdownMenuSeparator />
 					{user ? (
 						<>
@@ -63,7 +63,7 @@ const Avatar = ({ user }: AvatarProps) => {
 						</>
 					) : (
 						<DropdownMenuItem className="text-md">
-							<Link href="/login"> Sign In </Link>
+							<Link href="/login"> {t("login")} </Link>
 						</DropdownMenuItem>
 					)}
 				</DropdownMenuContent>

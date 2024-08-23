@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from 'next-intl';
 import {
   auctionData,
   oceanShippingRates,
@@ -20,6 +21,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function ShippingCalculator({ style }: { style: string }) {
+  const t = useTranslations('ShippingCalculator');
   const [auctionLocation, setAuctionLocation] = useState("");
   const [auction, setAuction] = useState("");
   const [purchaseFee, setPurchaseFee] = useState(0);
@@ -115,7 +117,7 @@ export function ShippingCalculator({ style }: { style: string }) {
     <Card className="w-full max-w-4xl">
       <CardHeader>
         <CardTitle className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-primary dark:drop-shadow-[0_1.3px_1.3px_rgba(0,0,0,1)]">
-          Shipping Calculator
+          {t('title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -123,7 +125,7 @@ export function ShippingCalculator({ style }: { style: string }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="bid">Enter your bid</Label>
+                <Label htmlFor="bid">{t('enterBid')}</Label>
                 <Input
                   id="bid"
                   value={purchaseFee}
@@ -132,10 +134,10 @@ export function ShippingCalculator({ style }: { style: string }) {
                 />
               </div>
               <div>
-                <Label htmlFor="auction">Select auction</Label>
+                <Label htmlFor="auction">{t('selectAuction')}</Label>
                 <Select onValueChange={handleAuctionChange} value={auction}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select Auction" />
+                    <SelectValue placeholder={t('selectAuction')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Copart">Copart</SelectItem>
@@ -144,7 +146,7 @@ export function ShippingCalculator({ style }: { style: string }) {
                 </Select>
               </div>
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="auctionLocation">Select an auction location</Label>
+                <Label htmlFor="auctionLocation">{t('selectAuctionLocation')}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -155,15 +157,15 @@ export function ShippingCalculator({ style }: { style: string }) {
                         !auctionLocation && "text-muted-foreground"
                       )}
                     >
-                      {auctionLocation || "Select an auction location"}
+                      {auctionLocation || t('selectAuctionLocation')}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-full p-0">
                     <Command>
-                      <CommandInput placeholder="Search auction location..." />
+                      <CommandInput placeholder={t('searchAuctionLocation')} />
                       <CommandList>
-                        <CommandEmpty>No auction location found.</CommandEmpty>
+                        <CommandEmpty>{t('noAuctionLocationFound')}</CommandEmpty>
                         <CommandGroup>
                           {Array.from(
                             new Set(
@@ -195,7 +197,7 @@ export function ShippingCalculator({ style }: { style: string }) {
                 </Popover>
               </div>
               <div>
-                <Label htmlFor="fromPort">From USA Port</Label>
+                <Label htmlFor="fromPort">{t('fromUSAPort')}</Label>
                 <Select value={port} disabled>
                   <SelectTrigger>
                     <SelectValue>{port}</SelectValue>
@@ -203,7 +205,7 @@ export function ShippingCalculator({ style }: { style: string }) {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="destinationPort">Destination Port</Label>
+                <Label htmlFor="destinationPort">{t('destinationPort')}</Label>
                 <Select value="Poti" disabled>
                   <SelectTrigger>
                     <SelectValue>Poti</SelectValue>
@@ -212,7 +214,7 @@ export function ShippingCalculator({ style }: { style: string }) {
               </div>
             </div>
             <div className="space-y-4">
-              <Label>Additional Fees</Label>
+              <Label>{t('additionalFees')}</Label>
               <div className="space-y-2">
                 {extraFees.map((fee) => (
                   <div key={fee.type} className="flex items-center space-x-2">
@@ -247,19 +249,19 @@ export function ShippingCalculator({ style }: { style: string }) {
                     htmlFor="insurance"
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
-                    Insurance (1.5%)
+                    {t('insurance')}
                   </label>
                 </div>
               </div>
               <div className="mt-4">
                 <p className="text-lg font-semibold">
-                  Estimated Total Fee:{" "}
+                  {t('estimatedTotalFee')}{" "}
                   <span className="text-xl font-bold">
                     ${estimatedFee.toFixed(2)}
                   </span>
                 </p>
                 <Button type="submit" className="w-full mt-4">
-                  Calculate
+                  {t('calculate')}
                 </Button>
               </div>
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getImagesAction } from "@/lib/actions/imageActions";
+import { getImageKeys } from "@/lib/actions/imageActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { useState } from "react";
 import Lightbox from "yet-another-react-lightbox";
@@ -17,36 +17,38 @@ const breakpoints = [3840, 1920, 1080, 640, 384, 256, 128];
 
 export const ImageGallery = ({ vin }: { vin: string }) => {
   const imageTypes = ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERY"];
-  const { data } = useServerActionQuery(getImagesAction, {
+  const publicUrl = process.env.NEXT_PUBLIC_BUCKET_URL;
+  const { data, error, isLoading } = useServerActionQuery(getImageKeys, {
     input: { vin },
     queryKey: ["getImagesForCar", vin],
   });
   const [open, setOpen] = useState<boolean>(false);
   const [startIndex, setStartIndex] = useState<number>(0);
 
-  if (!data) {
-    return <div>No Images.</div>;
-  }
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading images: {error.message}</div>;
+  if (!data || data.length === 0) return <div>No images available.</div>;
+  if (!publicUrl) return <div>Error: Public URL not configured.</div>;
 
   const filterImagesByType = (images: typeof data, imageType: string) =>
     images.filter((image) => image.imageType === imageType);
 
   const getSlides = (filteredData: typeof data) =>
-    filteredData.map(({ url }) => ({
-      src: url,
+    filteredData.map(({ imageKey }) => ({
+      src: `${publicUrl}/${imageKey}`,
       width: 3840,
       height: 2560,
       srcSet: breakpoints.map((breakpoint) => ({
-        src: url,
+        src: `${publicUrl}/${imageKey}`,
         width: breakpoint,
         height: Math.round((2560 / 3840) * breakpoint),
       })),
-      downloadUrl: url,
+      downloadUrl: `${publicUrl}/${imageKey}`,
     }));
 
   return (
     <div className="grid place-items-center">
-      <Tabs defaultValue="AUCTION" className="w-full text-black dark:text-white gap-2">
+      <Tabs defaultValue={imageTypes[0]} className="w-full text-black dark:text-white gap-2">
         <TabsList className="grid w-full grid-cols-4 bg-gray-300 dark:bg-gray-700 dark:text-white mb-10">
           {imageTypes.map((type) => (
             <TabsTrigger key={type} value={type}>
@@ -58,6 +60,14 @@ export const ImageGallery = ({ vin }: { vin: string }) => {
         {imageTypes.map((type) => {
           const filteredData = filterImagesByType(data, type);
           const slides = getSlides(filteredData);
+
+          if (slides.length === 0) {
+            return (
+              <TabsContent key={type} value={type}>
+                <div>No images available for {type}</div>
+              </TabsContent>
+            );
+          }
 
           return (
             <TabsContent key={type} value={type}>

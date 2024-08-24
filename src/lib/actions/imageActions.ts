@@ -38,6 +38,7 @@ export const getImageKeys = createServerAction()
   }))
   .output(z.array(z.object({
     imageKey: z.string(),
+    imageType: z.enum(["WAREHOUSE", "PICK_UP", "DELIVERED", "AUCTION"]),
   })))
   .handler(async ({ input }) => {
     const { vin } = input;
@@ -45,7 +46,8 @@ export const getImageKeys = createServerAction()
     try {
       const keys = await db
         .select({
-          imageKey: images.imageKey
+          imageKey: images.imageKey,
+          imageType: images.imageType,
         })
         .from(images)
         .where(eq(images.carVin, vin));

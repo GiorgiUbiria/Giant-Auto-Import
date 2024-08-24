@@ -33,8 +33,10 @@ import {
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
+
 export const EditImages = ({ vin }: { vin: string }) => {
   const queryClient = useQueryClient();
+  const publicUrl = process.env.NEXT_PUBLIC_BUCKET_URL as string
 
   const { isLoading, data } = useServerActionQuery(getImageKeys, {
     input: {
@@ -50,9 +52,7 @@ export const EditImages = ({ vin }: { vin: string }) => {
         toast.error(errorMessage);
       },
       onSuccess: async () => {
-        const successMessage = "Image deleted successfully!";
-        toast.success(successMessage);
-
+        const successMessage = "Image deleted successfully!"; toast.success(successMessage);
         await queryClient.invalidateQueries({
           queryKey: ["getImagesForCar", vin],
           refetchType: "active",
@@ -147,7 +147,7 @@ export const EditImages = ({ vin }: { vin: string }) => {
                 <TooltipTrigger className="w-full">
                   <div className="w-full aspect-[3/2] relative rounded-lg overflow-hidden">
                     <Image
-                      src={`https://pub-790f032d851548ee80b9672b151ea280.r2.dev/${image.imageKey}`}
+                      src={`${publicUrl}/${image.imageKey}`}
                       alt="Image"
                       layout="fill"
                       objectFit="cover"

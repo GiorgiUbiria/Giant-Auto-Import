@@ -24,14 +24,14 @@ export const Client = ({ vin }: { vin: string }) => {
 	}
 
 	return (
-		<div className="flex flex-col mb-4 mt-8 md:mt-4">
+		<div className="flex flex-col mb-4 mt-8 md:mt-4 px-4 sm:px-6 lg:px-8">
 			{
 				isLoading ? <LoadingState /> : (
 					<div>
-						<div className="w-1/2 mx-auto">
+						<div className="w-full lg:w-3/4 mx-auto mb-8">
 							<StatusLine status={data?.shippingStatus!} />
 						</div>
-						<div className="mt-8 w-11/12 mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
+						<div className="mt-8 w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 							<ImageGallery vin={data?.vin!} />
 							<CarInfo car={data!} />
 						</div>

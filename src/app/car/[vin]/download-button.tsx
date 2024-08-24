@@ -41,7 +41,7 @@ export default function DownloadButton({
     <Button
       variant="default"
       size="lg"
-      className="w-full mt-4"
+      className="w-full mt-4 text-sm sm:text-base"
       onClick={handleDownload}
     >
       Download All Images as ZIP

@@ -6,9 +6,11 @@ import { useServerActionMutation } from "@/lib/hooks/server-action-hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
 
 export const Reciever = ({ reciever, vin }: { reciever: string | null, vin: string }) => {
 	const queryClient = useQueryClient();
+	const [localReciever, setLocalReciever] = useState<string | null>(reciever);
 
 	const { isPending, mutate } = useServerActionMutation(assignRecieverAction, {
 		onError: (error) => {
@@ -18,6 +20,7 @@ export const Reciever = ({ reciever, vin }: { reciever: string | null, vin: stri
 		onSuccess: async ({ data }) => {
 			const successMessage = data?.message || "Reciever assigned successfully!";
 			toast.success(successMessage);
+			setLocalReciever(data?.reciever || localReciever);
 
 			await queryClient.invalidateQueries({
 				queryKey: ["getCars"],
@@ -37,7 +40,7 @@ export const Reciever = ({ reciever, vin }: { reciever: string | null, vin: stri
 	const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === 'Enter') {
 			const newReciever = (e.target as HTMLInputElement).value;
-			if (newReciever) {
+			if (newReciever && !localReciever) {
 				mutate({ reciever: newReciever, vin: vin });
 			}
 		}
@@ -48,14 +51,14 @@ export const Reciever = ({ reciever, vin }: { reciever: string | null, vin: stri
 			{isPending ? (
 				<LoadingState />
 			) : (
-				reciever === null || reciever === undefined ? (
+				localReciever === null ? (
 					<Input
 						type="text"
 						placeholder="Set reciever"
 						onKeyDown={handleKeyPress}
 					/>
 				) : (
-					<p>{reciever}</p>
+					<p>{localReciever}</p>
 				)
 			)}
 		</div>

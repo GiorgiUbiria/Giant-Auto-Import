@@ -75,25 +75,25 @@ const Navbar = async () => {
   return (
     <div>
       <DynamicHeader>
-        <nav className="flex justify-between items-center w-full">
+        <nav className="flex justify-between items-center w-full px-4 py-2 sm:px-6 lg:px-8">
           <Sheet>
             <SheetTrigger asChild>
               <Button
                 variant="outline"
                 size="icon"
-                className="shrink-0 h-14 w-14 md:hidden"
+                className="shrink-0 h-10 w-10 sm:h-12 sm:w-12 md:hidden"
               >
-                <Menu className="h-8 w-8 text-primary" />
+                <Menu className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
                 <span className="sr-only">Toggle navigation menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="text-primary">
-              <div className="flex flex-col justify-between h-full">
+            <SheetContent side="left" className="text-primary w-64 sm:w-80">
+              <div className="flex flex-col justify-between h-full py-6">
                 {navigationLinks.map((link) => (
                   <SheetClose asChild key={link.href}>
                     <Link
                       href={link.href}
-                      className="flex items-center text-black dark:text-white dark:focus-text-yellow-300 text-nowrap font-semibold focus:text-yellow-300 text-2xl md:text-lg transition-colors hover:text-yellow-500 dark:hover:text-yellow-500"
+                      className="flex items-center text-black dark:text-white dark:focus-text-yellow-300 text-nowrap font-semibold focus:text-yellow-300 text-base sm:text-lg md:text-base transition-colors hover:text-yellow-500 dark:hover:text-yellow-500 py-2"
                     >
                       <span>{link.label}</span>
                     </Link>
@@ -107,26 +107,26 @@ const Navbar = async () => {
             <Image
               src={NavbarLogo}
               alt="Company logo"
-              className="size-20 brightness-0 invert custom-shadow"
+              className="size-14 sm:size-16 brightness-0 invert custom-shadow"
               priority
             />
           </Link>
 
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-4 lg:gap-6">
             <Link href="/" className="w-max">
               <Image
                 src={NavbarLogo}
                 alt="Company logo"
-                className="size-20 brightness-0 invert custom-shadow"
+                className="size-16 lg:size-20 brightness-0 invert custom-shadow"
                 priority
               />
             </Link>
-            <div className="flex gap-2 ml-8">
+            <div className="flex gap-2 ml-4 lg:ml-8">
               <Link href="https://www.copart.com/login/" className="w-max">
                 <Image
                   src={CopartLogo}
                   alt="Company logo"
-                  className="size-20"
+                  className="size-16 lg:size-20"
                   priority
                 />
               </Link>
@@ -137,13 +137,13 @@ const Navbar = async () => {
                 <Image
                   src={IAAILogo}
                   alt="Company logo"
-                  className="size-20"
+                  className="size-16 lg:size-20"
                   priority
                 />
               </Link>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-4">
             <LocaleSwitcher />
             <Avatar user={user} />
           </div>

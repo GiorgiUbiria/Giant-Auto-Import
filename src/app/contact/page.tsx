@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from 'sonner';
 import { Loader2 } from "lucide-react";
+import { useTranslations } from 'next-intl';
 
 export default function Page() {
+  const t = useTranslations('ContactPage');
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -39,38 +41,37 @@ export default function Page() {
       });
 
       if (response.ok) {
-        toast.success('Email sent successfully!');
+        toast.success(t('successToast'));
         setFormData({ name: "", email: "", message: "" });
       } else {
         throw new Error('Failed to send email');
       }
     } catch (error) {
       console.error('Error sending email:', error);
-      toast.error('Failed to send email. Please try again later.');
+      toast.error(t('errorToast'));
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-      <section id="contact" className="px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-4">
-            <div className="mb-6 max-w-3xl text-center sm:text-center md:mx-auto md:mb-12">
-              <h2 className="font-heading mb-4 font-bold tracking-tight text-gray-900 dark:text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
-                Get in Touch
-              </h2>
-              <p className="mx-auto mt-4 max-w-3xl text-base sm:text-lg md:text-xl text-gray-600 dark:text-slate-400">
-                In hac habitasse platea dictumst
-              </p>
-            </div>
+    <section id="contact" className="px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-4">
+          <div className="mb-6 max-w-3xl text-center sm:text-center md:mx-auto md:mb-12">
+            <h2 className="font-heading mb-4 font-bold tracking-tight text-gray-900 dark:text-white text-3xl sm:text-5xl">
+              {t('title')}
+            </h2>
+            <p className="mx-auto mt-4 max-w-3xl text-xl text-gray-600 dark:text-slate-400">
+              {t('subtitle')}
+            </p>
           </div>
-          <div className="flex flex-col md:flex-row items-stretch justify-center">
-            <div className="w-full md:w-1/2 mb-8 md:mb-0 md:pr-6">
+        </div>
+        <div className="flex items-stretch justify-center">
+          <div className="grid md:grid-cols-2">
+            <div className="h-full pr-6">
               <p className="mt-3 mb-8 text-base sm:text-lg text-gray-600 dark:text-slate-400">
-                Class aptent taciti sociosqu ad litora torquent per conubia
-                nostra, per inceptos himenaeos. Duis nec ipsum orci. Ut
-                scelerisque sagittis ante, ac tincidunt sem venenatis ut.
+                {t('largeText')}
               </p>
               <ul className="space-y-6">
                 <li className="flex flex-col sm:flex-row items-start sm:items-center">
@@ -168,78 +169,75 @@ export default function Page() {
                 </li>
               </ul>
             </div>
-            <div className="w-full md:w-1/2">
-              <div className="card h-fit max-w-6xl p-5 md:p-12" id="form">
-                <h2 className="mb-4 text-xl sm:text-2xl font-bold dark:text-white">
-                  Ready to Get Started?
-                </h2>
-                <form id="contactForm" onSubmit={sendEmail}>
-                  <div className="mb-6">
-                    <div className="mb-4">
-                      <label
-                        htmlFor="name"
-                        className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        Your name
-                      </label>
-                      <input
-                        type="text"
-                        id="name"
-                        placeholder="Your name"
-                        className="w-full rounded-md border border-gray-400 py-2 px-4 shadow-md dark:text-gray-300"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label
-                        htmlFor="email"
-                        className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        Your email
-                      </label>
-                      <input
-                        type="email"
-                        id="email"
-                        placeholder="Your email address"
-                        className="w-full rounded-md border border-gray-400 py-2 px-4 shadow-md dark:text-gray-300"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label
-                        htmlFor="message"
-                        className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        Your message
-                      </label>
-                      <textarea
-                        id="message"
-                        name="message"
-                        rows={5}
-                        placeholder="Write your message..."
-                        className="w-full rounded-md border border-gray-400 py-2 px-4 shadow-md dark:text-gray-300"
-                        value={formData.message}
-                        onChange={handleChange}
-                        required
-                      ></textarea>
-                    </div>
+            <div className="card h-fit max-w-6xl p-5 md:p-12" id="form">
+              <h2 className="mb-4 text-2xl font-bold">{t('title')}</h2>
+              <form onSubmit={sendEmail}>
+                <div className="mb-6">
+                  <div className="mb-4">
+                    <label
+                      htmlFor="name"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      {t('name')}
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      placeholder={t('namePlaceholder')}
+                      className="w-full rounded-md border border-gray-400 py-2 px-4 shadow-md dark:text-gray-300"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
-                  <div className="text-center">
-                    <Button type="submit" className="w-full sm:w-auto light:bg-blue-900" disabled={isLoading}>
-                      {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Send Message'}
-                    </Button>
+                  <div className="mb-4">
+                    <label
+                      htmlFor="email"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      {t('email')}
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      placeholder={t('emailPlaceholder')}
+                      className="w-full rounded-md border border-gray-400 py-2 px-4 shadow-md dark:text-gray-300"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
-                </form>
-              </div>
+                  <div className="mb-4">
+                    <label
+                      htmlFor="message"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      {t('message')}
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      rows={5}
+                      placeholder={t('messagePlaceholder')}
+                      className="w-full rounded-md border border-gray-400 py-2 px-4 shadow-md dark:text-gray-300"
+                      value={formData.message}
+                      onChange={handleChange}
+                      required
+                    ></textarea>
+                  </div>
+                </div>
+                <div className="w-full">
+                  <Button type="submit" className="w-full light:bg-blue-900" disabled={isLoading}>
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : t('sendMessage')}
+                  </Button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
   );
 }

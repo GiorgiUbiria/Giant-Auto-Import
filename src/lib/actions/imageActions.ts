@@ -6,7 +6,7 @@ import { createServerAction } from "zsa";
 import { db } from "../drizzle/db";
 import { images } from "../drizzle/schema";
 import { isAdminProcedure } from "./authProcedures";
-import { deleteObjectFromBucket, fetchImageForDisplay, fetchImagesForDisplay } from "./bucketActions";
+import { deleteObjectFromBucket, fetchImageForDisplay, fetchImagesForDisplay, cleanUpBucketForVin } from "./bucketActions";
 
 export const getImagesAction = createServerAction()
   .input(z.object({
@@ -118,5 +118,35 @@ export const makeImageMainAction = isAdminProcedure
           await tx.update(images).set({ priority: null }).where(eq(images.imageKey, isMain[0].imageKey!));
           await tx.update(images).set({ priority: true }).where(eq(images.imageKey, imageKey));
         })
+    }
+  });
+
+export const removeAllImagesAction = isAdminProcedure
+  .createServerAction()
+  .input(z.object({
+    vin: z.string(),
+  }))
+  .output(z.object({
+    success: z.boolean(),
+    message: z.string(),
+  }))
+  .handler(async ({ input }) => {
+    const { vin } = input;
+
+    try {
+      await db.delete(images).where(eq(images.carVin, vin));
+
+      await cleanUpBucketForVin(vin);
+
+      return {
+        success: true,
+        message: `All images for VIN ${vin} have been removed successfully.`,
+      };
+    } catch (error) {
+      console.error(`Error removing images for VIN ${vin}:`, error);
+      return {
+        success: false,
+        message: `Failed to remove images for VIN ${vin}.`,
+      };
     }
   });

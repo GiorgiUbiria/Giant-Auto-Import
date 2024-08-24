@@ -180,6 +180,7 @@ export function ShippingCalculator({ style }: { style: string }) {
                               onSelect={(value) => {
                                 handleAuctionLocationChange(value);
                               }}
+                              className="text-primary"
                             >
                               <Check
                                 className={cn(

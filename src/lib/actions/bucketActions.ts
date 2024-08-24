@@ -10,7 +10,6 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import "dotenv/config";
 import { desc, eq } from "drizzle-orm";
-import { SQLiteTransaction } from "drizzle-orm/sqlite-core";
 import { z } from "zod";
 import { db } from "../drizzle/db";
 import {
@@ -282,4 +281,35 @@ export async function fetchImageForDisplay(
   };
 
   return result;
+}
+
+export async function cleanUpBucketForVin(vin: string): Promise<void> {
+  try {
+    const listObjectsParams = {
+      Bucket: bucketName,
+      Prefix: `${vin}/`,
+    };
+
+    let continuationToken;
+
+    do {
+      const listCommand = new ListObjectsV2Command({
+        ...listObjectsParams,
+        ContinuationToken: continuationToken,
+      });
+      const listedObjects: any = await S3Client.send(listCommand);
+
+      if (listedObjects.Contents) {
+        for (const item of listedObjects.Contents) {
+          if (item.Key) {
+            await deleteObjectFromBucket(item.Key);
+          }
+        }
+      }
+
+      continuationToken = listedObjects.NextContinuationToken;
+    } while (continuationToken);
+  } catch (error) {
+    console.error(`Error cleaning up the bucket for VIN ${vin}:`, error);
+  }
 }

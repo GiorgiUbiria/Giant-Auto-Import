@@ -25,7 +25,7 @@
   },
   "ShippingCalculator": {
     "title": "გადაზიდვის კალკულატორი",
-    "enterBid": "შეიყვანეთ თქვენი ფ��სი",
+    "enterBid": "შეიყვანეთ თქვენი ფასი",
     "selectAuction": "აირჩიეთ აუქციონი",
     "selectAuctionLocation": "აირჩიეთ აუქციონის ადგილმდებარეობა",
     "fromUSAPort": "აშშ-ს პორტიდან",

@@ -54,5 +54,104 @@
     "termsAndConditions": "Terms and conditions",
     "privacyPolicy": "Privacy policy",
     "copyright": "©Copyright 2024. Giant Auto Import"
+  },
+  "TermsAndConditions": {
+    "title": "Terms and Conditions",
+    "introduction": "These terms and conditions (\"Terms\", \"Agreement\") are an agreement between you (\"User\", \"You\") and Giant Auto Import (\"Giant Auto Import\", \"We\", \"Us\", \"Our\") governing your use of our website. This Agreement sets forth the general terms and conditions of your use of the Website and any of its products or services (collectively, \"Services\").",
+    "accountsTitle": "Accounts and Membership",
+    "accountsContent": "If you create an account on the Website, you are responsible for maintaining the security of your account and for any activities or actions occurring under your account. You agree to notify us immediately of any unauthorized access to or use of your account.",
+    "intellectualPropertyTitle": "Intellectual Property",
+    "intellectualPropertyContent": "The Website and its original content, features, and functionality are owned by Giant Auto Import and are protected by international copyright, trademark, patent, trade secret, and other intellectual property or proprietary rights laws.",
+    "userContentTitle": "User Content",
+    "userContentContent": "You retain ownership of any content you post on the Website (\"User Content\"). However, by posting User Content, you grant us a non-exclusive, worldwide, royalty-free, perpetual, irrevocable, sublicensable license to use, reproduce, adapt, publish, translate, and distribute it in any and all media.",
+    "limitationOfLiabilityTitle": "Limitation of Liability",
+    "limitationOfLiabilityContent": "To the fullest extent permitted by applicable law, in no event will Giant Auto Import be liable to any person for any indirect, incidental, special, punitive, cover or consequential damages arising out of or in connection with your use of the Website, whether or not Giant Auto Import has been advised of the possibility of such damages.",
+    "indemnificationTitle": "Indemnification",
+    "indemnificationContent": "You agree to indemnify and hold harmless Giant Auto Import and its affiliates, officers, directors, employees, agents, and licensors from and against any and all losses, expenses, damages, liabilities, and costs, including attorneys' fees, arising out of or related to your use of the Website or any violation of these Terms.",
+    "terminationTitle": "Termination",
+    "terminationContent": "We may terminate or suspend your access to the Website immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach these Terms.",
+    "governingLawTitle": "Governing Law",
+    "governingLawContent": "This Agreement is governed by and construed in accordance with the laws of Georgia, without regard to its conflict of law principles.",
+    "changesTitle": "Changes to This Agreement",
+    "changesContent": "We reserve the right, at our sole discretion, to modify or replace these Terms at any time. By continuing to access or use our Website after those revisions become effective, you agree to be bound by the revised terms.",
+    "contactTitle": "Contact Information",
+    "contactContent": "If you have any questions about these Terms, please contact us at info@giantautoimport.com.",
+    "agreement": "By using the Website, you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions."
+  },
+  "PrivacyPolicy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: 2024-08-21",
+    "introduction": "At Giant Auto Import, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy outlines how we collect, use, disclose, and safeguard your data when you use our website and services.",
+    "informationWeCollect": "Information We Collect",
+    "informationWeCollectContent": "We may collect the following types of information:",
+    "personalInfo": "Personal information (e.g., name, email address, phone number)",
+    "paymentInfo": "Payment information",
+    "vehicleInfo": "Vehicle information",
+    "usageData": "Usage data and analytics",
+    "howWeUseInfo": "How We Use Your Information",
+    "howWeUseInfoContent": "We use the collected information for various purposes, including:",
+    "providingServices": "Providing and improving our services",
+    "processingTransactions": "Processing transactions",
+    "communicating": "Communicating with you",
+    "analyzingUsage": "Analyzing usage patterns",
+    "complyingLegal": "Complying with legal obligations",
+    "dataSecurity": "Data Security",
+    "dataSecurityContent": "We implement appropriate security measures to protect your personal information from unauthorized access, alteration, disclosure, or destruction.",
+    "thirdPartyServices": "Third-Party Services",
+    "thirdPartyServicesContent": "We may use third-party services that collect, monitor, and analyze data. These third parties have their own privacy policies addressing how they use such information.",
+    "yourRights": "Your Rights",
+    "yourRightsContent": "You have the right to:",
+    "accessInfo": "Access your personal information",
+    "correctInfo": "Correct inaccurate or incomplete data",
+    "deleteInfo": "Request deletion of your data",
+    "objectProcessing": "Object to the processing of your data",
+    "requestCopy": "Request a copy of your data",
+    "changes": "Changes to This Privacy Policy",
+    "changesContent": "We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the \"Last updated\" date.",
+    "contactUs": "Contact Us",
+    "contactUsContent": "If you have any questions about this Privacy Policy, please contact us at:",
+    "email": "Email",
+    "phone": "Phone"
+  },
+  "ContactPage": {
+    "title": "Contact Us",
+    "subtitle": "Get in touch with us",
+    "largeText": "We are here to help you. If you have any questions, please contact us.",
+    "name": "Your name",
+    "namePlaceholder": "Enter your name",
+    "email": "Your email",
+    "emailPlaceholder": "Your email address",
+    "message": "Your message",
+    "messagePlaceholder": "Write your message...",
+    "sendMessage": "Send Message",
+    "successToast": "Email sent successfully!",
+    "errorToast": "Failed to send email. Please try again later."
+  },
+  "AboutPage": {
+    "title": "Welcome to Giant Auto Import",
+    "description": "Giant Auto Import is an auto importing company staffed by highly qualified professionals. Our main goal is to make the process of buying and delivering cars more transparent. We aim to make the desired car available for all customers, simplifying and securing the purchase and shipping process. Our team will help you choose the right car, inspect it, and transport it to Georgia. Creating a comfortable environment for the customer is our top priority.",
+    "services": {
+      "consultation": {
+        "title": "Free Auto-Expert Consultation",
+        "description": "Our free consultation with an auto-expert includes personalized advice on selecting the right car based on your needs, budget, and preferences. The expert will also provide insights into the current market trends and offer recommendations for the best deals available."
+      },
+      "carSelection": {
+        "title": "Car Selection from Leading Auctions",
+        "description": "We provide access to a wide range of cars from the world's leading auctions. Our platform allows you to browse, compare, and select your desired cars. We also offer assistance in understanding auction processes and making informed bids."
+      },
+      "liveAuction": {
+        "title": "Live Auction Participation",
+        "description": "Live auction participation allows you to bid on cars in real-time. Our team can represent you in live auctions, providing you with updates and guidance throughout the process to ensure you secure the best deals."
+      },
+      "historyCheck": {
+        "title": "Vehicle History Check",
+        "description": "Checking the vehicle's history is crucial to ensure you are making a safe investment. We provide comprehensive vehicle history reports that include past ownership, accident records, maintenance history, and more to give you peace of mind before purchasing."
+      },
+      "shipping": {
+        "title": "Comprehensive Shipping Service",
+        "description": "Our shipping service covers transportation from the port of Georgia to any location within Georgia and beyond. We ensure safe and timely delivery, handling all logistics and customs clearance to provide a hassle-free experience."
+      }
+    },
+    "learnMore": "Learn More"
   }
 }

@@ -1,87 +1,67 @@
-export default function Page() {
+import { getTranslations } from 'next-intl/server';
+
+export default async function Page() {
+  const t = await getTranslations('PrivacyPolicy');
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20 text-primary">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-4">Privacy Policy</h1>
+        <h1 className="text-3xl font-bold mb-4">{t('title')}</h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Last updated: 2024-08-21
+          {t('lastUpdated')}
         </p>
       </div>
       <div className="prose dark:prose-invert max-w-none">
-        <p>
-          At Giant Auto Import, we are committed to protecting your privacy and
-          ensuring the security of your personal information. This Privacy
-          Policy outlines how we collect, use, disclose, and safeguard your data
-          when you use our website and services.
-        </p>
+        <p>{t('introduction')}</p>
 
         <h2 className="text-2xl font-semibold mt-8 mb-4">
-          Information We Collect
+          {t('informationWeCollect')}
         </h2>
-        <p>We may collect the following types of information:</p>
+        <p>{t('informationWeCollectContent')}</p>
         <ul>
-          <li>
-            Personal information (e.g., name, email address, phone number)
-          </li>
-          <li>Payment information</li>
-          <li>Vehicle information</li>
-          <li>Usage data and analytics</li>
+          <li>{t('personalInfo')}</li>
+          <li>{t('paymentInfo')}</li>
+          <li>{t('vehicleInfo')}</li>
+          <li>{t('usageData')}</li>
         </ul>
 
         <h2 className="text-2xl font-semibold mt-8 mb-4">
-          How We Use Your Information
+          {t('howWeUseInfo')}
         </h2>
-        <p>We use the collected information for various purposes, including:</p>
+        <p>{t('howWeUseInfoContent')}</p>
         <ul>
-          <li>Providing and improving our services</li>
-          <li>Processing transactions</li>
-          <li>Communicating with you</li>
-          <li>Analyzing usage patterns</li>
-          <li>Complying with legal obligations</li>
+          <li>{t('providingServices')}</li>
+          <li>{t('processingTransactions')}</li>
+          <li>{t('communicating')}</li>
+          <li>{t('analyzingUsage')}</li>
+          <li>{t('complyingLegal')}</li>
         </ul>
 
-        <h2 className="text-2xl font-semibold mt-8 mb-4">Data Security</h2>
-        <p>
-          We implement appropriate security measures to protect your personal
-          information from unauthorized access, alteration, disclosure, or
-          destruction.
-        </p>
+        <h2 className="text-2xl font-semibold mt-8 mb-4">{t('dataSecurity')}</h2>
+        <p>{t('dataSecurityContent')}</p>
 
         <h2 className="text-2xl font-semibold mt-8 mb-4">
-          Third-Party Services
+          {t('thirdPartyServices')}
         </h2>
-        <p>
-          We may use third-party services that collect, monitor, and analyze
-          data. These third parties have their own privacy policies addressing
-          how they use such information.
-        </p>
+        <p>{t('thirdPartyServicesContent')}</p>
 
-        <h2 className="text-2xl font-semibold mt-8 mb-4">Your Rights</h2>
-        <p>You have the right to:</p>
+        <h2 className="text-2xl font-semibold mt-8 mb-4">{t('yourRights')}</h2>
+        <p>{t('yourRightsContent')}</p>
         <ul>
-          <li>Access your personal information</li>
-          <li>Correct inaccurate or incomplete data</li>
-          <li>Request deletion of your data</li>
-          <li>Object to the processing of your data</li>
-          <li>Request a copy of your data</li>
+          <li>{t('accessInfo')}</li>
+          <li>{t('correctInfo')}</li>
+          <li>{t('deleteInfo')}</li>
+          <li>{t('objectProcessing')}</li>
+          <li>{t('requestCopy')}</li>
         </ul>
 
-        <h2 className="text-2xl font-semibold mt-8 mb-4">
-          Changes to This Privacy Policy
-        </h2>
-        <p>
-          We may update our Privacy Policy from time to time. We will notify you
-          of any changes by posting the new Privacy Policy on this page and
-          updating the &ldquo;Last updated&rdquo; date.
-        </p>
+        <h2 className="text-2xl font-semibold mt-8 mb-4">{t('changes')}</h2>
+        <p>{t('changesContent')}</p>
 
-        <h2 className="text-2xl font-semibold mt-8 mb-4">Contact Us</h2>
+        <h2 className="text-2xl font-semibold mt-8 mb-4">{t('contactUs')}</h2>
+        <p>{t('contactUsContent')}</p>
         <p>
-          If you have any questions about this Privacy Policy, please contact us
-          at:
-        </p>
-        <p>
-          Email:{" "}
+          {t('email')}:{" "}
           <a
             href="mailto:giant.autoimporti@gmail.com"
             className="text-blue-600 dark:text-blue-400"
@@ -89,7 +69,7 @@ export default function Page() {
             giant.autoimporti@gmail.com
           </a>
           <br />
-          Phone:{" "}
+          {t('phone')}:{" "}
           <a
             href="tel:+995555550553"
             className="text-blue-600 dark:text-blue-400"

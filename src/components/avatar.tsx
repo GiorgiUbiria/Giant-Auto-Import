@@ -16,6 +16,7 @@ import { useTranslations } from 'next-intl';
 import Link from "next/link";
 import { toast } from "sonner";
 import { useServerAction } from "zsa-react";
+import { useMedia } from "react-use";
 
 type AvatarProps = {
 	user: User | null;
@@ -24,6 +25,7 @@ type AvatarProps = {
 const Avatar = ({ user }: AvatarProps) => {
 	const { isPending, execute } = useServerAction(logoutAction);
 	const t = useTranslations('Auth');
+	const isMobile = useMedia('(max-width: 768px)', false);
 
 	return (
 		<>
@@ -34,8 +36,14 @@ const Avatar = ({ user }: AvatarProps) => {
 							<CircleUser className="h-[2rem] w-[2rem]" />
 							<span className="sr-only">Toggle user menu</span>
 						</Button>
-						<p className="text-white text-xl font-bold ml-4"> {user?.role.includes("CUSTOMER") ? user?.fullName : t("role_admin")}</p>
-						<ChevronDown className="size-4 ml-1 mt-1 text-white font-bold" />
+						{!isMobile && (
+							<>
+								<p className="text-white text-xl font-bold ml-4">
+									{user?.role.includes("CUSTOMER") ? user?.fullName : t("role_admin")}
+								</p>
+								<ChevronDown className="size-4 ml-1 mt-1 text-white font-bold" />
+							</>
+						)}
 					</div>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end">

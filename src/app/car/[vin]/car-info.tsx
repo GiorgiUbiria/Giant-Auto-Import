@@ -28,21 +28,21 @@ function formatDateToInputValue(date: Date | null): string {
 export default function CarInfo({ car }: Props) {
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="flex flex-row items-start bg-gray-300 dark:bg-gray-700">
-        <div className="grid gap-0.5">
+      <CardHeader className="flex flex-col sm:flex-row items-start bg-gray-300 dark:bg-gray-700 p-4 sm:p-6">
+        <div className="grid gap-0.5 mb-4 sm:mb-0">
           <CardTitle className="group flex items-center gap-2 text-xl">
             <div>
-              <h2 className="text-2xl"> {car.make + "   " + car.model} </h2>
+              <h2 className="text-xl sm:text-2xl"> {car.make + "   " + car.model} </h2>
               <div className="flex gap-2 items-center">
-                VIN - {car.vin}
+                <span className="text-sm sm:text-base">VIN - {car.vin}</span>
                 <CopyToClipBoard text={car.vin} />
               </div>
             </div>
           </CardTitle>
         </div>
-        <div className="ml-auto flex items-center gap-1 mr-6">
+        <div className="sm:ml-auto flex items-center gap-1">
           {car.trackingLink &&
-            <Button size="sm" variant="outline" className="h-8 gap-1">
+            <Button size="sm" variant="outline" className="h-8 gap-1 text-xs sm:text-sm">
               <Truck className="h-3.5 w-3.5" />
               <Link href={car.trackingLink}>
                 Track Car
@@ -51,10 +51,10 @@ export default function CarInfo({ car }: Props) {
           }
         </div>
       </CardHeader>
-      <CardContent className="p-6 text-sm">
-        <div className="grid gap-12">
+      <CardContent className="p-4 sm:p-6 text-sm">
+        <div className="grid gap-8">
           <div className="flex flex-col gap-4">
-            <h3 className="font-semibold text-4xl">Tracking Info:</h3>
+            <h3 className="font-semibold text-2xl sm:text-4xl">Tracking Info:</h3>
             <div className="flex flex-col gap-4">
               <div className="flex justify-between">
                 <p className="text-xl text-primary"> Purchase Date: </p>
@@ -84,7 +84,7 @@ export default function CarInfo({ car }: Props) {
           </div>
           <Separator className="my-2 w-full" />
           <div className="flex flex-col gap-4">
-            <h3 className="font-semibold text-4xl">Shipping Info:</h3>
+            <h3 className="font-semibold text-2xl sm:text-4xl">Shipping Info:</h3>
             <div className="flex flex-col gap-4">
               <div className="flex justify-between">
                 <p className="text-xl text-primary"> Body Type: </p>

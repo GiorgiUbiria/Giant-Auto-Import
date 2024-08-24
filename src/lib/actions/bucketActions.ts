@@ -10,10 +10,13 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import "dotenv/config";
 import { desc, eq } from "drizzle-orm";
-import { SQLiteTransaction } from "drizzle-orm/sqlite-core";
 import { z } from "zod";
 import { db } from "../drizzle/db";
-import { images, insertImageSchema, selectImageSchema } from "../drizzle/schema";
+import {
+  images,
+  insertImageSchema,
+  selectImageSchema,
+} from "../drizzle/schema";
 import { isAdminProcedure } from "./authProcedures";
 
 const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
@@ -21,9 +24,11 @@ const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
 const secretAccessKey = process.env.CLOUDFLARE_SECRET_ACCESS_KEY as string;
 const bucketName = process.env.CLOUDFLARE_BUCKET_NAME as string;
 
-const SelectImageSchema = selectImageSchema.omit({ id: true, }).merge(z.object({
-  url: z.string(),
-}))
+const SelectImageSchema = selectImageSchema.omit({ id: true }).merge(
+  z.object({
+    url: z.string(),
+  })
+);
 type SelectImageType = z.infer<typeof SelectImageSchema>;
 
 const Uint8ArraySchema = z
@@ -40,87 +45,98 @@ const S3Client = new S3({
 });
 
 async function getFileCount(prefix: string): Promise<number> {
-  const command = new ListObjectsV2Command({
-    Bucket: bucketName,
-    Prefix: prefix,
-  });
+  try {
+    const command = new ListObjectsV2Command({
+      Bucket: bucketName,
+      Prefix: prefix,
+    });
 
-  let fileCount = 0;
-  let truncated: boolean = true;
+    let fileCount = 0;
+    let truncated: boolean = true;
 
-  while (truncated) {
-    const response = await S3Client.send(command);
-    fileCount += response.Contents?.length ?? 0;
-    truncated = response.IsTruncated as boolean;
-    if (truncated) {
-      command.input.ContinuationToken = response.NextContinuationToken;
+    while (truncated) {
+      const response = await S3Client.send(command);
+      fileCount += response.Contents?.length ?? 0;
+      truncated = response.IsTruncated as boolean;
+      if (truncated) {
+        command.input.ContinuationToken = response.NextContinuationToken;
+      }
     }
-  }
 
-  return fileCount;
+    return fileCount;
+  } catch (error) {
+    console.error("Error getting file count:", error);
+    return 0;
+  }
 }
 
 export const handleUploadImagesAction = isAdminProcedure
   .createServerAction()
-  .input(z.object({
-    vin: z.string(),
-    images: z.array(z.object({
-      buffer: Uint8ArraySchema,
-      size: z.number(),
-      name: z.string(),
-      type: z.enum(["AUCTION", "WAREHOUSE", "DELIVERED", "PICK_UP"]),
-    })),
-  }))
+  .input(
+    z.object({
+      vin: z.string(),
+      images: z.array(
+        z.object({
+          buffer: Uint8ArraySchema,
+          size: z.number(),
+          name: z.string(),
+          type: z.enum(["AUCTION", "WAREHOUSE", "DELIVERED", "PICK_UP"]),
+        })
+      ),
+    })
+  )
   .handler(async ({ input }) => {
     const { vin, images: imageData } = input;
-    const promises = imageData.map(async (file) => {
-      const prefix = `${vin}/${file.type}/`;
-      const existingFileCount = await getFileCount(prefix);
+    const uploadedImages: string[] = [];
 
-      const key = `${prefix}${existingFileCount + 1}.png`;
+    for (const file of imageData) {
+      try {
+        const prefix = `${vin}/${file.type}/`;
+        const existingFileCount = await getFileCount(prefix);
 
-      const command = new PutObjectCommand({
-        Bucket: bucketName,
-        Key: key,
-        ContentLength: file.size,
-        ContentType: "image/png",
-      });
+        const key = `${prefix}${existingFileCount + 1}.png`;
 
-      const signedUrl = await getSignedUrl(S3Client, command, {
-        expiresIn: 3600,
-      });
+        const command = new PutObjectCommand({
+          Bucket: bucketName,
+          Key: key,
+          ContentLength: file.size,
+          ContentType: "image/png",
+        });
 
-      const insertValues: z.infer<typeof insertImageSchema> = {
-        carVin: vin,
-        imageType: file.type,
-        imageKey: key,
-        priority: null,
-      }
+        const signedUrl = await getSignedUrl(S3Client, command, {
+          expiresIn: 3600,
+        });
 
-      await db.insert(images).values(insertValues);
+        const insertValues: z.infer<typeof insertImageSchema> = {
+          carVin: vin,
+          imageType: file.type,
+          imageKey: key,
+          priority: null,
+        };
 
-      return signedUrl;
-    });
+        await db.insert(images).values(insertValues);
 
-    const urls = await Promise.all(promises);
-
-    await Promise.all(
-      urls.map((url: string, index: number) =>
-        fetch(url, {
+        await fetch(signedUrl, {
           method: "PUT",
           headers: {
             "Content-Type": "image/png",
           },
-          body: imageData[index].buffer,
-        }),
-      ),
-    );
+          body: file.buffer,
+        });
+
+        uploadedImages.push(key);
+      } catch (error) {
+        console.error(`Error uploading image for VIN ${vin}:`, error);
+      }
+    }
+
+    return uploadedImages;
   });
 
 export async function handleImages(
   type: string,
   vin: string,
-  sizes: number[],
+  sizes: number[]
 ): Promise<string[]> {
   const prefix = `${vin}/${type}/`;
   const existingFileCount = await getFileCount(prefix);
@@ -144,7 +160,7 @@ export async function handleImages(
       });
 
       return signedUrl;
-    }),
+    })
   );
 
   const insertUrls = keys.map((key, index) => ({
@@ -213,11 +229,13 @@ export async function getSignedUrlForKey(key: string): Promise<string> {
       Bucket: bucketName,
       Key: key,
     }),
-    { expiresIn: 3600 },
+    { expiresIn: 3600 }
   );
 }
 
-export async function fetchImagesForDisplay(vin: string): Promise<SelectImageType[]> {
+export async function fetchImagesForDisplay(
+  vin: string
+): Promise<SelectImageType[]> {
   const imageRecords = await db
     .select()
     .from(images)
@@ -234,13 +252,15 @@ export async function fetchImagesForDisplay(vin: string): Promise<SelectImageTyp
         imageType: record.imageType,
         priority: record.priority,
       };
-    }),
+    })
   );
 
   return imageData;
 }
 
-export async function fetchImageForDisplay(vin: string): Promise<SelectImageType | null> {
+export async function fetchImageForDisplay(
+  vin: string
+): Promise<SelectImageType | null> {
   const [imageRecord] = await db
     .select()
     .from(images)
@@ -250,13 +270,46 @@ export async function fetchImageForDisplay(vin: string): Promise<SelectImageType
 
   if (!imageRecord) return null;
 
-  const url = await getSignedUrlForKey(imageRecord.imageKey!)
+  const url = await getSignedUrlForKey(imageRecord.imageKey!);
 
-  return {
+  const result = {
     url: url,
     carVin: vin,
     imageKey: imageRecord.imageKey,
     imageType: imageRecord.imageType,
     priority: imageRecord.priority,
   };
+
+  return result;
+}
+
+export async function cleanUpBucketForVin(vin: string): Promise<void> {
+  try {
+    const listObjectsParams = {
+      Bucket: bucketName,
+      Prefix: `${vin}/`,
+    };
+
+    let continuationToken;
+
+    do {
+      const listCommand = new ListObjectsV2Command({
+        ...listObjectsParams,
+        ContinuationToken: continuationToken,
+      });
+      const listedObjects: any = await S3Client.send(listCommand);
+
+      if (listedObjects.Contents) {
+        for (const item of listedObjects.Contents) {
+          if (item.Key) {
+            await deleteObjectFromBucket(item.Key);
+          }
+        }
+      }
+
+      continuationToken = listedObjects.NextContinuationToken;
+    } while (continuationToken);
+  } catch (error) {
+    console.error(`Error cleaning up the bucket for VIN ${vin}:`, error);
+  }
 }

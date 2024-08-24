@@ -2,8 +2,9 @@
 
 import {
   deleteImageAction,
-  getImagesAction,
+  getImageKeys,
   makeImageMainAction,
+  removeAllImagesAction,
 } from "@/lib/actions/imageActions";
 import {
   useServerActionMutation,
@@ -19,13 +20,25 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
+
 export const EditImages = ({ vin }: { vin: string }) => {
   const queryClient = useQueryClient();
+  const publicUrl = process.env.NEXT_PUBLIC_BUCKET_URL as string
 
-  const { isLoading, data } = useServerActionQuery(getImagesAction, {
+  const { isLoading, data } = useServerActionQuery(getImageKeys, {
     input: {
       vin: vin,
     },
@@ -39,9 +52,7 @@ export const EditImages = ({ vin }: { vin: string }) => {
         toast.error(errorMessage);
       },
       onSuccess: async () => {
-        const successMessage = "Image deleted successfully!";
-        toast.success(successMessage);
-
+        const successMessage = "Image deleted successfully!"; toast.success(successMessage);
         await queryClient.invalidateQueries({
           queryKey: ["getImagesForCar", vin],
           refetchType: "active",
@@ -66,6 +77,23 @@ export const EditImages = ({ vin }: { vin: string }) => {
       },
     });
 
+  const { isPending: removeAllPending, mutate: removeAllMutate } =
+    useServerActionMutation(removeAllImagesAction, {
+      onError: (error) => {
+        const errorMessage = error?.data || "Failed to remove all images";
+        toast.error(errorMessage);
+      },
+      onSuccess: async () => {
+        const successMessage = "All images removed successfully!";
+        toast.success(successMessage);
+
+        await queryClient.invalidateQueries({
+          queryKey: ["getImagesForCar", vin],
+          refetchType: "active",
+        });
+      },
+    });
+
   const LoadingState = () => {
     return (
       <div className="w-full h-full grid place-items-center">
@@ -77,6 +105,38 @@ export const EditImages = ({ vin }: { vin: string }) => {
   return (
     <div className="flex flex-col mb-8">
       <ImagesForm vin={vin} />
+      {data && data.length > 0 && (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" disabled={removeAllPending}>
+              {removeAllPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Remove All Images"}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="text-primary">
+            <DialogHeader>
+              <DialogTitle>Remove All Images</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to remove all images? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </DialogClose>
+              <DialogClose asChild>
+                <Button
+                  disabled={removeAllPending}
+                  onClick={() => {
+                    removeAllMutate({ vin: vin });
+                  }}
+                >
+                  {removeAllPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm"}
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
         {isLoading ? (
           <LoadingState />
@@ -87,7 +147,7 @@ export const EditImages = ({ vin }: { vin: string }) => {
                 <TooltipTrigger className="w-full">
                   <div className="w-full aspect-[3/2] relative rounded-lg overflow-hidden">
                     <Image
-                      src={image.url}
+                      src={`${publicUrl}/${image.imageKey}`}
                       alt="Image"
                       layout="fill"
                       objectFit="cover"

@@ -4,22 +4,24 @@ import { Button } from "@/components/ui/button";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
+const publicUrl = process.env.NEXT_PUBLIC_BUCKET_URL!;
+
 export default function DownloadButton({
   content,
   vin,
 }: {
-  content: {imageKey: string, url: string}[] | undefined;
+  content: {imageKey: string}[] | undefined;
   vin: string;
 }) {
   const handleDownload = async () => {
     if (content && content.length > 0) {
       const zip = new JSZip();
 
-      content.forEach((image, index) => {
-        if (image.url) {
+  content.forEach((image, index) => {
+        if (image.imageKey) {
           zip.file(
             `image_${index + 1}.jpg`,
-            fetch(image.url).then((response) => response.blob()),
+            fetch(`${publicUrl}/${image.imageKey}`).then((response) => response.blob()),
           );
         }
       });

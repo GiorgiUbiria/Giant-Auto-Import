@@ -10,9 +10,6 @@ const nextConfig = {
   },
   experimental: {
     serverComponentsExternalPackages: ["@node-rs/argon2", "nodemailer"],
-    serverActions: {
-      bodySizeLimit: "10mb",
-    },
   },
   images: {
     unoptimized: true,
@@ -20,6 +17,12 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "giantautoimportimages.ec17bb88a597d2c1d369945a578a8403.r2.cloudflarestorage.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "pub-790f032d851548ee80b9672b151ea280.r2.dev",
         port: "",
         pathname: "/**",
       },

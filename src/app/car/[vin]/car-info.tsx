@@ -33,7 +33,7 @@ export default function CarInfo({ car }: Props) {
           <CardTitle className="group flex items-center gap-2 text-xl">
             <div>
               <h2 className="text-2xl"> {car.make + "   " + car.model} </h2>
-              <div>
+              <div className="flex gap-2 items-center">
                 VIN - {car.vin}
                 <CopyToClipBoard text={car.vin} />
               </div>

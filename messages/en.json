@@ -153,5 +153,20 @@
       }
     },
     "learnMore": "Learn More"
+  },
+  "HowTo": {
+    "title": "How To Install AuctionGate Extension",
+    "step1": "Step 1: Visit the Copart website",
+    "step1Description": "Go to www.copart.com in your web browser.",
+    "step2": "Step 2: Look for the AuctionGate.io extension",
+    "step2Description": "In the top right corner of the Copart website, you'll see the AuctionGate.io extension icon.",
+    "step3": "Step 3: Click on the extension icon",
+    "step3Description": "Click on the AuctionGate.io icon to open the extension panel.",
+    "step4": "Step 4: Log in or sign up",
+    "step4Description": "If you have an account, enter your Email/User ID and Password, then click 'Login'. If you don't have an account, click 'Sing Up' to create one.",
+    "note": "Note: The AuctionGate.io extension allows you to place bids on Copart and IAAI auctions directly from the Copart website.",
+    "imageAlt1": "Copart website with AuctionGate.io extension",
+    "imageAlt2": "AuctionGate.io extension login panel",
+    "navbar": "Extension"
   }
 }

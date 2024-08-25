@@ -13,6 +13,7 @@ import { selectCarSchema } from "@/lib/drizzle/schema";
 import { z } from "zod";
 import { TableImage } from "./table-image";
 import { Reciever } from "./reciever";
+import { TotalFeeDetails } from "./total-fee-details";
 
 const SelectSchema = selectCarSchema;
 type SelectSchemaType = z.infer<typeof SelectSchema>;
@@ -204,5 +205,19 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   {
     accessorKey: "totalFee",
     header: "Total Fee",
+    cell: ({ row }) => {
+      const purchaseFee = row.original.purchaseFee as SelectSchemaType["purchaseFee"];
+      const auctionFee = row.original.auctionFee as SelectSchemaType["auctionFee"];
+      const gateFee = row.original.gateFee as SelectSchemaType["gateFee"];
+      const titleFee = row.original.titleFee as SelectSchemaType["titleFee"];
+      const environmentalFee = row.original.environmentalFee as SelectSchemaType["environmentalFee"];
+      const virtualBidFee = row.original.virtualBidFee as SelectSchemaType["virtualBidFee"];
+      const shippingFee = row.original.shippingFee as SelectSchemaType["shippingFee"];
+      const groundFee = row.original.groundFee as SelectSchemaType["groundFee"];
+      const oceanFee = row.original.oceanFee as SelectSchemaType["oceanFee"];
+      const totalFee = row.original.totalFee as SelectSchemaType["totalFee"];
+
+      return <TotalFeeDetails purchaseFee={purchaseFee} auctionFee={auctionFee || 0} gateFee={gateFee || 0} titleFee={titleFee || 0} environmentalFee={environmentalFee || 0} virtualBidFee={virtualBidFee || 0} shippingFee={shippingFee || 0} groundFee={groundFee || 0} oceanFee={oceanFee || 0} totalFee={totalFee || 0} />;
+    },
   },
 ];

@@ -21,6 +21,7 @@ import { getTranslations } from "next-intl/server";
 const Navbar = async () => {
   const { user } = await getAuth();
   const t = await getTranslations("Navbar");
+  const tHowTo = await getTranslations("HowTo");
 
   const navigationLinks = [
     {
@@ -38,6 +39,10 @@ const Navbar = async () => {
     {
       href: "/calculator",
       label: t("calculator"),
+    },
+    {
+      href: "/how-to",
+      label: tHowTo("navbar"),
     },
   ];
 

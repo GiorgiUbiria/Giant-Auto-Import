@@ -1,18 +1,16 @@
-import { useTranslations } from 'next-intl';
-import Image from "next/image";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
 } from "@/components/ui/accordion";
 import { getTranslations } from 'next-intl/server';
-
-import ServiceOne from "../../../public/service1.png";
-import ServiceTwo from "../../../public/service2.png";
-import ServiceThree from "../../../public/service3.png";
-import ServiceFour from "../../../public/service4.png";
-import ServiceFive from "../../../public/service5.png";
+import Image from "next/image";
+import ServiceOne from "../../../public/service1.jpeg";
+import ServiceTwo from "../../../public/service2.jpeg";
+import ServiceThree from "../../../public/service3.jpeg";
+import ServiceFour from "../../../public/service4.jpeg";
+import ServiceFive from "../../../public/service5.jpeg";
 
 export default async function Page() {
   const t = await getTranslations('AboutPage');
@@ -36,45 +34,47 @@ export default async function Page() {
             {t('description')}
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-          {services.slice(0, 3).map((service, index) => (
-            <div key={index} className="max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-              <Image src={service.image} alt={t(`services.${service.key}.title`)} className="w-full max-h-64 rounded-md" />
-              <div className="p-5">
-                <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                  {t(`services.${service.key}.title`)}
-                </h5>
-                <Accordion type="single" collapsible className="w-full rounded-md text-gray-900 dark:text-white">
-                  <AccordionItem value="item-1">
-                    <AccordionTrigger>{t('learnMore')}</AccordionTrigger>
-                    <AccordionContent>
-                      {t(`services.${service.key}.description`)}
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+        <div className="w-full mt-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            {services.slice(0, 3).map((service, index) => (
+              <div key={index} className="w-full bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 flex flex-col">
+                <Image src={service.image} alt={t(`services.${service.key}.title`)} className="w-full h-64 object-cover rounded-t-lg" />
+                <div className="p-5 flex-grow flex flex-col">
+                  <h5 className="mb-4 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                    {t(`services.${service.key}.title`)}
+                  </h5>
+                  <Accordion type="single" collapsible className="w-full rounded-md text-gray-900 dark:text-white mt-auto">
+                    <AccordionItem value="item-1">
+                      <AccordionTrigger>{t('learnMore')}</AccordionTrigger>
+                      <AccordionContent>
+                        {t(`services.${service.key}.description`)}
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-16">
-          {services.slice(3).map((service, index) => (
-            <div key={index} className="max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-              <Image src={service.image} alt={t(`services.${service.key}.title`)} className="w-full max-h-64 rounded-md" />
-              <div className="p-5">
-                <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                  {t(`services.${service.key}.title`)}
-                </h5>
-                <Accordion type="single" collapsible className="w-full rounded-md text-gray-900 dark:text-white">
-                  <AccordionItem value="item-1">
-                    <AccordionTrigger>{t('learnMore')}</AccordionTrigger>
-                    <AccordionContent>
-                      {t(`services.${service.key}.description`)}
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-[66.67%] mx-auto">
+            {services.slice(3).map((service, index) => (
+              <div key={index} className="w-full bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 flex flex-col">
+                <Image src={service.image} alt={t(`services.${service.key}.title`)} className="w-full h-64 object-cover rounded-t-lg" />
+                <div className="p-5 flex-grow flex flex-col">
+                  <h5 className="mb-4 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                    {t(`services.${service.key}.title`)}
+                  </h5>
+                  <Accordion type="single" collapsible className="w-full rounded-md text-gray-900 dark:text-white mt-auto">
+                    <AccordionItem value="item-1">
+                      <AccordionTrigger>{t('learnMore')}</AccordionTrigger>
+                      <AccordionContent>
+                        {t(`services.${service.key}.description`)}
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>

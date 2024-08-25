@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Giant Auto Import
+
+Giant Auto Import is a web application for an auto importing company, providing services to help customers purchase and import vehicles.
+
+## Features
+
+- User authentication and role-based authorization
+- Vehicle browsing and search
+- Shipping calculator
+- Admin panel for managing users and vehicles
+- Multi-language support (English, Georgian, Russian)
+- Image handling and ZIP download
+- Contact form
+
+## Tech Stack
+
+- Next.js 14
+- React 18
+- TypeScript
+- Tailwind CSS
+- Drizzle ORM
+- SQLite database
+- Lucia for authentication
+- AWS S3 for image storage
+- React Email for email sending
+- Zod for schema validation
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js 16.0.0 or later
+- npm or yarn
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Clone the repository:
+   ```
+   git clone https://github.com/your-username/giant-auto-import.git
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+2. Install dependencies:
+   ```
+   cd giant-auto-import
+   npm install
+   ```
 
-## Learn More
+3. Set up environment variables:
+   Create a `.env.local` file in the root directory and add the following variables:
+   ```
+   NEXT_PUBLIC_BUCKET_URL=your_s3_bucket_url
+   DATABASE_URL=your_database_url
+   AWS_ACCESS_KEY_ID=your_aws_access_key
+   AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+4. Run the development server:
+   ```
+   npm run dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+- `src/app`: Next.js app router and page components
+- `src/components`: Reusable React components
+- `src/lib`: Utility functions, database setup, and server actions
+- `src/messages`: Internationalization JSON files
+- `public`: Static assets
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Key Components
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- `AuthActions`: Handles user authentication (login, register, logout)
+- `DownloadButton`: Allows users to download vehicle images as a ZIP file
+- `ShippingCalculator`: Calculates shipping costs for vehicles
+- `LocaleSwitcher`: Enables language switching
+
+## Deployment
+
+This project is set up for deployment on Vercel. Connect your GitHub repository to Vercel for automatic deployments.
+
+## Contributing
+
+1. Fork the repository
+2. Create a new branch: `git checkout -b feature-name`
+3. Make your changes and commit them: `git commit -m 'Add some feature'`
+4. Push to the branch: `git push origin feature-name`
+5. Submit a pull request
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+## Contact
+
+For any inquiries, please contact us at info@giantautoimport.com.

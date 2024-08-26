@@ -29,7 +29,7 @@ export const TotalFeeDetails = ({ purchaseFee, auctionFee, gateFee, titleFee, en
         </HoverCardTrigger>
         <HoverCardContent>
           <div>
-            <h3 className="font-bold mb-2">Total Purchase Fee: {purchaseFee}$</h3>
+            <h3 className="font-bold mb-2">Total Purchase Fee: {purchaseFee + auctionFee + gateFee + titleFee + environmentalFee + virtualBidFee}$</h3>
             <ul className="list-none pl-4 mb-4">
               <li>Base Purchase Fee: {purchaseFee }$</li>
               <li>+ Auction Fee: {auctionFee}$</li>
@@ -38,7 +38,7 @@ export const TotalFeeDetails = ({ purchaseFee, auctionFee, gateFee, titleFee, en
               <li>+ Environmental Fee: {environmentalFee}$</li>
               <li>+ Virtual Bid Fee: {virtualBidFee}$</li>
             </ul>
-            <p className="font-semibold text-sm pl-4">= Total Purchase Fee: {purchaseFee}$</p>
+            <p className="font-semibold text-sm pl-4">= Total Purchase Fee: {purchaseFee + auctionFee + gateFee + titleFee + environmentalFee + virtualBidFee}$</p>
             <Separator className="my-2" />
             <h3 className="font-bold mb-2">Shipping Fee: {shippingFee}$</h3>
             <ul className="list-none pl-4">

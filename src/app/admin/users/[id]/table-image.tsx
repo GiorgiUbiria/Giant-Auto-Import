@@ -4,7 +4,7 @@ import { getImageAction } from "@/lib/actions/imageActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
-import NoImage from "../../../../public/no-car-image.jpg";
+import NoImage from "../../../../../public/no-car-image.jpg";
 
 export const TableImage = ({ vin }: { vin: string }) => {
   const { isLoading, data } = useServerActionQuery(getImageAction, {

@@ -24,6 +24,7 @@ export const Client = () => {
     return (
       <div className="w-full h-[400px] flex justify-center items-center">
         <p>Error loading car data. Please try again later.</p>
+        <p>{error?.message}</p>
       </div>
     );
   };

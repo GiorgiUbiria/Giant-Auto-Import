@@ -197,26 +197,15 @@ export const getCarsAction = authedProcedure
   )
   .output(z.array(SelectSchema))
   .handler(async ({ input }) => {
-    const { id: userId } = input;
     try {
-      let query;
+      const query = await db.query.cars.findMany({
+        orderBy: desc(cars.purchaseDate),
+      })
 
-      if (!userId) {
-        query = await db.select().from(cars).orderBy(desc(cars.purchaseDate));
-      } else {
-        query = await db
-          .select()
-          .from(cars)
-          .where(eq(cars.ownerId, userId))
-          .orderBy(desc(cars.purchaseDate));
-      }
-
-      // Ensure we always return an array, even if it's empty
-      return query || [];
+      return query;
     } catch (error) {
       console.error("Error fetching cars:", error);
-      // Return an empty array instead of throwing an error
-      return [];
+      throw new Error("Failed to fetch cars");
     }
   });
 

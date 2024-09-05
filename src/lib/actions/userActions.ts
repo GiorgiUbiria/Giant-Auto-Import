@@ -28,16 +28,20 @@ export const getUsersAction = isAdminProcedure
 
 export const getUserAction = isAdminProcedure
   .createServerAction()
-  .input(z.object({
-    id: z.string(),
-  }))
-  .output(z.union([
+  .input(
     z.object({
-      user: SelectSchema,
-      cars: z.array(selectCarSchema),
-    }),
-    z.null()
-  ]))
+      id: z.string(),
+    })
+  )
+  .output(
+    z.union([
+      z.object({
+        user: SelectSchema,
+        cars: z.array(selectCarSchema),
+      }),
+      z.null(),
+    ])
+  )
   .handler(async ({ input }) => {
     const { id } = input;
 
@@ -47,14 +51,13 @@ export const getUserAction = isAdminProcedure
     }
 
     try {
-      const [result] = await db
-        .query.users.findMany({
-          where: eq(users.id, id),
-          with: {
-            ownedCars: true,
-          },
-          limit: 1,
-        });
+      const [result] = await db.query.users.findMany({
+        where: eq(users.id, id),
+        with: {
+          ownedCars: true,
+        },
+        limit: 1,
+      });
 
       if (!result) return null;
 
@@ -71,14 +74,18 @@ export const getUserAction = isAdminProcedure
 
 export const deleteUserAction = isAdminProcedure
   .createServerAction()
-  .input(z.object({
-    id: z.string(),
-  }))
-  .output(z.object({
-    message: z.string().optional(),
-    data: z.any().optional(),
-    success: z.boolean(),
-  }))
+  .input(
+    z.object({
+      id: z.string(),
+    })
+  )
+  .output(
+    z.object({
+      message: z.string().optional(),
+      data: z.any().optional(),
+      success: z.boolean(),
+    })
+  )
   .handler(async ({ input }) => {
     const { id } = input;
 

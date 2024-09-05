@@ -207,6 +207,29 @@ export const getCarsAction = authedProcedure
     }
   });
 
+export const getCarsForUserAction = authedProcedure
+  .createServerAction()
+  .input(
+    z.object({
+      id: z.string(),
+    })
+  )
+  .output(z.array(SelectSchema))
+  .handler(async ({ input }) => {
+    try {
+      const query = await db.query.cars.findMany({
+        where: eq(cars.ownerId, input.id),
+        orderBy: desc(cars.purchaseDate),
+        limit: 100,
+      });
+
+      return query || [];
+    } catch (error) {
+      console.error("Error fetching cars:", error);
+      return [];
+    }
+  });
+
 export const getCarAction = authedProcedure
   .createServerAction()
   .input(

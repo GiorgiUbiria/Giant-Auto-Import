@@ -8,7 +8,5 @@ export default async function Page() {
     return redirect("/");
   }
 
-  return (
-    <Client userId={user.id} />
-  );
+  return <Client userId={user.id} />;
 }

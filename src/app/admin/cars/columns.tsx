@@ -32,7 +32,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       }
 
       return <Owner id={ownerId} />;
-    }
+    },
   },
   {
     accessorKey: "purchaseDate",
@@ -55,23 +55,21 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
         return <p> - </p>;
       }
 
-      const formattedDate = date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-      })
+      const formattedDate = date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+      });
 
       return <p> {formattedDate} </p>;
-    }
+    },
   },
   {
     header: "Photo",
     cell: ({ row }) => {
       const vin = row.original.vin as SelectSchemaType["vin"];
 
-      return (
-        <TableImage vin={vin} />
-      )
-    }
+      return <TableImage vin={vin} />;
+    },
   },
   {
     accessorKey: "vin",
@@ -83,7 +81,10 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       return (
         <div>
           <div className="flex gap-x-2 items-center">
-            <Link href={`/car/${vin}`} className="hover:underline"> {vin} </Link>
+            <Link href={`/car/${vin}`} className="hover:underline">
+              {" "}
+              {vin}{" "}
+            </Link>
             <CopyToClipBoard text={vin} />
           </div>
           {lotNumber ? (
@@ -95,7 +96,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             <p> - </p>
           )}
         </div>
-      )
+      );
     },
   },
   {
@@ -113,10 +114,14 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             <p className="text-left"> {year} </p>
             <p className="text-left"> {make} </p>
             <p className="text-left"> {model} </p>
-            {auction !== "Copart" ? <Image src={IAAILogo} alt="IAAI" className="size-8" /> : <Image src={CopartLogo} alt="IAAI" className="size-8" />}
+            {auction !== "Copart" ? (
+              <Image src={IAAILogo} alt="IAAI" className="size-8" />
+            ) : (
+              <Image src={CopartLogo} alt="IAAI" className="size-8" />
+            )}
           </div>
         </div>
-      )
+      );
     },
   },
   {
@@ -126,9 +131,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       const reciever = row.getValue("reciever") as SelectSchemaType["reciever"];
       const vin = row.getValue("vin") as SelectSchemaType["vin"];
 
-      return (
-        <AdminReciever reciever={reciever} vin={vin} />
-      )
+      return <AdminReciever reciever={reciever} vin={vin} />;
     },
   },
   {
@@ -157,7 +160,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
         return <p className="text-center"> - </p>;
       }
 
-      const date = new Date(departureDate)
+      const date = new Date(departureDate);
 
       const isSpecificDate =
         date.getFullYear() === 1 &&
@@ -168,10 +171,10 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
         return <p> - </p>;
       }
 
-      const formattedDate = date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-      })
+      const formattedDate = date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+      });
 
       return <p> {formattedDate} </p>;
     },
@@ -197,10 +200,10 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
         return <p> - </p>;
       }
 
-      const formattedDate = date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-      })
+      const formattedDate = date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+      });
 
       return <p> {formattedDate} </p>;
     },
@@ -225,25 +228,43 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     accessorKey: "totalFee",
     header: "Total Fee",
     cell: ({ row }) => {
-      const purchaseFee = row.original.purchaseFee as SelectSchemaType["purchaseFee"];
-      const auctionFee = row.original.auctionFee as SelectSchemaType["auctionFee"];
+      const purchaseFee = row.original
+        .purchaseFee as SelectSchemaType["purchaseFee"];
+      const auctionFee = row.original
+        .auctionFee as SelectSchemaType["auctionFee"];
       const gateFee = row.original.gateFee as SelectSchemaType["gateFee"];
       const titleFee = row.original.titleFee as SelectSchemaType["titleFee"];
-      const environmentalFee = row.original.environmentalFee as SelectSchemaType["environmentalFee"];
-      const virtualBidFee = row.original.virtualBidFee as SelectSchemaType["virtualBidFee"];
-      const shippingFee = row.original.shippingFee as SelectSchemaType["shippingFee"];
+      const environmentalFee = row.original
+        .environmentalFee as SelectSchemaType["environmentalFee"];
+      const virtualBidFee = row.original
+        .virtualBidFee as SelectSchemaType["virtualBidFee"];
+      const shippingFee = row.original
+        .shippingFee as SelectSchemaType["shippingFee"];
       const groundFee = row.original.groundFee as SelectSchemaType["groundFee"];
       const oceanFee = row.original.oceanFee as SelectSchemaType["oceanFee"];
       const totalFee = row.original.totalFee as SelectSchemaType["totalFee"];
 
-      return <TotalFeeDetails purchaseFee={purchaseFee} auctionFee={auctionFee || 0} gateFee={gateFee || 0} titleFee={titleFee || 0} environmentalFee={environmentalFee || 0} virtualBidFee={virtualBidFee || 0} shippingFee={shippingFee || 0} groundFee={groundFee || 0} oceanFee={oceanFee || 0} totalFee={totalFee || 0} />;
+      return (
+        <TotalFeeDetails
+          purchaseFee={purchaseFee}
+          auctionFee={auctionFee || 0}
+          gateFee={gateFee || 0}
+          titleFee={titleFee || 0}
+          environmentalFee={environmentalFee || 0}
+          virtualBidFee={virtualBidFee || 0}
+          shippingFee={shippingFee || 0}
+          groundFee={groundFee || 0}
+          oceanFee={oceanFee || 0}
+          totalFee={totalFee || 0}
+        />
+      );
     },
   },
   {
     id: "actions",
     header: "Actions",
     cell: ({ row }) => {
-      return <Actions vin={row.getValue("vin") as string} />
+      return <Actions vin={row.getValue("vin") as string} />;
     },
   },
 ];

@@ -37,7 +37,9 @@ export const Client = () => {
         <ErrorState />
       ) : data && data.length > 0 ? (
         <DataTable columns={columns} data={data} filterKey="vin" />
-      ) : null}
+      ) : (
+        <p>No cars found.</p>
+      )}
     </div>
   );
 };

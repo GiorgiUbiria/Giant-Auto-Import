@@ -7,22 +7,36 @@ import { Loader2 } from "lucide-react";
 import { columns } from "./columns";
 
 export const Client = () => {
-	const { isLoading, data } = useServerActionQuery(getCarsAction, {
-		input: {},
-		queryKey: ["getCars"],
-	})
+  const { isLoading, data, error } = useServerActionQuery(getCarsAction, {
+    input: {},
+    queryKey: ["getCars"],
+  });
 
-	const LoadingState = () => {
-		return (
-			<div className="w-full h-[400px] flex justify-center items-center">
-				<Loader2 className="animate-spin text-center" />
-			</div>
-		)
-	}
+  const LoadingState = () => {
+    return (
+      <div className="w-full h-[400px] flex justify-center items-center">
+        <Loader2 className="animate-spin text-center" />
+      </div>
+    );
+  };
 
-	return (
-		<div className="py-10 text-primary">
-			{isLoading ? <LoadingState /> : <DataTable columns={columns} data={data!} filterKey="vin" />}
-		</div>
-	)
-}
+  const ErrorState = () => {
+    return (
+      <div className="w-full h-[400px] flex justify-center items-center">
+        <p>Error loading car data. Please try again later.</p>
+      </div>
+    );
+  };
+
+  return (
+    <div className="py-10 text-primary">
+      {isLoading ? (
+        <LoadingState />
+      ) : error ? (
+        <ErrorState />
+      ) : data && data.length > 0 ? (
+        <DataTable columns={columns} data={data} filterKey="vin" />
+      ) : null}
+    </div>
+  );
+};

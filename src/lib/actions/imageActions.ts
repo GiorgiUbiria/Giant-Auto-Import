@@ -6,19 +6,30 @@ import { createServerAction } from "zsa";
 import { db } from "../drizzle/db";
 import { images } from "../drizzle/schema";
 import { isAdminProcedure } from "./authProcedures";
-import { deleteObjectFromBucket, fetchImageForDisplay, fetchImagesForDisplay, cleanUpBucketForVin } from "./bucketActions";
+import {
+  deleteObjectFromBucket,
+  fetchImageForDisplay,
+  fetchImagesForDisplay,
+  cleanUpBucketForVin,
+} from "./bucketActions";
 
 export const getImagesAction = createServerAction()
-  .input(z.object({
-    vin: z.string(),
-  }))
-  .output(z.array(z.object({
-    carVin: z.string(),
-    imageType: z.enum(["WAREHOUSE", "PICK_UP", "DELIVERED", "AUCTION"]),
-    priority: z.boolean().nullable(),
-    imageKey: z.string(),
-    url: z.string(),
-  })))
+  .input(
+    z.object({
+      vin: z.string(),
+    })
+  )
+  .output(
+    z.array(
+      z.object({
+        carVin: z.string(),
+        imageType: z.enum(["WAREHOUSE", "PICK_UP", "DELIVERED", "AUCTION"]),
+        priority: z.boolean().nullable(),
+        imageKey: z.string(),
+        url: z.string(),
+      })
+    )
+  )
   .handler(async ({ input }) => {
     const { vin } = input;
 
@@ -33,13 +44,19 @@ export const getImagesAction = createServerAction()
   });
 
 export const getImageKeys = createServerAction()
-  .input(z.object({
-    vin: z.string(),
-  }))
-  .output(z.array(z.object({
-    imageKey: z.string(),
-    imageType: z.enum(["WAREHOUSE", "PICK_UP", "DELIVERED", "AUCTION"]),
-  })))
+  .input(
+    z.object({
+      vin: z.string(),
+    })
+  )
+  .output(
+    z.array(
+      z.object({
+        imageKey: z.string(),
+        imageType: z.enum(["WAREHOUSE", "PICK_UP", "DELIVERED", "AUCTION"]),
+      })
+    )
+  )
   .handler(async ({ input }) => {
     const { vin } = input;
 
@@ -60,16 +77,22 @@ export const getImageKeys = createServerAction()
   });
 
 export const getImageAction = createServerAction()
-  .input(z.object({
-    vin: z.string(),
-  }))
-  .output(z.object({
-    carVin: z.string(),
-    imageType: z.enum(["WAREHOUSE", "PICK_UP", "DELIVERED", "AUCTION"]),
-    priority: z.boolean().nullable(),
-    imageKey: z.string(),
-    url: z.string(),
-  }).nullable())
+  .input(
+    z.object({
+      vin: z.string(),
+    })
+  )
+  .output(
+    z
+      .object({
+        carVin: z.string(),
+        imageType: z.enum(["WAREHOUSE", "PICK_UP", "DELIVERED", "AUCTION"]),
+        priority: z.boolean().nullable(),
+        imageKey: z.string(),
+        url: z.string(),
+      })
+      .nullable()
+  )
   .handler(async ({ input }) => {
     const { vin } = input;
     try {
@@ -84,9 +107,11 @@ export const getImageAction = createServerAction()
 
 export const deleteImageAction = isAdminProcedure
   .createServerAction()
-  .input(z.object({
-    imageKey: z.string()
-  }))
+  .input(
+    z.object({
+      imageKey: z.string(),
+    })
+  )
   .handler(async ({ input }) => {
     const { imageKey } = input;
     await deleteObjectFromBucket(imageKey);
@@ -95,17 +120,19 @@ export const deleteImageAction = isAdminProcedure
 
 export const makeImageMainAction = isAdminProcedure
   .createServerAction()
-  .input(z.object({
-    imageKey: z.string(),
-  }))
+  .input(
+    z.object({
+      imageKey: z.string(),
+    })
+  )
   .handler(async ({ input }) => {
     const { imageKey } = input;
     const isMain = await db
       .select({
-        imageKey: images.imageKey
+        imageKey: images.imageKey,
       })
       .from(images)
-      .where(eq(images.priority, true))
+      .where(eq(images.priority, true));
 
     if (isMain.length === 0) {
       await db
@@ -113,25 +140,34 @@ export const makeImageMainAction = isAdminProcedure
         .set({
           priority: true,
         })
-        .where(eq(images.imageKey, imageKey))
+        .where(eq(images.imageKey, imageKey));
     } else {
-      await db
-        .transaction(async (tx) => {
-          await tx.update(images).set({ priority: null }).where(eq(images.imageKey, isMain[0].imageKey!));
-          await tx.update(images).set({ priority: true }).where(eq(images.imageKey, imageKey));
-        })
+      await db.transaction(async (tx) => {
+        await tx
+          .update(images)
+          .set({ priority: null })
+          .where(eq(images.imageKey, isMain[0].imageKey!));
+        await tx
+          .update(images)
+          .set({ priority: true })
+          .where(eq(images.imageKey, imageKey));
+      });
     }
   });
 
 export const removeAllImagesAction = isAdminProcedure
   .createServerAction()
-  .input(z.object({
-    vin: z.string(),
-  }))
-  .output(z.object({
-    success: z.boolean(),
-    message: z.string(),
-  }))
+  .input(
+    z.object({
+      vin: z.string(),
+    })
+  )
+  .output(
+    z.object({
+      success: z.boolean(),
+      message: z.string(),
+    })
+  )
   .handler(async ({ input }) => {
     const { vin } = input;
 

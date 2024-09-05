@@ -19,11 +19,13 @@ const RegisterSchema = insertUserSchema.omit({ id: true });
 
 export const loginAction = createServerAction()
   .input(LoginSchema)
-  .output(z.object({
-    message: z.string().optional(),
-    data: z.any().optional(),
-    success: z.boolean(),
-  }))
+  .output(
+    z.object({
+      message: z.string().optional(),
+      data: z.any().optional(),
+      success: z.boolean(),
+    })
+  )
   .handler(async ({ input }) => {
     try {
       const { email, password } = input;
@@ -40,7 +42,10 @@ export const loginAction = createServerAction()
         };
       }
 
-      const validPassword = await new Argon2id().verify(existingUser.password, password);
+      const validPassword = await new Argon2id().verify(
+        existingUser.password,
+        password
+      );
       if (!validPassword) {
         return {
           success: false,
@@ -53,7 +58,7 @@ export const loginAction = createServerAction()
       cookies().set(
         sessionCookie.name,
         sessionCookie.value,
-        sessionCookie.attributes,
+        sessionCookie.attributes
       );
 
       return {
@@ -72,36 +77,39 @@ export const loginAction = createServerAction()
 export const registerAction = isAdminProcedure
   .createServerAction()
   .input(RegisterSchema)
-  .output(z.object({
-    message: z.string().optional(),
-    data: z.any().optional(),
-    success: z.boolean(),
-  }))
+  .output(
+    z.object({
+      message: z.string().optional(),
+      data: z.any().optional(),
+      success: z.boolean(),
+    })
+  )
   .handler(async ({ input }) => {
     const { email, password, fullName, phone, role } = input;
-    const hashedPassword = (await new Argon2id().hash(password));
+    const hashedPassword = await new Argon2id().hash(password);
 
     const userId = generateId(15) as string;
 
     try {
-      await db
-        .insert(users)
-        .values({
-          id: userId,
-          email,
-          phone,
-          fullName,
-          role,
-          password: hashedPassword,
-          passwordText: password,
-        })
+      await db.insert(users).values({
+        id: userId,
+        email,
+        phone,
+        fullName,
+        role,
+        password: hashedPassword,
+        passwordText: password,
+      });
 
       return {
         success: true,
         message: "User registered successfully",
       };
     } catch (error) {
-      if (error instanceof SqliteError && error.code === "SQLITE_CONSTRAINT_UNIQUE") {
+      if (
+        error instanceof SqliteError &&
+        error.code === "SQLITE_CONSTRAINT_UNIQUE"
+      ) {
         return {
           success: false,
           message: "Email or Phone number already used",
@@ -120,7 +128,7 @@ export const logoutAction = authedProcedure
     const { session } = ctx;
 
     if (session === null) {
-      throw new Error("Session not found")
+      throw new Error("Session not found");
     }
 
     await lucia.invalidateSession(session.id);
@@ -129,7 +137,7 @@ export const logoutAction = authedProcedure
     cookies().set(
       sessionCookie.name,
       sessionCookie.value,
-      sessionCookie.attributes,
+      sessionCookie.attributes
     );
 
     return redirect("/login");
@@ -137,19 +145,31 @@ export const logoutAction = authedProcedure
 
 export const updateUserAction = isAdminProcedure
   .createServerAction()
-  .input(z.object({
-    id: z.string(),
-    email: z.string().email().optional(),
-    phone: z.string().optional(),
-    fullName: z.string().optional(),
-    role: z.enum(['CUSTOMER_DEALER', 'CUSTOMER_SINGULAR', 'MODERATOR', 'ACCOUNTANT', 'ADMIN']).optional(),
-    passwordText: z.string().optional(),
-  }))
-  .output(z.object({
-    message: z.string().optional(),
-    data: z.any().optional(),
-    success: z.boolean(),
-  }))
+  .input(
+    z.object({
+      id: z.string(),
+      email: z.string().email().optional(),
+      phone: z.string().optional(),
+      fullName: z.string().optional(),
+      role: z
+        .enum([
+          "CUSTOMER_DEALER",
+          "CUSTOMER_SINGULAR",
+          "MODERATOR",
+          "ACCOUNTANT",
+          "ADMIN",
+        ])
+        .optional(),
+      passwordText: z.string().optional(),
+    })
+  )
+  .output(
+    z.object({
+      message: z.string().optional(),
+      data: z.any().optional(),
+      success: z.boolean(),
+    })
+  )
   .handler(async ({ input }) => {
     const { id, email, passwordText: password, fullName, phone, role } = input;
     const updateData: any = {};
@@ -179,14 +199,17 @@ export const updateUserAction = isAdminProcedure
         };
       }
 
-      revalidatePath(`/admin/users/${id}`)
+      revalidatePath(`/admin/users/${id}`);
 
       return {
         success: true,
         message: "User updated successfully",
       };
     } catch (error) {
-      if (error instanceof SqliteError && error.code === "SQLITE_CONSTRAINT_UNIQUE") {
+      if (
+        error instanceof SqliteError &&
+        error.code === "SQLITE_CONSTRAINT_UNIQUE"
+      ) {
         return {
           success: false,
           message: "Email or Phone number already used",

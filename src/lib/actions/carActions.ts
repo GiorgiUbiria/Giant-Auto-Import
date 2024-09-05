@@ -190,22 +190,20 @@ export const addCarAction = isAdminProcedure
 
 export const getCarsAction = authedProcedure
   .createServerAction()
-  .input(
-    z.object({
-      id: z.string().optional(),
-    })
-  )
   .output(z.array(SelectSchema))
-  .handler(async ({ input }) => {
+  .handler(async () => {
     try {
       const query = await db.query.cars.findMany({
         orderBy: desc(cars.purchaseDate),
-      })
+        limit: 100,
+      });
 
-      return query;
+      console.log(query);
+
+      return query || [];
     } catch (error) {
       console.error("Error fetching cars:", error);
-      throw new Error("Failed to fetch cars");
+      return [];
     }
   });
 

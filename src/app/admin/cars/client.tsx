@@ -8,7 +8,7 @@ import { columns } from "./columns";
 
 export const Client = () => {
   const { isLoading, data, error } = useServerActionQuery(getCarsAction, {
-    input: {},
+    input: undefined,
     queryKey: ["getCars"],
   });
 

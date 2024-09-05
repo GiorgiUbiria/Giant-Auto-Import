@@ -3,9 +3,7 @@ import { db } from "@/lib/drizzle/db";
 import { cars } from "@/lib/drizzle/schema";
 import { desc } from "drizzle-orm";
 
-export const config = {
-  runtime: "edge",
-};
+export const runtime = "edge";
 
 export async function GET() {
   try {

@@ -1,15 +1,21 @@
 "use client";
 
 import { DataTable } from "@/components/data-table";
-import { getCarsAction } from "@/lib/actions/carActions";
-import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { Loader2 } from "lucide-react";
 import { columns } from "./columns";
+import { useQuery } from "@tanstack/react-query";
 
+const fetchCars = async () => {
+  const response = await fetch("/api/cars");
+  if (!response.ok) {
+    throw new Error("Failed to fetch cars");
+  }
+  return response.json();
+};
 export const Client = () => {
-  const { isLoading, data, error } = useServerActionQuery(getCarsAction, {
-    input: undefined,
+  const { isLoading, data, error } = useQuery({
     queryKey: ["getCars"],
+    queryFn: fetchCars,
   });
 
   const LoadingState = () => {

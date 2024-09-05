@@ -195,10 +195,8 @@ export const getCarsAction = authedProcedure
     try {
       const query = await db.query.cars.findMany({
         orderBy: desc(cars.purchaseDate),
-        limit: 100,
+        limit: 50,
       });
-
-      console.log(query);
 
       return query || [];
     } catch (error) {

@@ -6,6 +6,24 @@ import { toast } from 'sonner';
 import { Loader2 } from "lucide-react";
 import { useTranslations } from 'next-intl';
 
+const LocationIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="h-6 w-6"
+  >
+    <path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path>
+    <path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0z"></path>
+  </svg>
+);
+
 export default function Page() {
   const t = useTranslations('ContactPage');
   const [formData, setFormData] = useState({
@@ -14,6 +32,7 @@ export default function Page() {
     message: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -27,6 +46,7 @@ export default function Page() {
 
   const sendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setSubmitStatus('loading');
     setIsLoading(true);
     const { email, name, message } = formData;
     const recipientEmail = "ubiriagiorgi8@gmail.com";
@@ -43,19 +63,21 @@ export default function Page() {
       if (response.ok) {
         toast.success(t('successToast'));
         setFormData({ name: "", email: "", message: "" });
+        setSubmitStatus('success');
       } else {
         throw new Error('Failed to send email');
       }
     } catch (error) {
       console.error('Error sending email:', error);
       toast.error(t('errorToast'));
+      setSubmitStatus('error');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <section id="contact" className="px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+    <section id="contact" className="px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
       <div className="mx-auto max-w-7xl">
         <div className="mb-4">
           <div className="mb-6 max-w-3xl text-center sm:text-center md:mx-auto md:mb-12">
@@ -68,7 +90,7 @@ export default function Page() {
           </div>
         </div>
         <div className="flex items-stretch justify-center">
-          <div className="grid md:grid-cols-2">
+          <div className="grid md:grid-cols-2 gap-8">
             <div className="h-full pr-6">
               <p className="mt-3 mb-8 text-base sm:text-lg text-gray-600 dark:text-slate-400">
                 {t('largeText')}
@@ -76,21 +98,7 @@ export default function Page() {
               <ul className="space-y-6">
                 <li className="flex flex-col sm:flex-row items-start sm:items-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded bg-blue-900 text-gray-50 mb-4 sm:mb-0">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-6 w-6"
-                    >
-                      <path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path>
-                      <path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0z"></path>
-                    </svg>
+                    <LocationIcon />
                   </div>
                   <div className="sm:ml-4">
                     <h3 className="mb-2 text-lg font-medium leading-6 text-gray-900 dark:text-white">
@@ -129,7 +137,7 @@ export default function Page() {
                       <a
                         href="https://wa.me/995555550553?text=I'm%20interested%20in%20your%20car%20for%20sale"
                       >
-                      +995 555 550 553
+                        +995 555 550 553
                       </a>
                     </p>
                     <p className="text-gray-600 dark:text-slate-400">
@@ -184,7 +192,7 @@ export default function Page() {
                       type="text"
                       id="name"
                       placeholder={t('namePlaceholder')}
-                      className="w-full rounded-md border border-gray-400 py-2 px-4 shadow-md dark:text-gray-300"
+                      className="w-full rounded-md border border-gray-300 py-2 px-4 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300"
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
@@ -229,7 +237,12 @@ export default function Page() {
                   </div>
                 </div>
                 <div className="w-full">
-                  <Button type="submit" className="w-full light:bg-blue-900" disabled={isLoading}>
+                  <Button
+                    type="submit"
+                    className="w-full bg-blue-900 hover:bg-blue-800 transition-colors duration-200"
+                    disabled={isLoading || submitStatus === 'loading'}
+                    aria-label={isLoading ? 'Sending message...' : 'Send message'}
+                  >
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : t('sendMessage')}
                   </Button>
                 </div>

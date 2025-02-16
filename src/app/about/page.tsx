@@ -1,8 +1,8 @@
 import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
 } from "@/components/ui/accordion";
 import { getTranslations } from 'next-intl/server';
 import Image from "next/image";
@@ -24,29 +24,51 @@ export default async function Page() {
   ];
 
   return (
-    <div>
-      <div className="mx-auto max-w-6xl px-6 py-12 grid place-items-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-black dark:text-white mb-4">
-            {t('title')}
-          </h1>
-          <p className="text-xl dark:text-white text-black mb-8">
-            {t('description')}
-          </p>
-        </div>
-        <div className="w-full mt-16">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            {services.slice(0, 3).map((service, index) => (
-              <div key={index} className="w-full bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 flex flex-col">
-                <Image src={service.image} alt={t(`services.${service.key}.title`)} className="w-full h-64 object-cover rounded-t-lg" />
-                <div className="p-5 flex-grow flex flex-col">
-                  <h5 className="mb-4 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+      <section className="relative py-20 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Hero Section */}
+          <div className="text-center mb-16 space-y-4">
+            <h1 className="text-5xl font-bold text-gray-900 dark:text-white tracking-tight animate-fade-in">
+              {t('title')}
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+              {t('description')}
+            </p>
+          </div>
+
+          {/* Services Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
+            {services.map((service, index) => (
+              <div
+                key={index}
+                className="group bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+              >
+                <div className="relative h-64 overflow-hidden">
+                  <Image
+                    src={service.image}
+                    alt={t(`services.${service.key}.title`)}
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+                    placeholder="blur"
+                  />
+                </div>
+                <div className="p-6 space-y-4">
+                  <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">
                     {t(`services.${service.key}.title`)}
-                  </h5>
-                  <Accordion type="single" collapsible className="w-full rounded-md text-gray-900 dark:text-white mt-auto">
-                    <AccordionItem value="item-1">
-                      <AccordionTrigger>{t('learnMore')}</AccordionTrigger>
-                      <AccordionContent>
+                  </h3>
+                  <Accordion
+                    type="single"
+                    collapsible
+                    className="border-none shadow-none"
+                  >
+                    <AccordionItem
+                      value="description"
+                      className="border-none"
+                    >
+                      <AccordionTrigger className="text-primary hover:text-primary/80 transition-colors py-2 px-0">
+                        {t('learnMore')}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-gray-600 dark:text-gray-300 leading-relaxed">
                         {t(`services.${service.key}.description`)}
                       </AccordionContent>
                     </AccordionItem>
@@ -55,28 +77,8 @@ export default async function Page() {
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-[66.67%] mx-auto">
-            {services.slice(3).map((service, index) => (
-              <div key={index} className="w-full bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 flex flex-col">
-                <Image src={service.image} alt={t(`services.${service.key}.title`)} className="w-full h-64 object-cover rounded-t-lg" />
-                <div className="p-5 flex-grow flex flex-col">
-                  <h5 className="mb-4 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                    {t(`services.${service.key}.title`)}
-                  </h5>
-                  <Accordion type="single" collapsible className="w-full rounded-md text-gray-900 dark:text-white mt-auto">
-                    <AccordionItem value="item-1">
-                      <AccordionTrigger>{t('learnMore')}</AccordionTrigger>
-                      <AccordionContent>
-                        {t(`services.${service.key}.description`)}
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

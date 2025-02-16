@@ -6,6 +6,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 type Props = {
   purchaseFee: number;
@@ -20,6 +21,19 @@ type Props = {
   totalFee: number;
 };
 
+type FeeItemProps = {
+  label: string;
+  amount: number;
+  className?: string;
+};
+
+const FeeItem = ({ label, amount, className }: FeeItemProps) => (
+  <div className={cn("flex justify-between items-center py-0.5", className)}>
+    <span className="text-muted-foreground">{label}:</span>
+    <span className="font-medium">${amount.toLocaleString()}</span>
+  </div>
+);
+
 export const TotalFeeDetails = ({
   purchaseFee,
   auctionFee,
@@ -32,48 +46,63 @@ export const TotalFeeDetails = ({
   oceanFee,
   totalFee,
 }: Props) => {
+  const totalPurchaseFee = 
+    purchaseFee + 
+    auctionFee + 
+    gateFee + 
+    titleFee + 
+    environmentalFee + 
+    virtualBidFee;
+
   return (
-    <div>
+    <div className="relative group">
       <HoverCard>
-        <HoverCardTrigger>
-          <p className="hover:text-primary/50 transition-all">{totalFee}</p>
+        <HoverCardTrigger asChild>
+          <button className="font-medium hover:text-primary/80 transition-colors">
+            ${totalFee.toLocaleString()}
+          </button>
         </HoverCardTrigger>
-        <HoverCardContent>
-          <div>
-            <h3 className="font-bold mb-2">
-              Total Purchase Fee:{" "}
-              {purchaseFee +
-                auctionFee +
-                gateFee +
-                titleFee +
-                environmentalFee +
-                virtualBidFee}
-              $
-            </h3>
-            <ul className="list-none pl-4 mb-4">
-              <li>Base Purchase Fee: {purchaseFee}$</li>
-              <li>+ Auction Fee: {auctionFee}$</li>
-              <li>+ Gate Fee: {gateFee}$</li>
-              <li>+ Title Fee: {titleFee}$</li>
-              <li>+ Environmental Fee: {environmentalFee}$</li>
-              <li>+ Virtual Bid Fee: {virtualBidFee}$</li>
-            </ul>
-            <p className="font-semibold text-sm pl-4">
-              = Total Purchase Fee:{" "}
-              {purchaseFee +
-                auctionFee +
-                gateFee +
-                titleFee +
-                environmentalFee +
-                virtualBidFee}
-              $
-            </p>
-            <Separator className="my-2" />
-            <h3 className="font-bold mb-2">Shipping Fee: {shippingFee}$</h3>
-            <ul className="list-none pl-4">
-              <li>Ground Fee: {groundFee}$</li>
-              <li>Ocean Fee: {oceanFee}$</li>
-            </ul>
+        <HoverCardContent className="w-80 p-4" align="end">
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-semibold text-lg mb-2">Purchase Details</h3>
+              <div className="space-y-1">
+                <FeeItem label="Base Purchase Fee" amount={purchaseFee} />
+                <FeeItem label="Auction Fee" amount={auctionFee} />
+                <FeeItem label="Gate Fee" amount={gateFee} />
+                <FeeItem label="Title Fee" amount={titleFee} />
+                <FeeItem label="Environmental Fee" amount={environmentalFee} />
+                <FeeItem label="Virtual Bid Fee" amount={virtualBidFee} />
+                <Separator className="my-2" />
+                <FeeItem 
+                  label="Total Purchase Fee" 
+                  amount={totalPurchaseFee}
+                  className="font-semibold text-primary"
+                />
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-lg mb-2">Shipping Details</h3>
+              <div className="space-y-1">
+                <FeeItem label="Ground Fee" amount={groundFee} />
+                <FeeItem label="Ocean Fee" amount={oceanFee} />
+                <Separator className="my-2" />
+                <FeeItem 
+                  label="Total Shipping Fee" 
+                  amount={shippingFee}
+                  className="font-semibold text-primary"
+                />
+              </div>
+            </div>
+
+            <Separator />
+            
+            <FeeItem 
+              label="Total Fee" 
+              amount={totalFee}
+              className="text-lg font-bold text-primary"
+            />
           </div>
         </HoverCardContent>
       </HoverCard>

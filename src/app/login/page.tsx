@@ -13,10 +13,22 @@ export default async function Page() {
   const t = await getTranslations('Auth');
 
   return (
-    <div className="w-full grid place-items-center">
-      <h1 className="text-3xl text-primary my-4"> {t('login')} </h1>
-      <Image src={Logo} alt="Company Logo" width={150} height={150} />
-      <LoginForm />
+    <div className="min-h-screen w-full grid place-items-center bg-gray-50 dark:bg-gray-900">
+      <div className="w-full max-w-md px-6 py-8 space-y-6">
+        <div className="text-center space-y-4">
+          <Image
+            src={Logo}
+            alt="Company Logo"
+            width={100}
+            height={100}
+            className="mx-auto"
+          />
+          <h1 className="text-3xl font-bold text-primary">
+            {t('login')}
+          </h1>
+        </div>
+        <LoginForm />
+      </div>
     </div>
   );
 }

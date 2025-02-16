@@ -54,7 +54,7 @@ export function ShippingCalculator({ style }: { style: string }) {
     const auctionFee = calculateFee(styleData, purchasePrice);
     const virtualBidFee = calculateFee(virtualBidData, purchasePrice);
     const fixedFees = 79 + 20 + 10;
-    if (insurance) {  
+    if (insurance) {
       return purchasePrice * 1.015 + auctionFee + virtualBidFee + fixedFees;
     } else {
       return purchasePrice + auctionFee + virtualBidFee + fixedFees;
@@ -114,23 +114,25 @@ export function ShippingCalculator({ style }: { style: string }) {
   };
 
   return (
-    <Card className="w-full max-w-4xl">
-      <CardHeader>
-        <CardTitle className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-primary dark:drop-shadow-[0_1.3px_1.3px_rgba(0,0,0,1)]">
+    <Card className="w-full max-w-4xl shadow-lg transition-all duration-200 hover:shadow-xl">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-primary dark:drop-shadow-[0_1.3px_1.3px_rgba(0,0,0,1)] bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
           {t('title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleCalculate} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="bid">{t('enterBid')}</Label>
+        <form onSubmit={handleCalculate} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="bid" className="text-base">{t('enterBid')}</Label>
                 <Input
                   id="bid"
                   value={purchaseFee}
                   onChange={(e) => setPurchaseFee(parseFloat(e.target.value))}
                   type="number"
+                  className="transition-all duration-200 focus:ring-2 focus:ring-primary"
+                  placeholder="0.00"
                 />
               </div>
               <div>
@@ -145,15 +147,15 @@ export function ShippingCalculator({ style }: { style: string }) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="auctionLocation">{t('selectAuctionLocation')}</Label>
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="auctionLocation" className="text-base">{t('selectAuctionLocation')}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       role="combobox"
                       className={cn(
-                        "w-full justify-between",
+                        "w-full justify-between transition-all duration-200 hover:border-primary",
                         !auctionLocation && "text-muted-foreground"
                       )}
                     >
@@ -214,54 +216,47 @@ export function ShippingCalculator({ style }: { style: string }) {
                 </Select>
               </div>
             </div>
-            <div className="space-y-4">
-              <Label>{t('additionalFees')}</Label>
-              <div className="space-y-2">
-                {extraFees.map((fee) => (
-                  <div key={fee.type} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={fee.type}
-                      checked={additionalFees.includes(fee.type)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setAdditionalFees([...additionalFees, fee.type]);
-                        } else {
-                          setAdditionalFees(
-                            additionalFees.filter((f) => f !== fee.type)
-                          );
-                        }
-                      }}
-                    />
-                    <label
-                      htmlFor={fee.type}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {fee.type} (${fee.rate})
-                    </label>
-                  </div>
-                ))}
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="insurance"
-                    checked={insurance}
-                    onCheckedChange={(checked) => setInsurance(checked as boolean)}
-                  />
-                  <label
-                    htmlFor="insurance"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {t('insurance')}
-                  </label>
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <Label className="text-base">{t('additionalFees')}</Label>
+                <div className="space-y-3 p-4 rounded-lg bg-muted/50">
+                  {extraFees.map((fee) => (
+                    <div key={fee.type} className="flex items-center space-x-3 transition-all duration-200 hover:bg-muted/80 p-2 rounded">
+                      <Checkbox
+                        id={fee.type}
+                        checked={additionalFees.includes(fee.type)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setAdditionalFees([...additionalFees, fee.type]);
+                          } else {
+                            setAdditionalFees(
+                              additionalFees.filter((f) => f !== fee.type)
+                            );
+                          }
+                        }}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                      <label
+                        htmlFor={fee.type}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {fee.type} (${fee.rate})
+                      </label>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className="mt-4">
-                <p className="text-lg font-semibold">
+              <div className="mt-6 p-4 rounded-lg bg-primary/5">
+                <p className="text-lg font-semibold mb-4">
                   {t('estimatedTotalFee')}{" "}
-                  <span className="text-xl font-bold">
+                  <span className="text-2xl font-bold text-primary">
                     ${estimatedFee.toFixed(2)}
                   </span>
                 </p>
-                <Button type="submit" className="w-full mt-4">
+                <Button
+                  type="submit"
+                  className="w-full transition-all duration-200 hover:scale-[1.02]"
+                >
                   {t('calculate')}
                 </Button>
               </div>

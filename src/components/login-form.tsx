@@ -49,18 +49,27 @@ export default function LoginForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit} className="w-full md:w-1/3 space-y-6 my-4 bg-gray-200/90 dark:bg-gray-700 p-3 rounded-md text-primary">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full space-y-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6"
+      >
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-sm font-medium">Email</FormLabel>
               <FormControl>
-                <Input placeholder="example@mail.com" type="email" {...field} required />
+                <Input
+                  placeholder="example@mail.com"
+                  type="email"
+                  className="h-10"
+                  {...field}
+                  required
+                />
               </FormControl>
-              <FormDescription>
-                Email of the user
+              <FormDescription className="text-xs text-gray-500">
+                Enter your registered email address
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -71,21 +80,31 @@ export default function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel className="text-sm font-medium">Password</FormLabel>
               <FormControl>
-                <Input placeholder="********" type="password" {...field} required />
+                <Input
+                  placeholder="********"
+                  type="password"
+                  className="h-10"
+                  {...field}
+                  required
+                />
               </FormControl>
-              <FormDescription>
-                Password that is at least 8 characters long and contains a number
+              <FormDescription className="text-xs text-gray-500">
+                Enter your password
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full" disabled={isPending}>
-          {
-            isPending ? <Loader2 className="animate-spin" /> : "Log In"
-          }
+        <Button
+          type="submit"
+          className="w-full h-10 font-medium"
+          disabled={isPending}
+        >
+          {isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          ) : "Log In"}
         </Button>
       </form>
     </Form>

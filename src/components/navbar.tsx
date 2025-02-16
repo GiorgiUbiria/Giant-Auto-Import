@@ -18,56 +18,59 @@ import DynamicHeader from "./dynamic-header";
 import NavigationLinks from "./navigation-links";
 import { getTranslations } from "next-intl/server";
 
+// Client component for mobile menu
+const MobileMenu = ({ links }: { links: Array<{ href: string; label: string }> }) => {
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon"
+          className="shrink-0 h-10 w-10 sm:h-12 sm:w-12 md:hidden"
+        >
+          <Menu className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+          <span className="sr-only">Toggle navigation menu</span>
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="text-primary w-64 sm:w-80">
+        <div className="flex flex-col justify-between h-full py-6">
+          {links.map((link) => (
+            <SheetClose asChild key={link.href}>
+              <Link
+                href={link.href}
+                className="flex items-center text-black dark:text-white dark:focus-text-yellow-300 text-nowrap font-semibold focus:text-yellow-300 text-base sm:text-lg md:text-base transition-colors hover:text-yellow-500 dark:hover:text-yellow-500 py-2"
+              >
+                <span>{link.label}</span>
+              </Link>
+            </SheetClose>
+          ))}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+// Server Component
 const Navbar = async () => {
   const { user } = await getAuth();
   const t = await getTranslations("Navbar");
   const tHowTo = await getTranslations("HowTo");
 
   const navigationLinks = [
-    {
-      href: "/",
-      label: t("home"),
-    },
-    {
-      href: "/contact",
-      label: t("contact"),
-    },
-    {
-      href: "/about",
-      label: t("about"),
-    },
-    {
-      href: "/calculator",
-      label: t("calculator"),
-    },
-    {
-      href: "/how-to",
-      label: tHowTo("navbar"),
-    },
+    { href: "/", label: t("home") },
+    { href: "/contact", label: t("contact") },
+    { href: "/about", label: t("about") },
+    { href: "/calculator", label: t("calculator") },
+    { href: "/how-to", label: tHowTo("navbar") },
   ];
 
   if (user?.role === "ADMIN") {
     navigationLinks.push(
-      {
-        href: "/admin",
-        label: t("admin_panel"),
-      },
-      {
-        href: "/admin/cars",
-        label: t("cars"),
-      },
-      {
-        href: "/admin/add_car",
-        label: t("add_car"),
-      },
-      {
-        href: "/admin/users",
-        label: t("users"),
-      },
-      {
-        href: "/admin/signup",
-        label: t("register"),
-      }
+      { href: "/admin", label: t("admin_panel") },
+      { href: "/admin/cars", label: t("cars") },
+      { href: "/admin/add_car", label: t("add_car") },
+      { href: "/admin/users", label: t("users") },
+      { href: "/admin/signup", label: t("register") }
     );
   }
 
@@ -77,38 +80,14 @@ const Navbar = async () => {
       label: t("dashboard"),
     });
   }
+
   return (
     <div>
       <DynamicHeader>
         <nav className="flex justify-between items-center w-full px-4 py-2 sm:px-6 lg:px-8">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="shrink-0 h-10 w-10 sm:h-12 sm:w-12 md:hidden"
-              >
-                <Menu className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
-                <span className="sr-only">Toggle navigation menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="text-primary w-64 sm:w-80">
-              <div className="flex flex-col justify-between h-full py-6">
-                {navigationLinks.map((link) => (
-                  <SheetClose asChild key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="flex items-center text-black dark:text-white dark:focus-text-yellow-300 text-nowrap font-semibold focus:text-yellow-300 text-base sm:text-lg md:text-base transition-colors hover:text-yellow-500 dark:hover:text-yellow-500 py-2"
-                    >
-                      <span>{link.label}</span>
-                    </Link>
-                  </SheetClose>
-                ))}
-              </div>
-            </SheetContent>
-          </Sheet>
+          <MobileMenu links={navigationLinks} />
 
-          <Link href="/" className="w-max md:hidden">
+          <Link href="/" className="w-max md:hidden" prefetch>
             <Image
               src={NavbarLogo}
               alt="Company logo"
@@ -118,7 +97,7 @@ const Navbar = async () => {
           </Link>
 
           <div className="hidden md:flex items-center gap-4 lg:gap-6">
-            <Link href="/" className="w-max">
+            <Link href="/" className="w-max" prefetch>
               <Image
                 src={NavbarLogo}
                 alt="Company logo"

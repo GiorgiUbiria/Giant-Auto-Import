@@ -21,61 +21,53 @@ type SelectSchemaType = z.infer<typeof SelectSchema>;
 export const columns: ColumnDef<SelectSchemaType>[] = [
   {
     accessorKey: "purchaseDate",
-    header: "PD",
+    header: () => <div className="text-center font-semibold">PD</div>,
     cell: ({ row }) => {
       const purchaseDate = row.getValue("purchaseDate") as Date;
 
-      if (!purchaseDate) {
-        return <p> - </p>;
+      if (!purchaseDate || (new Date(purchaseDate).getFullYear() === 1 && 
+          new Date(purchaseDate).getMonth() === 0 && 
+          new Date(purchaseDate).getDate() === 1)) {
+        return <div className="text-center text-muted-foreground">-</div>;
       }
 
-      const date = new Date(purchaseDate);
-
-      const isSpecificDate =
-        date.getFullYear() === 1 &&
-        date.getMonth() === 0 &&
-        date.getDate() === 1;
-
-      if (isSpecificDate) {
-        return <p> - </p>;
-      }
-
-      const formattedDate = date.toLocaleDateString("en-GB", {
+      const formattedDate = new Date(purchaseDate).toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "2-digit",
       });
 
-      return <p> {formattedDate} </p>;
+      return <div className="text-center font-medium">{formattedDate}</div>;
     },
   },
   {
-    header: "Photo",
+    header: () => <div className="text-center font-semibold">Photo</div>,
     cell: ({ row }) => {
       const vin = row.original.vin as SelectSchemaType["vin"];
-
       return <TableImage vin={vin} />;
     },
   },
   {
     accessorKey: "vin",
-    header: "VIN# LOT#",
+    header: () => <div className="font-semibold">VIN# LOT#</div>,
     cell: ({ row }) => {
       const vin = row.getValue("vin") as SelectSchemaType["vin"];
       const lotNumber = row.original.lotNumber as SelectSchemaType["lotNumber"];
 
       return (
-        <div>
-          <div className="flex gap-x-2 items-center">
-            <Link href={`/car/${vin}`}> {vin} </Link>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Link href={`/car/${vin}`} className="hover:underline text-primary font-medium">
+              {vin}
+            </Link>
             <CopyToClipBoard text={vin} />
           </div>
           {lotNumber ? (
-            <div className="flex gap-x-2 items-center">
-              <p> {lotNumber}</p>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">{lotNumber}</span>
               <CopyToClipBoard text={lotNumber} />
             </div>
           ) : (
-            <p> - </p>
+            <span className="text-muted-foreground">-</span>
           )}
         </div>
       );
@@ -83,7 +75,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   },
   {
     accessorKey: "year",
-    header: "Vehicle",
+    header: () => <div className="font-semibold">Vehicle</div>,
     cell: ({ row }) => {
       const year = row.getValue("year") as SelectSchemaType["year"];
       const make = row.original.make as SelectSchemaType["make"];
@@ -91,13 +83,17 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       const auction = row.original.auction as SelectSchemaType["auction"];
 
       return (
-        <div className="flex items-center justify-between w-[84px]">
-          <p className="text-left"> {year + " " + make + " " + model} </p>
-          {auction !== "Copart" ? (
-            <Image src={IAAILogo} alt="IAAI" className="size-8" />
-          ) : (
-            <Image src={CopartLogo} alt="IAAI" className="size-8" />
-          )}
+        <div className="flex items-center justify-between min-w-[120px]">
+          <p className="font-medium">
+            {year} {make} {model}
+          </p>
+          <div className="shrink-0">
+            {auction !== "Copart" ? (
+              <Image src={IAAILogo} alt="IAAI" className="size-8 rounded-sm" />
+            ) : (
+              <Image src={CopartLogo} alt="Copart" className="size-8 rounded-sm" />
+            )}
+          </div>
         </div>
       );
     },
@@ -114,19 +110,45 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   },
   {
     accessorKey: "fuelType",
-    header: "Fuel",
+    header: () => <div className="text-center font-semibold">Fuel</div>,
+    cell: ({ row }) => {
+      const fuelType = row.getValue("fuelType") as string;
+      return <div className="text-center font-medium">{fuelType || "-"}</div>;
+    }
   },
   {
     accessorKey: "keys",
-    header: "Keys",
+    header: () => <div className="text-center font-semibold">Keys</div>,
+    cell: ({ row }) => {
+      const keys = row.getValue("keys") as string;
+      return <div className="text-center font-medium">{keys || "-"}</div>;
+    }
   },
   {
     accessorKey: "title",
-    header: "Title",
+    header: () => <div className="text-center font-semibold">Title</div>,
+    cell: ({ row }) => {
+      const title = row.getValue("title") as string;
+      return <div className="text-center font-medium">{title || "-"}</div>;
+    }
   },
   {
     accessorKey: "shippingStatus",
-    header: "Status",
+    header: () => <div className="text-center font-semibold">Status</div>,
+    cell: ({ row }) => {
+      const status = row.getValue("shippingStatus") as string;
+      return (
+        <div className="text-center">
+          <span className={`px-2 py-1 rounded-full text-sm font-medium
+            ${status === "In Transit" ? "bg-yellow-100 text-yellow-800" : 
+              status === "Delivered" ? "bg-green-100 text-green-800" :
+              status === "Processing" ? "bg-blue-100 text-blue-800" :
+              "bg-gray-100 text-gray-800"}`}>
+            {status || "Pending"}
+          </span>
+        </div>
+      );
+    }
   },
   {
     accessorKey: "departureDate",

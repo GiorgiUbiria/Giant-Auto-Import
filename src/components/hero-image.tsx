@@ -8,12 +8,13 @@ export default function HeroImageComponent() {
       <Image
         src={Bg}
         alt="Background Image"
-        objectFit="cover"
-        objectPosition="center"
-        layout="fill"
+        fill
+        className="object-cover object-center transform scale-105"
         priority
+        quality={85}
+        placeholder="blur"
       />
-      <div className="absolute inset-0 bg-black opacity-50"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/40 backdrop-blur-[2px]"></div>
     </div>
   );
 }

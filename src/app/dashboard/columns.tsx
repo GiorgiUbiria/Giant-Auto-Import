@@ -25,9 +25,9 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     cell: ({ row }) => {
       const purchaseDate = row.getValue("purchaseDate") as Date;
 
-      if (!purchaseDate || (new Date(purchaseDate).getFullYear() === 1 && 
-          new Date(purchaseDate).getMonth() === 0 && 
-          new Date(purchaseDate).getDate() === 1)) {
+      if (!purchaseDate || (new Date(purchaseDate).getFullYear() === 1 &&
+        new Date(purchaseDate).getMonth() === 0 &&
+        new Date(purchaseDate).getDate() === 1)) {
         return <div className="text-center text-muted-foreground">-</div>;
       }
 
@@ -40,6 +40,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     },
   },
   {
+    accessorKey: "vin",
     header: () => <div className="text-center font-semibold">Photo</div>,
     cell: ({ row }) => {
       const vin = row.original.vin as SelectSchemaType["vin"];
@@ -140,10 +141,10 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       return (
         <div className="text-center">
           <span className={`px-2 py-1 rounded-full text-sm font-medium
-            ${status === "In Transit" ? "bg-yellow-100 text-yellow-800" : 
+            ${status === "In Transit" ? "bg-yellow-100 text-yellow-800" :
               status === "Delivered" ? "bg-green-100 text-green-800" :
-              status === "Processing" ? "bg-blue-100 text-blue-800" :
-              "bg-gray-100 text-gray-800"}`}>
+                status === "Processing" ? "bg-blue-100 text-blue-800" :
+                  "bg-gray-100 text-gray-800"}`}>
             {status || "Pending"}
           </span>
         </div>

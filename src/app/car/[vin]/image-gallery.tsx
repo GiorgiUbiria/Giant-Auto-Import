@@ -13,8 +13,31 @@ import "yet-another-react-lightbox/styles.css";
 import DownloadButton from "./download-button";
 import NextJsImage from "./nextjs-image";
 import { useMedia } from "react-use";
+import { Loader2 } from "lucide-react";
+import { Suspense } from "react";
 
 const breakpoints = [3840, 1920, 1080, 640, 384, 256, 128];
+
+const LoadingState = () => (
+  <div className="w-full h-[50vh] grid place-items-center">
+    <div className="flex flex-col items-center gap-2">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <p className="text-muted-foreground">Loading images...</p>
+    </div>
+  </div>
+);
+
+const ErrorState = () => (
+  <div className="w-full h-[50vh] grid place-items-center">
+    <p className="text-red-500">Error loading images. Please try again later.</p>
+  </div>
+);
+
+const EmptyState = () => (
+  <div className="w-full h-[50vh] grid place-items-center">
+    <p className="text-muted-foreground">No images available.</p>
+  </div>
+);
 
 export const ImageGallery = ({ vin }: { vin: string }) => {
   const imageTypes = ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERED"];
@@ -22,14 +45,17 @@ export const ImageGallery = ({ vin }: { vin: string }) => {
   const { data, error, isLoading } = useServerActionQuery(getImageKeys, {
     input: { vin },
     queryKey: ["getImagesForCar", vin],
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
   const [open, setOpen] = useState<boolean>(false);
   const [startIndex, setStartIndex] = useState<number>(0);
   const isMobile = useMedia('(max-width: 640px)', false);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error loading images: {error.message}</div>;
-  if (!data || data.length === 0) return <div>No images available.</div>;
+  if (isLoading) return <LoadingState />;
+  if (error) return <ErrorState />;
+  if (!data || data.length === 0) return <EmptyState />;
   if (!publicUrl) return <div>Error: Public URL not configured.</div>;
 
   const filterImagesByType = (images: typeof data, imageType: string) =>
@@ -75,33 +101,35 @@ export const ImageGallery = ({ vin }: { vin: string }) => {
             return (
               <TabsContent key={type} value={type} className="w-full">
                 <div className="w-full aspect-[3/2] max-w-full overflow-hidden">
-                  <Lightbox
-                    slides={slides}
-                    inline={{
-                      style: {
-                        aspectRatio: "3/2",
-                        maxHeight: "100%",
-                        width: "100%",
-                      }
-                    }}
-                    plugins={[Inline, ...(isMobile ? [] : [Thumbnails])]}
-                    carousel={{ imageFit: "contain" }}
-                    render={{ slide: NextJsImage, thumbnail: NextJsImage }}
-                    on={{
-                      click: ({ index }) => {
-                        setStartIndex(index);
-                        setOpen(true);
-                      },
-                    }}
-                    thumbnails={isMobile ? undefined : {
-                      width: 60,
-                      height: 40,
-                      border: 1,
-                      borderRadius: 4,
-                      padding: 4,
-                      gap: 8,
-                    }}
-                  />
+                  <Suspense fallback={<LoadingState />}>
+                    <Lightbox
+                      slides={slides}
+                      inline={{
+                        style: {
+                          aspectRatio: "3/2",
+                          maxHeight: "100%",
+                          width: "100%",
+                        }
+                      }}
+                      plugins={[Inline, ...(isMobile ? [] : [Thumbnails])]}
+                      carousel={{ imageFit: "contain" }}
+                      render={{ slide: NextJsImage, thumbnail: NextJsImage }}
+                      on={{
+                        click: ({ index }) => {
+                          setStartIndex(index);
+                          setOpen(true);
+                        },
+                      }}
+                      thumbnails={isMobile ? undefined : {
+                        width: 60,
+                        height: 40,
+                        border: 1,
+                        borderRadius: 4,
+                        padding: 4,
+                        gap: 8,
+                      }}
+                    />
+                  </Suspense>
                 </div>
               </TabsContent>
             );

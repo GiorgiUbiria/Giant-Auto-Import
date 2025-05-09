@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -5,18 +7,17 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { getAuth } from "@/lib/auth";
 import { Menu } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { useEffect, useRef, useState, useCallback } from "react";
 import CopartLogo from "../../public/copart-logo.png";
 import IAAILogo from "../../public/iaai-logo.png";
 import NavbarLogo from "../../public/logo.png";
 import LocaleSwitcher from "./LocaleSwitcher";
 import Avatar from "./avatar";
-import DynamicHeader from "./dynamic-header";
 import NavigationLinks from "./navigation-links";
-import { getTranslations } from "next-intl/server";
 
 // Client component for mobile menu
 const MobileMenu = ({ links }: { links: Array<{ href: string; label: string }> }) => {
@@ -26,35 +27,101 @@ const MobileMenu = ({ links }: { links: Array<{ href: string; label: string }> }
         <Button
           variant="outline"
           size="icon"
-          className="shrink-0 h-10 w-10 sm:h-12 sm:w-12 md:hidden"
+          className="shrink-0 h-10 w-10 md:hidden rounded-md border-gray-200 dark:border-gray-700"
+          aria-label="Open navigation menu"
         >
-          <Menu className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+          <Menu className="h-5 w-5 text-gray-700 dark:text-gray-300" />
           <span className="sr-only">Toggle navigation menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="text-primary w-64 sm:w-80">
-        <div className="flex flex-col justify-between h-full py-6">
-          {links.map((link) => (
-            <SheetClose asChild key={link.href}>
-              <Link
-                href={link.href}
-                className="flex items-center text-black dark:text-white dark:focus-text-yellow-300 text-nowrap font-semibold focus:text-yellow-300 text-base sm:text-lg md:text-base transition-colors hover:text-yellow-500 dark:hover:text-yellow-500 py-2"
-              >
-                <span>{link.label}</span>
-              </Link>
-            </SheetClose>
-          ))}
+      <SheetContent side="left" className="bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 w-72">
+        <div className="flex flex-col gap-6 pt-6">
+          <Link href="/" className="flex justify-center mb-4">
+            <Image
+              src={NavbarLogo}
+              alt="Company logo"
+              className="size-16 dark:invert"
+              priority
+            />
+          </Link>
+          <nav className="flex flex-col space-y-1">
+            {links.map((link) => (
+              <SheetClose asChild key={link.href}>
+                <Link
+                  href={link.href}
+                  className="flex items-center text-gray-800 dark:text-gray-200 font-medium 
+                    text-base py-3 px-4 rounded-md transition-colors hover:bg-gray-100 
+                    dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  <span>{link.label}</span>
+                </Link>
+              </SheetClose>
+            ))}
+          </nav>
+          <div className="mt-auto pt-6 border-t border-gray-200 dark:border-gray-800">
+            <div className="flex justify-center">
+              <LocaleSwitcher />
+            </div>
+          </div>
         </div>
       </SheetContent>
     </Sheet>
   );
 };
 
-// Server Component
-const Navbar = async () => {
-  const { user } = await getAuth();
-  const t = await getTranslations("Navbar");
-  const tHowTo = await getTranslations("HowTo");
+interface NavbarProps {
+  user: any; // Replace with proper user type
+  translations: {
+    navbar: Record<string, string>;
+    howTo: Record<string, string>;
+  };
+}
+
+// Client Component
+const Navbar = ({ user, translations }: NavbarProps) => {
+  const [isVisible, setIsVisible] = useState(true);
+  const scrollTimer = useRef<NodeJS.Timeout | null>(null);
+  const t = useTranslations("Navbar");
+  const tHowTo = useTranslations("HowTo");
+
+  const resetVisibilityTimeout = useCallback(() => {
+    setIsVisible(true);
+    if (scrollTimer.current !== null) {
+      clearTimeout(scrollTimer.current);
+    }
+    scrollTimer.current = setTimeout(() => {
+      setIsVisible(false);
+    }, 2000);
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    setIsVisible(true);
+    if (scrollTimer.current !== null) {
+      clearTimeout(scrollTimer.current);
+    }
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    resetVisibilityTimeout();
+  }, [resetVisibilityTimeout]);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY < lastScrollY && window.innerWidth <= 640) {
+        setIsVisible(true);
+        resetVisibilityTimeout();
+      }
+      lastScrollY = currentScrollY;
+    };
+
+    if (window.innerWidth <= 640) {
+      window.addEventListener("scroll", handleScroll);
+      return () => window.removeEventListener("scroll", handleScroll);
+    }
+  }, [resetVisibilityTimeout]);
 
   const navigationLinks = [
     { href: "/", label: t("home") },
@@ -74,68 +141,85 @@ const Navbar = async () => {
     );
   }
 
-  if (user?.role.includes("CUSTOMER")) {
+  if (user?.role?.includes("CUSTOMER")) {
     navigationLinks.push({
       href: "/dashboard",
       label: t("dashboard"),
     });
   }
 
+  const headerClassName = `fixed top-0 left-0 right-0 w-full md:relative md:top-0 flex items-center gap-4 dark:bg-gradient-to-r dark:from-darkbg dark:to-darkfg bg-gradient-to-r from-darkbg to-darkfg z-50 ${isVisible ? "" : "header-hidden"}`;
+
   return (
-    <div>
-      <DynamicHeader>
-        <nav className="flex justify-between items-center w-full px-4 py-2 sm:px-6 lg:px-8">
-          <MobileMenu links={navigationLinks} />
+    <div className="w-full shadow-md">
+      <header
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className={headerClassName}
+      >
+        <div className="w-full bg-white dark:bg-gray-900 shadow-md transition-colors duration-300">
+          {/* Upper Navbar */}
+          <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16 sm:h-20">
+              <div className="flex items-center gap-4">
+                <MobileMenu links={navigationLinks} />
+                <Link href="/" className="flex items-center" prefetch>
+                  <Image
+                    src={NavbarLogo}
+                    alt="Company logo"
+                    className="size-12 sm:size-14 lg:size-16 dark:invert"
+                    priority
+                  />
+                  <span className="ml-2 text-lg font-semibold text-gray-900 dark:text-white hidden sm:block">
+                    Giant Auto Import
+                  </span>
+                </Link>
+              </div>
 
-          <Link href="/" className="w-max md:hidden" prefetch>
-            <Image
-              src={NavbarLogo}
-              alt="Company logo"
-              className="size-14 sm:size-16 brightness-0 invert custom-shadow"
-              priority
-            />
-          </Link>
+              <div className="hidden md:flex items-center gap-6">
+                <Link
+                  href="https://www.copart.com/login/"
+                  className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Image
+                    src={CopartLogo}
+                    alt="Copart logo"
+                    className="size-10 sm:size-12 dark:brightness-95"
+                    priority
+                  />
+                </Link>
+                <Link
+                  href="https://login.iaai.com/"
+                  className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Image
+                    src={IAAILogo}
+                    alt="IAAI logo"
+                    className="size-10 sm:size-12 dark:brightness-95"
+                    priority
+                  />
+                </Link>
+              </div>
 
-          <div className="hidden md:flex items-center gap-4 lg:gap-6">
-            <Link href="/" className="w-max" prefetch>
-              <Image
-                src={NavbarLogo}
-                alt="Company logo"
-                className="size-16 lg:size-20 brightness-0 invert custom-shadow"
-                priority
-              />
-            </Link>
-            <div className="flex gap-2 ml-4 lg:ml-8">
-              <Link href="https://www.copart.com/login/" className="w-max">
-                <Image
-                  src={CopartLogo}
-                  alt="Company logo"
-                  className="size-16 lg:size-20"
-                  priority
-                />
-              </Link>
-              <Link
-                href="https://login.iaai.com/Identity/Account/Login?ReturnUrl=%2Fconnect%2Fauthorize%2Fcallback%3Fclient_id%3DAuctionCenterPortal%26redirect_uri%3Dhttps%253A%252F%252Fwww.iaai.com%252Fsignin-oidc%26response_type%3Dcode%26scope%3Dopenid%2520profile%2520email%2520phone%2520offline_access%2520BuyerProfileClaims%26code_challenge%3D9PMRV8ReGXfo8_dLHnDBMBWLnrRs9fdpGSejoqBUzaA%26code_challenge_method%3DS256%26response_mode%3Dform_post%26nonce%3D638574975578455032.NzYwYmFhZWUtZDY5ZS00NzYwLWIzNjAtNjYxYWFiMzliYzI2ODc1Y2U3YTEtMmFiNy00YjY4LWJiMTUtMzk1ODE2NDZhNTRj%26state%3DCfDJ8BCy1GGolWFFkdQe4OIhgEJEuQoihIhAIadE97gWAxz1OCihd0THPTDDIVWW_eXiQUhav40uR_NXpvfFZDIgb2Sqr07Rt0YSEf9UTmhZWaubMZ_e1Cc99VJ-b6-2rHIF3TfJxY4YJOh4UbdTGswM8_vyPqOKlfKuKxTINcb6sqo2YR7KUTjNxOa0bMK134T-dLwzmZKaFhL0MgL2aSaFN5ti29F9QgE-hs9kemYNqcKUyTUUzXGJrGrPiggrkhb3KGFTUWwHnBS2wenwYFKALoF_k8R27ikmrZjUR-5ArZt2wREvFIrkZ0kzlUqgMb_CIz8MoAa6Dqm9urLp6-P3ogqu2MENhbo77rLSWhBIxCizH1awZ_R4Y-_RXLe6VdzAs58a0Lu0pD5yppLnR9SovNyiaoyoFHjFaaBMhmjDncocyEx1rG3O8-0U85wdoSPcWDz6XolwlBCa7AQ6_MkLedhkpo3I7a9E6Xc0o2_CHtek"
-                className="w-max"
-              >
-                <Image
-                  src={IAAILogo}
-                  alt="Company logo"
-                  className="size-16 lg:size-20"
-                  priority
-                />
-              </Link>
+              <div className="flex items-center gap-3 sm:gap-4">
+                <LocaleSwitcher />
+                <Avatar user={user} />
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <LocaleSwitcher />
-            <Avatar user={user} />
+
+          {/* Navigation Links */}
+          <div className="hidden md:block border-t border-gray-200 dark:border-gray-800">
+            <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
+              <NavigationLinks links={navigationLinks} />
+            </div>
           </div>
-        </nav>
-      </DynamicHeader>
-      <div className="hidden md:flex">
-        <NavigationLinks links={navigationLinks} />
-      </div>
+        </div>
+      </header>
     </div>
   );
 };

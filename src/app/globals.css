@@ -112,3 +112,9 @@
   background-position: center center;
   background-size: cover;
 }
+
+/* src/app/globals.css */
+/* Add at the top of the file */
+.no-fouc {
+  visibility: hidden;
+}

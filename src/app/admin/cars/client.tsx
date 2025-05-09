@@ -6,11 +6,28 @@ import { columns } from "./columns";
 import { useQuery } from "@tanstack/react-query";
 
 const fetchCars = async () => {
-  const response = await fetch("/api/cars");
-  if (!response.ok) {
-    throw new Error("Failed to fetch cars");
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+    const response = await fetch("/api/cars", {
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.details || 'Failed to fetch cars');
+    }
+    
+    return response.json();
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timed out after 30 seconds');
+    }
+    throw error;
   }
-  return response.json();
 };
 export const Client = () => {
   const { isLoading, data, error } = useQuery({

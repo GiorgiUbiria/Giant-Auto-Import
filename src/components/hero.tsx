@@ -2,7 +2,7 @@ import HeroImageComponent from "./hero-image";
 
 export default async function Hero() {
   return (
-    <div className="relative bg-gradient-to-r from-purple-600 to-blue-600 min-h-[700px] text-white overflow-hidden">
+    <div className="relative bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-900 dark:to-black min-h-[700px] text-white overflow-hidden">
       <HeroImageComponent />
       <div className="relative flex flex-col justify-center items-center h-full text-center px-4 py-20">
         <div className="w-max">
@@ -11,14 +11,14 @@ export default async function Hero() {
           </h1>
         </div>
         <p className="text-xl text-gray-100 mb-10 max-w-2xl animate-fadeIn">
-          Discover amazing features and services that await you.
+          Your trusted partner in importing premium vehicles from Copart USA
         </p>
         <div className="flex gap-4 animate-fadeIn">
-          <a href="#features" className="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-            Get Started
+          <a href="#features" className="bg-white text-blue-600 dark:text-blue-800 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+            Start Importing
           </a>
-          <a href="/docs" className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white/10 transition-colors">
-            Documentation
+          <a href="/how-to" className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white/10 transition-colors">
+            How It Works
           </a>
         </div>
       </div>

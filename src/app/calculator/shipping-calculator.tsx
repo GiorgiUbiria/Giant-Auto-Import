@@ -114,31 +114,32 @@ export function ShippingCalculator({ style }: { style: string }) {
   };
 
   return (
-    <Card className="w-full max-w-4xl shadow-lg transition-all duration-200 hover:shadow-xl">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-primary dark:drop-shadow-[0_1.3px_1.3px_rgba(0,0,0,1)] bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+    <Card className="w-full max-w-4xl shadow-lg transition-all duration-300 hover:shadow-xl border-black dark:border-border/20">
+      <CardHeader className="text-center space-y-4">
+        <CardTitle className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-primary dark:text-primary/90 bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
           {t('title')}
         </CardTitle>
+        <p className="text-muted-foreground text-sm sm:text-base">{t('description')}</p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleCalculate} className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="bid" className="text-base">{t('enterBid')}</Label>
+                <Label htmlFor="bid" className="text-base font-medium">{t('enterBid')}</Label>
                 <Input
                   id="bid"
                   value={purchaseFee}
                   onChange={(e) => setPurchaseFee(parseFloat(e.target.value))}
                   type="number"
-                  className="transition-all duration-200 focus:ring-2 focus:ring-primary"
+                  className="transition-all duration-200 focus:ring-2 focus:ring-primary dark:focus:ring-primary/80 dark:bg-muted/50"
                   placeholder="0.00"
                 />
               </div>
-              <div>
-                <Label htmlFor="auction">{t('selectAuction')}</Label>
+              <div className="space-y-2">
+                <Label htmlFor="auction" className="text-base font-medium">{t('selectAuction')}</Label>
                 <Select onValueChange={handleAuctionChange} value={auction}>
-                  <SelectTrigger>
+                  <SelectTrigger className="transition-all duration-200 hover:border-primary dark:hover:border-primary/80">
                     <SelectValue placeholder={t('selectAuction')} />
                   </SelectTrigger>
                   <SelectContent>
@@ -148,14 +149,14 @@ export function ShippingCalculator({ style }: { style: string }) {
                 </Select>
               </div>
               <div className="flex flex-col space-y-2">
-                <Label htmlFor="auctionLocation" className="text-base">{t('selectAuctionLocation')}</Label>
+                <Label htmlFor="auctionLocation" className="text-base font-medium">{t('selectAuctionLocation')}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       role="combobox"
                       className={cn(
-                        "w-full justify-between transition-all duration-200 hover:border-primary",
+                        "w-full justify-between transition-all duration-200 hover:border-primary dark:hover:border-primary/80",
                         !auctionLocation && "text-muted-foreground"
                       )}
                     >
@@ -164,8 +165,8 @@ export function ShippingCalculator({ style }: { style: string }) {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-full p-0">
-                    <Command>
-                      <CommandInput placeholder={t('searchAuctionLocation')} />
+                    <Command className="rounded-lg border shadow-md dark:border-border/20">
+                      <CommandInput placeholder={t('searchAuctionLocation')} className="h-9" />
                       <CommandList>
                         <CommandEmpty>{t('noAuctionLocationFound')}</CommandEmpty>
                         <CommandGroup>
@@ -182,7 +183,7 @@ export function ShippingCalculator({ style }: { style: string }) {
                               onSelect={(value) => {
                                 handleAuctionLocationChange(value);
                               }}
-                              className="text-primary"
+                              className="text-primary cursor-pointer transition-colors hover:bg-muted/50 dark:hover:bg-muted/30"
                             >
                               <Check
                                 className={cn(
@@ -199,18 +200,18 @@ export function ShippingCalculator({ style }: { style: string }) {
                   </PopoverContent>
                 </Popover>
               </div>
-              <div>
-                <Label htmlFor="fromPort">{t('fromUSAPort')}</Label>
+              <div className="space-y-2">
+                <Label htmlFor="fromPort" className="text-base font-medium">{t('fromUSAPort')}</Label>
                 <Select value={port} disabled>
-                  <SelectTrigger>
+                  <SelectTrigger className="transition-all duration-200 bg-muted/50 dark:bg-muted/30">
                     <SelectValue>{port}</SelectValue>
                   </SelectTrigger>
                 </Select>
               </div>
-              <div>
-                <Label htmlFor="destinationPort">{t('destinationPort')}</Label>
+              <div className="space-y-2">
+                <Label htmlFor="destinationPort" className="text-base font-medium">{t('destinationPort')}</Label>
                 <Select value="Poti" disabled>
-                  <SelectTrigger>
+                  <SelectTrigger className="transition-all duration-200 bg-muted/50 dark:bg-muted/30">
                     <SelectValue>Poti</SelectValue>
                   </SelectTrigger>
                 </Select>
@@ -218,10 +219,10 @@ export function ShippingCalculator({ style }: { style: string }) {
             </div>
             <div className="space-y-6">
               <div className="space-y-4">
-                <Label className="text-base">{t('additionalFees')}</Label>
-                <div className="space-y-3 p-4 rounded-lg bg-muted/50">
+                <Label className="text-base font-medium">{t('additionalFees')}</Label>
+                <div className="space-y-3 p-4 rounded-lg bg-muted/50 dark:bg-muted/30 border border-border/20 dark:border-border/10">
                   {extraFees.map((fee) => (
-                    <div key={fee.type} className="flex items-center space-x-3 transition-all duration-200 hover:bg-muted/80 p-2 rounded">
+                    <div key={fee.type} className="flex items-center space-x-3 transition-all duration-200 hover:bg-muted/80 dark:hover:bg-muted/50 p-2 rounded">
                       <Checkbox
                         id={fee.type}
                         checked={additionalFees.includes(fee.type)}
@@ -234,7 +235,7 @@ export function ShippingCalculator({ style }: { style: string }) {
                             );
                           }
                         }}
-                        className="data-[state=checked]:bg-primary"
+                        className="data-[state=checked]:bg-primary dark:data-[state=checked]:bg-primary/90"
                       />
                       <label
                         htmlFor={fee.type}
@@ -246,16 +247,16 @@ export function ShippingCalculator({ style }: { style: string }) {
                   ))}
                 </div>
               </div>
-              <div className="mt-6 p-4 rounded-lg bg-primary/5">
+              <div className="mt-6 p-6 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20">
                 <p className="text-lg font-semibold mb-4">
                   {t('estimatedTotalFee')}{" "}
-                  <span className="text-2xl font-bold text-primary">
+                  <span className="text-2xl font-bold text-primary dark:text-primary/90">
                     ${estimatedFee.toFixed(2)}
                   </span>
                 </p>
                 <Button
                   type="submit"
-                  className="w-full transition-all duration-200 hover:scale-[1.02]"
+                  className="w-full transition-all duration-200 hover:scale-[1.02] bg-primary hover:bg-primary/90 dark:bg-primary/90 dark:hover:bg-primary/80"
                 >
                   {t('calculate')}
                 </Button>

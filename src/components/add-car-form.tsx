@@ -283,24 +283,25 @@ export function AddCarForm() {
 
   return (
     <Form {...form}>
-      {" "}
       <form
         onSubmit={handleSubmit}
-        className="w-full md:w-2/3 space-y-6 my-4 bg-gray-200/90 dark:bg-gray-700 p-3 rounded-md"
+        className="w-full md:w-2/3 space-y-8 my-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg transition-all"
       >
-        {" "}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
-          {" "}
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Vehicle Information</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Enter the basic details about the vehicle</p>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <FormField
             control={form.control}
             name="vin"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>VIN*</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">VIN*</FormLabel>
                 <FormControl>
-                  <Input {...field} required />
+                  <Input {...field} required className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700" />
                 </FormControl>
-                <FormDescription>VIN Code of the car</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">VIN Code of the car</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -310,16 +311,17 @@ export function AddCarForm() {
             name="year"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Year*</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Year*</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
                     {...field}
                     required
                     onChange={(e) => field.onChange(Number(e.target.value))}
+                    className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700"
                   />
                 </FormControl>
-                <FormDescription>Year</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Year</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -329,11 +331,11 @@ export function AddCarForm() {
             name="make"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Make*</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Make*</FormLabel>
                 <FormControl>
-                  <Input {...field} required />
+                  <Input {...field} required className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700" />
                 </FormControl>
-                <FormDescription>Car Manufacturer</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Car Manufacturer</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -343,27 +345,32 @@ export function AddCarForm() {
             name="model"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Model*</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Model*</FormLabel>
                 <FormControl>
-                  <Input {...field} required />
+                  <Input {...field} required className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700" />
                 </FormControl>
-                <FormDescription>Car Model</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Car Model</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
+
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Shipping Details</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Enter the shipping and tracking information</p>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <FormField
             control={form.control}
             name="bookingNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Booking #</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Booking #</FormLabel>
                 <FormControl>
-                  <Input {...field} value={field.value || ""} />
+                  <Input {...field} value={field.value || ""} className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700" />
                 </FormControl>
-                <FormDescription>Booking #</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Booking #</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -373,11 +380,11 @@ export function AddCarForm() {
             name="containerNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Container #</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Container #</FormLabel>
                 <FormControl>
-                  <Input {...field} value={field.value || ""} />
+                  <Input {...field} value={field.value || ""} className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700" />
                 </FormControl>
-                <FormDescription>Container #</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Container #</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -387,11 +394,11 @@ export function AddCarForm() {
             name="lotNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Lot #</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Lot #</FormLabel>
                 <FormControl>
-                  <Input {...field} value={field.value || ""} />
+                  <Input {...field} value={field.value || ""} className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700" />
                 </FormControl>
-                <FormDescription>Lot #</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Lot #</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -401,32 +408,34 @@ export function AddCarForm() {
             name="trackingLink"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Tracking Link</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Tracking Link</FormLabel>
                 <FormControl>
-                  <Input {...field} value={field.value || ""} />
+                  <Input {...field} value={field.value || ""} className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700" />
                 </FormControl>
-                <FormDescription>Tracking Link</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Tracking Link</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <FormField
             control={form.control}
             name="ownerId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Owner</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Owner</FormLabel>
                 <Select onValueChange={field.onChange}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700">
                       <SelectValue placeholder="Select the owner of the car" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {isLoading ? (
-                      <Loader2 className="animate-spin" />
+                      <div className="flex items-center justify-center p-2">
+                        <Loader2 className="animate-spin h-5 w-5" />
+                      </div>
                     ) : (
                       data?.map((user) => (
                         <SelectItem value={user.id} key={user.id}>
@@ -436,7 +445,7 @@ export function AddCarForm() {
                     )}
                   </SelectContent>
                 </Select>
-                <FormDescription>Car Owner</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Car Owner</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -446,13 +455,13 @@ export function AddCarForm() {
             name="shippingStatus"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Status</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Status</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700">
                       <SelectValue placeholder="Select the shipping status" />
                     </SelectTrigger>
                   </FormControl>
@@ -465,7 +474,7 @@ export function AddCarForm() {
                     <SelectItem value="DELIVERED">Delivered</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormDescription>Car shipping status</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Car shipping status</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -475,34 +484,35 @@ export function AddCarForm() {
             name="purchaseFee"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Purchase Fee*</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Purchase Fee*</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     required
                     onChange={(e) => field.onChange(Number(e.target.value))}
+                    className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700"
                   />
                 </FormControl>
-                <FormDescription>Purchase Fee</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Purchase Fee</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <FormField
             control={form.control}
             name="departureDate"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Date of Departure</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Date of Departure</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "pl-3 text-left font-normal",
+                          "pl-3 text-left font-normal transition-all hover:border-primary",
                           !field.value && "text-muted-foreground"
                         )}
                       >
@@ -524,7 +534,7 @@ export function AddCarForm() {
                     />
                   </PopoverContent>
                 </Popover>
-                <FormDescription>Date of Departure</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Date of Departure</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -534,14 +544,14 @@ export function AddCarForm() {
             name="arrivalDate"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Date of Arrival</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Date of Arrival</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "pl-3 text-left font-normal",
+                          "pl-3 text-left font-normal transition-all hover:border-primary",
                           !field.value && "text-muted-foreground"
                         )}
                       >
@@ -563,7 +573,7 @@ export function AddCarForm() {
                     />
                   </PopoverContent>
                 </Popover>
-                <FormDescription>Date of Arrival</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Date of Arrival</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -573,14 +583,14 @@ export function AddCarForm() {
             name="purchaseDate"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Date of Purchase*</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Date of Purchase*</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "pl-3 text-left font-normal",
+                          "pl-3 text-left font-normal transition-all hover:border-primary",
                           !field.value && "text-muted-foreground"
                         )}
                       >
@@ -602,25 +612,29 @@ export function AddCarForm() {
                     />
                   </PopoverContent>
                 </Popover>
-                <FormDescription>Date of Purchase</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Date of Purchase</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Vehicle Specifications</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Enter the vehicle&apos;s specifications and features</p>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <FormField
             control={form.control}
             name="keys"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Keys</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Keys</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700">
                       <SelectValue placeholder="Select if the keys for the car are available" />
                     </SelectTrigger>
                   </FormControl>
@@ -630,7 +644,7 @@ export function AddCarForm() {
                     <SelectItem value="UNKNOWN">Unknown</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormDescription>Keys for the car</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Keys for the car</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -640,13 +654,13 @@ export function AddCarForm() {
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Title</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Title</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700">
                       <SelectValue placeholder="Select if the title of the car is available" />
                     </SelectTrigger>
                   </FormControl>
@@ -656,7 +670,7 @@ export function AddCarForm() {
                     <SelectItem value="PENDING">Pending</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormDescription>Title of the car</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Title of the car</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -666,13 +680,13 @@ export function AddCarForm() {
             name="bodyType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Body/Vehicle Type</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Body/Vehicle Type</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700">
                       <SelectValue placeholder="Select type of the vehicle" />
                     </SelectTrigger>
                   </FormControl>
@@ -684,7 +698,7 @@ export function AddCarForm() {
                     <SelectItem value="BIKE">Bike</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormDescription>Body Type</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Body Type</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -694,36 +708,41 @@ export function AddCarForm() {
             name="fuelType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Fuel Type</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Fuel Type</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700">
                       <SelectValue placeholder="Select if the keys for the car are available" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="GASOLINE">Gas</SelectItem>
                     <SelectItem value="HYBRID_ELECTRIC">
-                      Hybric (Electric)
+                      Hybrid (Electric)
                     </SelectItem>
                   </SelectContent>
                 </Select>
-                <FormDescription>Fuel Type</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Fuel Type</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
+
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Auction Information</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Enter the auction and port details</p>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <FormField
             control={form.control}
             name="auction"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Auction</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Auction</FormLabel>
                 <Select
                   onValueChange={(value) => {
                     field.onChange(value);
@@ -733,7 +752,7 @@ export function AddCarForm() {
                   required
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700">
                       <SelectValue placeholder="Select the auction where the car was bought" />
                     </SelectTrigger>
                   </FormControl>
@@ -742,7 +761,7 @@ export function AddCarForm() {
                     <SelectItem value="IAAI">IAAI</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormDescription>Auction</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Auction</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -752,7 +771,7 @@ export function AddCarForm() {
             name="auctionLocation"
             render={({ field }) => (
               <FormItem className="flex flex-col mt-2.5">
-                <FormLabel>Auction Location*</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Auction Location*</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -760,7 +779,7 @@ export function AddCarForm() {
                         variant="outline"
                         role="combobox"
                         className={cn(
-                          "w-full justify-between",
+                          "w-full justify-between transition-all hover:border-primary",
                           !field.value && "text-muted-foreground"
                         )}
                       >
@@ -797,7 +816,7 @@ export function AddCarForm() {
                                 field.onChange(value);
                                 handleAuctionLocationChange(value);
                               }}
-                              className="text-primary"
+                              className="text-primary hover:bg-secondary/50 transition-colors"
                             >
                               <Check
                                 className={cn(
@@ -813,7 +832,7 @@ export function AddCarForm() {
                     </Command>
                   </PopoverContent>
                 </Popover>
-                <FormDescription>Auction Location</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Auction Location</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -823,14 +842,14 @@ export function AddCarForm() {
             name="originPort"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Port of Origin*</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Port of Origin*</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                   required
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700">
                       <SelectValue placeholder="Select the origin port for ground fee calculation" />
                     </SelectTrigger>
                   </FormControl>
@@ -842,7 +861,7 @@ export function AddCarForm() {
                     ))}
                   </SelectContent>
                 </Select>
-                <FormDescription>Origin Port</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Origin Port</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -852,13 +871,13 @@ export function AddCarForm() {
             name="insurance"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Insurance</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Insurance</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value as string}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700">
                       <SelectValue placeholder="Select if the car is insured" />
                     </SelectTrigger>
                   </FormControl>
@@ -867,19 +886,24 @@ export function AddCarForm() {
                     <SelectItem value="NO">NO</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormDescription>Insurance</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Insurance</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
+
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Vehicle Images</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Upload images for different stages of the vehicle</p>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <FormField
             control={form.control}
             name="auction_images"
             render={({ field: { value, onChange, ...fieldProps } }) => (
               <FormItem>
-                <FormLabel>Auction Images</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Auction Images</FormLabel>
                 <FormControl>
                   <Input
                     type="file"
@@ -887,9 +911,10 @@ export function AddCarForm() {
                     multiple
                     accept={ACCEPTED_IMAGE_TYPES.join(", ")}
                     onChange={(event) => onChange(event.target.files)}
+                    className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
                   />
                 </FormControl>
-                <FormDescription>Auction Images</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Auction Images</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -899,7 +924,7 @@ export function AddCarForm() {
             name="warehouse_images"
             render={({ field: { value, onChange, ...fieldProps } }) => (
               <FormItem>
-                <FormLabel>Warehouse Images</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Warehouse Images</FormLabel>
                 <FormControl>
                   <Input
                     type="file"
@@ -907,9 +932,10 @@ export function AddCarForm() {
                     multiple
                     accept={ACCEPTED_IMAGE_TYPES.join(", ")}
                     onChange={(event) => onChange(event.target.files)}
+                    className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
                   />
                 </FormControl>
-                <FormDescription>Warehouse Images</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Warehouse Images</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -919,7 +945,7 @@ export function AddCarForm() {
             name="delivery_images"
             render={({ field: { value, onChange, ...fieldProps } }) => (
               <FormItem>
-                <FormLabel>Delivery Images</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Delivery Images</FormLabel>
                 <FormControl>
                   <Input
                     type="file"
@@ -927,9 +953,10 @@ export function AddCarForm() {
                     multiple
                     accept={ACCEPTED_IMAGE_TYPES.join(", ")}
                     onChange={(event) => onChange(event.target.files)}
+                    className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
                   />
                 </FormControl>
-                <FormDescription>Delivery Images</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Delivery Images</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -939,7 +966,7 @@ export function AddCarForm() {
             name="pick_up_images"
             render={({ field: { value, onChange, ...fieldProps } }) => (
               <FormItem>
-                <FormLabel>Pick Up Images</FormLabel>
+                <FormLabel className="font-semibold text-gray-700 dark:text-gray-200">Pick Up Images</FormLabel>
                 <FormControl>
                   <Input
                     type="file"
@@ -947,21 +974,26 @@ export function AddCarForm() {
                     multiple
                     accept={ACCEPTED_IMAGE_TYPES.join(", ")}
                     onChange={(event) => onChange(event.target.files)}
+                    className="transition-all hover:border-primary focus:border-primary bg-gray-50 dark:bg-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
                   />
                 </FormControl>
-                <FormDescription>Pick Up Images</FormDescription>
+                <FormDescription className="text-xs text-gray-500 dark:text-gray-400">Pick Up Images</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
+
         <Button
           type="submit"
-          className="w-full"
+          className="w-full transition-all hover:bg-primary/90 font-semibold py-3 text-base rounded-lg shadow-md hover:shadow-lg"
           disabled={isPending || isUploadingImages}
         >
           {isPending || isUploadingImages ? (
-            <Loader2 className="animate-spin" />
+            <div className="flex items-center justify-center gap-2">
+              <Loader2 className="animate-spin h-5 w-5" />
+              <span>Processing...</span>
+            </div>
           ) : (
             "Add Car"
           )}

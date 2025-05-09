@@ -2,8 +2,10 @@
 
 import { getUserAction } from "@/lib/actions/userActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
-import { Loader2 } from "lucide-react";
+import { Loader2, Users, Car, PlusCircle, UserPlus } from "lucide-react";
 import { UpdateAdminForm } from "./update-admin-form";
+import Link from "next/link";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Client = ({ id }: { id: string }) => {
 	const { isLoading, data } = useServerActionQuery(getUserAction, {
@@ -21,13 +23,59 @@ export const Client = ({ id }: { id: string }) => {
 		)
 	}
 
+	const QuickAccessCard = ({ title, description, icon: Icon, href }: { title: string; description: string; icon: any; href: string }) => (
+		<Link href={href}>
+			<Card className="hover:bg-accent transition-colors cursor-pointer">
+				<CardHeader>
+					<CardTitle className="flex items-center gap-2">
+						<Icon className="h-5 w-5" />
+						{title}
+					</CardTitle>
+					<CardDescription>{description}</CardDescription>
+				</CardHeader>
+			</Card>
+		</Link>
+	);
+
 	return (
-		<div>
+		<div className="space-y-8">
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+				<QuickAccessCard
+					title="Users"
+					description="Manage user accounts"
+					icon={Users}
+					href="/admin/users"
+				/>
+				<QuickAccessCard
+					title="Cars"
+					description="View all imported cars"
+					icon={Car}
+					href="/admin/cars"
+				/>
+				<QuickAccessCard
+					title="Add Car"
+					description="Add a new car to the system"
+					icon={PlusCircle}
+					href="/admin/add_car"
+				/>
+				<QuickAccessCard
+					title="Register User"
+					description="Create a new user account"
+					icon={UserPlus}
+					href="/admin/signup"
+				/>
+			</div>
+
 			{isLoading ? <LoadingState /> : (
-				<div className="w-full grid place-items-center">
-					<h1 className="text-3xl my-8 flex gap-2 items-center"> Profile of - {data?.user.fullName} </h1>
-					<UpdateAdminForm user={data?.user!} />
-				</div>
+				<Card>
+					<CardHeader>
+						<CardTitle>Admin Profile</CardTitle>
+						<CardDescription>Update your admin account information</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<UpdateAdminForm user={data?.user!} />
+					</CardContent>
+				</Card>
 			)}
 		</div>
 	)

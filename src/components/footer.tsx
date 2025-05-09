@@ -15,8 +15,8 @@ export default async function Footer() {
   const t = await getTranslations("Footer");
 
   return (
-    <footer className="bg-gradient-to-r from-darkbg to-darkfg py-12">
-      <div className="mx-auto w-full max-w-7xl px-4 xl:px-8">
+    <footer className="bg-white dark:bg-gray-900 shadow-lg shadow-md shadow-black/30 border-t border-gray-200 dark:border-gray-800">
+      <div className="mx-auto w-full max-w-7xl px-4 py-12 xl:px-8">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
           {/* Company Info Section */}
           <div className="space-y-6">
@@ -24,9 +24,9 @@ export default async function Footer() {
               <Image
                 src={CompanyLogo}
                 alt="Company Logo"
-                className="h-16 w-16 brightness-0 invert"
+                className="h-16 w-16 dark:invert"
               />
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                 {t("companyName")}
               </h2>
             </div>
@@ -50,6 +50,7 @@ export default async function Footer() {
                       alt={social.alt}
                       width={32}
                       height={32}
+                      className="dark:invert hover:opacity-80 transition-opacity"
                     />
                   </Link>
                 ))}
@@ -84,23 +85,23 @@ export default async function Footer() {
               }
             ].map((item) => (
               <div key={item.alt} className="flex items-start gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
                   <Image
                     src={item.icon}
                     alt={item.alt}
                     width={24}
                     height={24}
-                    className="invert"
+                    className="dark:invert"
                   />
                 </div>
                 <div>
                   <a
                     href={item.href}
-                    className="text-sm font-medium text-white hover:text-white/80"
+                    className="text-sm font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                   >
                     {item.text}
                   </a>
-                  <p className="mt-1 text-xs text-white/80">
+                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
                     {item.subtext}
                   </p>
                 </div>
@@ -110,7 +111,7 @@ export default async function Footer() {
 
           {/* Navigation Links Section */}
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               {t('pages')}
             </h3>
             <nav>
@@ -125,7 +126,8 @@ export default async function Footer() {
                   <li key={link.href}>
                     <a
                       href={link.href}
-                      className="text-sm text-white/80 transition-colors hover:text-white hover:font-medium"
+                      className="text-sm text-gray-600 dark:text-gray-400 transition-colors 
+                        hover:text-blue-600 dark:hover:text-blue-400"
                     >
                       {link.label}
                     </a>
@@ -136,10 +138,10 @@ export default async function Footer() {
           </div>
         </div>
 
-        <hr className="my-8 border-white/20" />
+        <hr className="my-8 border-gray-200 dark:border-gray-800" />
 
         <div className="text-center">
-          <p className="text-sm text-white/80">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             {t('copyright')}
           </p>
         </div>

@@ -6,6 +6,16 @@ import { Loader2 } from "lucide-react";
 import CarInfo from "./car-info";
 import { ImageGallery } from "./image-gallery";
 import StatusLine from "./status-line";
+import { Suspense } from "react";
+
+const LoadingState = () => (
+	<div className="w-full h-[50vh] grid place-items-center">
+		<div className="flex flex-col items-center gap-2">
+			<Loader2 className="h-8 w-8 animate-spin text-primary" />
+			<p className="text-muted-foreground">Loading car details...</p>
+		</div>
+	</div>
+);
 
 export const Client = ({ vin }: { vin: string }) => {
 	const { isLoading, data } = useServerActionQuery(getCarAction, {
@@ -13,20 +23,17 @@ export const Client = ({ vin }: { vin: string }) => {
 			vin: vin,
 		},
 		queryKey: ["getCar", vin],
-	})
-
-	const LoadingState = () => {
-		return (
-			<div className="w-full h-full grid place-items-center">
-				<Loader2 className="animate-spin text-center" />
-			</div>
-		)
-	}
+		refetchOnWindowFocus: false,
+		refetchOnMount: false,
+		refetchOnReconnect: false,
+	});
 
 	return (
 		<div className="flex flex-col mb-4 mt-8 md:mt-4 px-4 sm:px-6 lg:px-8">
-			{
-				isLoading ? <LoadingState /> : (
+			<Suspense fallback={<LoadingState />}>
+				{isLoading ? (
+					<LoadingState />
+				) : (
 					<div>
 						<div className="w-full lg:w-3/4 mx-auto mb-8">
 							<StatusLine status={data?.shippingStatus!} />
@@ -36,8 +43,8 @@ export const Client = ({ vin }: { vin: string }) => {
 							<CarInfo car={data!} />
 						</div>
 					</div>
-				)
-			}
+				)}
+			</Suspense>
 		</div>
-	)
-}
+	);
+};

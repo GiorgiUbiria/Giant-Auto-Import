@@ -118,6 +118,7 @@ export const cars = sqliteTable("cars", {
   return {
     vinIdx: uniqueIndex("vin_idx").on(table.vin),
     ownerIdx: index("owner_idx").on(table.ownerId),
+    purchaseDateIdx: index("purchase_date_idx").on(table.purchaseDate),
   }
 });
 

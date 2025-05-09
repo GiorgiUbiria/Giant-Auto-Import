@@ -33,7 +33,7 @@ export default function LocaleSwitcherSelect({
 				<Select.Trigger
 					aria-label={label}
 					className={clsx(
-						'inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm text-white/90 transition-all hover:bg-white/10 hover:text-white',
+						'inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm text-gray-700 dark:text-white/90 bg-gray-100 dark:bg-transparent transition-all hover:bg-gray-200 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white',
 						isPending && 'pointer-events-none opacity-60'
 					)}
 				>
@@ -43,19 +43,19 @@ export default function LocaleSwitcherSelect({
 				<Select.Portal>
 					<Select.Content
 						align="end"
-						className="min-w-[8rem] overflow-hidden rounded-md bg-black/95 backdrop-blur-sm shadow-lg border border-white/10 z-50"
+						className="min-w-[8rem] overflow-hidden rounded-md bg-white dark:bg-black/95 backdrop-blur-sm shadow-lg border border-gray-200 dark:border-white/10 z-50"
 						position="popper"
 					>
 						<Select.Viewport className="p-1">
 							{items.map((item) => (
 								<Select.Item
 									key={item.value}
-									className="flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-white outline-none hover:bg-white/10 focus:bg-white/10"
+									className="flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-gray-800 dark:text-white outline-none hover:bg-gray-100 dark:hover:bg-white/10 focus:bg-gray-100 dark:focus:bg-white/10"
 									value={item.value}
 								>
 									<div className="w-4 flex-shrink-0">
 										{item.value === defaultValue && (
-											<CheckIcon className="h-4 w-4 text-yellow-400" />
+											<CheckIcon className="h-4 w-4 text-blue-600 dark:text-yellow-400" />
 										)}
 									</div>
 									<span>{item.label}</span>

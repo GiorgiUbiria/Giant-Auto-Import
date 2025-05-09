@@ -1,0 +1,1 @@
+CREATE INDEX `purchase_date_idx` ON `cars` (`purchase_date`);

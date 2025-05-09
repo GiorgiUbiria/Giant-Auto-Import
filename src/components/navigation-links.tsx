@@ -14,9 +14,10 @@ const NavLink = memo(({ href, label, isActive }: LinkProp & { isActive: boolean 
   <Link
     href={href}
     prefetch
-    className={`flex items-center text-white text-nowrap font-medium focus:text-yellow-400 text-lg transition-all hover:text-yellow-400 hover:-translate-y-0.5 ${
-      isActive ? "text-yellow-400 font-semibold" : "text-white/90"
-    }`}
+    className={`flex items-center text-nowrap font-medium py-3 transition-colors
+      ${isActive 
+        ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400" 
+        : "text-black dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 border-b-2 border-transparent"}`}
   >
     <span>{label}</span>
   </Link>
@@ -28,7 +29,7 @@ function NavigationLinks({ links }: { links: LinkProp[] }) {
   const pathname = usePathname();
 
   return (
-    <div className="flex flex-col w-full md:flex-row gap-6 px-8 py-3 bg-black/95 backdrop-blur-sm shadow-lg md:items-center">
+    <div className="flex items-center gap-8">
       {links.map((link) => (
         <NavLink
           key={link.href}

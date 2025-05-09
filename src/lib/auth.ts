@@ -1,6 +1,7 @@
 import { Lucia } from "lucia";
 import { cookies } from "next/headers";
 import { cache } from "react";
+import { unstable_cache } from 'next/cache';
 
 import { DrizzleSQLiteAdapter } from "@lucia-auth/adapter-drizzle";
 import type { Session, User } from "lucia";
@@ -31,6 +32,15 @@ export const lucia = new Lucia(adapter, {
   },
 });
 
+// Cache session validation for 5 minutes
+const validateSessionWithCache = unstable_cache(
+  async (sessionId: string) => {
+    return await lucia.validateSession(sessionId);
+  },
+  ['session-validation'],
+  { revalidate: 300 } // 5 minutes
+);
+
 export const getAuth = cache(
   async (): Promise<{ user: User; session: Session } | { user: null; session: null }> => {
     const sessionId = cookies().get(lucia.sessionCookieName)?.value ?? null;
@@ -41,7 +51,7 @@ export const getAuth = cache(
       };
     }
 
-    const result = await lucia.validateSession(sessionId);
+    const result = await validateSessionWithCache(sessionId);
 
     try {
       if (result.session && result.session.fresh) {

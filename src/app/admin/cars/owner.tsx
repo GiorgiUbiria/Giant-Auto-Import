@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import Link from "next/link";
 
 export const Owner = ({ id }: { id: string }) => {
-  const { isLoading, data } = useServerActionQuery(getUserAction, {
+  const { isLoading, data, error } = useServerActionQuery(getUserAction, {
     input: {
       id: id,
     },
@@ -15,22 +15,36 @@ export const Owner = ({ id }: { id: string }) => {
 
   const LoadingState = () => {
     return (
-      <Link href="">
-        <Loader2 className="animate-spin text-center" />
-      </Link>
+      <div className="py-10">
+        <Loader2 className="animate-spin text-primary" />
+      </div>
     );
   };
 
+  const ErrorState = () => {
+    return (
+      <div className="py-10 text-muted-foreground">
+        {data?.message || "Failed to load user data"}
+      </div>
+    );
+  };
+
+  if (isLoading) {
+    return <LoadingState />;
+  }
+
+  if (error || !data?.success || !data?.user) {
+    return <ErrorState />;
+  }
+
   return (
     <div className="py-10 text-primary">
-      {isLoading ? (
-        <LoadingState />
-      ) : (
-        <Link href={data?.user.id!} className="font-semibold hover:underline">
-          {" "}
-          {data?.user.fullName}{" "}
-        </Link>
-      )}
+      <Link 
+        href={`/admin/users/${data.user.id}`} 
+        className="font-semibold hover:underline"
+      >
+        {data.user.fullName}
+      </Link>
     </div>
   );
 };

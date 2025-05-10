@@ -37,22 +37,22 @@ type Props = {
 export function UpdateAdminForm({ user }: Props) {
 	const [showPassword, setShowPassword] = useState(false);
 	
-	if (!user) {
-		return null;
-	}
-
 	const form = useForm<z.infer<typeof FormSchema>>({
 		resolver: zodResolver(FormSchema),
 		defaultValues: {
-			id: user.id || "",
-			fullName: user.fullName || "",
-			email: user.email || "",
-			passwordText: user.passwordText || "",
-			phone: user.phone || "",
+			id: user?.id || "",
+			fullName: user?.fullName || "",
+			email: user?.email || "",
+			passwordText: user?.passwordText || "",
+			phone: user?.phone || "",
 		},
 	})
 
 	const { isPending, execute } = useServerAction(updateUserAction);
+
+	if (!user) {
+		return null;
+	}
 
 	const onSubmit = async (values: z.infer<typeof FormSchema>) => {
 		try {

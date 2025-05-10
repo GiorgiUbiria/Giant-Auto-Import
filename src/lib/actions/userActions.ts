@@ -34,20 +34,23 @@ export const getUserAction = isAdminProcedure
     })
   )
   .output(
-    z.union([
-      z.object({
-        user: SelectSchema,
-        cars: z.array(selectCarSchema),
-      }),
-      z.null(),
-    ])
+    z.object({
+      success: z.boolean(),
+      user: SelectSchema.nullable(),
+      cars: z.array(selectCarSchema).nullable(),
+      message: z.string().optional(),
+    })
   )
   .handler(async ({ input }) => {
     const { id } = input;
 
     if (!id) {
-      console.log("No id");
-      return null;
+      return {
+        success: false,
+        user: null,
+        cars: null,
+        message: "No user ID provided",
+      };
     }
 
     try {
@@ -59,16 +62,30 @@ export const getUserAction = isAdminProcedure
         limit: 1,
       });
 
-      if (!result) return null;
+      if (!result) {
+        return {
+          success: false,
+          user: null,
+          cars: null,
+          message: "User not found",
+        };
+      }
 
       const { ownedCars, ...user } = result;
       return {
+        success: true,
         user,
         cars: ownedCars ?? [],
+        message: "User fetched successfully",
       };
     } catch (error) {
       console.error("Error fetching user:", error);
-      throw new Error("Failed to fetch user");
+      return {
+        success: false,
+        user: null,
+        cars: null,
+        message: "Failed to fetch user",
+      };
     }
   });
 

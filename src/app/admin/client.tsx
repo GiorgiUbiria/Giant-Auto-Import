@@ -28,7 +28,7 @@ export const Client = ({ id }: { id: string }) => {
 		return (
 			<Alert variant="destructive">
 				<AlertDescription>
-					Failed to load user data. Please try refreshing the page.
+					{data?.message || "Failed to load user data. Please try refreshing the page."}
 				</AlertDescription>
 			</Alert>
 		)
@@ -81,7 +81,7 @@ export const Client = ({ id }: { id: string }) => {
 
 			{isLoading ? (
 				<LoadingState />
-			) : error ? (
+			) : error || !data?.success ? (
 				<ErrorState />
 			) : data?.user ? (
 				<Card className="border-t">

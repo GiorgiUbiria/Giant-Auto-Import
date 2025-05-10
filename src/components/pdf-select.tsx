@@ -1,9 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { PDFDocument } from "pdf-lib";
-import fontkit from "@pdf-lib/fontkit";
+import { Button } from "@/components/ui/button";
 import { User } from "lucia";
+
+let PDFDocument: any;
+let fontkit: any;
+
+async function loadPDFLibs() {
+  if (!PDFDocument) {
+    const pdfLib = await import('pdf-lib');
+    PDFDocument = pdfLib.PDFDocument;
+  }
+  if (!fontkit) {
+    fontkit = (await import('@pdf-lib/fontkit')).default;
+  }
+  return { PDFDocument, fontkit };
+}
 
 type Props = {
   user: User;
@@ -20,6 +33,7 @@ export default function PdfSelect({ user }: Props) {
   };
 
   const editPdf = async (existingPdfBytes: ArrayBuffer, type: string) => {
+    const { PDFDocument, fontkit } = await loadPDFLibs();
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
     pdfDoc.registerFontkit(fontkit);
 

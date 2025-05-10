@@ -11,8 +11,10 @@ export default function HeroImageComponent() {
         fill
         className="object-cover object-center transform scale-105"
         priority
-        quality={85}
+        quality={75}
         placeholder="blur"
+        sizes="100vw"
+        loading="eager"
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/40 backdrop-blur-[2px]"></div>
     </div>

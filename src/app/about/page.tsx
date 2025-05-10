@@ -6,11 +6,11 @@ import {
 } from "@/components/ui/accordion";
 import { getTranslations } from 'next-intl/server';
 import Image from "next/image";
-import ServiceOne from "../../../public/service1.jpeg";
-import ServiceTwo from "../../../public/service2.jpeg"; 
-import ServiceThree from "../../../public/service3.jpeg";
-import ServiceFour from "../../../public/service4.jpeg";
-import ServiceFive from "../../../public/service5.jpeg";
+import ServiceOne from "../../../public/service1.webp";
+import ServiceTwo from "../../../public/service2.webp"; 
+import ServiceThree from "../../../public/service3.webp";
+import ServiceFour from "../../../public/service4.webp";
+import ServiceFive from "../../../public/service5.webp";
 
 export default async function Page() {
   const t = await getTranslations('AboutPage');
@@ -52,8 +52,10 @@ export default async function Page() {
                   alt={t(`services.${service.key}.title`)}
                   className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out"
                   placeholder="blur"
-                  priority={index < 3} // Prioritize loading first 3 images
+                  priority={index < 3}
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  quality={75}
+                  loading={index < 3 ? "eager" : "lazy"}
                 />
               </div>
               <div className="p-5 flex flex-col h-[calc(100%-192px)]">

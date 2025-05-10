@@ -40,7 +40,7 @@ export default async function Page() {
                     <div className="relative aspect-video w-full overflow-hidden rounded-xl 
                       ring-1 ring-gray-200 dark:ring-gray-700">
                       <Image
-                        src={`/extension${step === 2 ? '1' : '2'}.jpeg`}
+                        src={`/extension${step === 2 ? '1' : '2'}.webp`}
                         alt={t(`imageAlt${step === 2 ? '1' : '2'}`)}
                         fill
                         className="object-cover hover:scale-105 transition-transform duration-300

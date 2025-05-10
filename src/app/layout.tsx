@@ -65,15 +65,12 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang={locale} className="text-primary scroll-smooth" suppressHydrationWarning>
       <head>
-        {/* Move viewport meta to the top */}
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-        {/* Add preload for critical styles */}
         <link
           rel="preload"
           href="/_next/static/css/app/layout.css"
           as="style"
         />
-        {/* Resource preconnects */}
         <link rel="preconnect" href="https://giantautoimportimages.ec17bb88a597d2c1d369945a578a8403.r2.cloudflarestorage.com" />
         <link rel="preconnect" href="https://pub-790f032d851548ee80b9672b151ea280.r2.dev" />
         <link rel="preconnect" href="https://media.mtlworld.win" />
@@ -81,7 +78,6 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         <link rel="preconnect" href="https://valetapp.pro" />
       </head>
       <body className="antialiased">
-        {/* Add no-fouc script */}
         <script>0</script>
         <NextIntlClientProvider messages={messages}>
           <ReactQueryProvider>

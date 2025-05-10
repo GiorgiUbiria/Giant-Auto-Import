@@ -23,11 +23,11 @@ import { z } from "zod";
 import { useServerAction } from "zsa-react";
 
 const FormSchema = z.object({
-	id: z.string(),
-	email: z.string().email().optional(),
-	phone: z.string().optional(),
-	fullName: z.string().optional(),
-	passwordText: z.string().optional(),
+	id: z.string().min(1, "User ID is required"),
+	email: z.string().email("Invalid email address").optional().or(z.literal("")),
+	phone: z.string().optional().or(z.literal("")),
+	fullName: z.string().min(1, "Full name is required"),
+	passwordText: z.string().optional().or(z.literal("")),
 })
 
 type Props = {
@@ -36,27 +36,37 @@ type Props = {
 
 export function UpdateAdminForm({ user }: Props) {
 	const [showPassword, setShowPassword] = useState(false);
+	
+	if (!user) {
+		return null;
+	}
+
 	const form = useForm<z.infer<typeof FormSchema>>({
 		resolver: zodResolver(FormSchema),
 		defaultValues: {
-			id: user.id,
-			fullName: user.fullName,
-			email: user.email,
+			id: user.id || "",
+			fullName: user.fullName || "",
+			email: user.email || "",
 			passwordText: user.passwordText || "",
-			phone: user.phone,
+			phone: user.phone || "",
 		},
 	})
 
 	const { isPending, execute } = useServerAction(updateUserAction);
 
 	const onSubmit = async (values: z.infer<typeof FormSchema>) => {
-		const [data, error] = await execute(values);
+		try {
+			const [data, error] = await execute(values);
 
-		if (data?.success === false) {
-			toast.error(data?.message);
-			console.error(error)
-		} else {
-			toast.success(data?.message);
+			if (error || data?.success === false) {
+				toast.error(data?.message || "Failed to update profile");
+				console.error(error);
+			} else {
+				toast.success(data?.message || "Profile updated successfully");
+			}
+		} catch (error) {
+			toast.error("An unexpected error occurred");
+			console.error(error);
 		}
 	}
 

@@ -6,9 +6,10 @@ import { Loader2, Users, Car, PlusCircle, UserPlus } from "lucide-react";
 import { UpdateAdminForm } from "./update-admin-form";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const Client = ({ id }: { id: string }) => {
-	const { isLoading, data } = useServerActionQuery(getUserAction, {
+	const { isLoading, data, error } = useServerActionQuery(getUserAction, {
 		input: {
 			id: id,
 		},
@@ -20,6 +21,16 @@ export const Client = ({ id }: { id: string }) => {
 			<div className="w-full h-40 grid place-items-center">
 				<Loader2 className="animate-spin text-primary" size={32} />
 			</div>
+		)
+	}
+
+	const ErrorState = () => {
+		return (
+			<Alert variant="destructive">
+				<AlertDescription>
+					Failed to load user data. Please try refreshing the page.
+				</AlertDescription>
+			</Alert>
 		)
 	}
 
@@ -68,16 +79,22 @@ export const Client = ({ id }: { id: string }) => {
 				/>
 			</div>
 
-			{isLoading ? <LoadingState /> : (
+			{isLoading ? (
+				<LoadingState />
+			) : error ? (
+				<ErrorState />
+			) : data?.user ? (
 				<Card className="border-t">
 					<CardHeader>
 						<CardTitle className="text-xl">Admin Profile</CardTitle>
 						<CardDescription>Update your account information and preferences</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<UpdateAdminForm user={data?.user!} />
+						<UpdateAdminForm user={data.user} />
 					</CardContent>
 				</Card>
+			) : (
+				<ErrorState />
 			)}
 		</div>
 	)

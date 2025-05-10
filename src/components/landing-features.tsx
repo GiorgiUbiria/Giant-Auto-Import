@@ -1,12 +1,47 @@
-export default function LandingFeaturesComponent() {
+import { useTranslations } from 'next-intl';
+
+interface LandingFeaturesProps {
+  translations: {
+    title: string;
+    subtitle: string;
+    features: {
+      pricing: {
+        title: string;
+        description: string;
+      };
+      security: {
+        title: string;
+        description: string;
+      };
+      shipping: {
+        title: string;
+        description: string;
+      };
+      support: {
+        title: string;
+        description: string;
+      };
+      selection: {
+        title: string;
+        description: string;
+      };
+      quality: {
+        title: string;
+        description: string;
+      };
+    };
+  };
+}
+
+export default function LandingFeaturesComponent({ translations }: LandingFeaturesProps) {
   return (
     <div className="max-w-6xl mx-auto px-5 mt-24 mb-24 text-gray-900 dark:text-white" id="features">
       <div className="text-center">
         <h2 className="font-bold text-4xl md:text-5xl animate-float bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 inline-block text-transparent bg-clip-text">
-          Why Choose Giant Auto Import?
+          {translations.title}
         </h2>
         <p className="max-w-2xl mx-auto mt-4 text-gray-600 dark:text-gray-400 text-lg">
-          Your premier solution for importing quality vehicles from Copart USA auctions
+          {translations.subtitle}
         </p>
       </div>
 
@@ -18,9 +53,9 @@ export default function LandingFeaturesComponent() {
             </svg>
           </span>
           <div>
-            <h3 className="font-semibold text-xl mb-2">Competitive Pricing</h3>
+            <h3 className="font-semibold text-xl mb-2">{translations.features.pricing.title}</h3>
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              Access to wholesale prices at Copart auctions, helping you save thousands on your dream car
+              {translations.features.pricing.description}
             </p>
           </div>
         </div>
@@ -32,9 +67,9 @@ export default function LandingFeaturesComponent() {
             </svg>
           </span>
           <div>
-            <h3 className="font-semibold text-xl mb-2">Secure Transactions</h3>
+            <h3 className="font-semibold text-xl mb-2">{translations.features.security.title}</h3>
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              Safe and secure bidding process with full transparency throughout your purchase journey
+              {translations.features.security.description}
             </p>
           </div>
         </div>
@@ -46,9 +81,9 @@ export default function LandingFeaturesComponent() {
             </svg>
           </span>
           <div>
-            <h3 className="font-semibold text-xl mb-2">Global Shipping</h3>
+            <h3 className="font-semibold text-xl mb-2">{translations.features.shipping.title}</h3>
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              Door-to-door shipping service with real-time tracking and customs clearance assistance
+              {translations.features.shipping.description}
             </p>
           </div>
         </div>
@@ -60,9 +95,9 @@ export default function LandingFeaturesComponent() {
             </svg>
           </span>
           <div>
-            <h3 className="font-semibold text-xl mb-2">Expert Support</h3>
+            <h3 className="font-semibold text-xl mb-2">{translations.features.support.title}</h3>
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              Dedicated team of automotive experts to guide you through the entire import process
+              {translations.features.support.description}
             </p>
           </div>
         </div>
@@ -74,9 +109,9 @@ export default function LandingFeaturesComponent() {
             </svg>
           </span>
           <div>
-            <h3 className="font-semibold text-xl mb-2">Wide Selection</h3>
+            <h3 className="font-semibold text-xl mb-2">{translations.features.selection.title}</h3>
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              Access to thousands of vehicles including luxury, classic, and specialty cars from Copart&apos;s extensive inventory
+              {translations.features.selection.description}
             </p>
           </div>
         </div>
@@ -88,9 +123,9 @@ export default function LandingFeaturesComponent() {
             </svg>
           </span>
           <div>
-            <h3 className="font-semibold text-xl mb-2">Quality Assurance</h3>
+            <h3 className="font-semibold text-xl mb-2">{translations.features.quality.title}</h3>
             <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-              Thorough vehicle inspection and condition reports before bidding to ensure you know exactly what you&apos;re getting
+              {translations.features.quality.description}
             </p>
           </div>
         </div>

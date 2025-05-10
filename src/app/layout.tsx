@@ -8,6 +8,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { Suspense } from "react";
 import "./globals.css";
+import LoadingSpinner from "@/components/loading-spinner";
 
 // Dynamic imports with loading fallbacks
 const DynamicNavbar = dynamic(() => import('@/components/navbar-wrapper'), {
@@ -19,18 +20,6 @@ const DynamicFooter = dynamic(() => import('@/components/footer'), {
   loading: () => <LoadingSpinner />,
   ssr: true,
 });
-
-// Shared loading component
-function LoadingSpinner() {
-  return (
-    <div className="flex items-center justify-center w-full h-16" role="status">
-      <div
-        className="w-8 h-8 border-4 border-blue-500 dark:border-blue-400 border-t-transparent rounded-full animate-spin"
-        aria-label="Loading"
-      />
-    </div>
-  );
-}
 
 // Metadata configuration
 export const metadata: Metadata = {

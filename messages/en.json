@@ -222,5 +222,35 @@
     "uploading": "Uploading images...",
     "success": "Car added successfully!",
     "error": "An error occurred while submitting the form"
+  },
+  "LandingFeatures": {
+    "title": "Why Choose Giant Auto Import?",
+    "subtitle": "Your premier solution for importing quality vehicles from Copart USA auctions",
+    "features": {
+      "pricing": {
+        "title": "Competitive Pricing",
+        "description": "Access to wholesale prices at Copart auctions, helping you save thousands on your dream car"
+      },
+      "security": {
+        "title": "Secure Transactions",
+        "description": "Safe and secure bidding process with full transparency throughout your purchase journey"
+      },
+      "shipping": {
+        "title": "Global Shipping",
+        "description": "Door-to-door shipping service with real-time tracking and customs clearance assistance"
+      },
+      "support": {
+        "title": "Expert Support",
+        "description": "Dedicated team of automotive experts to guide you through the entire import process"
+      },
+      "selection": {
+        "title": "Wide Selection",
+        "description": "Access to thousands of vehicles including luxury, classic, and specialty cars from Copart's extensive inventory"
+      },
+      "quality": {
+        "title": "Quality Assurance",
+        "description": "Thorough vehicle inspection and condition reports before bidding to ensure you know exactly what you're getting"
+      }
+    }
   }
 }

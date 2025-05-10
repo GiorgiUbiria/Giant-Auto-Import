@@ -66,11 +66,6 @@ export default async function RootLayout({ children }: RootLayoutProps) {
     <html lang={locale} className="text-primary scroll-smooth" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-        <link
-          rel="preload"
-          href="/_next/static/css/app/layout.css"
-          as="style"
-        />
         <link rel="preconnect" href="https://giantautoimportimages.ec17bb88a597d2c1d369945a578a8403.r2.cloudflarestorage.com" />
         <link rel="preconnect" href="https://pub-790f032d851548ee80b9672b151ea280.r2.dev" />
         <link rel="preconnect" href="https://media.mtlworld.win" />

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { db } from "../drizzle/db";
 import { selectCarSchema, selectUserSchema, users } from "../drizzle/schema";
 import { isAdminProcedure } from "./authProcedures";
+import { revalidatePath } from "next/cache";
 
 const SelectSchema = selectUserSchema;
 
@@ -72,6 +73,10 @@ export const getUserAction = isAdminProcedure
       }
 
       const { ownedCars, ...user } = result;
+      
+      // Revalidate the user's page
+      revalidatePath(`/admin/users/${id}`);
+      
       return {
         success: true,
         user,
@@ -139,12 +144,18 @@ export const deleteUserAction = isAdminProcedure
         };
       }
 
+      // Revalidate the users list
+      revalidatePath('/admin/users');
+      
       return {
         success: true,
         message: `User ${isDeleted.fullName} was deleted successfully`,
       };
     } catch (error) {
       console.error("Error deleting the user:", error);
-      throw new Error("Error deleting the user");
+      return {
+        success: false,
+        message: "Error deleting the user",
+      };
     }
   });

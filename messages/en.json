@@ -35,7 +35,8 @@
     "estimatedTotalFee": "Estimated Total Fee:",
     "calculate": "Calculate",
     "noAuctionLocationFound": "No auction location found.",
-    "searchAuctionLocation": "Search auction location..."
+    "searchAuctionLocation": "Search auction location...",
+    "description": "Calculate your total shipping and purchase costs easily using our calculator."
   },
   "Footer": {
     "companyLogoAlt": "Company Logo",
@@ -115,17 +116,24 @@
   },
   "ContactPage": {
     "title": "Contact Us",
-    "subtitle": "Get in touch with us",
-    "largeText": "We are here to help you. If you have any questions, please contact us.",
-    "name": "Your name",
-    "namePlaceholder": "Enter your name",
-    "email": "Your email",
-    "emailPlaceholder": "Your email address",
-    "message": "Your message",
-    "messagePlaceholder": "Write your message...",
-    "sendMessage": "Send Message",
-    "successToast": "Email sent successfully!",
-    "errorToast": "Failed to send email. Please try again later."
+    "description": "Reach out to us for any inquiries or support. We're here to help you.",
+    "contactInfo": "Contact Information",
+    "address": "Address",
+    "email": "Email",
+    "phone": "Phone",
+    "businessHours": "Business Hours",
+    "weekdays": "Weekdays",
+    "weekends": "Weekends",
+    "closed": "Closed",
+    "form": {
+      "name": "Name",
+      "email": "Email",
+      "message": "Message",
+      "submit": "Send",
+      "success": "Your message has been sent successfully!",
+      "error": "There was an error sending your message.",
+      "required": "This field is required."
+    }
   },
   "AboutPage": {
     "title": "Welcome to Giant Auto Import",

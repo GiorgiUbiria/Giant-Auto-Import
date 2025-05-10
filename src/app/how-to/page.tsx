@@ -1,15 +1,6 @@
 import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 
-// Mark this page as statically generated with ISR
-export const dynamic = 'force-static';
-export const revalidate = 3600; // Revalidate every hour
-
-// Pre-generate the page for all supported locales
-export async function generateStaticParams() {
-  return [{ locale: 'en' }, { locale: 'ge' }, { locale: 'ru' }];
-}
-
 export default async function Page() {
   const t = await getTranslations('HowTo');
 

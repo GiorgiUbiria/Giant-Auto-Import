@@ -12,15 +12,6 @@ import ServiceThree from "../../../public/service3.jpeg";
 import ServiceFour from "../../../public/service4.jpeg";
 import ServiceFive from "../../../public/service5.jpeg";
 
-// Mark this page as statically generated with ISR
-export const dynamic = 'force-static';
-export const revalidate = 3600; // Revalidate every hour
-
-// Pre-generate the page for all supported locales
-export async function generateStaticParams() {
-  return [{ locale: 'en' }, { locale: 'ge' }, { locale: 'ru' }];
-}
-
 export default async function Page() {
   const t = await getTranslations('AboutPage');
 

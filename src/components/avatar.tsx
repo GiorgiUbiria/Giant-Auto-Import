@@ -39,7 +39,7 @@ const Avatar = ({ user }: AvatarProps) => {
 						{!isMobile && (
 							<>
 								<p className="text-white text-xl font-bold ml-4">
-									{user?.role.includes("CUSTOMER") ? user?.fullName : t("role_admin")}
+									My Account
 								</p>
 								<ChevronDown className="size-4 ml-1 mt-1 text-white font-bold" />
 							</>

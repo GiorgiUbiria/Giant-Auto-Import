@@ -15,12 +15,12 @@ export default async function Page() {
   }
 
   return (
-    <main className="container mx-auto">
-      <div className="flex flex-col gap-6">
-        <header className="pt-6">
-          <h1 className="text-3xl font-bold tracking-tight">Admin Panel</h1>
-          <p className="text-muted-foreground">
-            Manage your auto import business
+    <main className="container mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <header className="border-b pb-6">
+          <h1 className="text-4xl font-bold tracking-tight text-primary">Admin Panel</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage your auto import business efficiently
           </p>
         </header>
         

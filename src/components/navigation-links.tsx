@@ -9,7 +9,6 @@ interface LinkProp {
   label: string;
 }
 
-// Memoized link component to prevent unnecessary re-renders
 const NavLink = memo(({ href, label, isActive }: LinkProp & { isActive: boolean }) => (
   <Link
     href={href}

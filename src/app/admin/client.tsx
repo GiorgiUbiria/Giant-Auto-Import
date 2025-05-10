@@ -17,21 +17,23 @@ export const Client = ({ id }: { id: string }) => {
 
 	const LoadingState = () => {
 		return (
-			<div className="w-full h-full grid place-items-center">
-				<Loader2 className="animate-spin text-center" />
+			<div className="w-full h-40 grid place-items-center">
+				<Loader2 className="animate-spin text-primary" size={32} />
 			</div>
 		)
 	}
 
 	const QuickAccessCard = ({ title, description, icon: Icon, href }: { title: string; description: string; icon: any; href: string }) => (
 		<Link href={href}>
-			<Card className="hover:bg-accent transition-colors cursor-pointer">
-				<CardHeader>
-					<CardTitle className="flex items-center gap-2">
-						<Icon className="h-5 w-5" />
-						{title}
-					</CardTitle>
-					<CardDescription>{description}</CardDescription>
+			<Card className="hover:bg-accent/50 transition-all duration-200 cursor-pointer group">
+				<CardHeader className="space-y-2">
+					<div className="flex items-center gap-3">
+						<div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+							<Icon className="h-5 w-5 text-primary" />
+						</div>
+						<CardTitle className="text-lg">{title}</CardTitle>
+					</div>
+					<CardDescription className="text-sm">{description}</CardDescription>
 				</CardHeader>
 			</Card>
 		</Link>
@@ -42,35 +44,35 @@ export const Client = ({ id }: { id: string }) => {
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 				<QuickAccessCard
 					title="Users"
-					description="Manage user accounts"
+					description="Manage user accounts and permissions"
 					icon={Users}
 					href="/admin/users"
 				/>
 				<QuickAccessCard
 					title="Cars"
-					description="View all imported cars"
+					description="Browse and manage imported vehicles"
 					icon={Car}
 					href="/admin/cars"
 				/>
 				<QuickAccessCard
 					title="Add Car"
-					description="Add a new car to the system"
+					description="Add new vehicles to inventory"
 					icon={PlusCircle}
 					href="/admin/add_car"
 				/>
 				<QuickAccessCard
 					title="Register User"
-					description="Create a new user account"
+					description="Create new user accounts"
 					icon={UserPlus}
 					href="/admin/signup"
 				/>
 			</div>
 
 			{isLoading ? <LoadingState /> : (
-				<Card>
+				<Card className="border-t">
 					<CardHeader>
-						<CardTitle>Admin Profile</CardTitle>
-						<CardDescription>Update your admin account information</CardDescription>
+						<CardTitle className="text-xl">Admin Profile</CardTitle>
+						<CardDescription>Update your account information and preferences</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<UpdateAdminForm user={data?.user!} />

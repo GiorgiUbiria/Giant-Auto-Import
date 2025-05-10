@@ -64,7 +64,7 @@ export function UpdateAdminForm({ user }: Props) {
 
 	return (
 		<Form {...form}>
-      <form onSubmit={handleSubmit} className="w-full md:w-1/2 lg:w-1/3 space-y-6 my-8 bg-gray-200 dark:bg-gray-700 p-3 rounded-md">
+			<form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
 				<FormField
 					control={form.control}
 					name="fullName"
@@ -72,11 +72,8 @@ export function UpdateAdminForm({ user }: Props) {
 						<FormItem>
 							<FormLabel>Full Name</FormLabel>
 							<FormControl>
-								<Input {...field} />
+								<Input {...field} placeholder="Enter your full name" />
 							</FormControl>
-							<FormDescription>
-								Full Name of the user
-							</FormDescription>
 							<FormMessage />
 						</FormItem>
 					)}
@@ -88,11 +85,8 @@ export function UpdateAdminForm({ user }: Props) {
 						<FormItem>
 							<FormLabel>Email</FormLabel>
 							<FormControl>
-								<Input type="email" {...field} />
+								<Input type="email" {...field} placeholder="Enter your email" />
 							</FormControl>
-							<FormDescription>
-								Email of the user
-							</FormDescription>
 							<FormMessage />
 						</FormItem>
 					)}
@@ -104,11 +98,8 @@ export function UpdateAdminForm({ user }: Props) {
 						<FormItem>
 							<FormLabel>Phone Number</FormLabel>
 							<FormControl>
-								<Input type="tel" {...field} />
+								<Input type="tel" {...field} placeholder="Enter your phone number" />
 							</FormControl>
-							<FormDescription>
-								Phone number of the user
-							</FormDescription>
 							<FormMessage />
 						</FormItem>
 					)}
@@ -120,30 +111,38 @@ export function UpdateAdminForm({ user }: Props) {
 						<FormItem>
 							<FormLabel>Password</FormLabel>
 							<FormControl>
-								<Input type={showPassword ? "text" : "password"} {...field} />
+								<Input 
+									type={showPassword ? "text" : "password"} 
+									{...field} 
+									placeholder="Enter new password (optional)"
+								/>
 							</FormControl>
-							<FormDescription>
-								Password that is at least 8 characters long and contains a number
-							</FormDescription>
 							<FormMessage />
 						</FormItem>
 					)}
 				/>
-				<div className="flex items-center space-x-2">
+				<div className="md:col-span-2 flex items-center space-x-2">
 					<Checkbox
 						id="showPassword"
 						checked={showPassword}
 						onCheckedChange={() => setShowPassword(!showPassword)}
 					/>
-					<label htmlFor="showPassword" className="text-sm">
-						Show Password
+					<label htmlFor="showPassword" className="text-sm text-muted-foreground">
+						Show password
 					</label>
 				</div>
-        <Button type="submit" className="w-full" disabled={isPending}>
-          {
-            isPending ? <Loader2 className="animate-spin" /> : "Update User"
-          }
-        </Button>
+				<div className="md:col-span-2">
+					<Button type="submit" className="w-full md:w-auto" disabled={isPending}>
+						{isPending ? (
+							<>
+								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+								Updating...
+							</>
+						) : (
+							"Update Profile"
+						)}
+					</Button>
+				</div>
 			</form>
 		</Form>
 	)

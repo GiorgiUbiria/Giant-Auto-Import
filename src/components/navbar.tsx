@@ -129,7 +129,7 @@ const Navbar = ({ user, translations }: NavbarProps) => {
     }
   }, [resetVisibilityTimeout]);
 
-  const navigationLinks: NavigationLink[] = [
+  const baseLinks: NavigationLink[] = [
     { href: "/", label: t("home") },
     { href: "/contact", label: t("contact") },
     { href: "/about", label: t("about") },
@@ -137,22 +137,19 @@ const Navbar = ({ user, translations }: NavbarProps) => {
     { href: "/how-to", label: tHowTo("navbar") },
   ];
 
-  if (user?.role === "ADMIN") {
-    navigationLinks.push(
-      { href: "/admin", label: t("admin_panel") },
-      { href: "/admin/cars", label: t("cars"), isAdminLink: true },
-      { href: "/admin/add_car", label: t("add_car"), isAdminLink: true },
-      { href: "/admin/users", label: t("users"), isAdminLink: true },
-      { href: "/admin/signup", label: t("register"), isAdminLink: true }
-    );
-  }
+  const adminLinks: NavigationLink[] = user?.role === "ADMIN" ? [
+    { href: "/admin", label: t("admin_panel") },
+    { href: "/admin/cars", label: t("cars"), isAdminLink: true },
+    { href: "/admin/add_car", label: t("add_car"), isAdminLink: true },
+    { href: "/admin/users", label: t("users"), isAdminLink: true },
+    { href: "/admin/signup", label: t("register"), isAdminLink: true }
+  ] : [];
 
-  if (user?.role?.includes("CUSTOMER")) {
-    navigationLinks.push({
-      href: "/dashboard",
-      label: t("dashboard"),
-    });
-  }
+  const customerLinks: NavigationLink[] = user?.role?.includes("CUSTOMER") ? [
+    { href: "/dashboard", label: t("dashboard") }
+  ] : [];
+
+  const navigationLinks = [...baseLinks, ...adminLinks, ...customerLinks];
 
   const headerClassName = `fixed top-0 left-0 right-0 w-full md:relative md:top-0 flex items-center gap-4 dark:bg-gradient-to-r dark:from-darkbg dark:to-darkfg bg-gradient-to-r from-darkbg to-darkfg z-50 ${isVisible ? "" : "header-hidden"}`;
 

@@ -77,6 +77,12 @@ interface NavbarProps {
   };
 }
 
+interface NavigationLink {
+  href: string;
+  label: string;
+  isAdminLink?: boolean;
+}
+
 // Client Component
 const Navbar = ({ user, translations }: NavbarProps) => {
   const [isVisible, setIsVisible] = useState(true);
@@ -123,7 +129,7 @@ const Navbar = ({ user, translations }: NavbarProps) => {
     }
   }, [resetVisibilityTimeout]);
 
-  const navigationLinks = [
+  const navigationLinks: NavigationLink[] = [
     { href: "/", label: t("home") },
     { href: "/contact", label: t("contact") },
     { href: "/about", label: t("about") },
@@ -134,10 +140,10 @@ const Navbar = ({ user, translations }: NavbarProps) => {
   if (user?.role === "ADMIN") {
     navigationLinks.push(
       { href: "/admin", label: t("admin_panel") },
-      { href: "/admin/cars", label: t("cars") },
-      { href: "/admin/add_car", label: t("add_car") },
-      { href: "/admin/users", label: t("users") },
-      { href: "/admin/signup", label: t("register") }
+      { href: "/admin/cars", label: t("cars"), isAdminLink: true },
+      { href: "/admin/add_car", label: t("add_car"), isAdminLink: true },
+      { href: "/admin/users", label: t("users"), isAdminLink: true },
+      { href: "/admin/signup", label: t("register"), isAdminLink: true }
     );
   }
 

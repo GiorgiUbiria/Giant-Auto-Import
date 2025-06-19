@@ -19,10 +19,34 @@ import {
 } from "../drizzle/schema";
 import { isAdminProcedure } from "./authProcedures";
 
+const validateEnvironment = () => {
+  const required = [
+    'CLOUDFLARE_API_ENDPOINT',
+    'CLOUDFLARE_ACCESS_KEY_ID', 
+    'CLOUDFLARE_SECRET_ACCESS_KEY',
+    'CLOUDFLARE_BUCKET_NAME'
+  ];
+  
+  const missing = required.filter(key => !process.env[key]);
+  
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+};
+
+validateEnvironment();
+
 const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
 const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
 const secretAccessKey = process.env.CLOUDFLARE_SECRET_ACCESS_KEY as string;
 const bucketName = process.env.CLOUDFLARE_BUCKET_NAME as string;
+
+console.log('R2 Configuration:', {
+  endpoint: endpoint ? 'SET' : 'MISSING',
+  accessKeyId: accessKeyId ? 'SET' : 'MISSING', 
+  secretAccessKey: secretAccessKey ? 'SET' : 'MISSING',
+  bucketName: bucketName ? 'SET' : 'MISSING'
+});
 
 const SelectImageSchema = selectImageSchema.omit({ id: true }).merge(
   z.object({
@@ -41,6 +65,10 @@ const S3Client = new S3({
   credentials: {
     accessKeyId: accessKeyId,
     secretAccessKey: secretAccessKey,
+  },
+  forcePathStyle: true,
+  requestHandler: {
+    requestTimeout: 10000,
   },
 });
 
@@ -223,64 +251,118 @@ export async function deleteObjectFromBucket(key: string): Promise<void> {
 }
 
 export async function getSignedUrlForKey(key: string): Promise<string> {
-  return getSignedUrl(
-    S3Client,
-    new GetObjectCommand({
+  try {
+    const command = new GetObjectCommand({
       Bucket: bucketName,
       Key: key,
-    }),
-    { expiresIn: 3600 }
-  );
+    });
+    
+    const url = await getSignedUrl(S3Client, command, { 
+      expiresIn: 3600,
+    });
+    
+    console.log(`Generated signed URL for key: ${key}`);
+    return url;
+  } catch (error) {
+    console.error(`Error generating signed URL for key ${key}:`, error);
+    throw new Error(`Failed to generate signed URL for ${key}`);
+  }
 }
 
-export async function fetchImagesForDisplay(
-  vin: string
-): Promise<SelectImageType[]> {
-  const imageRecords = await db
-    .select()
-    .from(images)
-    .where(eq(images.carVin, vin))
-    .orderBy(desc(images.priority));
-
-  const imageData = await Promise.all(
-    imageRecords.map(async (record) => {
-      const url = await getSignedUrlForKey(record.imageKey!);
-      return {
-        url: url,
-        carVin: vin,
-        imageKey: record.imageKey,
-        imageType: record.imageType,
-        priority: record.priority,
-      };
-    })
-  );
-
-  return imageData;
+export async function getPublicUrlForKey(key: string): Promise<string> {
+  const publicBaseUrl = process.env.NEXT_PUBLIC_BUCKET_URL;
+  if (!publicBaseUrl) {
+    throw new Error('NEXT_PUBLIC_BUCKET_URL not configured');
+  }
+  
+  return `${publicBaseUrl}/${key}`;
 }
 
 export async function fetchImageForDisplay(
   vin: string
 ): Promise<SelectImageType | null> {
-  const [imageRecord] = await db
-    .select()
-    .from(images)
-    .where(eq(images.carVin, vin))
-    .orderBy(desc(images.priority))
-    .limit(1);
+  try {
+    const [imageRecord] = await db
+      .select()
+      .from(images)
+      .where(eq(images.carVin, vin))
+      .orderBy(desc(images.priority))
+      .limit(1);
 
-  if (!imageRecord) return null;
+    if (!imageRecord || !imageRecord.imageKey) {
+      console.log(`No image found for VIN: ${vin}`);
+      return null;
+    }
 
-  const url = await getSignedUrlForKey(imageRecord.imageKey!);
+    let url: string;
+    
+    if (process.env.NEXT_PUBLIC_BUCKET_URL) {
+      url = await getPublicUrlForKey(imageRecord.imageKey);
+      console.log(`Using public URL for key: ${imageRecord.imageKey}`);
+    } else {
+      url = await getSignedUrlForKey(imageRecord.imageKey);
+      console.log(`Using presigned URL for key: ${imageRecord.imageKey}`);
+    }
 
-  const result = {
-    url: url,
-    carVin: vin,
-    imageKey: imageRecord.imageKey,
-    imageType: imageRecord.imageType,
-    priority: imageRecord.priority,
-  };
+    const result = {
+      url: url,
+      carVin: vin,
+      imageKey: imageRecord.imageKey,
+      imageType: imageRecord.imageType,
+      priority: imageRecord.priority,
+    };
 
-  return result;
+    return result;
+  } catch (error) {
+    console.error(`Error fetching image for VIN ${vin}:`, error);
+    return null;
+  }
+}
+
+export async function fetchImagesForDisplay(
+  vin: string
+): Promise<SelectImageType[]> {
+  try {
+    const imageRecords = await db
+      .select()
+      .from(images)
+      .where(eq(images.carVin, vin))
+      .orderBy(desc(images.priority));
+
+    if (imageRecords.length === 0) {
+      console.log(`No images found for VIN: ${vin}`);
+      return [];
+    }
+
+    const imageData = await Promise.all(
+      imageRecords.map(async (record) => {
+        if (!record.imageKey) {
+          console.error(`Image record missing imageKey for VIN: ${vin}`);
+          return null;
+        }
+        
+        try {
+          const url = await getSignedUrlForKey(record.imageKey);
+          return {
+            url: url,
+            carVin: vin,
+            imageKey: record.imageKey,
+            imageType: record.imageType,
+            priority: record.priority,
+          };
+        } catch (error) {
+          console.error(`Failed to generate URL for image key ${record.imageKey}:`, error);
+          return null;
+        }
+      })
+    );
+
+    // Filter out any null results
+    return imageData.filter((item): item is SelectImageType => item !== null);
+  } catch (error) {
+    console.error(`Error fetching images for VIN ${vin}:`, error);
+    return [];
+  }
 }
 
 export async function cleanUpBucketForVin(vin: string): Promise<void> {
@@ -311,5 +393,32 @@ export async function cleanUpBucketForVin(vin: string): Promise<void> {
     } while (continuationToken);
   } catch (error) {
     console.error(`Error cleaning up the bucket for VIN ${vin}:`, error);
+  }
+}
+
+export async function testR2Connection(): Promise<boolean> {
+  try {
+    console.log('Testing R2 connection with configuration:');
+    console.log('Endpoint:', endpoint);
+    console.log('Bucket:', bucketName);
+    
+    const command = new ListObjectsV2Command({
+      Bucket: bucketName,
+      MaxKeys: 1,
+    });
+    
+    const result = await S3Client.send(command);
+    console.log('R2 connection successful. Found objects:', result.KeyCount || 0);
+    return true;
+  } catch (error) {
+    console.error('R2 connection failed:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack?.split('\n')[0], // First line of stack trace
+      });
+    }
+    return false;
   }
 }

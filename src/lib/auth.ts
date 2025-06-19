@@ -14,7 +14,7 @@ import { selectUserSchema, sessions, users } from "./drizzle/schema";
 const AuthSchema = selectUserSchema.omit({ id: true, });
 type AuthSchemaType = z.infer<typeof AuthSchema>; 
 
-const adapter = new DrizzleSQLiteAdapter(db, sessions, users);
+const adapter = new DrizzleSQLiteAdapter(db, sessions as any, users as any);
 
 export const lucia = new Lucia(adapter, {
   sessionCookie: {

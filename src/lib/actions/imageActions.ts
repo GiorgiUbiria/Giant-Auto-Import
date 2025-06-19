@@ -35,11 +35,10 @@ export const getImagesAction = createServerAction()
 
     try {
       const query = await fetchImagesForDisplay(vin);
-
       return query.length ? query : [];
     } catch (error) {
       console.error("Error fetching images:", error);
-      throw new Error("Failed to fetch images");
+      return [];
     }
   });
 
@@ -95,13 +94,21 @@ export const getImageAction = createServerAction()
   )
   .handler(async ({ input }) => {
     const { vin } = input;
+    
+    if (!process.env.CLOUDFLARE_API_ENDPOINT || 
+        !process.env.CLOUDFLARE_ACCESS_KEY_ID || 
+        !process.env.CLOUDFLARE_SECRET_ACCESS_KEY || 
+        !process.env.CLOUDFLARE_BUCKET_NAME) {
+      console.error("Missing Cloudflare R2 environment variables");
+      throw new Error("Image service configuration error");
+    }
+    
     try {
       const query = await fetchImageForDisplay(vin);
-
       return query;
     } catch (error) {
       console.error("Error fetching image:", error);
-      throw new Error("Failed to fetch image");
+      return null;
     }
   });
 

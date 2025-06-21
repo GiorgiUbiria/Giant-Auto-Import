@@ -12,6 +12,7 @@ export const QueryKeyFactory = createServerActionsKeyFactory({
   getImages: () => ["getImages"],
   getImagesForCar: (vin: string) => ["getImagesForCar", vin],
   getCar: (vin: string) => ["getCar", vin],
+  getCarPublic: (vin: string) => ["getCarPublic", vin],
   getUser: (id: string) => ["getUser", id],
 });
 

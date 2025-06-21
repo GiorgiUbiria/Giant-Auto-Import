@@ -17,6 +17,7 @@ import {
   styleToJson,
 } from "../utils";
 import { authedProcedure, isAdminProcedure } from "./authProcedures";
+import { createServerAction } from "zsa";
 import { deleteObjectFromBucket } from "./bucketActions";
 
 const AddCarSchema = insertCarSchema.omit({ id: true, destinationPort: true });
@@ -228,8 +229,8 @@ export const getCarsForUserAction = authedProcedure
     }
   });
 
-export const getCarAction = authedProcedure
-  .createServerAction()
+// Public version for car details page (no auth required)
+export const getCarPublicAction = createServerAction()
   .input(
     z.object({
       vin: z.string().optional(),
@@ -241,10 +242,14 @@ export const getCarAction = authedProcedure
     const { vin, id } = input;
 
     if (!id && !vin) {
+      console.error("getCarPublicAction: Neither id nor vin provided");
       return null;
     }
 
     try {
+      // Log the input for debugging
+      console.log("getCarPublicAction: Input received", { vin, id });
+
       const whereClause = [];
       if (id !== undefined) {
         whereClause.push(eq(cars.id, id));
@@ -253,15 +258,75 @@ export const getCarAction = authedProcedure
         whereClause.push(eq(cars.vin, vin));
       }
 
+      console.log("getCarPublicAction: Executing database query");
       const [carQuery] = await db
         .select()
         .from(cars)
         .where(or(...whereClause));
 
+      console.log("getCarPublicAction: Query completed", { found: !!carQuery, vin: carQuery?.vin });
       return carQuery ?? null;
     } catch (error) {
-      console.error("Error fetching car:", error);
-      throw new Error("Failed to fetch car");
+      console.error("getCarPublicAction: Database error", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        vin,
+        id
+      });
+      
+      // Instead of throwing, return null to prevent 500 errors
+      return null;
+    }
+  });
+
+export const getCarAction = authedProcedure
+  .createServerAction()
+  .input(
+    z.object({
+      vin: z.string().optional(),
+      id: z.number().optional(),
+    })
+  )
+  .output(z.union([SelectSchema, z.null()]))
+  .handler(async ({ input, ctx }) => {
+    const { vin, id } = input;
+
+    if (!id && !vin) {
+      console.error("getCarAction: Neither id nor vin provided");
+      return null;
+    }
+
+    try {
+      // Log the input for debugging
+      console.log("getCarAction: Input received", { vin, id, userId: ctx.user?.id });
+
+      const whereClause = [];
+      if (id !== undefined) {
+        whereClause.push(eq(cars.id, id));
+      }
+      if (vin !== undefined) {
+        whereClause.push(eq(cars.vin, vin));
+      }
+
+      console.log("getCarAction: Executing database query");
+      const [carQuery] = await db
+        .select()
+        .from(cars)
+        .where(or(...whereClause));
+
+      console.log("getCarAction: Query completed", { found: !!carQuery, vin: carQuery?.vin });
+      return carQuery ?? null;
+    } catch (error) {
+      console.error("getCarAction: Database error", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        vin,
+        id,
+        userId: ctx.user?.id
+      });
+      
+      // Instead of throwing, return null to prevent 500 errors
+      return null;
     }
   });
 

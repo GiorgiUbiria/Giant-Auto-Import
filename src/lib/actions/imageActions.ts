@@ -33,11 +33,19 @@ export const getImagesAction = createServerAction()
   .handler(async ({ input }) => {
     const { vin } = input;
 
+    console.log("getImagesAction: Input received", { vin });
+
     try {
+      console.log("getImagesAction: Fetching images for VIN", vin);
       const query = await fetchImagesForDisplay(vin);
+      console.log("getImagesAction: Images fetch completed", { count: query.length, vin });
       return query.length ? query : [];
     } catch (error) {
-      console.error("Error fetching images:", error);
+      console.error("getImagesAction: Error fetching images", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        vin
+      });
       return [];
     }
   });
@@ -95,19 +103,32 @@ export const getImageAction = createServerAction()
   .handler(async ({ input }) => {
     const { vin } = input;
     
+    console.log("getImageAction: Input received", { vin });
+    
     if (!process.env.CLOUDFLARE_API_ENDPOINT || 
         !process.env.CLOUDFLARE_ACCESS_KEY_ID || 
         !process.env.CLOUDFLARE_SECRET_ACCESS_KEY || 
         !process.env.CLOUDFLARE_BUCKET_NAME) {
-      console.error("Missing Cloudflare R2 environment variables");
-      throw new Error("Image service configuration error");
+      console.error("getImageAction: Missing Cloudflare R2 environment variables", {
+        endpoint: !!process.env.CLOUDFLARE_API_ENDPOINT,
+        accessKey: !!process.env.CLOUDFLARE_ACCESS_KEY_ID,
+        secretKey: !!process.env.CLOUDFLARE_SECRET_ACCESS_KEY,
+        bucket: !!process.env.CLOUDFLARE_BUCKET_NAME
+      });
+      return null; // Return null instead of throwing
     }
     
     try {
+      console.log("getImageAction: Fetching image for VIN", vin);
       const query = await fetchImageForDisplay(vin);
+      console.log("getImageAction: Image fetch completed", { found: !!query, vin });
       return query;
     } catch (error) {
-      console.error("Error fetching image:", error);
+      console.error("getImageAction: Error fetching image", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        vin
+      });
       return null;
     }
   });

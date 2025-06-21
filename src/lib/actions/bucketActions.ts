@@ -274,6 +274,8 @@ export async function fetchImageForDisplay(
   vin: string
 ): Promise<SelectImageType | null> {
   try {
+    console.log(`fetchImageForDisplay: Starting fetch for VIN ${vin}`);
+    
     const [imageRecord] = await db
       .select()
       .from(images)
@@ -282,18 +284,23 @@ export async function fetchImageForDisplay(
       .limit(1);
 
     if (!imageRecord || !imageRecord.imageKey) {
-      console.log(`No image found for VIN: ${vin}`);
+      console.log(`fetchImageForDisplay: No image found for VIN: ${vin}`);
       return null;
     }
+
+    console.log(`fetchImageForDisplay: Found image record for VIN ${vin}:`, {
+      imageKey: imageRecord.imageKey,
+      imageType: imageRecord.imageType
+    });
 
     let url: string;
     
     if (process.env.NEXT_PUBLIC_BUCKET_URL) {
       url = await getPublicUrlForKey(imageRecord.imageKey);
-      console.log(`Using public URL for key: ${imageRecord.imageKey}`);
+      console.log(`fetchImageForDisplay: Using public URL for key: ${imageRecord.imageKey}`);
     } else {
       url = await getSignedUrlForKey(imageRecord.imageKey);
-      console.log(`Using presigned URL for key: ${imageRecord.imageKey}`);
+      console.log(`fetchImageForDisplay: Using presigned URL for key: ${imageRecord.imageKey}`);
     }
 
     const result = {
@@ -304,9 +311,13 @@ export async function fetchImageForDisplay(
       priority: imageRecord.priority,
     };
 
+    console.log(`fetchImageForDisplay: Successfully prepared result for VIN ${vin}`);
     return result;
   } catch (error) {
-    console.error(`Error fetching image for VIN ${vin}:`, error);
+    console.error(`fetchImageForDisplay: Error fetching image for VIN ${vin}:`, {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return null;
   }
 }

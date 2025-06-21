@@ -1,9 +1,7 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getImageKeys } from "@/lib/actions/imageActions";
-import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Lightbox from "yet-another-react-lightbox";
 import Download from "yet-another-react-lightbox/plugins/download";
 import Inline from "yet-another-react-lightbox/plugins/inline";
@@ -39,23 +37,49 @@ const EmptyState = () => (
   </div>
 );
 
-export const ImageGallery = ({ vin }: { vin: string }) => {
+type ImageData = {
+  imageKey: string;
+  imageType: "WAREHOUSE" | "PICK_UP" | "DELIVERED" | "AUCTION";
+};
+
+export const FallbackImageGallery = ({ vin }: { vin: string }) => {
   const imageTypes = ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERED"];
   const publicUrl = process.env.NEXT_PUBLIC_BUCKET_URL;
-  const { data, error, isLoading } = useServerActionQuery(getImageKeys, {
-    input: { vin },
-    queryKey: ["getImagesForCar", vin],
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    retry: 1, // Only retry once
-    retryDelay: 1000, // Wait 1 second before retry
-  });
+  const [data, setData] = useState<ImageData[] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<boolean>(false);
   const [startIndex, setStartIndex] = useState<number>(0);
   const isMobile = useMedia('(max-width: 640px)', false);
 
-  console.log("ImageGallery: Render state", { 
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        console.log("FallbackImageGallery: Fetching images for VIN", vin);
+        setIsLoading(true);
+        setError(null);
+
+        const response = await fetch(`/api/test-images?vin=${encodeURIComponent(vin)}`);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to fetch images');
+        }
+
+        console.log("FallbackImageGallery: Images fetched successfully", { count: result.count });
+        setData(result.images || []);
+      } catch (err) {
+        console.error("FallbackImageGallery: Error fetching images", err);
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchImages();
+  }, [vin]);
+
+  console.log("FallbackImageGallery: Render state", { 
     vin, 
     isLoading, 
     hasError: !!error, 
@@ -65,22 +89,22 @@ export const ImageGallery = ({ vin }: { vin: string }) => {
 
   if (isLoading) return <LoadingState />;
   if (error) {
-    console.error("ImageGallery: Error state", error);
+    console.error("FallbackImageGallery: Error state", error);
     return <ErrorState />;
   }
   if (!data || data.length === 0) {
-    console.log("ImageGallery: No data available for VIN", vin);
+    console.log("FallbackImageGallery: No data available for VIN", vin);
     return <EmptyState />;
   }
   if (!publicUrl) {
-    console.error("ImageGallery: Public URL not configured");
+    console.error("FallbackImageGallery: Public URL not configured");
     return <div>Error: Public URL not configured.</div>;
   }
 
-  const filterImagesByType = (images: typeof data, imageType: string) =>
+  const filterImagesByType = (images: ImageData[], imageType: string) =>
     images.filter((image) => image.imageType === imageType);
 
-  const getSlides = (filteredData: typeof data) =>
+  const getSlides = (filteredData: ImageData[]) =>
     filteredData.map(({ imageKey }) => ({
       src: `${publicUrl}/${imageKey}`,
       width: 3840,
@@ -168,4 +192,4 @@ export const ImageGallery = ({ vin }: { vin: string }) => {
       <DownloadButton content={data} vin={vin} />
     </div>
   );
-};
+}; 

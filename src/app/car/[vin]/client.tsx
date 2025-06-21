@@ -4,7 +4,7 @@ import { getCarPublicAction } from "@/lib/actions/carActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { Loader2 } from "lucide-react";
 import CarInfo from "./car-info";
-import { ImageGallery } from "./image-gallery";
+import { FallbackImageGallery } from "./fallback-image-gallery";
 import StatusLine from "./status-line";
 import { Suspense } from "react";
 
@@ -62,7 +62,7 @@ export const Client = ({ vin }: { vin: string }) => {
 							<StatusLine status={data.shippingStatus} />
 						</div>
 						<div className="mt-8 w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-							<ImageGallery vin={data.vin} />
+							<FallbackImageGallery vin={data.vin} />
 							<CarInfo car={data} />
 						</div>
 					</div>

@@ -2,7 +2,7 @@ import { db } from "@/lib/drizzle/db";
 import { cars } from "@/lib/drizzle/schema";
 import { eq } from "drizzle-orm";
 import CarInfo from "./car-info";
-import { ImageGallery } from "./image-gallery";
+import { FallbackImageGallery } from "./fallback-image-gallery";
 import StatusLine from "./status-line";
 
 const ErrorState = ({ vin }: { vin: string }) => (
@@ -38,7 +38,7 @@ export const ServerClient = async ({ vin }: { vin: string }) => {
           <StatusLine status={carData.shippingStatus} />
         </div>
         <div className="mt-8 w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          <ImageGallery vin={carData.vin} />
+          <FallbackImageGallery vin={carData.vin} />
           <CarInfo car={carData} />
         </div>
       </div>

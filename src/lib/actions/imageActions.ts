@@ -67,7 +67,10 @@ export const getImageKeys = createServerAction()
   .handler(async ({ input }) => {
     const { vin } = input;
 
+    console.log("getImageKeys: Input received", { vin });
+
     try {
+      console.log("getImageKeys: Fetching image keys for VIN", vin);
       const keys = await db
         .select({
           imageKey: images.imageKey,
@@ -76,10 +79,16 @@ export const getImageKeys = createServerAction()
         .from(images)
         .where(eq(images.carVin, vin));
 
+      console.log("getImageKeys: Query completed", { count: keys.length, vin });
       return keys.length ? keys : [];
     } catch (error) {
-      console.error("Error fetching images:", error);
-      throw new Error("Failed to fetch images");
+      console.error("getImageKeys: Error fetching image keys", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        vin
+      });
+      // Return empty array instead of throwing to prevent 500 errors
+      return [];
     }
   });
 

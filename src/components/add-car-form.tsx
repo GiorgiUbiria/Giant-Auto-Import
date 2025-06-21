@@ -40,7 +40,7 @@ import { getUsersAction } from "@/lib/actions/userActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { auctionData } from "@/lib/utils";
 import { useState } from "react";
-import { handleImages } from "@/lib/actions/bucketActions";
+import { handleUploadImagesAction } from "@/lib/actions/bucketActions";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
 const ACCEPTED_IMAGE_TYPES = [
@@ -126,44 +126,6 @@ const FormInitialSchema = insertCarSchema.omit({
 });
 const FormSchema = FormInitialSchema.extend(ImageSchema);
 
-const processImages = async (
-  images: FileList | undefined,
-  type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP",
-  vin: string
-) => {
-  if (!images || images.length === 0) return;
-
-  const fileData = await Promise.all(
-    Array.from(images).map(async (file: File) => {
-      const arrayBuffer = await file.arrayBuffer();
-      return {
-        buffer: arrayBuffer,
-        size: file.size,
-        type: type,
-        name: file.name,
-      };
-    })
-  );
-
-  const urls = await handleImages(
-    type,
-    vin,
-    fileData.map((file) => file.size)
-  );
-
-  await Promise.all(
-    urls.map((url: string, index: number) =>
-      fetch(url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": images[index].type,
-        },
-        body: fileData[index].buffer,
-      })
-    )
-  );
-};
-
 export function AddCarForm() {
   const router = useRouter();
 
@@ -207,38 +169,80 @@ export function AddCarForm() {
         }
 
         setIsUploadingImages(true);
-        await processImages(
-          form.getValues("auction_images"),
-          "AUCTION",
-          form.getValues("vin")
-        );
-        await processImages(
-          form.getValues("warehouse_images"),
-          "WAREHOUSE",
-          form.getValues("vin")
-        );
-        await processImages(
-          form.getValues("delivery_images"),
-          "DELIVERED",
-          form.getValues("vin")
-        );
-        await processImages(
-          form.getValues("pick_up_images"),
-          "PICK_UP",
-          form.getValues("vin")
-        );
+        
+        // Process all image types in parallel
+        const imagePromises = [];
+        
+        const auctionImages = form.getValues("auction_images");
+        const warehouseImages = form.getValues("warehouse_images");
+        const deliveryImages = form.getValues("delivery_images");
+        const pickUpImages = form.getValues("pick_up_images");
+        
+        if (auctionImages && auctionImages.length > 0) {
+          imagePromises.push(processImages(auctionImages, "AUCTION", form.getValues("vin")));
+        }
+        if (warehouseImages && warehouseImages.length > 0) {
+          imagePromises.push(processImages(warehouseImages, "WAREHOUSE", form.getValues("vin")));
+        }
+        if (deliveryImages && deliveryImages.length > 0) {
+          imagePromises.push(processImages(deliveryImages, "DELIVERED", form.getValues("vin")));
+        }
+        if (pickUpImages && pickUpImages.length > 0) {
+          imagePromises.push(processImages(pickUpImages, "PICK_UP", form.getValues("vin")));
+        }
+
+        if (imagePromises.length > 0) {
+          await Promise.all(imagePromises);
+        }
+        
         setIsUploadingImages(false);
 
         toast.success(data?.message);
         router.push("/admin/cars");
       } catch (error) {
         console.error(error);
+        setIsUploadingImages(false);
         toast.error(
           "An error occurred while submitting the form or processing images"
         );
       }
     },
   });
+
+  const { execute: executeImageUpload } = useServerAction(handleUploadImagesAction, {
+    onError: (err) => {
+      console.error("Image upload error:", err);
+      throw new Error("Failed to upload images");
+    },
+  });
+
+  const processImages = async (
+    images: FileList | undefined,
+    type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP",
+    vin: string
+  ) => {
+    if (!images || images.length === 0) return;
+
+    const imageData = await Promise.all(
+      Array.from(images).map(async (file: File) => {
+        const arrayBuffer = await file.arrayBuffer();
+        return {
+          buffer: Array.from(new Uint8Array(arrayBuffer)),
+          size: file.size,
+          name: file.name,
+          type: type,
+        };
+      })
+    );
+
+    // Use the server action to handle the upload
+    const result = await executeImageUpload({
+      vin,
+      images: imageData,
+    });
+
+    return result;
+  };
 
   const { isLoading, data } = useServerActionQuery(getUsersAction, {
     input: undefined,

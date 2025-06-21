@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { handleImages } from "@/lib/actions/bucketActions";
+import { handleUploadImagesAction } from "@/lib/actions/bucketActions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -19,6 +19,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
+import { useServerAction } from "zsa-react";
 
 const ACCEPTED_IMAGE_TYPES = [
   "image/png",
@@ -88,44 +89,6 @@ const ImageSchema = z.object({
     .optional(),
 });
 
-const processImages = async (
-  images: FileList | undefined,
-  type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP",
-  vin: string
-) => {
-  if (!images || images.length === 0) return;
-
-  const fileData = await Promise.all(
-    Array.from(images).map(async (file: File) => {
-      const arrayBuffer = await file.arrayBuffer();
-      return {
-        buffer: arrayBuffer,
-        size: file.size,
-        type: type,
-        name: file.name,
-      };
-    })
-  );
-
-  const urls = await handleImages(
-    type,
-    vin,
-    fileData.map((file) => file.size)
-  );
-
-  await Promise.all(
-    urls.map((url: string, index: number) =>
-      fetch(url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": images[index].type,
-        },
-        body: fileData[index].buffer,
-      })
-    )
-  );
-};
-
 export function ImagesForm({ vin }: { vin: string }) {
   const [isPending, setIsPending] = useState(false);
   const queryClient = useQueryClient();
@@ -133,6 +96,41 @@ export function ImagesForm({ vin }: { vin: string }) {
     resolver: zodResolver(ImageSchema),
     defaultValues: {},
   });
+
+  const { execute: executeImageUpload } = useServerAction(handleUploadImagesAction, {
+    onError: (err) => {
+      console.error("Image upload error:", err);
+      throw new Error("Failed to upload images");
+    },
+  });
+
+  const processImages = async (
+    images: FileList | undefined,
+    type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP",
+    vin: string
+  ) => {
+    if (!images || images.length === 0) return;
+
+    const imageData = await Promise.all(
+      Array.from(images).map(async (file: File) => {
+        const arrayBuffer = await file.arrayBuffer();
+        return {
+          buffer: Array.from(new Uint8Array(arrayBuffer)),
+          size: file.size,
+          name: file.name,
+          type: type,
+        };
+      })
+    );
+
+    // Use the server action to handle the upload
+    const result = await executeImageUpload({
+      vin,
+      images: imageData,
+    });
+
+    return result;
+  };
 
   const onSubmit = async (values: z.infer<typeof ImageSchema>) => {
     try {
@@ -143,21 +141,34 @@ export function ImagesForm({ vin }: { vin: string }) {
         delivery_images,
       } = values;
 
-      const imagePromises = [
-        processImages(warehouse_images, "WAREHOUSE", vin),
-        processImages(auction_images, "AUCTION", vin),
-        processImages(pick_up_images, "PICK_UP", vin),
-        processImages(delivery_images, "DELIVERED", vin),
-      ];
+      const imagePromises = [];
+      
+      if (warehouse_images && warehouse_images.length > 0) {
+        imagePromises.push(processImages(warehouse_images, "WAREHOUSE", vin));
+      }
+      if (auction_images && auction_images.length > 0) {
+        imagePromises.push(processImages(auction_images, "AUCTION", vin));
+      }
+      if (pick_up_images && pick_up_images.length > 0) {
+        imagePromises.push(processImages(pick_up_images, "PICK_UP", vin));
+      }
+      if (delivery_images && delivery_images.length > 0) {
+        imagePromises.push(processImages(delivery_images, "DELIVERED", vin));
+      }
 
       setIsPending(true);
-      await Promise.all(imagePromises);
+      
+      if (imagePromises.length > 0) {
+        await Promise.all(imagePromises);
+      }
+      
       setIsPending(false);
 
       queryClient.invalidateQueries({ queryKey: ["getImagesForCar", vin] });
       toast.success("Images Uploaded successfully");
     } catch (error) {
       console.error(error);
+      setIsPending(false);
       toast.error("An error occurred while submitting the form");
     }
   };

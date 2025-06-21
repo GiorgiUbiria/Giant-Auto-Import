@@ -127,13 +127,13 @@ export const handleUploadImagesAction = isAdminProcedure
         const command = new PutObjectCommand({
           Bucket: bucketName,
           Key: key,
+          Body: file.buffer,
           ContentLength: file.size,
           ContentType: "image/png",
         });
 
-        const signedUrl = await getSignedUrl(S3Client, command, {
-          expiresIn: 3600,
-        });
+        // Upload directly using S3 SDK instead of signed URL
+        await S3Client.send(command);
 
         const insertValues: z.infer<typeof insertImageSchema> = {
           carVin: vin,
@@ -143,14 +143,6 @@ export const handleUploadImagesAction = isAdminProcedure
         };
 
         await db.insert(images).values(insertValues);
-
-        await fetch(signedUrl, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "image/png",
-          },
-          body: file.buffer,
-        });
 
         uploadedImages.push(key);
       } catch (error) {

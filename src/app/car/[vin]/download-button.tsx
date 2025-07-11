@@ -14,11 +14,11 @@ export default function DownloadButton({
   const handleDownload = async () => {
     if (!content || content.length === 0) return;
 
-    // Dynamically import heavy libraries only when needed. 
-    // We use `any` to avoid the need for type declarations which adds extra weight.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // Dynamically import heavy libraries only when needed.
+    // We intentionally cast to `any` to avoid bundling type definitions.
+    // @ts-ignore
     const JSZip = (await import("jszip")) as any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // @ts-ignore
     const fileSaver = (await import("file-saver")) as any;
     const saveAs = fileSaver.saveAs;
 

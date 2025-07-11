@@ -5,3 +5,6 @@ declare module 'yet-another-react-lightbox/plugins/download';
 declare module 'yet-another-react-lightbox/plugins/inline';
 declare module 'yet-another-react-lightbox/plugins/thumbnails';
 declare module 'next/dynamic';
+declare module 'react';
+declare module 'react-use';
+declare module 'lucide-react';

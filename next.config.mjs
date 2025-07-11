@@ -1,5 +1,11 @@
 import createNextIntlPlugin from 'next-intl/plugin';
- 
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const withNextIntl = createNextIntlPlugin();
 
 /** @type {import('next').NextConfig} */
@@ -79,4 +85,4 @@ const nextConfig = {
   output: 'standalone',
 };
 
-export default withNextIntl(nextConfig);
+export default withBundleAnalyzer(withNextIntl(nextConfig));

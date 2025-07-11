@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getImageKeys } from "@/lib/actions/imageActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { useState } from "react";
-import Lightbox from "yet-another-react-lightbox";
+import dynamic from "next/dynamic";
 import Download from "yet-another-react-lightbox/plugins/download";
 import Inline from "yet-another-react-lightbox/plugins/inline";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
@@ -15,6 +15,10 @@ import NextJsImage from "./nextjs-image";
 import { useMedia } from "react-use";
 import { Loader2 } from "lucide-react";
 import { Suspense } from "react";
+
+const Lightbox = dynamic(() => import("yet-another-react-lightbox"), {
+  ssr: false,
+});
 
 const breakpoints = [3840, 1920, 1080, 640, 384, 256, 128];
 

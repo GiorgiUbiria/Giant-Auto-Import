@@ -1,8 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import JSZip from "jszip";
-import { saveAs } from "file-saver";
 
 const publicUrl = process.env.NEXT_PUBLIC_BUCKET_URL!;
 
@@ -14,26 +12,34 @@ export default function DownloadButton({
   vin: string;
 }) {
   const handleDownload = async () => {
-    if (content && content.length > 0) {
-      const zip = new JSZip();
+    if (!content || content.length === 0) return;
 
-  content.forEach((image, index) => {
-        if (image.imageKey) {
-          zip.file(
-            `image_${index + 1}.jpg`,
-            fetch(`${publicUrl}/${image.imageKey}`).then((response) => response.blob()),
-          );
-        }
-      });
+    // Dynamically import heavy libraries only when needed. 
+    // We use `any` to avoid the need for type declarations which adds extra weight.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const JSZip = (await import("jszip")) as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fileSaver = (await import("file-saver")) as any;
+    const saveAs = fileSaver.saveAs;
 
-      zip
-        .generateAsync({ type: "blob" })
-        .then((blob) => {
-          saveAs(blob, `VIN-${vin}-PHOTOS.zip`);
-        })
-        .catch((error) => {
-          console.error("Failed to generate ZIP", error);
-        });
+    const zip = new JSZip();
+
+    content.forEach((image, index) => {
+      if (image.imageKey) {
+        zip.file(
+          `image_${index + 1}.jpg`,
+          fetch(`${publicUrl}/${image.imageKey}`).then((response) =>
+            response.blob(),
+          ),
+        );
+      }
+    });
+
+    try {
+      const blob = await zip.generateAsync({ type: "blob" });
+      saveAs(blob, `VIN-${vin}-PHOTOS.zip`);
+    } catch (error) {
+      console.error("Failed to generate ZIP", error);
     }
   };
 

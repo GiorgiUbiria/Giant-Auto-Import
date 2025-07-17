@@ -5,6 +5,10 @@ import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import NoImage from "../../../../public/no-car-image.webp";
+import React from "react";
+// Enhancement: Preconnect and preload for CDN image domain
+// If you haven't installed 'react-dom' for preconnect/preload, run: npm install react-dom
+import { preconnect, preload } from 'react-dom';
 
 export const TableImage = ({ vin }: { vin: string }) => {
   const { isLoading, data, error } = useServerActionQuery(getImageAction, {
@@ -15,6 +19,26 @@ export const TableImage = ({ vin }: { vin: string }) => {
     retry: 1, // Reduce retry attempts
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  // Utility to extract CDN base from a URL
+  function getCdnBase(url?: string): string | null {
+    if (!url) return null;
+    try {
+      const u = new URL(url);
+      return u.origin;
+    } catch {
+      return null;
+    }
+  }
+
+  // Preconnect and preload for CDN
+  React.useEffect(() => {
+    if (data?.url) {
+      const cdnBase = getCdnBase(data.url);
+      if (cdnBase) preconnect(cdnBase);
+      preload(data.url, { as: 'image' });
+    }
+  }, [data?.url]);
 
   // Show fallback image on error or no data
   if (error || (!data && !isLoading)) {

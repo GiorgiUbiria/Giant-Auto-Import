@@ -122,6 +122,17 @@ export function ImagesForm({ vin }: { vin: string }) {
     initialQuality: 0.6,
   };
 
+  // Helper: create a thumbnail using browser-image-compression
+  async function createThumbnail(file: File): Promise<File> {
+    return imageCompression(file, {
+      maxWidthOrHeight: 300,
+      maxSizeMB: 0.1,
+      initialQuality: 0.4,
+      fileType: 'image/webp',
+      useWebWorker: true,
+    });
+  }
+
   // Helper: upload all images with proper progress tracking
   async function uploadAllImages(allFiles: Array<{ file: File; type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP" }>) {
     let uploaded = 0;
@@ -137,6 +148,15 @@ export function ImagesForm({ vin }: { vin: string }) {
           compressedFile = file;
         }
 
+        // Generate thumbnail
+        let thumbFile: File | null = null;
+        try {
+          thumbFile = await createThumbnail(file);
+        } catch (err) {
+          console.warn("Thumbnail generation failed, skipping thumbnail:", err);
+        }
+
+        // Upload original
         const arrayBuffer = await compressedFile.arrayBuffer();
         await executeImageUpload({
           vin,
@@ -149,7 +169,27 @@ export function ImagesForm({ vin }: { vin: string }) {
             },
           ],
         });
-        
+
+        // Upload thumbnail (with -thumb before extension)
+        if (thumbFile) {
+          const extIdx = compressedFile.name.lastIndexOf('.');
+          const thumbName = extIdx !== -1
+            ? compressedFile.name.slice(0, extIdx) + '-thumb.webp'
+            : compressedFile.name + '-thumb.webp';
+          const thumbBuffer = await thumbFile.arrayBuffer();
+          await executeImageUpload({
+            vin,
+            images: [
+              {
+                buffer: Array.from(new Uint8Array(thumbBuffer)),
+                size: thumbFile.size,
+                name: thumbName,
+                type: type,
+              },
+            ],
+          });
+        }
+
         uploaded++;
         setUploadProgress({ total: allFiles.length, uploaded });
         console.log(`Uploaded ${uploaded}/${allFiles.length}: ${compressedFile.name}`);

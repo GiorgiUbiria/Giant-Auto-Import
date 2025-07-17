@@ -14,12 +14,13 @@ import { Input } from "@/components/ui/input";
 import { handleUploadImagesAction } from "@/lib/actions/bucketActions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { useServerAction } from "zsa-react";
+import imageCompression from "browser-image-compression";
 
 const ACCEPTED_IMAGE_TYPES = [
   "image/png",
@@ -94,11 +95,17 @@ const ImageSchema = z.object({
 export function ImagesForm({ vin }: { vin: string }) {
   const [isPending, setIsPending] = useState(false);
   const [previews, setPreviews] = useState<Record<string, string[]>>({});
+  const [uploadProgress, setUploadProgress] = useState({ total: 0, uploaded: 0 });
   const queryClient = useQueryClient();
   const form = useForm<z.infer<typeof ImageSchema>>({
     resolver: zodResolver(ImageSchema),
     defaultValues: {},
   });
+  // Refs for file inputs
+  const auctionInputRef = useRef<HTMLInputElement>(null);
+  const warehouseInputRef = useRef<HTMLInputElement>(null);
+  const deliveryInputRef = useRef<HTMLInputElement>(null);
+  const pickupInputRef = useRef<HTMLInputElement>(null);
 
   const { execute: executeImageUpload } = useServerAction(handleUploadImagesAction, {
     onError: (err) => {
@@ -107,6 +114,54 @@ export function ImagesForm({ vin }: { vin: string }) {
     },
   });
 
+  // Compression options
+  const options = {
+    maxSizeMB: 1.5,
+    maxWidthOrHeight: 1920,
+    useWebWorker: true,
+    initialQuality: 0.6,
+  };
+
+  // Helper: upload all images with proper progress tracking
+  async function uploadAllImages(allFiles: Array<{ file: File; type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP" }>) {
+    let uploaded = 0;
+    setUploadProgress({ total: allFiles.length, uploaded: 0 });
+
+    for (const { file, type } of allFiles) {
+      try {
+        let compressedFile: File = file;
+        try {
+          compressedFile = await imageCompression(file, options);
+        } catch (err) {
+          console.warn("Compression failed, using original file:", err);
+          compressedFile = file;
+        }
+
+        const arrayBuffer = await compressedFile.arrayBuffer();
+        await executeImageUpload({
+          vin,
+          images: [
+            {
+              buffer: Array.from(new Uint8Array(arrayBuffer)),
+              size: compressedFile.size,
+              name: compressedFile.name,
+              type: type,
+            },
+          ],
+        });
+        
+        uploaded++;
+        setUploadProgress({ total: allFiles.length, uploaded });
+        console.log(`Uploaded ${uploaded}/${allFiles.length}: ${compressedFile.name}`);
+      } catch (error) {
+        console.error(`Failed to upload ${file.name}:`, error);
+        // Continue with next file instead of stopping
+        uploaded++;
+        setUploadProgress({ total: allFiles.length, uploaded });
+      }
+    }
+  }
+
   const processImages = async (
     images: FileList | undefined,
     type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP",
@@ -114,13 +169,28 @@ export function ImagesForm({ vin }: { vin: string }) {
   ) => {
     if (!images || images.length === 0) return;
 
+    // Compression options: target ~1.5MB per image, 10-15x compression
+    const options = {
+      maxSizeMB: 1.5,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+      initialQuality: 0.6, // start with moderate quality
+    };
+
     const imageData = await Promise.all(
       Array.from(images).map(async (file: File) => {
-        const arrayBuffer = await file.arrayBuffer();
+        let compressedFile = file;
+        try {
+          compressedFile = await imageCompression(file, options);
+        } catch (err) {
+          // fallback to original file if compression fails
+          compressedFile = file;
+        }
+        const arrayBuffer = await compressedFile.arrayBuffer();
         return {
           buffer: Array.from(new Uint8Array(arrayBuffer)),
-          size: file.size,
-          name: file.name,
+          size: compressedFile.size,
+          name: compressedFile.name,
           type: type,
         };
       })
@@ -144,35 +214,47 @@ export function ImagesForm({ vin }: { vin: string }) {
         delivery_images,
       } = values;
 
-      const imagePromises = [];
+      // Gather all files with their types
+      const allFiles: Array<{ file: File; type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP" }> = [];
       
-      if (warehouse_images && warehouse_images.length > 0) {
-        imagePromises.push(processImages(warehouse_images, "WAREHOUSE", vin));
+      if (warehouse_images) {
+        Array.from(warehouse_images).forEach(file => {
+          allFiles.push({ file, type: "WAREHOUSE" as const });
+        });
       }
-      if (auction_images && auction_images.length > 0) {
-        imagePromises.push(processImages(auction_images, "AUCTION", vin));
+      if (auction_images) {
+        Array.from(auction_images).forEach(file => {
+          allFiles.push({ file, type: "AUCTION" as const });
+        });
       }
-      if (pick_up_images && pick_up_images.length > 0) {
-        imagePromises.push(processImages(pick_up_images, "PICK_UP", vin));
+      if (pick_up_images) {
+        Array.from(pick_up_images).forEach(file => {
+          allFiles.push({ file, type: "PICK_UP" as const });
+        });
       }
-      if (delivery_images && delivery_images.length > 0) {
-        imagePromises.push(processImages(delivery_images, "DELIVERED", vin));
+      if (delivery_images) {
+        Array.from(delivery_images).forEach(file => {
+          allFiles.push({ file, type: "DELIVERED" as const });
+        });
+      }
+
+      if (allFiles.length === 0) {
+        toast.error("No images selected");
+        return;
       }
 
       setIsPending(true);
-      
-      if (imagePromises.length > 0) {
-        await Promise.all(imagePromises);
-      }
-      
+      await uploadAllImages(allFiles);
       setIsPending(false);
-
+      setUploadProgress({ total: 0, uploaded: 0 });
+      
       queryClient.invalidateQueries({ queryKey: ["getImagesForCar", vin] });
-      toast.success("Images Uploaded successfully");
+      toast.success(`Successfully uploaded ${allFiles.length} images`);
     } catch (error) {
-      console.error(error);
+      console.error("Upload error:", error);
       setIsPending(false);
-      toast.error("An error occurred while submitting the form");
+      setUploadProgress({ total: 0, uploaded: 0 });
+      toast.error("An error occurred while uploading images");
     }
   };
 
@@ -218,6 +300,20 @@ export function ImagesForm({ vin }: { vin: string }) {
         onSubmit={handleSubmit}
         className="w-full space-y-6 my-12 md:my-4 bg-gray-200/90 dark:bg-gray-700 p-3 rounded-md"
       >
+        {/* Upload Progress Bar */}
+        {uploadProgress.total > 0 && (
+          <div className="mb-4">
+            <div className="flex justify-between text-sm mb-1">
+              <span>Uploaded {uploadProgress.uploaded} of {uploadProgress.total}</span>
+              <span>{uploadProgress.total - uploadProgress.uploaded} left</span>
+            </div>
+            <progress
+              className="w-full h-2"
+              value={uploadProgress.total === 0 ? 0 : (uploadProgress.uploaded / uploadProgress.total) * 100}
+              max={100}
+            />
+          </div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
           <FormField
             control={form.control}
@@ -226,13 +322,28 @@ export function ImagesForm({ vin }: { vin: string }) {
               <FormItem>
                 <FormLabel>Auction Images</FormLabel>
                 <FormControl>
-                  <Input
-                    type="file"
-                    {...fieldProps}
-                    multiple
-                    accept={ACCEPTED_IMAGE_TYPES.join(", ")}
-                    onChange={(event) => onChange(event.target.files)}
-                  />
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="file"
+                      {...fieldProps}
+                      multiple
+                      accept={ACCEPTED_IMAGE_TYPES.join(", ")}
+                      onChange={(event) => onChange(event.target.files)}
+                      ref={auctionInputRef}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        form.setValue("auction_images", undefined);
+                        if (auctionInputRef.current) auctionInputRef.current.value = "";
+                      }}
+                      disabled={isPending}
+                    >
+                      Clear
+                    </Button>
+                  </div>
                 </FormControl>
                 <FormDescription>Auction Images</FormDescription>
                 {/* Image Previews */}
@@ -260,13 +371,28 @@ export function ImagesForm({ vin }: { vin: string }) {
               <FormItem>
                 <FormLabel>Warehouse Images</FormLabel>
                 <FormControl>
-                  <Input
-                    type="file"
-                    {...fieldProps}
-                    multiple
-                    accept={ACCEPTED_IMAGE_TYPES.join(", ")}
-                    onChange={(event) => onChange(event.target.files)}
-                  />
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="file"
+                      {...fieldProps}
+                      multiple
+                      accept={ACCEPTED_IMAGE_TYPES.join(", ")}
+                      onChange={(event) => onChange(event.target.files)}
+                      ref={warehouseInputRef}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        form.setValue("warehouse_images", undefined);
+                        if (warehouseInputRef.current) warehouseInputRef.current.value = "";
+                      }}
+                      disabled={isPending}
+                    >
+                      Clear
+                    </Button>
+                  </div>
                 </FormControl>
                 <FormDescription>Warehouse Images</FormDescription>
                 {/* Image Previews */}
@@ -294,13 +420,28 @@ export function ImagesForm({ vin }: { vin: string }) {
               <FormItem>
                 <FormLabel>Delivery Images</FormLabel>
                 <FormControl>
-                  <Input
-                    type="file"
-                    {...fieldProps}
-                    multiple
-                    accept={ACCEPTED_IMAGE_TYPES.join(", ")}
-                    onChange={(event) => onChange(event.target.files)}
-                  />
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="file"
+                      {...fieldProps}
+                      multiple
+                      accept={ACCEPTED_IMAGE_TYPES.join(", ")}
+                      onChange={(event) => onChange(event.target.files)}
+                      ref={deliveryInputRef}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        form.setValue("delivery_images", undefined);
+                        if (deliveryInputRef.current) deliveryInputRef.current.value = "";
+                      }}
+                      disabled={isPending}
+                    >
+                      Clear
+                    </Button>
+                  </div>
                 </FormControl>
                 <FormDescription>Delivery Images</FormDescription>
                 {/* Image Previews */}
@@ -328,13 +469,28 @@ export function ImagesForm({ vin }: { vin: string }) {
               <FormItem>
                 <FormLabel>Pick Up Images</FormLabel>
                 <FormControl>
-                  <Input
-                    type="file"
-                    {...fieldProps}
-                    multiple
-                    accept={ACCEPTED_IMAGE_TYPES.join(", ")}
-                    onChange={(event) => onChange(event.target.files)}
-                  />
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="file"
+                      {...fieldProps}
+                      multiple
+                      accept={ACCEPTED_IMAGE_TYPES.join(", ")}
+                      onChange={(event) => onChange(event.target.files)}
+                      ref={pickupInputRef}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        form.setValue("pick_up_images", undefined);
+                        if (pickupInputRef.current) pickupInputRef.current.value = "";
+                      }}
+                      disabled={isPending}
+                    >
+                      Clear
+                    </Button>
+                  </div>
                 </FormControl>
                 <FormDescription>Pick Up Images</FormDescription>
                 {/* Image Previews */}

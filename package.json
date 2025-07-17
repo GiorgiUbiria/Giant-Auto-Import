@@ -49,6 +49,7 @@
     "aws-sdk": "^2.1659.0",
     "axios": "^1.7.2",
     "better-sqlite3": "^9.6.0",
+    "browser-image-compression": "^2.0.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",

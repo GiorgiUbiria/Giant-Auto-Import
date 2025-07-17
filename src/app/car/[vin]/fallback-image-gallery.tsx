@@ -13,6 +13,9 @@ import NextJsImage from "./nextjs-image";
 import { useMedia } from "react-use";
 import { Loader2 } from "lucide-react";
 import { Suspense } from "react";
+import type { GridChildComponentProps } from 'react-window';
+import { FixedSizeGrid as Grid } from 'react-window';
+import { preconnect, preload } from 'react-dom';
 
 const breakpoints = [3840, 1920, 1080, 640, 384, 256, 128];
 
@@ -79,6 +82,15 @@ export const FallbackImageGallery = ({ vin }: { vin: string }) => {
     fetchImages();
   }, [vin]);
 
+  // Preconnect and preload for CDN
+  if (publicUrl) {
+    preconnect(publicUrl);
+    // Optionally preload the first image for perceived speed
+    if (data && data.length > 0) {
+      preload(`${publicUrl}/${data[0].imageKey}`, { as: 'image' });
+    }
+  }
+
   console.log("FallbackImageGallery: Render state", { 
     vin, 
     isLoading, 
@@ -104,6 +116,42 @@ export const FallbackImageGallery = ({ vin }: { vin: string }) => {
   const filterImagesByType = (images: ImageData[], imageType: string) =>
     images.filter((image) => image.imageType === imageType);
 
+  // Virtualized thumbnail grid for large image sets
+  const VirtualizedGrid = ({ images, onThumbClick }: { images: ImageData[], onThumbClick: (idx: number) => void }) => {
+    const columnCount = isMobile ? 3 : 6;
+    const rowCount = Math.ceil(images.length / columnCount);
+    const cellWidth = 100;
+    const cellHeight = 80;
+    return (
+      <Grid
+        columnCount={columnCount}
+        columnWidth={cellWidth}
+        height={Math.min(320, rowCount * cellHeight)}
+        rowCount={rowCount}
+        rowHeight={cellHeight}
+        width={columnCount * cellWidth}
+      >
+        {({ columnIndex, rowIndex, style }: GridChildComponentProps) => {
+          const idx = rowIndex * columnCount + columnIndex;
+          if (idx >= images.length) return null;
+          const image = images[idx];
+          return (
+            <div style={style} key={image.imageKey} onClick={() => onThumbClick(idx)}>
+              <img
+                src={`${publicUrl}/${image.imageKey}`}
+                alt={image.imageType}
+                width={90}
+                height={70}
+                style={{ objectFit: 'cover', borderRadius: 4, cursor: 'pointer', margin: 4 }}
+                loading="lazy"
+              />
+            </div>
+          );
+        }}
+      </Grid>
+    );
+  };
+
   const getSlides = (filteredData: ImageData[]) =>
     filteredData.map(({ imageKey }) => ({
       src: `${publicUrl}/${imageKey}`,
@@ -127,12 +175,10 @@ export const FallbackImageGallery = ({ vin }: { vin: string }) => {
             </TabsTrigger>
           ))}
         </TabsList>
-
         <div className="mt-32 sm:mt-0">
           {imageTypes.map((type) => {
             const filteredData = filterImagesByType(data, type);
             const slides = getSlides(filteredData);
-
             if (slides.length === 0) {
               return (
                 <TabsContent key={type} value={type} className="text-center p-4">
@@ -140,38 +186,45 @@ export const FallbackImageGallery = ({ vin }: { vin: string }) => {
                 </TabsContent>
               );
             }
-
+            // Use virtualization for thumbnail grid if more than 18 images
             return (
               <TabsContent key={type} value={type} className="w-full">
                 <div className="w-full aspect-[3/2] max-w-full overflow-hidden">
                   <Suspense fallback={<LoadingState />}>
-                    <Lightbox
-                      slides={slides}
-                      inline={{
-                        style: {
-                          aspectRatio: "3/2",
-                          maxHeight: "100%",
-                          width: "100%",
-                        }
-                      }}
-                      plugins={[Inline, ...(isMobile ? [] : [Thumbnails])]}
-                      carousel={{ imageFit: "contain" }}
-                      render={{ slide: NextJsImage, thumbnail: NextJsImage }}
-                      on={{
-                        click: ({ index }) => {
-                          setStartIndex(index);
-                          setOpen(true);
-                        },
-                      }}
-                      thumbnails={isMobile ? undefined : {
-                        width: 60,
-                        height: 40,
-                        border: 1,
-                        borderRadius: 4,
-                        padding: 4,
-                        gap: 8,
-                      }}
-                    />
+                    {filteredData.length > 18 ? (
+                      <VirtualizedGrid images={filteredData} onThumbClick={(idx) => {
+                        setStartIndex(idx);
+                        setOpen(true);
+                      }} />
+                    ) : (
+                      <Lightbox
+                        slides={slides}
+                        inline={{
+                          style: {
+                            aspectRatio: "3/2",
+                            maxHeight: "100%",
+                            width: "100%",
+                          }
+                        }}
+                        plugins={[Inline, ...(isMobile ? [] : [Thumbnails])]} 
+                        carousel={{ imageFit: "contain" }}
+                        render={{ slide: NextJsImage, thumbnail: NextJsImage }}
+                        on={{
+                          click: ({ index }) => {
+                            setStartIndex(index);
+                            setOpen(true);
+                          },
+                        }}
+                        thumbnails={isMobile ? undefined : {
+                          width: 60,
+                          height: 40,
+                          border: 1,
+                          borderRadius: 4,
+                          padding: 4,
+                          gap: 8,
+                        }}
+                      />
+                    )}
                   </Suspense>
                 </div>
               </TabsContent>

@@ -43,7 +43,27 @@ const EmptyState = () => (
 type ImageData = {
   imageKey: string;
   imageType: "WAREHOUSE" | "PICK_UP" | "DELIVERED" | "AUCTION";
+  url: string;
 };
+
+// Helper: check if a thumbnail exists
+async function checkThumbnailExists(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, { method: 'HEAD' });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+// Helper: generate thumbnail URL
+function getThumbnailUrl(imageKey: string, publicUrl: string): string {
+  const extIdx = imageKey.lastIndexOf('.');
+  const thumbKey = extIdx !== -1
+    ? imageKey.slice(0, extIdx) + '-thumb' + imageKey.slice(extIdx)
+    : imageKey + '-thumb';
+  return `${publicUrl}/${thumbKey}`;
+}
 
 export const FallbackImageGallery = ({ vin, fetchByType = false }: { vin: string, fetchByType?: boolean }) => {
   const imageTypes = ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERED"];
@@ -54,6 +74,7 @@ export const FallbackImageGallery = ({ vin, fetchByType = false }: { vin: string
   const [open, setOpen] = useState<boolean>(false);
   const [startIndex, setStartIndex] = useState<number>(0);
   const [selectedType, setSelectedType] = useState<string>(imageTypes[0]);
+  const [thumbnailCache, setThumbnailCache] = useState<Record<string, boolean>>({});
   const isMobile = useMedia('(max-width: 640px)', false);
 
   useEffect(() => {
@@ -81,6 +102,27 @@ export const FallbackImageGallery = ({ vin, fetchByType = false }: { vin: string
     };
     fetchImages();
   }, [vin, fetchByType, selectedType]);
+
+  // Check thumbnails for visible images
+  useEffect(() => {
+    if (!data || !publicUrl) return;
+
+    const checkThumbnails = async () => {
+      const newCache = { ...thumbnailCache };
+      const promises = data.map(async (img) => {
+        if (newCache[img.imageKey] !== undefined) return; // Already checked
+        
+        const thumbUrl = getThumbnailUrl(img.imageKey, publicUrl);
+        const hasThumb = await checkThumbnailExists(thumbUrl);
+        newCache[img.imageKey] = hasThumb;
+      });
+
+      await Promise.all(promises);
+      setThumbnailCache(newCache);
+    };
+
+    checkThumbnails();
+  }, [data, publicUrl, thumbnailCache]);
 
   // Preconnect and preload for CDN
   if (publicUrl) {
@@ -116,10 +158,13 @@ export const FallbackImageGallery = ({ vin, fetchByType = false }: { vin: string
           const idx = rowIndex * columnCount + columnIndex;
           if (idx >= images.length) return null;
           const image = images[idx];
+          const thumbUrl = getThumbnailUrl(image.imageKey, publicUrl);
+          const hasThumb = thumbnailCache[image.imageKey];
+          
           return (
             <div style={style} key={image.imageKey} onClick={() => onThumbClick(idx)}>
               <img
-                src={`${publicUrl}/${image.imageKey}`}
+                src={hasThumb ? thumbUrl : image.url}
                 alt={image.imageType}
                 width={90}
                 height={70}

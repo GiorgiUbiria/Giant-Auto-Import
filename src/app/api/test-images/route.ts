@@ -4,35 +4,6 @@ import { images } from '@/lib/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 
-// Helper: check if a thumbnail exists in R2
-async function checkThumbnailExists(url: string): Promise<boolean> {
-  try {
-    const res = await fetch(url, { method: 'HEAD' });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
-// Helper: for a list of images, check for thumbnail existence
-async function withThumbCheck(imgs: Array<{ imageKey: string; imageType: string }>, publicUrl: string) {
-  const results = await Promise.all(imgs.map(async img => {
-    const extIdx = img.imageKey.lastIndexOf('.');
-    const thumbKey = extIdx !== -1
-      ? img.imageKey.slice(0, extIdx) + '-thumb' + img.imageKey.slice(extIdx)
-      : img.imageKey + '-thumb';
-    const thumbUrl = `${publicUrl}/${thumbKey}`;
-    const originalUrl = `${publicUrl}/${img.imageKey}`;
-    const hasThumb = await checkThumbnailExists(thumbUrl);
-    return {
-      ...img,
-      url: originalUrl,
-      thumbnailUrl: hasThumb ? thumbUrl : null,
-    };
-  }));
-  return results;
-}
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -80,12 +51,15 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Check thumbnails in parallel (but limit concurrency for performance)
-    const imagesWithThumbs = await withThumbCheck(imageKeys, publicUrl);
+    // Add URLs to the response without checking thumbnails
+    const imagesWithUrls = imageKeys.map(img => ({
+      ...img,
+      url: `${publicUrl}/${img.imageKey}`,
+    }));
 
     return NextResponse.json({
       success: true,
-      images: imagesWithThumbs,
+      images: imagesWithUrls,
       count,
       page,
       pageSize,

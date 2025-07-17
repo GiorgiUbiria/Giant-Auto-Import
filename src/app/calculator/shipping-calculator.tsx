@@ -245,6 +245,21 @@ export function ShippingCalculator({ style }: { style: string }) {
                       </label>
                     </div>
                   ))}
+                  {/* Insurance Checkbox */}
+                  <div className="flex items-center space-x-3 transition-all duration-200 hover:bg-muted/80 dark:hover:bg-muted/50 p-2 rounded">
+                    <Checkbox
+                      id="insurance"
+                      checked={insurance}
+                      onCheckedChange={(checked) => setInsurance(!!checked)}
+                      className="data-[state=checked]:bg-primary dark:data-[state=checked]:bg-primary/90"
+                    />
+                    <label
+                      htmlFor="insurance"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {t('insurance')} (1.5%)
+                    </label>
+                  </div>
                 </div>
               </div>
               <div className="mt-6 p-6 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20">

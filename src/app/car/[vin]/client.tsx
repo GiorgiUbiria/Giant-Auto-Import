@@ -7,6 +7,7 @@ import CarInfo from "./car-info";
 import { FallbackImageGallery } from "./fallback-image-gallery";
 import StatusLine from "./status-line";
 import { Suspense } from "react";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const LoadingState = () => (
 	<div className="w-full h-[50vh] grid place-items-center">
@@ -50,24 +51,26 @@ export const Client = ({ vin }: { vin: string }) => {
 	});
 
 	return (
-		<div className="flex flex-col mb-4 mt-8 md:mt-4 px-4 sm:px-6 lg:px-8">
-			<Suspense fallback={<LoadingState />}>
-				{isLoading ? (
-					<LoadingState />
-				) : error || !data ? (
-					<ErrorState vin={vin} />
-				) : (
-					<div>
-						<div className="w-full lg:w-3/4 mx-auto mb-8">
-							<StatusLine status={data.shippingStatus} />
+		<TooltipProvider>
+			<div className="flex flex-col mb-4 mt-8 md:mt-4 px-4 sm:px-6 lg:px-8">
+				<Suspense fallback={<LoadingState />}>
+					{isLoading ? (
+						<LoadingState />
+					) : error || !data ? (
+						<ErrorState vin={vin} />
+					) : (
+						<div>
+							<div className="w-full lg:w-3/4 mx-auto mb-8">
+								<StatusLine status={data.shippingStatus} />
+							</div>
+							<div className="mt-8 w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+								<FallbackImageGallery vin={data.vin} fetchByType={false} />
+								<CarInfo car={data} />
+							</div>
 						</div>
-						<div className="mt-8 w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-							<FallbackImageGallery vin={data.vin} />
-							<CarInfo car={data} />
-						</div>
-					</div>
-				)}
-			</Suspense>
-		</div>
+					)}
+				</Suspense>
+			</div>
+		</TooltipProvider>
 	);
 };

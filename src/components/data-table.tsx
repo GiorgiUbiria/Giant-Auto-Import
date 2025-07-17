@@ -4,20 +4,21 @@ import * as React from "react";
 
 import {
   ColumnDef,
-  ColumnFiltersState,
   flexRender,
-  SortingState,
   getCoreRowModel,
-  VisibilityState,
   useReactTable,
   getSortedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
+  SortingState,
+  ColumnFiltersState,
+  VisibilityState,
+  Table,
 } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
 import {
-  Table,
+  Table as UITable,
   TableBody,
   TableCell,
   TableHead,
@@ -37,37 +38,66 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   filterKey?: string;
+  pageIndex: number;
+  pageSize: number;
+  onPaginationChange: (updater: { pageIndex: number; pageSize: number }) => void;
+  sorting: SortingState;
+  onSortingChange: (updaterOrValue: SortingState | ((old: SortingState) => SortingState)) => void;
+  filters: ColumnFiltersState;
+  onFiltersChange: (updaterOrValue: ColumnFiltersState | ((old: ColumnFiltersState) => ColumnFiltersState)) => void;
+  rowCount: number;
+  columnVisibility?: VisibilityState;
+  onColumnVisibilityChange?: (updaterOrValue: VisibilityState | ((old: VisibilityState) => VisibilityState)) => void;
+  rowSelection?: {};
+  onRowSelectionChange?: (updaterOrValue: any | ((old: any) => any)) => void;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   filterKey,
+  pageIndex,
+  pageSize,
+  onPaginationChange,
+  sorting,
+  onSortingChange,
+  filters,
+  onFiltersChange,
+  rowCount,
+  columnVisibility = {},
+  onColumnVisibilityChange,
+  rowSelection = {},
+  onRowSelectionChange,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
-
   const table = useReactTable({
     data,
     columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
+    pageCount: Math.ceil(rowCount / pageSize),
     state: {
       sorting,
-      columnFilters,
+      columnFilters: filters,
       columnVisibility,
       rowSelection,
+      pagination: { pageIndex, pageSize },
+    },
+    manualPagination: true,
+    manualSorting: true,
+    manualFiltering: true,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onSortingChange,
+    onColumnFiltersChange: onFiltersChange,
+    onColumnVisibilityChange,
+    onRowSelectionChange,
+    onPaginationChange: (updater) => {
+      if (typeof updater === "function") {
+        const newState = updater({ pageIndex, pageSize });
+        onPaginationChange(newState);
+      } else {
+        onPaginationChange(updater);
+      }
     },
   });
 
@@ -75,22 +105,32 @@ export function DataTable<TData, TValue>({
     <div className="mx-auto container-fluid">
       <div className="flex gap-4 pb-4">
         <div className="flex flex-col gap-2.5 container pl-2">
-          <DataTablePagination table={table} />
+          <DataTablePagination
+            pageIndex={pageIndex}
+            pageSize={pageSize}
+            rowCount={rowCount}
+            onPaginationChange={onPaginationChange}
+          />
         </div>
-        {
-          filterKey && (
-            <div className="flex items-center">
-              <Input
-                placeholder={`Filter by ${filterKey}`}
-                value={(table.getColumn(filterKey)?.getFilterValue() as string) ?? ""}
-                onChange={(event) =>
-                  table.getColumn(filterKey)?.setFilterValue(event.target.value)
+        {filterKey && (
+          <div className="flex items-center">
+            <Input
+              placeholder={`Filter by ${filterKey}`}
+              value={
+                (filters.find(f => f.id === filterKey)?.value as string) ?? ""
+              }
+              onChange={(event) => {
+                const value = event.target.value;
+                const newFilters = filters.filter(f => f.id !== filterKey);
+                if (value) {
+                  newFilters.push({ id: filterKey, value });
                 }
-                className="max-w-sm"
-              />
-            </div>
-          )
-        }
+                onFiltersChange(newFilters);
+              }}
+              className="max-w-sm"
+            />
+          </div>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
@@ -119,7 +159,7 @@ export function DataTable<TData, TValue>({
         </DropdownMenu>
       </div>
       <div className="rounded-md border">
-        <Table>
+        <UITable>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -129,9 +169,9 @@ export function DataTable<TData, TValue>({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
                     </TableHead>
                   );
                 })}
@@ -158,16 +198,13 @@ export function DataTable<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
+                <TableCell colSpan={columns.length} className="h-24 text-center">
                   No results.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
-        </Table>
+        </UITable>
       </div>
     </div>
   );

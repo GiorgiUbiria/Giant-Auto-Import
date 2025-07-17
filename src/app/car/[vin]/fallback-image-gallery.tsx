@@ -13,6 +13,9 @@ import NextJsImage from "./nextjs-image";
 import { useMedia } from "react-use";
 import { Loader2 } from "lucide-react";
 import { Suspense } from "react";
+import type { GridChildComponentProps } from 'react-window';
+import { FixedSizeGrid as Grid } from 'react-window';
+import { preconnect, preload } from 'react-dom';
 
 const breakpoints = [3840, 1920, 1080, 640, 384, 256, 128];
 
@@ -42,7 +45,7 @@ type ImageData = {
   imageType: "WAREHOUSE" | "PICK_UP" | "DELIVERED" | "AUCTION";
 };
 
-export const FallbackImageGallery = ({ vin }: { vin: string }) => {
+export const FallbackImageGallery = ({ vin, fetchByType = false }: { vin: string, fetchByType?: boolean }) => {
   const imageTypes = ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERED"];
   const publicUrl = process.env.NEXT_PUBLIC_BUCKET_URL;
   const [data, setData] = useState<ImageData[] | null>(null);
@@ -50,59 +53,85 @@ export const FallbackImageGallery = ({ vin }: { vin: string }) => {
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<boolean>(false);
   const [startIndex, setStartIndex] = useState<number>(0);
+  const [selectedType, setSelectedType] = useState<string>(imageTypes[0]);
   const isMobile = useMedia('(max-width: 640px)', false);
 
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        console.log("FallbackImageGallery: Fetching images for VIN", vin);
         setIsLoading(true);
         setError(null);
-
-        const response = await fetch(`/api/test-images?vin=${encodeURIComponent(vin)}`);
+        let url = '';
+        if (fetchByType) {
+          url = `/api/test-images?vin=${encodeURIComponent(vin)}&type=${encodeURIComponent(selectedType)}&pageSize=0`;
+        } else {
+          url = `/api/test-images?vin=${encodeURIComponent(vin)}&pageSize=0`;
+        }
+        const response = await fetch(url);
         const result = await response.json();
-
         if (!response.ok) {
           throw new Error(result.error || 'Failed to fetch images');
         }
-
-        console.log("FallbackImageGallery: Images fetched successfully", { count: result.count });
         setData(result.images || []);
       } catch (err) {
-        console.error("FallbackImageGallery: Error fetching images", err);
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchImages();
-  }, [vin]);
+  }, [vin, fetchByType, selectedType]);
 
-  console.log("FallbackImageGallery: Render state", { 
-    vin, 
-    isLoading, 
-    hasError: !!error, 
-    dataLength: data?.length || 0,
-    publicUrl: !!publicUrl 
-  });
+  // Preconnect and preload for CDN
+  if (publicUrl) {
+    preconnect(publicUrl);
+    if (data && data.length > 0) {
+      preload(`${publicUrl}/${data[0].imageKey}`, { as: 'image' });
+    }
+  }
 
   if (isLoading) return <LoadingState />;
-  if (error) {
-    console.error("FallbackImageGallery: Error state", error);
-    return <ErrorState />;
-  }
-  if (!data || data.length === 0) {
-    console.log("FallbackImageGallery: No data available for VIN", vin);
-    return <EmptyState />;
-  }
-  if (!publicUrl) {
-    console.error("FallbackImageGallery: Public URL not configured");
-    return <div>Error: Public URL not configured.</div>;
-  }
+  if (error) return <ErrorState />;
+  if (!data || data.length === 0) return <EmptyState />;
+  if (!publicUrl) return <div>Error: Public URL not configured.</div>;
 
   const filterImagesByType = (images: ImageData[], imageType: string) =>
     images.filter((image) => image.imageType === imageType);
+
+  const VirtualizedGrid = ({ images, onThumbClick }: { images: ImageData[], onThumbClick: (idx: number) => void }) => {
+    const columnCount = isMobile ? 3 : 6;
+    const rowCount = Math.ceil(images.length / columnCount);
+    const cellWidth = 100;
+    const cellHeight = 80;
+    return (
+      <Grid
+        columnCount={columnCount}
+        columnWidth={cellWidth}
+        height={Math.min(320, rowCount * cellHeight)}
+        rowCount={rowCount}
+        rowHeight={cellHeight}
+        width={columnCount * cellWidth}
+      >
+        {({ columnIndex, rowIndex, style }: GridChildComponentProps) => {
+          const idx = rowIndex * columnCount + columnIndex;
+          if (idx >= images.length) return null;
+          const image = images[idx];
+          return (
+            <div style={style} key={image.imageKey} onClick={() => onThumbClick(idx)}>
+              <img
+                src={`${publicUrl}/${image.imageKey}`}
+                alt={image.imageType}
+                width={90}
+                height={70}
+                style={{ objectFit: 'cover', borderRadius: 4, cursor: 'pointer', margin: 4 }}
+                loading="lazy"
+              />
+            </div>
+          );
+        }}
+      </Grid>
+    );
+  };
 
   const getSlides = (filteredData: ImageData[]) =>
     filteredData.map(({ imageKey }) => ({
@@ -119,7 +148,7 @@ export const FallbackImageGallery = ({ vin }: { vin: string }) => {
 
   return (
     <div className="grid place-items-center w-full">
-      <Tabs defaultValue={imageTypes[0]} className="w-full text-black dark:text-white gap-2">
+      <Tabs value={selectedType} onValueChange={setSelectedType} className="w-full text-black dark:text-white gap-2">
         <TabsList className="grid w-full grid-cols-1 sm:grid-cols-4 bg-gray-300 dark:bg-gray-700 dark:text-white mb-4 sm:mb-10">
           {imageTypes.map((type) => (
             <TabsTrigger key={type} value={type} className="text-sm sm:text-base py-2 sm:py-1">
@@ -127,12 +156,15 @@ export const FallbackImageGallery = ({ vin }: { vin: string }) => {
             </TabsTrigger>
           ))}
         </TabsList>
-
         <div className="mt-32 sm:mt-0">
           {imageTypes.map((type) => {
-            const filteredData = filterImagesByType(data, type);
+            let filteredData = data;
+            if (!fetchByType) {
+              filteredData = filterImagesByType(data, type);
+            } else if (type !== selectedType) {
+              filteredData = [];
+            }
             const slides = getSlides(filteredData);
-
             if (slides.length === 0) {
               return (
                 <TabsContent key={type} value={type} className="text-center p-4">
@@ -140,7 +172,6 @@ export const FallbackImageGallery = ({ vin }: { vin: string }) => {
                 </TabsContent>
               );
             }
-
             return (
               <TabsContent key={type} value={type} className="w-full">
                 <div className="w-full aspect-[3/2] max-w-full overflow-hidden">
@@ -154,7 +185,7 @@ export const FallbackImageGallery = ({ vin }: { vin: string }) => {
                           width: "100%",
                         }
                       }}
-                      plugins={[Inline, ...(isMobile ? [] : [Thumbnails])]}
+                      plugins={[Inline, ...(isMobile ? [] : [Thumbnails])]} 
                       carousel={{ imageFit: "contain" }}
                       render={{ slide: NextJsImage, thumbnail: NextJsImage }}
                       on={{
@@ -180,14 +211,24 @@ export const FallbackImageGallery = ({ vin }: { vin: string }) => {
         </div>
       </Tabs>
       {open && (
-        <Lightbox
-          open={open}
-          close={() => setOpen(false)}
-          slides={getSlides(data)}
-          index={startIndex}
-          render={{ slide: NextJsImage, thumbnail: NextJsImage }}
-          plugins={[...(isMobile ? [] : [Thumbnails]), Download]}
-        />
+        (() => {
+          // Only show images for the current tab/type in the modal
+          let filteredData = data;
+          if (!fetchByType) {
+            filteredData = filterImagesByType(data, selectedType);
+          }
+          const slides = getSlides(filteredData);
+          return (
+            <Lightbox
+              open={open}
+              close={() => setOpen(false)}
+              slides={slides}
+              index={startIndex}
+              render={{ slide: NextJsImage, thumbnail: NextJsImage }}
+              plugins={[...(isMobile ? [] : [Thumbnails]), Download]}
+            />
+          );
+        })()
       )}
       <DownloadButton content={data} vin={vin} />
     </div>

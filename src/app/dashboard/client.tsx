@@ -8,6 +8,8 @@ import { columns } from "./columns";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
+import { SortingState, ColumnFiltersState, VisibilityState } from "@tanstack/react-table";
+import React from "react";
 
 const LoadingState = () => (
   <div className="w-full h-[50vh] grid place-items-center">
@@ -49,6 +51,34 @@ const EmptyState = () => (
     );
 
 export const Client = ({ userId }: { userId: string }) => {
+  // Add state for table controls
+  const [pageIndex, setPageIndex] = React.useState(0);
+  const [pageSize, setPageSize] = React.useState(20);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [filters, setFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = React.useState({});
+
+  // Utility to handle both value and updater function
+  function handleControlledChange<T>(setState: React.Dispatch<React.SetStateAction<T>>) {
+    return (updaterOrValue: T | ((old: T) => T)) => {
+      setState((old) =>
+        typeof updaterOrValue === "function"
+          ? (updaterOrValue as (old: T) => T)(old)
+          : updaterOrValue
+      );
+    };
+  }
+
+  const handlePaginationChange = ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
+    setPageIndex(pageIndex);
+    setPageSize(pageSize);
+  };
+  const handleSortingChange = handleControlledChange<SortingState>(setSorting);
+  const handleFiltersChange = handleControlledChange<ColumnFiltersState>(setFilters);
+  const handleColumnVisibilityChange = handleControlledChange<VisibilityState>(setColumnVisibility);
+  const handleRowSelectionChange = handleControlledChange<any>(setRowSelection);
+
   const { isLoading, data, error, refetch } = useServerActionQuery(getCarsForUserAction, {
     input: {
       id: userId,
@@ -70,7 +100,23 @@ export const Client = ({ userId }: { userId: string }) => {
       ) : !data?.length ? (
         <EmptyState />
       ) : (
-        <DataTable columns={columns} data={data} filterKey="vin" />
+        <DataTable
+          columns={columns}
+          data={data}
+          filterKey="vin"
+          pageIndex={pageIndex}
+          pageSize={pageSize}
+          onPaginationChange={handlePaginationChange}
+          sorting={sorting}
+          onSortingChange={handleSortingChange}
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+          rowCount={data.length}
+          columnVisibility={columnVisibility}
+          onColumnVisibilityChange={handleColumnVisibilityChange}
+          rowSelection={rowSelection}
+          onRowSelectionChange={handleRowSelectionChange}
+        />
       )}
     </Suspense>
   );

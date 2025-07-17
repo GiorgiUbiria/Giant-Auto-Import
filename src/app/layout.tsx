@@ -9,6 +9,7 @@ import { getLocale, getMessages } from 'next-intl/server';
 import { Suspense } from "react";
 import "./globals.css";
 import LoadingSpinner from "@/components/loading-spinner";
+import NextTopLoader from 'nextjs-toploader';
 
 // Dynamic imports with loading fallbacks
 const DynamicNavbar = dynamic(() => import('@/components/navbar-wrapper'), {
@@ -73,6 +74,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         <link rel="preconnect" href="https://valetapp.pro" />
       </head>
       <body className="antialiased">
+        <NextTopLoader />
         <script>0</script>
         <NextIntlClientProvider messages={messages}>
           <ReactQueryProvider>

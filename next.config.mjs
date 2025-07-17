@@ -45,13 +45,38 @@ const nextConfig = {
   images: {
     // Enable image optimization
     unoptimized: false,
-    // Configure image domains
-    domains: [
-      'giantautoimportimages.ec17bb88a597d2c1d369945a578a8403.r2.cloudflarestorage.com',
-      'pub-790f032d851548ee80b9672b151ea280.r2.dev',
-      'media.mtlworld.win',
-      'admin.app.mtlworld.com',
-      'valetapp.pro'
+    // Configure remote patterns for external images
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'giantautoimportimages.ec17bb88a597d2c1d369945a578a8403.r2.cloudflarestorage.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pub-790f032d851548ee80b9672b151ea280.r2.dev',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media.mtlworld.win',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'admin.app.mtlworld.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'valetapp.pro',
+        port: '',
+        pathname: '/**',
+      },
     ],
     // Configure image sizes
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],

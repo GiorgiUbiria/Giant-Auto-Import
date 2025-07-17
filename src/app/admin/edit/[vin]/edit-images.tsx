@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 
 export const EditImages = ({ vin }: { vin: string }) => {
@@ -102,6 +103,58 @@ export const EditImages = ({ vin }: { vin: string }) => {
     );
   };
 
+  // Memoize image list rendering for performance
+  const memoizedImageList = useMemo(() => {
+    if (!data) return null;
+    return data.map((image) => (
+      <TooltipProvider key={image.imageKey}>
+        <Tooltip>
+          <TooltipTrigger className="w-full">
+            <div className="w-full aspect-[3/2] relative rounded-lg overflow-hidden">
+              <Image
+                src={`${publicUrl}/${image.imageKey}`}
+                alt={image.imageKey || "Image"}
+                fill
+                style={{ objectFit: "cover" }}
+                loading="lazy"
+                placeholder="blur"
+                blurDataURL="data:image/webp;base64,UklGRiIAAABXRUJQVlA4ICwAAACwAgCdASoCAAIALmk0mk0iIiIiIgBoSywA"
+                onError={(e) => {
+                  // fallback to a placeholder image if loading fails
+                  e.currentTarget.src = "/no-car-image.webp";
+                }}
+              />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <div className="flex gap-x-2">
+              <Button
+                variant="link"
+                size="icon"
+                disabled={makeMainPending || deletePending}
+                onClick={() => {
+                  deleteMutate({ imageKey: image.imageKey });
+                }}
+              >
+                <Trash className="w-4 h-4 hover:opacity-50 hover:text-red-500 transition" />
+              </Button>
+              <Button
+                variant="link"
+                size="icon"
+                disabled={makeMainPending || deletePending}
+                onClick={() => {
+                  makeMainMutate({ imageKey: image.imageKey });
+                }}
+              >
+                <Stamp className="w-4 h-4 hover:opacity-50 hover:text-red-500 transition" />
+              </Button>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    ));
+  }, [data, publicUrl, makeMainPending, deletePending, deleteMutate, makeMainMutate]);
+
   return (
     <div className="flex flex-col mb-8">
       <ImagesForm vin={vin} />
@@ -141,46 +194,7 @@ export const EditImages = ({ vin }: { vin: string }) => {
         {isLoading ? (
           <LoadingState />
         ) : (
-          data?.map((image) => (
-            <TooltipProvider key={image.imageKey}>
-              <Tooltip>
-                <TooltipTrigger className="w-full">
-                  <div className="w-full aspect-[3/2] relative rounded-lg overflow-hidden">
-                    <Image
-                      src={`${publicUrl}/${image.imageKey}`}
-                      alt="Image"
-                      layout="fill"
-                      objectFit="cover"
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div className="flex gap-x-2">
-                    <Button
-                      variant="link"
-                      size="icon"
-                      disabled={makeMainPending || deletePending}
-                      onClick={() => {
-                        deleteMutate({ imageKey: image.imageKey });
-                      }}
-                    >
-                      <Trash className="w-4 h-4 hover:opacity-50 hover:text-red-500 transition" />
-                    </Button>
-                    <Button
-                      variant="link"
-                      size="icon"
-                      disabled={makeMainPending || deletePending}
-                      onClick={() => {
-                        makeMainMutate({ imageKey: image.imageKey });
-                      }}
-                    >
-                      <Stamp className="w-4 h-4 hover:opacity-50 hover:text-red-500 transition" />
-                    </Button>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ))
+          memoizedImageList
         )}
       </div>
     </div>

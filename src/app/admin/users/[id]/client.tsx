@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { DataTable } from "@/components/data-table";
 import { getUserAction } from "@/lib/actions/userActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Suspense } from "react";
+import { SortingState, ColumnFiltersState, VisibilityState } from "@tanstack/react-table";
 
 const LoadingState = () => {
 	return (
@@ -42,6 +44,14 @@ export const Client = ({ id }: { id: string }) => {
 		queryKey: ["getUser", id],
 	})
 
+	// Table state
+	const [pageIndex, setPageIndex] = React.useState(0);
+	const [pageSize, setPageSize] = React.useState(20);
+	const [sorting, setSorting] = React.useState<SortingState>([]);
+	const [filters, setFilters] = React.useState<ColumnFiltersState>([]);
+	const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+	const [rowSelection, setRowSelection] = React.useState({});
+
 	if (isLoading) {
 		return <LoadingState />;
 	}
@@ -49,6 +59,48 @@ export const Client = ({ id }: { id: string }) => {
 	if (error || !data?.success || !data?.user) {
 		return <ErrorState message={data?.message} />;
 	}
+
+	// Client-side filtering
+	let filteredData = data.cars ?? [];
+	filters.forEach(f => {
+		if (f.value && filteredData.length > 0 && Object.prototype.hasOwnProperty.call(filteredData[0], f.id)) {
+			filteredData = filteredData.filter((row: Record<string, any>) => String(row[f.id as keyof typeof row] ?? '').toLowerCase().includes(String(f.value).toLowerCase()));
+		}
+	});
+
+	// Client-side sorting
+	if (sorting.length > 0) {
+		const { id, desc } = sorting[0];
+		filteredData = [...filteredData].sort((a: Record<string, any>, b: Record<string, any>) => {
+			const aValue = a[id as keyof typeof a];
+			const bValue = b[id as keyof typeof b];
+			if (aValue < bValue) return desc ? 1 : -1;
+			if (aValue > bValue) return desc ? -1 : 1;
+			return 0;
+		});
+	}
+
+	// Client-side pagination
+	const rowCount = filteredData.length;
+	const paginatedData = filteredData.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
+
+	// Handlers
+	const handlePaginationChange = ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
+		setPageIndex(pageIndex);
+		setPageSize(pageSize);
+	};
+	const handleSortingChange = (updaterOrValue: SortingState | ((old: SortingState) => SortingState)) => {
+		setSorting(typeof updaterOrValue === "function" ? updaterOrValue(sorting) : updaterOrValue);
+	};
+	const handleFiltersChange = (updaterOrValue: ColumnFiltersState | ((old: ColumnFiltersState) => ColumnFiltersState)) => {
+		setFilters(typeof updaterOrValue === "function" ? updaterOrValue(filters) : updaterOrValue);
+	};
+	const handleColumnVisibilityChange = (updaterOrValue: VisibilityState | ((old: VisibilityState) => VisibilityState)) => {
+		setColumnVisibility(typeof updaterOrValue === "function" ? updaterOrValue(columnVisibility) : updaterOrValue);
+	};
+	const handleRowSelectionChange = (updaterOrValue: any | ((old: any) => any)) => {
+		setRowSelection(typeof updaterOrValue === "function" ? updaterOrValue(rowSelection) : updaterOrValue);
+	};
 
 	return (
 		<div>
@@ -70,10 +122,22 @@ export const Client = ({ id }: { id: string }) => {
 					</Dialog>
 				</Suspense>
 			</h1>
-			<DataTable 
-				columns={columns} 
-				data={data.cars ?? []} 
-				filterKey="vin" 
+			<DataTable
+				columns={columns}
+				data={paginatedData}
+				filterKey="vin"
+				pageIndex={pageIndex}
+				pageSize={pageSize}
+				onPaginationChange={handlePaginationChange}
+				sorting={sorting}
+				onSortingChange={handleSortingChange}
+				filters={filters}
+				onFiltersChange={handleFiltersChange}
+				rowCount={rowCount}
+				columnVisibility={columnVisibility}
+				onColumnVisibilityChange={handleColumnVisibilityChange}
+				rowSelection={rowSelection}
+				onRowSelectionChange={handleRowSelectionChange}
 			/>
 		</div>
 	)

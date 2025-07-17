@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { handleUploadImagesAction } from "@/lib/actions/bucketActions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -28,6 +28,8 @@ const ACCEPTED_IMAGE_TYPES = [
   "image/webp",
 ];
 const MAX_IMAGE_SIZE = 4;
+
+let prevPreviews: Record<string, string[]> = {};
 
 const sizeInMB = (sizeInBytes: number, decimalsNum = 2) => {
   const result = sizeInBytes / (1024 * 1024);
@@ -91,6 +93,7 @@ const ImageSchema = z.object({
 
 export function ImagesForm({ vin }: { vin: string }) {
   const [isPending, setIsPending] = useState(false);
+  const [previews, setPreviews] = useState<Record<string, string[]>>({});
   const queryClient = useQueryClient();
   const form = useForm<z.infer<typeof ImageSchema>>({
     resolver: zodResolver(ImageSchema),
@@ -175,6 +178,40 @@ export function ImagesForm({ vin }: { vin: string }) {
 
   const handleSubmit = form.handleSubmit(onSubmit);
 
+  // Generate previews when files are selected
+  useEffect(() => {
+    const fields = [
+      "auction_images",
+      "warehouse_images",
+      "delivery_images",
+      "pick_up_images",
+    ];
+    const updatePreviews = () => {
+      const newPreviews: Record<string, string[]> = {};
+      fields.forEach((field) => {
+        const files = form.getValues(field as any) as FileList | undefined;
+        if (files && files.length > 0) {
+          newPreviews[field] = Array.from(files).map((file: File) => URL.createObjectURL(file));
+        } else {
+          newPreviews[field] = [];
+        }
+      });
+      // Revoke old URLs
+      Object.values(prevPreviews).flat().forEach((url) => URL.revokeObjectURL(url));
+      prevPreviews = newPreviews;
+      setPreviews(newPreviews);
+    };
+    updatePreviews();
+    const subscription = form.watch(() => {
+      updatePreviews();
+    });
+    return () => {
+      subscription.unsubscribe();
+      Object.values(prevPreviews).flat().forEach((url) => URL.revokeObjectURL(url));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <Form {...form}>
       <form
@@ -198,6 +235,20 @@ export function ImagesForm({ vin }: { vin: string }) {
                   />
                 </FormControl>
                 <FormDescription>Auction Images</FormDescription>
+                {/* Image Previews */}
+                {previews.auction_images && previews.auction_images.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {previews.auction_images.map((url, idx) => (
+                      <img
+                        key={url}
+                        src={url}
+                        alt={`Auction Preview ${idx + 1}`}
+                        className="w-20 h-20 object-cover rounded border"
+                        loading="lazy"
+                      />
+                    ))}
+                  </div>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -218,6 +269,20 @@ export function ImagesForm({ vin }: { vin: string }) {
                   />
                 </FormControl>
                 <FormDescription>Warehouse Images</FormDescription>
+                {/* Image Previews */}
+                {previews.warehouse_images && previews.warehouse_images.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {previews.warehouse_images.map((url, idx) => (
+                      <img
+                        key={url}
+                        src={url}
+                        alt={`Warehouse Preview ${idx + 1}`}
+                        className="w-20 h-20 object-cover rounded border"
+                        loading="lazy"
+                      />
+                    ))}
+                  </div>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -238,6 +303,20 @@ export function ImagesForm({ vin }: { vin: string }) {
                   />
                 </FormControl>
                 <FormDescription>Delivery Images</FormDescription>
+                {/* Image Previews */}
+                {previews.delivery_images && previews.delivery_images.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {previews.delivery_images.map((url, idx) => (
+                      <img
+                        key={url}
+                        src={url}
+                        alt={`Delivery Preview ${idx + 1}`}
+                        className="w-20 h-20 object-cover rounded border"
+                        loading="lazy"
+                      />
+                    ))}
+                  </div>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -258,6 +337,20 @@ export function ImagesForm({ vin }: { vin: string }) {
                   />
                 </FormControl>
                 <FormDescription>Pick Up Images</FormDescription>
+                {/* Image Previews */}
+                {previews.pick_up_images && previews.pick_up_images.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {previews.pick_up_images.map((url, idx) => (
+                      <img
+                        key={url}
+                        src={url}
+                        alt={`Pick Up Preview ${idx + 1}`}
+                        className="w-20 h-20 object-cover rounded border"
+                        loading="lazy"
+                      />
+                    ))}
+                  </div>
+                )}
                 <FormMessage />
               </FormItem>
             )}

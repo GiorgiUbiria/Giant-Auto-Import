@@ -41,6 +41,9 @@ const nextConfig = {
       'lucide-react',
       'react-icons',
     ],
+    serverActions: {
+      bodySizeLimit: '20mb',
+    },
   },
   images: {
     // Enable image optimization

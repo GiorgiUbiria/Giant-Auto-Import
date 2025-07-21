@@ -33,6 +33,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DataTablePagination } from "./data-table-pagination";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Search, Settings2 } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -102,110 +104,163 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="mx-auto container-fluid">
-      <div className="flex gap-4 pb-4">
-        <div className="flex flex-col gap-2.5 container pl-2">
-          <DataTablePagination
-            pageIndex={pageIndex}
-            pageSize={pageSize}
-            rowCount={rowCount}
-            onPaginationChange={onPaginationChange}
-          />
-        </div>
-        {filterKey && (
-          <div className="flex items-center">
-            <Input
-              placeholder={`Filter by ${filterKey}`}
-              value={
-                (filters.find(f => f.id === filterKey)?.value as string) ?? ""
-              }
-              onChange={(event) => {
-                const value = event.target.value;
-                const newFilters = filters.filter(f => f.id !== filterKey);
-                if (value) {
-                  newFilters.push({ id: filterKey, value });
-                }
-                onFiltersChange(newFilters);
-              }}
-              className="max-w-sm"
+    <div className="w-full min-w-full">
+      <Card className="border-0 shadow-none md:border md:shadow-sm w-full min-w-full">
+        <CardHeader className="px-3 py-4 md:px-6 w-full">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between w-full">
+            {/* Search and Filter Section */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              {filterKey && (
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder={`Search by ${filterKey}...`}
+                    value={
+                      (filters.find(f => f.id === filterKey)?.value as string) ?? ""
+                    }
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      const newFilters = filters.filter(f => f.id !== filterKey);
+                      if (value) {
+                        newFilters.push({ id: filterKey, value });
+                      }
+                      onFiltersChange(newFilters);
+                    }}
+                    className="pl-9 w-full sm:w-[250px] md:w-[300px]"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Controls Section */}
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9">
+                    <Settings2 className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">Columns</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[200px]">
+                  {table
+                    .getAllColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => {
+                      return (
+                        <DropdownMenuCheckboxItem
+                          key={`column-${column.id}`}
+                          className="capitalize"
+                          checked={column.getIsVisible()}
+                          onCheckedChange={(value) => {
+                            column.toggleVisibility(!!value);
+                          }}
+                        >
+                          {column.id}
+                        </DropdownMenuCheckboxItem>
+                      );
+                    })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
+          {/* Pagination Top - Hidden on mobile */}
+          <div className="pt-2 hidden md:block">
+            <DataTablePagination
+              pageIndex={pageIndex}
+              pageSize={pageSize}
+              rowCount={rowCount}
+              onPaginationChange={onPaginationChange}
             />
           </div>
-        )}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <div className="rounded-md border">
-        <UITable>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row, index) => (
-                <TableRow
-                  key={row.id}
-                  index={index}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
+        </CardHeader>
+
+        <CardContent className="px-0 md:px-6 w-full">
+          {/* Table Container with Horizontal Scroll */}
+          <div className="relative w-full min-w-full">
+            <div className="overflow-x-auto rounded-md border w-full min-w-full">
+              <UITable className="w-full min-w-full">
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => {
+                        return (
+                          <TableHead
+                            key={header.id}
+                            className="whitespace-nowrap px-3 py-3 text-xs font-medium md:px-4 md:text-sm"
+                          >
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                          </TableHead>
+                        );
+                      })}
+                    </TableRow>
                   ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </UITable>
-      </div>
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row, index) => (
+                      <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() && "selected"}
+                        className="hover:bg-muted/50"
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell
+                            key={cell.id}
+                            className="whitespace-nowrap px-3 py-3 text-xs md:px-4 md:py-4 md:text-sm"
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            ) as React.ReactNode}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-32 text-center text-muted-foreground"
+                      >
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <div className="text-4xl">📭</div>
+                          <div className="text-sm font-medium">
+                            {filterKey && filters.find(f => f.id === filterKey)?.value 
+                              ? "No results match your search" 
+                              : "No cars found"
+                            }
+                          </div>
+                          {Boolean(filterKey && filters.find(f => f.id === filterKey)?.value) && (
+                            <div className="text-xs text-muted-foreground">
+                              Try adjusting your search criteria or clear the filter
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </UITable>
+            </div>
+          </div>
+
+          {/* Bottom Pagination */}
+          <div className="pt-4">
+            <DataTablePagination
+              pageIndex={pageIndex}
+              pageSize={pageSize}
+              rowCount={rowCount}
+              onPaginationChange={onPaginationChange}
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -27,71 +27,93 @@ export function DataTablePagination({
   const canPreviousPage = pageIndex > 0;
   const canNextPage = pageIndex < pageCount - 1;
 
+  const startItem = pageIndex * pageSize + 1;
+  const endItem = Math.min((pageIndex + 1) * pageSize, rowCount);
+
   return (
-    <div className="flex w-full flex-col-reverse items-center justify-between gap-4 overflow-auto p-1 sm:flex-row sm:gap-8">
-      <div className="flex flex-col-reverse items-center gap-4 sm:flex-row sm:gap-6 lg:gap-8">
-        <div className="flex items-center space-x-2">
-          <p className="whitespace-nowrap text-sm font-medium">Rows per page</p>
+    <div className="flex w-full flex-col gap-4 px-2 sm:flex-row sm:items-center sm:justify-between">
+      {/* Results info */}
+      <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-4">
+        <div className="whitespace-nowrap">
+          Showing {rowCount > 0 ? startItem : 0} to {endItem} of {rowCount} results
+        </div>
+        
+        {/* Rows per page control */}
+        <div className="flex items-center gap-2">
+          <span className="whitespace-nowrap text-sm">Rows per page:</span>
           <Select
             value={`${pageSize}`}
             onValueChange={(value) => {
               onPaginationChange({ pageIndex: 0, pageSize: Number(value) });
             }}
           >
-            <SelectTrigger className="h-8 w-[4.5rem]">
-              <SelectValue placeholder={pageSize} />
+            <SelectTrigger className="h-8 w-16 text-sm">
+              <SelectValue />
             </SelectTrigger>
-            <SelectContent side="top">
+            <SelectContent side="top" align="end">
               {pageSizeOptions.map((size) => (
-                <SelectItem key={size} value={`${size}`}>
+                <SelectItem key={size} value={`${size}`} className="text-sm">
                   {size}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-center justify-center text-sm font-medium">
-          Page {pageIndex + 1} of {pageCount}
+      </div>
+
+      {/* Navigation controls */}
+      <div className="flex items-center justify-between sm:justify-end">
+        {/* Page info */}
+        <div className="flex items-center gap-2 text-sm font-medium sm:mr-4">
+          <span className="whitespace-nowrap">
+            Page {pageCount > 0 ? pageIndex + 1 : 0} of {pageCount}
+          </span>
         </div>
-        <div className="flex items-center space-x-2">
+
+        {/* Navigation buttons */}
+        <div className="flex items-center gap-1">
           <Button
             aria-label="Go to first page"
             variant="outline"
-            className="hidden size-8 p-0 lg:flex"
+            size="sm"
+            className="hidden h-8 w-8 p-0 md:flex"
             onClick={() => onPaginationChange({ pageIndex: 0, pageSize })}
             disabled={!canPreviousPage}
           >
-            <ArrowLeftIcon className="size-4" aria-hidden="true" />
+            <ArrowLeftIcon className="h-3 w-3" />
           </Button>
+          
           <Button
             aria-label="Go to previous page"
             variant="outline"
-            size="icon"
-            className="size-8"
+            size="sm"
+            className="h-8 w-8 p-0"
             onClick={() => onPaginationChange({ pageIndex: Math.max(0, pageIndex - 1), pageSize })}
             disabled={!canPreviousPage}
           >
-            <ChevronLeftIcon className="size-4" aria-hidden="true" />
+            <ChevronLeftIcon className="h-4 w-4" />
           </Button>
+          
           <Button
             aria-label="Go to next page"
             variant="outline"
-            size="icon"
-            className="size-8"
+            size="sm"
+            className="h-8 w-8 p-0"
             onClick={() => onPaginationChange({ pageIndex: Math.min(pageCount - 1, pageIndex + 1), pageSize })}
             disabled={!canNextPage}
           >
-            <ChevronRightIcon className="size-4" aria-hidden="true" />
+            <ChevronRightIcon className="h-4 w-4" />
           </Button>
+          
           <Button
             aria-label="Go to last page"
             variant="outline"
-            size="icon"
-            className="hidden size-8 lg:flex"
+            size="sm"
+            className="hidden h-8 w-8 p-0 md:flex"
             onClick={() => onPaginationChange({ pageIndex: pageCount - 1, pageSize })}
             disabled={!canNextPage}
           >
-            <ArrowRightIcon className="size-4" aria-hidden="true" />
+            <ArrowRightIcon className="h-3 w-3" />
           </Button>
         </div>
       </div>

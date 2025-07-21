@@ -70,62 +70,71 @@ export const Client = () => {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const { isLoading, data = { cars: [], count: 0 }, error } = useQuery<CarsApiResponse>({
+  const { isLoading, data, error } = useQuery<CarsApiResponse>({
     queryKey: ["getCars", pageIndex, pageSize, sorting, filters],
     queryFn: () => fetchCars({ pageIndex, pageSize, sorting, filters }),
-    // Remove keepPreviousData if not supported by your React Query version
+    staleTime: 30000, // 30 seconds
   });
 
-  const handlePaginationChange = ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
+  // Provide default values
+  const tableData = data?.cars || [];
+  const totalCount = data?.count || 0;
+
+  const handlePaginationChange = React.useCallback(({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
     setPageIndex(pageIndex);
     setPageSize(pageSize);
-  };
+  }, []);
 
-  const handleSortingChange = handleControlledChange<SortingState>(setSorting);
-  const handleFiltersChange = handleControlledChange<ColumnFiltersState>(setFilters);
-  const handleColumnVisibilityChange = handleControlledChange<VisibilityState>(setColumnVisibility);
-  const handleRowSelectionChange = handleControlledChange<any>(setRowSelection);
+  const handleSortingChange = React.useCallback(handleControlledChange<SortingState>(setSorting), []);
+  const handleFiltersChange = React.useCallback(handleControlledChange<ColumnFiltersState>(setFilters), []);
+  const handleColumnVisibilityChange = React.useCallback(handleControlledChange<VisibilityState>(setColumnVisibility), []);
+  const handleRowSelectionChange = React.useCallback(handleControlledChange<any>(setRowSelection), []);
 
   const LoadingState = () => (
     <div className="w-full h-[400px] flex justify-center items-center">
-      <Loader2 className="animate-spin text-center" />
+      <div className="flex flex-col items-center gap-2">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Loading cars...</p>
+      </div>
     </div>
   );
 
   const ErrorState = () => (
     <div className="w-full h-[400px] flex justify-center items-center">
-      <p>Error loading car data. Please try again later.</p>
-      <p>{error?.message}</p>
+      <div className="text-center">
+        <p className="text-destructive font-medium">Error loading car data</p>
+        <p className="text-muted-foreground text-sm mt-1">{error?.message}</p>
+      </div>
     </div>
   );
 
-  return (
-    <div className="py-10 text-primary">
-      {isLoading ? (
-        <LoadingState />
-      ) : error ? (
-        <ErrorState />
-      ) : data && data.cars && data.cars.length > 0 ? (
-        <DataTable
+  if (isLoading) {
+    return <LoadingState />;
+  }
+
+  if (error) {
+    return <ErrorState />;
+  }
+
+    return (
+    <div className="w-full px-4 md:px-6">
+      <DataTable
           columns={columns}
-          data={data.cars}
-          filterKey="vin"
-          pageIndex={pageIndex}
-          pageSize={pageSize}
-          onPaginationChange={handlePaginationChange}
-          sorting={sorting}
-          onSortingChange={handleSortingChange}
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          rowCount={data.count}
-          columnVisibility={columnVisibility}
-          onColumnVisibilityChange={handleColumnVisibilityChange}
-          rowSelection={rowSelection}
-          onRowSelectionChange={handleRowSelectionChange}
-        />
-      ) : (
-        <p>No cars found.</p>
-      )}
+          data={tableData}
+          filterKey="vinDetails"
+        pageIndex={pageIndex}
+        pageSize={pageSize}
+        onPaginationChange={handlePaginationChange}
+        sorting={sorting}
+        onSortingChange={handleSortingChange}
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+        rowCount={totalCount}
+        columnVisibility={columnVisibility}
+        onColumnVisibilityChange={handleColumnVisibilityChange}
+        rowSelection={rowSelection}
+        onRowSelectionChange={handleRowSelectionChange}
+      />
     </div>
   );
 };

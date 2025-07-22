@@ -64,6 +64,8 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     },
   },
   {
+    id: "photo",
+    accessorKey: "vin",
     header: "Photo",
     cell: ({ row }) => {
       const vin = row.original.vin as SelectSchemaType["vin"];
@@ -72,10 +74,11 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     },
   },
   {
-    accessorKey: "vin",
+    id: "vinDetails",
+    accessorKey: "vin", 
     header: "VIN# LOT#",
     cell: ({ row }) => {
-      const vin = row.getValue("vin") as SelectSchemaType["vin"];
+      const vin = row.original.vin as SelectSchemaType["vin"];
       const lotNumber = row.original.lotNumber as SelectSchemaType["lotNumber"];
 
       return (
@@ -129,7 +132,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     header: "Reciever",
     cell: ({ row }) => {
       const reciever = row.getValue("reciever") as SelectSchemaType["reciever"];
-      const vin = row.getValue("vin") as SelectSchemaType["vin"];
+      const vin = row.original.vin as SelectSchemaType["vin"];
 
       return <AdminReciever reciever={reciever} vin={vin} />;
     },
@@ -264,7 +267,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     id: "actions",
     header: "Actions",
     cell: ({ row }) => {
-      return <Actions vin={row.getValue("vin") as string} />;
+      return <Actions vin={row.original.vin as string} />;
     },
   },
 ];

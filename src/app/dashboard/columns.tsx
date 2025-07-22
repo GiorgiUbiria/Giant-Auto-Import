@@ -40,18 +40,21 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     },
   },
   {
+    id: "photo",
     accessorKey: "vin",
     header: () => <div className="text-center font-semibold">Photo</div>,
     cell: ({ row }) => {
       const vin = row.original.vin as SelectSchemaType["vin"];
       return <TableImage vin={vin} />;
     },
+    enableColumnFilter: false, // Disable filtering for photo column
   },
   {
+    id: "vinDetails", 
     accessorKey: "vin",
     header: () => <div className="font-semibold">VIN# LOT#</div>,
     cell: ({ row }) => {
-      const vin = row.getValue("vin") as SelectSchemaType["vin"];
+      const vin = row.original.vin as SelectSchemaType["vin"];
       const lotNumber = row.original.lotNumber as SelectSchemaType["lotNumber"];
 
       return (
@@ -71,6 +74,14 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             <span className="text-muted-foreground">-</span>
           )}
         </div>
+      );
+    },
+    filterFn: (row, id, value) => {
+      const vin = row.original.vin;
+      const lotNumber = row.original.lotNumber;
+      return !!(
+        vin?.toLowerCase().includes(value.toLowerCase()) ||
+        lotNumber?.toLowerCase().includes(value.toLowerCase())
       );
     },
   },
@@ -104,7 +115,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     header: "Reciever",
     cell: ({ row }) => {
       const reciever = row.getValue("reciever") as SelectSchemaType["reciever"];
-      const vin = row.getValue("vin") as SelectSchemaType["vin"];
+      const vin = row.original.vin as SelectSchemaType["vin"];
 
       return <Reciever reciever={reciever} vin={vin} />;
     },

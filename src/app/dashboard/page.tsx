@@ -16,9 +16,9 @@ export default async function DashboardPage() {
   }
 
   return (
-    <main className="container mx-auto">
+    <div className="w-full">
       <div className="flex flex-col gap-6">
-        <header className="pt-6">
+        <header className="px-4 md:px-6 pt-6">
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
             Manage and track your imported vehicles
@@ -27,6 +27,6 @@ export default async function DashboardPage() {
         
         <Client userId={user.id} />
       </div>
-    </main>
+    </div>
   );
 }

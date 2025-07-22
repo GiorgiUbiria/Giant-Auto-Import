@@ -1,15 +1,77 @@
 "use client";
 
 import { DataTable } from "@/components/data-table";
-import { getCarsForUserAction } from "@/lib/actions/carActions";
-import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { columns } from "./columns";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
 import { SortingState, ColumnFiltersState, VisibilityState } from "@tanstack/react-table";
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
+
+// Add type for API response
+interface CarsApiResponse {
+  cars: any[];
+  count: number;
+}
+
+const fetchUserCars = async ({ 
+  userId, 
+  pageIndex, 
+  pageSize, 
+  sorting, 
+  filters 
+}: {
+  userId: string;
+  pageIndex: number;
+  pageSize: number;
+  sorting: SortingState;
+  filters: ColumnFiltersState;
+}) => {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+    const params = new URLSearchParams();
+    params.set("page", (pageIndex + 1).toString());
+    params.set("pageSize", pageSize.toString());
+    params.set("ownerId", userId); // Filter by user ID
+    
+    if (sorting.length > 0) {
+      params.set("sortBy", sorting[0].id);
+      params.set("sortOrder", sorting[0].desc ? "desc" : "asc");
+    }
+    
+    filters.forEach(f => {
+      if (f.value) {
+        // Map filter IDs to API parameters
+        if (f.id === "vinDetails") {
+          params.set("vin", f.value as string);
+        } else {
+          params.set(f.id, f.value as string);
+        }
+      }
+    });
+
+    const response = await fetch(`/api/cars?${params.toString()}`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.details || 'Failed to fetch cars');
+    }
+    
+    return response.json();
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timed out after 30 seconds');
+    }
+    throw error;
+  }
+};
 
 const LoadingState = () => (
   <div className="w-full h-[50vh] grid place-items-center">
@@ -21,34 +83,34 @@ const LoadingState = () => (
 );
 
 const ErrorState = ({ refetch }: { refetch: () => void }) => (
-      <div className="py-10 px-4 max-w-2xl mx-auto">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription className="flex flex-col gap-4">
-            <p>Failed to load your cars. Please try again.</p>
-            <Button
-              variant="outline"
-              onClick={() => refetch()}
-              className="w-fit"
-            >
-              Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
+  <div className="py-10 px-4 max-w-2xl mx-auto">
+    <Alert variant="destructive">
+      <AlertCircle className="h-4 w-4" />
+      <AlertTitle>Error</AlertTitle>
+      <AlertDescription className="flex flex-col gap-4">
+        <p>Failed to load your cars. Please try again.</p>
+        <Button
+          variant="outline"
+          onClick={() => refetch()}
+          className="w-fit"
+        >
+          Retry
+        </Button>
+      </AlertDescription>
+    </Alert>
+  </div>
+);
 
-const EmptyState = () => (
-      <div className="py-10 px-4 max-w-2xl mx-auto">
-        <Alert>
-          <AlertTitle>No cars found</AlertTitle>
-          <AlertDescription>
-            You haven&apos;t added any cars yet. Start by adding your first car.
-          </AlertDescription>
-        </Alert>
-      </div>
+// Utility to handle both value and updater function
+function handleControlledChange<T>(setState: React.Dispatch<React.SetStateAction<T>>) {
+  return (updaterOrValue: T | ((old: T) => T)) => {
+    setState((old) =>
+      typeof updaterOrValue === "function"
+        ? (updaterOrValue as (old: T) => T)(old)
+        : updaterOrValue
     );
+  };
+}
 
 export const Client = ({ userId }: { userId: string }) => {
   // Add state for table controls
@@ -59,51 +121,45 @@ export const Client = ({ userId }: { userId: string }) => {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  // Utility to handle both value and updater function
-  function handleControlledChange<T>(setState: React.Dispatch<React.SetStateAction<T>>) {
-    return (updaterOrValue: T | ((old: T) => T)) => {
-      setState((old) =>
-        typeof updaterOrValue === "function"
-          ? (updaterOrValue as (old: T) => T)(old)
-          : updaterOrValue
-      );
-    };
-  }
-
-  const handlePaginationChange = ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
+  const handlePaginationChange = React.useCallback(({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
     setPageIndex(pageIndex);
     setPageSize(pageSize);
-  };
-  const handleSortingChange = handleControlledChange<SortingState>(setSorting);
-  const handleFiltersChange = handleControlledChange<ColumnFiltersState>(setFilters);
-  const handleColumnVisibilityChange = handleControlledChange<VisibilityState>(setColumnVisibility);
-  const handleRowSelectionChange = handleControlledChange<any>(setRowSelection);
+  }, []);
 
-  const { isLoading, data, error, refetch } = useServerActionQuery(getCarsForUserAction, {
-    input: {
-      id: userId,
-    },
-    queryKey: ["getCarsForUser", userId],
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+  const handleSortingChange = React.useCallback(handleControlledChange<SortingState>(setSorting), []);
+  const handleFiltersChange = React.useCallback(handleControlledChange<ColumnFiltersState>(setFilters), []);
+  const handleColumnVisibilityChange = React.useCallback(handleControlledChange<VisibilityState>(setColumnVisibility), []);
+  const handleRowSelectionChange = React.useCallback(handleControlledChange<any>(setRowSelection), []);
+
+  const { isLoading, data, error, refetch } = useQuery<CarsApiResponse>({
+    queryKey: ["getUserCars", userId, pageIndex, pageSize, sorting, filters],
+    queryFn: () => fetchUserCars({ userId, pageIndex, pageSize, sorting, filters }),
+    staleTime: 30000, // 30 seconds
   });
+
+  // Provide default values
+  const tableData = data?.cars || [];
+  const totalCount = data?.count || 0;
 
   if (error) {
     return <ErrorState refetch={refetch} />;
   }
 
+  if (isLoading) {
+    return (
+      <Suspense fallback={<LoadingState />}>
+        <LoadingState />
+      </Suspense>
+    );
+  }
+
   return (
     <Suspense fallback={<LoadingState />}>
-      {isLoading ? (
-        <LoadingState />
-      ) : !data?.length ? (
-        <EmptyState />
-      ) : (
+      <div className="w-full px-4 md:px-6">
         <DataTable
           columns={columns}
-          data={data}
-          filterKey="vin"
+          data={tableData}
+          filterKey="vinDetails"
           pageIndex={pageIndex}
           pageSize={pageSize}
           onPaginationChange={handlePaginationChange}
@@ -111,13 +167,13 @@ export const Client = ({ userId }: { userId: string }) => {
           onSortingChange={handleSortingChange}
           filters={filters}
           onFiltersChange={handleFiltersChange}
-          rowCount={data.length}
+          rowCount={totalCount}
           columnVisibility={columnVisibility}
           onColumnVisibilityChange={handleColumnVisibilityChange}
           rowSelection={rowSelection}
           onRowSelectionChange={handleRowSelectionChange}
         />
-      )}
+      </div>
     </Suspense>
   );
 };

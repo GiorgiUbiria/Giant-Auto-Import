@@ -3,8 +3,6 @@ import { db } from "@/lib/drizzle/db";
 import { cars } from "@/lib/drizzle/schema";
 import { desc, asc, eq, sql, and, like } from "drizzle-orm";
 
-export const runtime = "edge";
-
 // Map allowed sort keys to columns
 const sortColumnMap = {
   id: cars.id,
@@ -41,18 +39,27 @@ const sortColumnMap = {
 type SortKey = keyof typeof sortColumnMap;
 
 // Updated: Use like for partial VIN filtering (case-insensitive for ASCII in SQLite)
-function buildWhereClause(vin?: string, ownerId?: string) {
-  if (vin && ownerId) {
-    return and(
-      like(cars.vin, `%${vin}%`),
-      eq(cars.ownerId, ownerId)
-    );
-  } else if (vin) {
-    return like(cars.vin, `%${vin}%`);
-  } else if (ownerId) {
-    return eq(cars.ownerId, ownerId);
+function buildWhereClause(vin?: string, vinLot?: string, ownerId?: string) {
+  const conditions = [];
+  
+  // Handle VIN filtering (either from vin or vinLot parameter)
+  const vinFilter = vin || vinLot;
+  if (vinFilter) {
+    conditions.push(like(cars.vin, `%${vinFilter}%`));
   }
-  return undefined;
+  
+  // Handle owner filtering
+  if (ownerId) {
+    conditions.push(eq(cars.ownerId, ownerId));
+  }
+  
+  if (conditions.length === 0) {
+    return undefined;
+  } else if (conditions.length === 1) {
+    return conditions[0];
+  } else {
+    return and(...conditions);
+  }
 }
 
 export async function GET(req: Request) {
@@ -63,13 +70,14 @@ export async function GET(req: Request) {
     const sortByParam = searchParams.get("sortBy") ?? "purchaseDate";
     const sortOrder = searchParams.get("sortOrder") === "asc" ? asc : desc;
     const vin = searchParams.get("vin") || undefined;
+    const vinLot = searchParams.get("vinLot") || undefined; // Add support for vinLot filter
     const ownerId = searchParams.get("ownerId") || undefined;
 
     // Validate sortBy
     const sortBy: SortKey = (sortByParam in sortColumnMap ? sortByParam : "purchaseDate") as SortKey;
     const sortColumn = sortColumnMap[sortBy];
 
-    const whereClause = buildWhereClause(vin, ownerId);
+    const whereClause = buildWhereClause(vin, vinLot, ownerId);
 
     // Fetch paginated data
     const [data, countResult] = await Promise.all([

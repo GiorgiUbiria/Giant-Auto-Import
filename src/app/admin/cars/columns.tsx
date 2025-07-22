@@ -6,8 +6,10 @@ import IAAILogo from "../../../../public/iaai-logo.png";
 
 import Image from "next/image";
 import Link from "next/link";
+import { Check, X, Download } from "lucide-react";
 
 import CopyToClipBoard from "@/components/copy-to-clipboard";
+import { Button } from "@/components/ui/button";
 
 import { selectCarSchema } from "@/lib/drizzle/schema";
 import { z } from "zod";
@@ -36,75 +38,37 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   },
   {
     accessorKey: "purchaseDate",
-    header: "PD",
+    header: () => <div className="text-center font-semibold">Purchase Date</div>,
     cell: ({ row }) => {
       const purchaseDate = row.getValue("purchaseDate") as Date;
 
-      if (!purchaseDate) {
-        return <p> - </p>;
+      if (!purchaseDate || (new Date(purchaseDate).getFullYear() === 1 &&
+        new Date(purchaseDate).getMonth() === 0 &&
+        new Date(purchaseDate).getDate() === 1)) {
+        return <div className="text-center text-muted-foreground">-</div>;
       }
 
-      const date = new Date(purchaseDate);
-
-      const isSpecificDate =
-        date.getFullYear() === 1 &&
-        date.getMonth() === 0 &&
-        date.getDate() === 1;
-
-      if (isSpecificDate) {
-        return <p> - </p>;
-      }
-
-      const formattedDate = date.toLocaleDateString("en-GB", {
+      const formattedDate = new Date(purchaseDate).toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "2-digit",
       });
 
-      return <p> {formattedDate} </p>;
+      return <div className="text-center font-medium">{formattedDate}</div>;
     },
   },
   {
     id: "photo",
     accessorKey: "vin",
-    header: "Photo",
+    header: () => <div className="text-center font-semibold">Photo</div>,
     cell: ({ row }) => {
       const vin = row.original.vin as SelectSchemaType["vin"];
-
       return <TableImage vin={vin} />;
     },
-  },
-  {
-    id: "vinDetails",
-    accessorKey: "vin", 
-    header: "VIN# LOT#",
-    cell: ({ row }) => {
-      const vin = row.original.vin as SelectSchemaType["vin"];
-      const lotNumber = row.original.lotNumber as SelectSchemaType["lotNumber"];
-
-      return (
-        <div>
-          <div className="flex gap-x-2 items-center">
-            <Link href={`/car/${vin}`} className="hover:underline">
-              {" "}
-              {vin}{" "}
-            </Link>
-            <CopyToClipBoard text={vin} />
-          </div>
-          {lotNumber ? (
-            <div className="flex gap-x-2 items-center">
-              <p> {lotNumber}</p>
-              <CopyToClipBoard text={lotNumber} />
-            </div>
-          ) : (
-            <p> - </p>
-          )}
-        </div>
-      );
-    },
+    enableColumnFilter: false, // Disable filtering for photo column
   },
   {
     accessorKey: "year",
-    header: "Vehicle",
+    header: () => <div className="font-semibold">Vehicle</div>,
     cell: ({ row }) => {
       const year = row.getValue("year") as SelectSchemaType["year"];
       const make = row.original.make as SelectSchemaType["make"];
@@ -112,18 +76,54 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       const auction = row.original.auction as SelectSchemaType["auction"];
 
       return (
-        <div className="flex items-center justify-between w-[84px]">
-          <div className="flex flex-col gap-0.5">
-            <p className="text-left"> {year} </p>
-            <p className="text-left"> {make} </p>
-            <p className="text-left"> {model} </p>
+        <div className="flex items-center justify-between min-w-[120px]">
+          <p className="font-medium">
+            {year} {make} {model}
+          </p>
+          <div className="shrink-0">
             {auction !== "Copart" ? (
-              <Image src={IAAILogo} alt="IAAI" className="size-8" />
+              <Image src={IAAILogo} alt="IAAI" className="size-8 rounded-sm" />
             ) : (
-              <Image src={CopartLogo} alt="IAAI" className="size-8" />
+              <Image src={CopartLogo} alt="Copart" className="size-8 rounded-sm" />
             )}
           </div>
         </div>
+      );
+    },
+  },
+  {
+    id: "vinDetails", 
+    accessorKey: "vin",
+    header: () => <div className="font-semibold">LOT# VIN#</div>,
+    cell: ({ row }) => {
+      const vin = row.original.vin as SelectSchemaType["vin"];
+      const lotNumber = row.original.lotNumber as SelectSchemaType["lotNumber"];
+
+      return (
+        <div className="space-y-1">
+          {lotNumber ? (
+            <div className="flex items-center gap-2">
+              <span className="font-medium">{lotNumber}</span>
+              <CopyToClipBoard text={lotNumber} />
+            </div>
+          ) : (
+            <span className="text-muted-foreground">-</span>
+          )}
+          <div className="flex items-center gap-2">
+            <Link href={`/car/${vin}`} className="hover:underline text-primary font-medium">
+              {vin}
+            </Link>
+            <CopyToClipBoard text={vin} />
+          </div>
+        </div>
+      );
+    },
+    filterFn: (row, id, value) => {
+      const vin = row.original.vin;
+      const lotNumber = row.original.lotNumber;
+      return !!(
+        vin?.toLowerCase().includes(value.toLowerCase()) ||
+        lotNumber?.toLowerCase().includes(value.toLowerCase())
       );
     },
   },
@@ -139,97 +139,134 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   },
   {
     accessorKey: "fuelType",
-    header: "Fuel",
-  },
-  {
-    accessorKey: "keys",
-    header: "Keys",
+    header: () => <div className="text-center font-semibold">Fuel</div>,
+    cell: ({ row }) => {
+      const fuelType = row.getValue("fuelType") as string;
+      return <div className="text-center font-medium">{fuelType || "-"}</div>;
+    }
   },
   {
     accessorKey: "title",
-    header: "Title",
-  },
-  {
-    accessorKey: "shippingStatus",
-    header: "Status",
-  },
-  {
-    accessorKey: "departureDate",
-    header: "ETD",
+    header: () => <div className="text-center font-semibold">Title</div>,
     cell: ({ row }) => {
-      const departureDate = row.getValue("departureDate") as Date;
-
-      if (!departureDate) {
-        return <p className="text-center"> - </p>;
-      }
-
-      const date = new Date(departureDate);
-
-      const isSpecificDate =
-        date.getFullYear() === 1 &&
-        date.getMonth() === 0 &&
-        date.getDate() === 1;
-
-      if (isSpecificDate) {
-        return <p> - </p>;
-      }
-
-      const formattedDate = date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-      });
-
-      return <p> {formattedDate} </p>;
-    },
+      const title = row.getValue("title") as string;
+      const hasTitle = title === "Yes" || title === "yes" || title === "YES";
+      const noTitle = title === "No" || title === "no" || title === "NO";
+      
+      return (
+        <div className="text-center flex items-center justify-center">
+          {hasTitle ? (
+            <div className="flex items-center gap-1 bg-green-600 text-white px-2 py-1 rounded-md">
+              <Check className="h-4 w-4" />
+              <span className="font-medium">Yes</span>
+            </div>
+          ) : noTitle ? (
+            <div className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-md">
+              <X className="h-4 w-4" />
+              <span className="font-medium">No</span>
+            </div>
+          ) : (
+            <span className="text-muted-foreground font-medium">{title || "-"}</span>
+          )}
+        </div>
+      );
+    }
   },
   {
-    accessorKey: "arrivalDate",
-    header: "ETA",
+    accessorKey: "keys",
+    header: () => <div className="text-center font-semibold">Keys</div>,
     cell: ({ row }) => {
-      const arrivalDate = row.getValue("arrivalDate") as Date;
-
-      if (!arrivalDate) {
-        return <p> - </p>;
-      }
-
-      const date = new Date(arrivalDate);
-
-      const isSpecificDate =
-        date.getFullYear() === 1 &&
-        date.getMonth() === 0 &&
-        date.getDate() === 1;
-
-      if (isSpecificDate) {
-        return <p> - </p>;
-      }
-
-      const formattedDate = date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-      });
-
-      return <p> {formattedDate} </p>;
-    },
+      const keys = row.getValue("keys") as string;
+      const hasKeys = keys === "Yes" || keys === "yes" || keys === "YES";
+      const noKeys = keys === "No" || keys === "no" || keys === "NO";
+      
+      return (
+        <div className="text-center flex items-center justify-center">
+          {hasKeys ? (
+            <div className="flex items-center gap-1 bg-green-600 text-white px-2 py-1 rounded-md">
+              <Check className="h-4 w-4" />
+              <span className="font-medium">Yes</span>
+            </div>
+          ) : noKeys ? (
+            <div className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-md">
+              <X className="h-4 w-4" />
+              <span className="font-medium">No</span>
+            </div>
+          ) : (
+            <span className="text-muted-foreground font-medium">{keys || "-"}</span>
+          )}
+        </div>
+      );
+    }
   },
   {
     accessorKey: "originPort",
-    header: "Origin Port",
+    header: "US Port",
+    cell: ({ row }) => {
+      const originPort = row.getValue("originPort") as string;
+      return <div className="font-medium">{originPort || "-"}</div>;
+    },
   },
   {
     accessorKey: "destinationPort",
     header: "Destination Port",
+    cell: ({ row }) => {
+      const destinationPort = row.getValue("destinationPort") as string;
+      const displayPort = destinationPort ? `Georgia, ${destinationPort}` : "-";
+      return <div className="font-medium">{displayPort}</div>;
+    },
   },
   {
     accessorKey: "purchaseFee",
-    header: "Purchase Fee",
+    header: "Purchase Due",
+    cell: ({ row }) => {
+      const purchaseFee = row.getValue("purchaseFee") as number;
+      return (
+        <div className="space-y-2">
+          <div className="font-medium">${purchaseFee || 0}</div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="h-6 px-2 text-xs"
+            onClick={() => {
+              // TODO: Implement download functionality
+              console.log("Download purchase invoice");
+            }}
+          >
+            <Download className="h-3 w-3 mr-1" />
+            Invoice
+          </Button>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "shippingFee",
-    header: "Shipping Fee",
+    header: "Shipping Due",
+    cell: ({ row }) => {
+      const shippingFee = row.getValue("shippingFee") as number;
+      return (
+        <div className="space-y-2">
+          <div className="font-medium">${shippingFee || 0}</div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="h-6 px-2 text-xs"
+            onClick={() => {
+              // TODO: Implement download functionality
+              console.log("Download shipping invoice");
+            }}
+          >
+            <Download className="h-3 w-3 mr-1" />
+            Invoice
+          </Button>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "totalFee",
-    header: "Total Fee",
+    header: "Total Due",
     cell: ({ row }) => {
       const purchaseFee = row.original
         .purchaseFee as SelectSchemaType["purchaseFee"];
@@ -248,20 +285,47 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       const totalFee = row.original.totalFee as SelectSchemaType["totalFee"];
 
       return (
-        <TotalFeeDetails
-          purchaseFee={purchaseFee}
-          auctionFee={auctionFee || 0}
-          gateFee={gateFee || 0}
-          titleFee={titleFee || 0}
-          environmentalFee={environmentalFee || 0}
-          virtualBidFee={virtualBidFee || 0}
-          shippingFee={shippingFee || 0}
-          groundFee={groundFee || 0}
-          oceanFee={oceanFee || 0}
-          totalFee={totalFee || 0}
-        />
+        <div className="space-y-2">
+          <TotalFeeDetails
+            purchaseFee={purchaseFee}
+            auctionFee={auctionFee || 0}
+            gateFee={gateFee || 0}
+            titleFee={titleFee || 0}
+            environmentalFee={environmentalFee || 0}
+            virtualBidFee={virtualBidFee || 0}
+            shippingFee={shippingFee || 0}
+            groundFee={groundFee || 0}
+            oceanFee={oceanFee || 0}
+            totalFee={Math.round(totalFee || 0)}
+          />
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="h-6 px-2 text-xs"
+            onClick={() => {
+              // TODO: Implement download functionality
+              console.log("Download total invoice");
+            }}
+          >
+            <Download className="h-3 w-3 mr-1" />
+            Invoice
+          </Button>
+        </div>
       );
     },
+  },
+  {
+    id: "paidAmount",
+    header: "Paid Amount",
+    cell: ({ row }) => {
+      // Currently empty/disabled as requested
+      return (
+        <div className="text-center text-muted-foreground">
+          <span className="italic">Coming soon</span>
+        </div>
+      );
+    },
+    enableColumnFilter: false,
   },
   {
     id: "actions",

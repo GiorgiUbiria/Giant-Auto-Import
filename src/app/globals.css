@@ -83,6 +83,84 @@
   }
 }
 
+@layer utilities {
+  /* Glass morphism effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Gradient text effects */
+  .gradient-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .gradient-text-blue {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Enhanced shadows */
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+
+  .shadow-glow-purple {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+
+  .shadow-soft {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Animated background gradients */
+  .bg-animated-gradient {
+    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+
+  @keyframes gradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* Smooth scrolling behavior */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom selection colors */
+  ::selection {
+    background-color: rgba(59, 130, 246, 0.3);
+    color: rgb(30, 58, 138);
+  }
+
+  .dark ::selection {
+    background-color: rgba(147, 197, 253, 0.3);
+    color: rgb(219, 234, 254);
+  }
+}
+
 .custom-shadow {
   position: relative;
   display: inline-block;

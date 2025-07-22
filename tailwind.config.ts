@@ -60,6 +60,15 @@ const config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      backdropBlur: {
+        xs: '2px',
+      },
+      boxShadow: {
+        'glow': '0 0 20px rgba(59, 130, 246, 0.3)',
+        'glow-lg': '0 0 40px rgba(59, 130, 246, 0.4)',
+        'purple-glow': '0 0 20px rgba(139, 92, 246, 0.3)',
+        'soft': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -136,6 +145,50 @@ const config = {
             "transform-origin": "center center",
           },
         },
+        "gradient-shift": {
+          "0%, 100%": {
+            "background-position": "0% 50%"
+          },
+          "50%": {
+            "background-position": "100% 50%"
+          }
+        },
+        "pulse-glow": {
+          "0%, 100%": {
+            opacity: "1",
+            transform: "scale(1)"
+          },
+          "50%": {
+            opacity: "0.5",
+            transform: "scale(1.05)"
+          }
+        },
+        "bounce-in": {
+          "0%": {
+            transform: "scale(0.3)",
+            opacity: "0"
+          },
+          "50%": {
+            transform: "scale(1.05)"
+          },
+          "70%": {
+            transform: "scale(0.9)"
+          },
+          "100%": {
+            transform: "scale(1)",
+            opacity: "1"
+          }
+        },
+        "slide-up": {
+          "0%": {
+            transform: "translateY(100%)",
+            opacity: "0"
+          },
+          "100%": {
+            transform: "translateY(0)",
+            opacity: "1"
+          }
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -146,6 +199,10 @@ const config = {
         zoomIn: "zoom-in 10s ease-in-out forwards infinite",
         fadeInLeft: "slideLeft 1.5s ease-out forwards",
         fadeInRight: "slideRight 1.5s ease-out forwards",
+        "gradient-shift": "gradient-shift 3s ease infinite",
+        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "bounce-in": "bounce-in 0.6s ease-out",
+        "slide-up": "slide-up 0.6s ease-out"
       },
     },
   },

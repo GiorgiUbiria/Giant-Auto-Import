@@ -1,31 +1,21 @@
 import dynamic from 'next/dynamic';
 import { Suspense } from "react";
 import { getTranslations } from 'next-intl/server';
-
-function LoadingSpinner({ height = "h-24" }: { height?: string }) {
-  return (
-    <div className={`flex items-center justify-center w-full ${height}`} role="status">
-      <div
-        className="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"
-        aria-label="Loading content"
-      />
-    </div>
-  );
-}
+import LoadingSpinner from '@/components/loading-spinner';
 
 const DynamicHero = dynamic(() => import('@/components/hero'), {
-  loading: () => <LoadingSpinner height="h-96" />,
-  ssr: true,
+  loading: () => <LoadingSpinner height="h-96" variant="gradient" size="lg" />,
+  ssr: false,
 });
 
 const DynamicLandingFeatures = dynamic(() => import('@/components/landing-features'), {
-  loading: () => <LoadingSpinner height="h-96" />,
-  ssr: true,
+  loading: () => <LoadingSpinner height="h-96" variant="pulse" size="lg" />,
+  ssr: false,
 });
 
 export const metadata = {
-  title: 'Giant Auto Import - Home',
-  description: 'Discover and import your dream car from our extensive worldwide collection',
+  title: 'Giant Auto Import - Premium Vehicle Import Services',
+  description: 'Discover and import your dream car from our extensive worldwide collection with secure, transparent pricing and professional support.',
 };
 
 export default async function HomePage() {
@@ -63,15 +53,15 @@ export default async function HomePage() {
   };
 
   return (
-    <div className="flex flex-col gap-8">
-      <section aria-label="Hero Section" className="w-full">
-        <Suspense fallback={<LoadingSpinner height="h-96" />}>
+    <div className="flex flex-col gap-8 scroll-smooth overflow-x-hidden">
+      <section aria-label="Hero Section" className="w-full relative">
+        <Suspense fallback={<LoadingSpinner height="h-96" variant="gradient" size="lg" />}>
           <DynamicHero />
         </Suspense>
       </section>
 
-      <section aria-label="Features Section" className="w-full">
-        <Suspense fallback={<LoadingSpinner height="h-96" />}>
+      <section aria-label="Features Section" className="w-full relative">
+        <Suspense fallback={<LoadingSpinner height="h-96" variant="pulse" size="lg" />}>
           <DynamicLandingFeatures translations={translations} />
         </Suspense>
       </section>

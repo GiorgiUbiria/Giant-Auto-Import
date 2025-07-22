@@ -151,7 +151,7 @@ const Navbar = ({ user, translations }: NavbarProps) => {
 
   const navigationLinks = [...baseLinks, ...adminLinks, ...customerLinks];
 
-  const headerClassName = `fixed top-0 left-0 right-0 w-full md:relative md:top-0 flex items-center gap-4 dark:bg-gradient-to-r dark:from-darkbg dark:to-darkfg bg-gradient-to-r from-darkbg to-darkfg z-50 ${isVisible ? "" : "header-hidden"}`;
+  const headerClassName = `fixed top-0 left-0 right-0 w-full md:relative md:top-0 flex items-center gap-4 z-50 ${isVisible ? "" : "header-hidden"}`;
 
   return (
     <div className="w-full shadow-md">

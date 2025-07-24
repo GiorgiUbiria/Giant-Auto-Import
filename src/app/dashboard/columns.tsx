@@ -27,15 +27,20 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     cell: ({ row }) => {
       const purchaseDate = row.getValue("purchaseDate") as Date;
 
-      if (!purchaseDate || (new Date(purchaseDate).getFullYear() === 1 &&
-        new Date(purchaseDate).getMonth() === 0 &&
-        new Date(purchaseDate).getDate() === 1)) {
+      if (
+        !purchaseDate ||
+        (new Date(purchaseDate).getFullYear() === 1 &&
+          new Date(purchaseDate).getMonth() === 0 &&
+          new Date(purchaseDate).getDate() === 1)
+      ) {
         return <div className="text-center text-muted-foreground">-</div>;
       }
 
-      const formattedDate = new Date(purchaseDate).toLocaleDateString("en-GB", {
+      const dateObj = new Date(purchaseDate);
+      const formattedDate = dateObj.toLocaleDateString("en-US", {
+        month: "short",
         day: "2-digit",
-        month: "2-digit",
+        year: "numeric",
       });
 
       return <div className="text-center font-medium">{formattedDate}</div>;
@@ -50,6 +55,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       return <TableImage vin={vin} />;
     },
     enableColumnFilter: false, // Disable filtering for photo column
+    meta: { cellClassName: "p-0 relative h-[72px] !w-[154px] !min-w-[154px] !max-w-[154px] bg-red-100" }, // Force width with !important and add background for debugging
   },
   {
     accessorKey: "year",

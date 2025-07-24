@@ -212,7 +212,10 @@ export function DataTable<TData, TValue>({
                         {row.getVisibleCells().map((cell) => (
                           <TableCell
                             key={cell.id}
-                            className="whitespace-nowrap px-3 py-3 text-xs md:px-4 md:py-4 md:text-sm"
+                            className={
+                              (cell.column.columnDef.meta?.cellClassName ? cell.column.columnDef.meta.cellClassName + " " : "") +
+                              "whitespace-nowrap px-3 py-3 text-xs md:px-4 md:py-4 md:text-sm"
+                            }
                           >
                             {flexRender(
                               cell.column.columnDef.cell,

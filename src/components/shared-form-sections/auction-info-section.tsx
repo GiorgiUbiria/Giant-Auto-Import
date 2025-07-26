@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { auctionData, oceanShippingRates } from "@/lib/utils";
+import { auctionData, oceanShippingRates } from "@/lib/calculator-utils";
 
 interface AuctionInfoSectionProps {
   form: UseFormReturn<any>;

@@ -1,23 +1,56 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState, useEffect, useCallback } from "react";
-import Lightbox from "yet-another-react-lightbox";
-import Download from "yet-another-react-lightbox/plugins/download";
-import Inline from "yet-another-react-lightbox/plugins/inline";
-import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
-import "yet-another-react-lightbox/plugins/thumbnails.css";
-import "yet-another-react-lightbox/styles.css";
-import DownloadButton from "./download-button";
-import NextJsImage from "./nextjs-image";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useMedia } from "react-use";
 import { Loader2 } from "lucide-react";
-import { Suspense } from "react";
-import type { GridChildComponentProps } from 'react-window';
-import { FixedSizeGrid as Grid } from 'react-window';
 import { preconnect, preload } from 'react-dom';
 import { imageCacheService } from "@/lib/image-cache";
 import OptimizedImage, { OptimizedThumbnail } from "./optimized-image";
+import dynamic from 'next/dynamic';
+
+// Dynamic imports for heavy libraries
+const Lightbox = dynamic(() => import("yet-another-react-lightbox"), {
+  loading: () => <div className="flex items-center justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>,
+  ssr: false,
+});
+
+// Import plugins synchronously to avoid type issues
+let Download: any;
+let Inline: any;
+let Thumbnails: any;
+
+// Load plugins when component mounts
+const loadLightboxPlugins = async () => {
+  if (typeof window !== 'undefined') {
+    const [downloadModule, inlineModule, thumbnailsModule] = await Promise.all([
+      import("yet-another-react-lightbox/plugins/download"),
+      import("yet-another-react-lightbox/plugins/inline"),
+      import("yet-another-react-lightbox/plugins/thumbnails")
+    ]);
+    Download = downloadModule.default;
+    Inline = inlineModule.default;
+    Thumbnails = thumbnailsModule.default;
+  }
+};
+
+const DownloadButton = dynamic(() => import("./download-button"), {
+  loading: () => <div className="flex items-center justify-center p-4"><Loader2 className="h-4 w-4 animate-spin" /></div>,
+  ssr: false,
+});
+
+const NextJsImage = dynamic(() => import("./nextjs-image"), {
+  loading: () => <div className="flex items-center justify-center p-4"><Loader2 className="h-4 w-4 animate-spin" /></div>,
+  ssr: false,
+});
+
+// Import CSS only when needed
+const importLightboxCSS = () => {
+  if (typeof window !== 'undefined') {
+    import("yet-another-react-lightbox/plugins/thumbnails.css");
+    import("yet-another-react-lightbox/styles.css");
+  }
+};
 
 const LoadingState = () => (
   <div className="w-full h-[50vh] grid place-items-center">
@@ -40,65 +73,7 @@ const EmptyState = () => (
   </div>
 );
 
-// Move VirtualizedGrid outside to prevent hook recreation
-const VirtualizedGrid = ({ 
-  images, 
-  onThumbClick, 
-  loadedImages, 
-  isMobile 
-}: { 
-  images: ImageData[]; 
-  onThumbClick: (idx: number) => void;
-  loadedImages: Set<string>;
-  isMobile: boolean;
-}) => {
-  const columnCount = isMobile ? 3 : 6;
-  const rowCount = Math.ceil(images.length / columnCount);
-  const cellWidth = 100;
-  const cellHeight = 80;
-  
-  return (
-    <Grid
-      columnCount={columnCount}
-      columnWidth={cellWidth}
-      height={Math.min(320, rowCount * cellHeight)}
-      rowCount={rowCount}
-      rowHeight={cellHeight}
-      width={columnCount * cellWidth}
-    >
-      {({ columnIndex, rowIndex, style }: GridChildComponentProps) => {
-        const idx = rowIndex * columnCount + columnIndex;
-        if (idx >= images.length) return null;
-        const image = images[idx];
-        const isLoaded = loadedImages.has(image.imageKey);
-        
-        return (
-          <div style={style} key={image.imageKey} onClick={() => onThumbClick(idx)}>
-            <div className="relative w-full h-full p-1">
-              <OptimizedThumbnail
-                src={image.url}
-                alt={image.imageType}
-                size={90}
-                className={`rounded transition-opacity duration-300 ${
-                  isLoaded ? 'opacity-100' : 'opacity-70'
-                }`}
-                onClick={() => onThumbClick(idx)}
-              />
-              {!isLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      }}
-    </Grid>
-  );
-};
-
 type ImageData = {
-  id: number;
   imageKey: string;
   imageType: "WAREHOUSE" | "PICK_UP" | "DELIVERED" | "AUCTION";
   url: string;
@@ -114,7 +89,16 @@ export const FallbackImageGallery = ({ vin, fetchByType = false }: { vin: string
   const [startIndex, setStartIndex] = useState<number>(0);
   const [selectedType, setSelectedType] = useState<string>(imageTypes[0]);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+  const [pluginsLoaded, setPluginsLoaded] = useState(false);
   const isMobile = useMedia('(max-width: 640px)', false);
+
+  // Load lightbox plugins on mount
+  useEffect(() => {
+    loadLightboxPlugins().then(() => {
+      setPluginsLoaded(true);
+      importLightboxCSS();
+    });
+  }, []);
 
   // Define all hooks before any early returns
   const handleImageLoad = useCallback((imageKey: string) => {
@@ -180,6 +164,7 @@ export const FallbackImageGallery = ({ vin, fetchByType = false }: { vin: string
   if (isLoading) return <LoadingState />;
   if (error) return <ErrorState />;
   if (!data || data.length === 0) return <EmptyState />;
+  if (!pluginsLoaded) return <LoadingState />;
 
   return (
     <div className="grid place-items-center w-full">
@@ -222,7 +207,6 @@ export const FallbackImageGallery = ({ vin, fetchByType = false }: { vin: string
                       }}
                       plugins={[Inline, ...(isMobile ? [] : [Thumbnails])]} 
                       carousel={{ imageFit: "contain" }}
-                      render={{ slide: NextJsImage, thumbnail: NextJsImage }}
                       on={{
                         click: ({ index }) => {
                           setStartIndex(index);
@@ -259,7 +243,6 @@ export const FallbackImageGallery = ({ vin, fetchByType = false }: { vin: string
               close={() => setOpen(false)}
               slides={slides}
               index={startIndex}
-              render={{ slide: NextJsImage, thumbnail: NextJsImage }}
               plugins={[...(isMobile ? [] : [Thumbnails]), Download]}
             />
           );

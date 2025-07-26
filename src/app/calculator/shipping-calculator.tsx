@@ -8,7 +8,9 @@ import {
   extraFees,
   styleToJson,
   parseVirtualBidData,
-} from "@/lib/utils";
+  calculateTotalPurchaseFee,
+  calculateShippingFee,
+} from "@/lib/calculator-utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,60 +35,12 @@ export function ShippingCalculator({ style }: { style: string }) {
   const styleData = styleToJson(style);
   const virtualBidData = parseVirtualBidData();
 
-  const calculateFee = (feeData: any[], value: number): number => {
-    for (const entry of feeData) {
-      if (
-        value >= entry.minPrice &&
-        (entry.maxPrice === "%" || value <= entry.maxPrice)
-      ) {
-        if (typeof entry.fee === "string" && entry.fee.includes("%")) {
-          const percentage = parseFloat(entry.fee) / 100;
-          return value * percentage;
-        } else {
-          return entry.fee;
-        }
-      }
-    }
-    return 0;
-  };
-
-  const calculateTotalPurchaseFee = (purchasePrice: number): number => {
-    const auctionFee = calculateFee(styleData, purchasePrice);
-    const virtualBidFee = calculateFee(virtualBidData, purchasePrice);
-    const fixedFees = 79 + 20 + 10;
-    if (insurance) {
-      return purchasePrice * 1.015 + auctionFee + virtualBidFee + fixedFees;
-    } else {
-      return purchasePrice + auctionFee + virtualBidFee + fixedFees;
-    }
-  };
-
-  const calculateShippingFee = (
-    auctionLoc: string,
-    auctionName: string,
-    portName: string,
-    additionalFeeTypes: string[]
-  ): number => {
-    const groundFee =
-      auctionData.find(
-        (data) =>
-          data.auction === auctionName && data.auctionLocation === auctionLoc
-      )?.rate || 0;
-    const oceanFee =
-      oceanShippingRates.find((rate) => rate.shorthand === portName)?.rate || 0;
-    const extraFeesTotal = additionalFeeTypes.reduce(
-      (total, fee) =>
-        total +
-        (extraFees.find((extraFee) => extraFee.type === fee)?.rate ?? 0),
-      0
-    );
-    return groundFee + oceanFee + extraFeesTotal;
-  };
+  // Use imported utility functions instead of local ones
 
   const handleCalculate = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const totalPurchaseFee = calculateTotalPurchaseFee(purchaseFee);
+    const totalPurchaseFee = calculateTotalPurchaseFee(purchaseFee, styleData, virtualBidData, insurance);
     const shippingFee = calculateShippingFee(
       auctionLocation,
       auction,

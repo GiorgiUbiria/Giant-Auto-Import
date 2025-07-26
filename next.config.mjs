@@ -1,13 +1,24 @@
 import createNextIntlPlugin from 'next-intl/plugin';
- 
+
 const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
+
+// Bundle analyzer configuration
+const withBundleAnalyzer = process.env.ANALYZE === 'true' 
+  ? require('@next/bundle-analyzer')({ enabled: true })
+  : (config) => config;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   webpack: (config, { dev, isServer }) => {
     config.externals.push("@node-rs/argon2", "@node-rs/bcrypt");
     
-    // Optimize webpack configuration
+    // Fix for @tanstack/react-table module parsing
+    config.module.rules.push({
+      test: /node_modules\/@tanstack\/react-table/,
+      type: 'javascript/auto',
+    });
+    
+    // Enhanced webpack optimization
     config.optimization = {
       ...config.optimization,
       splitChunks: {
@@ -17,27 +28,71 @@ const nextConfig = {
         cacheGroups: {
           default: false,
           vendors: false,
+          // React and React DOM
+          react: {
+            test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+            name: 'react',
+            chunks: 'all',
+            priority: 40,
+          },
+          // Next.js
+          next: {
+            test: /[\\/]node_modules[\\/](next)[\\/]/,
+            name: 'next',
+            chunks: 'all',
+            priority: 30,
+          },
+          // UI Libraries
+          ui: {
+            test: /[\\/]node_modules[\\/](@radix-ui|lucide-react|class-variance-authority|clsx|tailwind-merge)[\\/]/,
+            name: 'ui',
+            chunks: 'all',
+            priority: 20,
+          },
+          // Data and Form Libraries
+          data: {
+            test: /[\\/]node_modules[\\/](@tanstack|react-hook-form|@hookform|zod)[\\/]/,
+            name: 'data',
+            chunks: 'all',
+            priority: 15,
+          },
+          // Heavy Libraries
+          heavy: {
+            test: /[\\/]node_modules[\\/](pdf-lib|@pdf-lib|yet-another-react-lightbox|react-window|motion|react-photo-album)[\\/]/,
+            name: 'heavy',
+            chunks: 'async',
+            priority: 10,
+          },
+          // Commons
           commons: {
             name: 'commons',
             chunks: 'all',
             minChunks: 2,
+            priority: 5,
           },
+          // Other libraries
           lib: {
             test: /[\\/]node_modules[\\/]/,
             name(module) {
               const match = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/);
               return match ? `npm.${match[1].replace('@', '')}` : 'npm.unknown';
             },
+            priority: 1,
           },
         },
       },
-      // Add runtime chunk optimization
+      // Runtime chunk optimization
       runtimeChunk: 'single',
+      // Module concatenation for better tree shaking (commented out due to compatibility issues)
+      // concatenateModules: !dev,
     };
 
     // Optimize for production
     if (!dev && !isServer) {
       config.optimization.minimize = true;
+      // Enable tree shaking (commented out due to compatibility issues)
+      // config.optimization.usedExports = true;
+      // config.optimization.sideEffects = false;
     }
 
     return config;
@@ -49,11 +104,17 @@ const nextConfig = {
       '@radix-ui/react-slot',
       'lucide-react',
       'react-icons',
+      '@tanstack/react-table',
+      '@tanstack/react-query',
+      'react-hook-form',
+      '@hookform/resolvers',
+      'date-fns',
+      'zod',
     ],
     serverActions: {
       bodySizeLimit: '20mb',
     },
-    // Add performance optimizations
+    // Performance optimizations
     optimizeCss: true,
     turbo: {
       rules: {
@@ -63,6 +124,8 @@ const nextConfig = {
         },
       },
     },
+    // Enable modern JavaScript features (commented out due to compatibility issues)
+    // esmExternals: 'loose',
   },
   images: {
     // Enable image optimization
@@ -178,4 +241,4 @@ const nextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+export default withBundleAnalyzer(withNextIntl(nextConfig));

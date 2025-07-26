@@ -3,6 +3,9 @@ import { db } from "@/lib/drizzle/db";
 import { cars } from "@/lib/drizzle/schema";
 import { desc, asc, eq, sql, and, like } from "drizzle-orm";
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 // Map allowed sort keys to columns
 const sortColumnMap = {
   id: cars.id,
@@ -79,7 +82,7 @@ export async function GET(req: Request) {
 
     const whereClause = buildWhereClause(vin, vinLot, ownerId);
 
-    // Fetch paginated data
+    // Fetch paginated data with optimized query
     const [data, countResult] = await Promise.all([
       db.query.cars.findMany({
         where: whereClause,
@@ -93,7 +96,14 @@ export async function GET(req: Request) {
     ]);
 
     const count = countResult[0]?.count ?? 0;
-    return NextResponse.json({ cars: data, count });
+    
+    // Create response with caching headers
+    const response = NextResponse.json({ cars: data, count });
+    
+    // Add caching headers for better performance
+    response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    
+    return response;
   } catch (error) {
     console.error("Error fetching cars:", error);
     return NextResponse.json(

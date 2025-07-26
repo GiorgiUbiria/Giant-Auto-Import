@@ -17,7 +17,9 @@ export const TableImage = ({ vin }: { vin: string }) => {
     },
     queryKey: ["getImage", vin],
     retry: 1, // Reduce retry attempts
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes - images don't change often
+    gcTime: 30 * 60 * 1000, // 30 minutes cache
+    refetchOnWindowFocus: false, // Prevent refetch on focus
   });
 
   // Utility to extract CDN base from a URL

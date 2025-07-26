@@ -1,12 +1,13 @@
 import createNextIntlPlugin from 'next-intl/plugin';
  
-const withNextIntl = createNextIntlPlugin();
+const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config) => {
+  webpack: (config, { dev, isServer }) => {
     config.externals.push("@node-rs/argon2", "@node-rs/bcrypt");
-    // Add webpack optimizations
+    
+    // Optimize webpack configuration
     config.optimization = {
       ...config.optimization,
       splitChunks: {
@@ -30,7 +31,15 @@ const nextConfig = {
           },
         },
       },
+      // Add runtime chunk optimization
+      runtimeChunk: 'single',
     };
+
+    // Optimize for production
+    if (!dev && !isServer) {
+      config.optimization.minimize = true;
+    }
+
     return config;
   },
   experimental: {
@@ -43,6 +52,16 @@ const nextConfig = {
     ],
     serverActions: {
       bodySizeLimit: '20mb',
+    },
+    // Add performance optimizations
+    optimizeCss: true,
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
     },
   },
   images: {
@@ -124,6 +143,39 @@ const nextConfig = {
   },
   // Disable static optimization for error pages
   output: 'standalone',
+  // Add performance optimizations
+  generateEtags: false, // Disable ETags for better caching
+  // Add headers for better caching
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=30, stale-while-revalidate=60',
+          },
+        ],
+      },
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);

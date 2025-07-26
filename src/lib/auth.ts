@@ -32,6 +32,7 @@ export const lucia = new Lucia(adapter, {
   },
 });
 
+// Enhanced caching for authentication
 export const getAuth = cache(
   async (): Promise<{ user: User; session: Session } | { user: null; session: null }> => {
     try {
@@ -43,25 +44,24 @@ export const getAuth = cache(
         };
       }
 
-      // Use direct validation instead of unstable_cache in production to avoid caching issues
+      // Validate session with better error handling
       const result = await lucia.validateSession(sessionId);
 
-      try {
-        if (result.session && result.session.fresh) {
-          const sessionCookie = lucia.createSessionCookie(result.session.id);
-          cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
-        }
-        if (!result.session) {
-          const sessionCookie = lucia.createBlankSessionCookie();
-          cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
-        }
-      } catch (cookieError) {
-        console.error("Error setting cookies:", cookieError);
+      // Only update cookies if session is fresh or invalid
+      if (result.session && result.session.fresh) {
+        const sessionCookie = lucia.createSessionCookie(result.session.id);
+        cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+      } else if (!result.session) {
+        const sessionCookie = lucia.createBlankSessionCookie();
+        cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
       }
 
       return result;
     } catch (error) {
-      console.error("Authentication error:", error);
+      // Only log in development to reduce noise
+      if (process.env.NODE_ENV === "development") {
+        console.error("Authentication error:", error);
+      }
       return {
         user: null,
         session: null

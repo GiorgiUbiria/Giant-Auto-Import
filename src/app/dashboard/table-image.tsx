@@ -12,6 +12,10 @@ export const TableImage = ({ vin }: { vin: string }) => {
       vin: vin,
     },
     queryKey: ["getImage", vin],
+    retry: 1, // Reduce retry attempts
+    staleTime: 10 * 60 * 1000, // 10 minutes - images don't change often
+    gcTime: 30 * 60 * 1000, // 30 minutes cache
+    refetchOnWindowFocus: false, // Prevent refetch on focus
   });
 
   if (!data && !isLoading) {

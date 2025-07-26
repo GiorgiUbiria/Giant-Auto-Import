@@ -31,7 +31,7 @@ const fetchUserCars = async ({
 }) => {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // Reduced timeout to 15 seconds
 
     const params = new URLSearchParams();
     params.set("page", (pageIndex + 1).toString());
@@ -55,7 +55,8 @@ const fetchUserCars = async ({
     });
 
     const response = await fetch(`/api/cars?${params.toString()}`, {
-      signal: controller.signal
+      signal: controller.signal,
+      cache: 'default'
     });
     clearTimeout(timeoutId);
     
@@ -67,7 +68,7 @@ const fetchUserCars = async ({
     return response.json();
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Request timed out after 30 seconds');
+      throw new Error('Request timed out after 15 seconds');
     }
     throw error;
   }
@@ -101,17 +102,6 @@ const ErrorState = ({ refetch }: { refetch: () => void }) => (
   </div>
 );
 
-// Utility to handle both value and updater function
-function handleControlledChange<T>(setState: React.Dispatch<React.SetStateAction<T>>) {
-  return (updaterOrValue: T | ((old: T) => T)) => {
-    setState((old) =>
-      typeof updaterOrValue === "function"
-        ? (updaterOrValue as (old: T) => T)(old)
-        : updaterOrValue
-    );
-  };
-}
-
 export const Client = ({ userId }: { userId: string }) => {
   // Add state for table controls
   const [pageIndex, setPageIndex] = React.useState(0);
@@ -126,15 +116,29 @@ export const Client = ({ userId }: { userId: string }) => {
     setPageSize(pageSize);
   }, []);
 
-  const handleSortingChange = React.useCallback(handleControlledChange<SortingState>(setSorting), []);
-  const handleFiltersChange = React.useCallback(handleControlledChange<ColumnFiltersState>(setFilters), []);
-  const handleColumnVisibilityChange = React.useCallback(handleControlledChange<VisibilityState>(setColumnVisibility), []);
-  const handleRowSelectionChange = React.useCallback(handleControlledChange<any>(setRowSelection), []);
+  const handleSortingChange = React.useCallback((updaterOrValue: SortingState | ((old: SortingState) => SortingState)) => {
+    setSorting(typeof updaterOrValue === "function" ? updaterOrValue(sorting) : updaterOrValue);
+  }, [sorting]);
+
+  const handleFiltersChange = React.useCallback((updaterOrValue: ColumnFiltersState | ((old: ColumnFiltersState) => ColumnFiltersState)) => {
+    setFilters(typeof updaterOrValue === "function" ? updaterOrValue(filters) : updaterOrValue);
+  }, [filters]);
+
+  const handleColumnVisibilityChange = React.useCallback((updaterOrValue: VisibilityState | ((old: VisibilityState) => VisibilityState)) => {
+    setColumnVisibility(typeof updaterOrValue === "function" ? updaterOrValue(columnVisibility) : updaterOrValue);
+  }, [columnVisibility]);
+
+  const handleRowSelectionChange = React.useCallback((updaterOrValue: any | ((old: any) => any)) => {
+    setRowSelection(typeof updaterOrValue === "function" ? updaterOrValue(rowSelection) : updaterOrValue);
+  }, [rowSelection]);
 
   const { isLoading, data, error, refetch } = useQuery<CarsApiResponse>({
     queryKey: ["getUserCars", userId, pageIndex, pageSize, sorting, filters],
     queryFn: () => fetchUserCars({ userId, pageIndex, pageSize, sorting, filters }),
-    staleTime: 30000, // 30 seconds
+    staleTime: 5 * 60 * 1000, // 5 minutes - increased for better caching
+    gcTime: 10 * 60 * 1000, // 10 minutes cache
+    retry: 1, // Reduce retries
+    refetchOnWindowFocus: false, // Prevent refetch on focus
   });
 
   // Provide default values

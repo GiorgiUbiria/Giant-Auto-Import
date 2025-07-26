@@ -2,7 +2,15 @@ import { createClient } from "@libsql/client/web";
 import { LibSQLDatabase, drizzle } from "drizzle-orm/libsql";
 import * as schema from "./schema";
 
+// Global database instance for connection pooling
+let dbInstance: LibSQLDatabase<typeof schema> | null = null;
+
 export function tursoClient(): LibSQLDatabase<typeof schema> {
+  // Return cached instance if available
+  if (dbInstance) {
+    return dbInstance;
+  }
+
   if (typeof process === "undefined") {
     throw new Error(
       "process is not defined. Are you trying to run this on the client?"
@@ -21,24 +29,33 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
     throw new Error("TURSO_AUTH_TOKEN is not defined");
   }
 
-  console.log("Database configuration:", {
-    url: url ? "SET" : "MISSING",
-    authToken: authToken ? "SET" : "MISSING",
-    environment: process.env.NODE_ENV
-  });
+  // Only log in development
+  if (process.env.NODE_ENV === "development") {
+    console.log("Database configuration:", {
+      url: url ? "SET" : "MISSING",
+      authToken: authToken ? "SET" : "MISSING",
+      environment: process.env.NODE_ENV
+    });
+  }
 
   try {
-    return drizzle(
+    dbInstance = drizzle(
       createClient({
         url,
         authToken,
       }),
-      { schema, logger: process.env.NODE_ENV !== "production" }
+      { 
+        schema, 
+        logger: false // Disable verbose query logging
+      }
     );
+    
+    return dbInstance;
   } catch (error) {
     console.error("Failed to create database client:", error);
     throw error;
   }
 }
 
+// Export the cached instance
 export const db = tursoClient();

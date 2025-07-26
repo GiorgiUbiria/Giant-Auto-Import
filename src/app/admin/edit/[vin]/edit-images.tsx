@@ -33,10 +33,10 @@ import {
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, useEffect } from "react";
+import { imageCacheService, clearImageCache } from "@/lib/image-cache";
 
 export const EditImages = ({ vin }: { vin: string }) => {
   const queryClient = useQueryClient();
-  const publicUrl = process.env.NEXT_PUBLIC_BUCKET_URL as string;
 
   // Tabs and pagination state
   const imageTypes = [
@@ -52,16 +52,23 @@ export const EditImages = ({ vin }: { vin: string }) => {
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch images with type and pagination
+  // Fetch images with type and pagination using cache service
   useEffect(() => {
     async function fetchImages() {
       setIsLoading(true);
       try {
-        const res = await fetch(`/api/test-images?vin=${vin}&type=${selectedType}&page=${page}&pageSize=${pageSize}`);
-        const data = await res.json();
+        const data = await imageCacheService.getImageList({
+          vin,
+          type: selectedType,
+          page,
+          pageSize,
+          revalidate: 30, // 30 seconds cache for admin
+        });
+        
         setImagesData(data.images || []);
         setTotalCount(data.count || 0);
       } catch (err) {
+        console.error('Failed to fetch images:', err);
         setImagesData([]);
         setTotalCount(0);
       }
@@ -77,7 +84,12 @@ export const EditImages = ({ vin }: { vin: string }) => {
         toast.error(errorMessage);
       },
       onSuccess: async () => {
-        const successMessage = "Image deleted successfully!"; toast.success(successMessage);
+        const successMessage = "Image deleted successfully!"; 
+        toast.success(successMessage);
+        
+        // Clear image cache for this VIN
+        clearImageCache(vin);
+        
         await queryClient.invalidateQueries({
           queryKey: ["getImagesForCar", vin],
           refetchType: "active",
@@ -95,6 +107,9 @@ export const EditImages = ({ vin }: { vin: string }) => {
         const successMessage = "Image prioritized successfully!";
         toast.success(successMessage);
 
+        // Clear image cache for this VIN
+        clearImageCache(vin);
+
         await queryClient.invalidateQueries({
           queryKey: ["getImagesForCar", vin],
           refetchType: "active",
@@ -111,6 +126,9 @@ export const EditImages = ({ vin }: { vin: string }) => {
       onSuccess: async () => {
         const successMessage = "All images removed successfully!";
         toast.success(successMessage);
+
+        // Clear image cache for this VIN
+        clearImageCache(vin);
 
         await queryClient.invalidateQueries({
           queryKey: ["getImagesForCar", vin],
@@ -134,19 +152,28 @@ export const EditImages = ({ vin }: { vin: string }) => {
       <TooltipProvider key={image.imageKey}>
         <Tooltip>
           <TooltipTrigger className="w-full">
-            <div className="w-full aspect-[3/2] relative rounded-lg overflow-hidden">
+            <div className="w-full aspect-[3/2] relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
               <Image
                 src={image.url}
                 alt={image.imageKey || "Image"}
                 fill
                 style={{ objectFit: "cover" }}
                 loading="lazy"
-                placeholder="blur"
-                blurDataURL="data:image/webp;base64,UklGRiIAAABXRUJQVlA4ICwAAACwAgCdASoCAAIALmk0mk0iIiIiIgBoSywA"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 onError={(e) => {
                   // Fallback to placeholder if image fails to load
-                  e.currentTarget.src = "/no-car-image.webp";
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML = `
+                      <div class="flex items-center justify-center w-full h-full text-gray-500">
+                        <div class="text-center">
+                          <div class="text-sm">Image not available</div>
+                        </div>
+                      </div>
+                    `;
+                  }
                 }}
               />
             </div>

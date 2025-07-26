@@ -16,10 +16,8 @@ import { Suspense } from "react";
 import type { GridChildComponentProps } from 'react-window';
 import { FixedSizeGrid as Grid } from 'react-window';
 import { preconnect, preload } from 'react-dom';
-import { imageUtils } from "@/lib/utils";
+import { imageCacheService } from "@/lib/image-cache";
 import OptimizedImage, { OptimizedThumbnail } from "./optimized-image";
-
-const breakpoints = [3840, 1920, 1080, 640, 384, 256, 128];
 
 const LoadingState = () => (
   <div className="w-full h-[50vh] grid place-items-center">
@@ -46,13 +44,11 @@ const EmptyState = () => (
 const VirtualizedGrid = ({ 
   images, 
   onThumbClick, 
-  publicUrl, 
   loadedImages, 
   isMobile 
 }: { 
   images: ImageData[]; 
   onThumbClick: (idx: number) => void;
-  publicUrl: string;
   loadedImages: Set<string>;
   isMobile: boolean;
 }) => {
@@ -74,14 +70,13 @@ const VirtualizedGrid = ({
         const idx = rowIndex * columnCount + columnIndex;
         if (idx >= images.length) return null;
         const image = images[idx];
-        const imageSrc = `${publicUrl}/${image.imageKey}`;
         const isLoaded = loadedImages.has(image.imageKey);
         
         return (
           <div style={style} key={image.imageKey} onClick={() => onThumbClick(idx)}>
             <div className="relative w-full h-full p-1">
               <OptimizedThumbnail
-                src={imageSrc}
+                src={image.url}
                 alt={image.imageType}
                 size={90}
                 className={`rounded transition-opacity duration-300 ${
@@ -103,14 +98,15 @@ const VirtualizedGrid = ({
 };
 
 type ImageData = {
+  id: number;
   imageKey: string;
   imageType: "WAREHOUSE" | "PICK_UP" | "DELIVERED" | "AUCTION";
   url: string;
+  priority: boolean | null;
 };
 
 export const FallbackImageGallery = ({ vin, fetchByType = false }: { vin: string, fetchByType?: boolean }) => {
   const imageTypes = ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERED"];
-  const publicUrl = process.env.NEXT_PUBLIC_BUCKET_URL;
   const [data, setData] = useState<ImageData[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -129,50 +125,29 @@ export const FallbackImageGallery = ({ vin, fetchByType = false }: { vin: string
     images.filter((image) => image.imageType === imageType), []);
 
   const getSlides = useCallback((filteredData: ImageData[]) => {
-    if (!publicUrl) return [];
-    
-    return filteredData.map(({ imageKey }) => {
-      const baseUrl = `${publicUrl}/${imageKey}`;
-      const responsiveSizes = imageUtils.getResponsiveSizes('fullscreen');
-      
+    return filteredData.map(({ imageKey, url }) => {
       return {
-        src: imageUtils.getOptimizedUrl(publicUrl, imageKey, {
-          quality: 90,
-          width: responsiveSizes.desktop,
-          format: 'webp'
-        }),
-        width: responsiveSizes.retina,
-        height: Math.round((2560 / 3840) * responsiveSizes.retina),
-        srcSet: Object.entries(responsiveSizes).map(([breakpoint, width]) => ({
-          src: imageUtils.getOptimizedUrl(publicUrl, imageKey, {
-            quality: 85,
-            width,
-            format: 'webp'
-          }),
-          width,
-          height: Math.round((2560 / 3840) * width),
-        })),
-        downloadUrl: baseUrl,
+        src: url, // Use direct URL for better loading
+        width: 1920,
+        height: 1080,
+        downloadUrl: url,
       };
     });
-  }, [publicUrl]);
+  }, []);
 
   useEffect(() => {
     const fetchImages = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        let url = '';
-        if (fetchByType) {
-          url = `/api/test-images?vin=${encodeURIComponent(vin)}&type=${encodeURIComponent(selectedType)}&pageSize=0`;
-        } else {
-          url = `/api/test-images?vin=${encodeURIComponent(vin)}&pageSize=0`;
-        }
-        const response = await fetch(url);
-        const result = await response.json();
-        if (!response.ok) {
-          throw new Error(result.error || 'Failed to fetch images');
-        }
+        
+        const result = await imageCacheService.getImageList({
+          vin,
+          type: fetchByType ? selectedType : undefined,
+          pageSize: 0, // Get all images
+          revalidate: 60 * 1000, // 1 minute cache for public gallery
+        });
+        
         setData(result.images || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
@@ -183,38 +158,28 @@ export const FallbackImageGallery = ({ vin, fetchByType = false }: { vin: string
     fetchImages();
   }, [vin, fetchByType, selectedType]);
 
-  // Preconnect to CDN for better performance
+  // Preload images for better UX
   useEffect(() => {
-    if (publicUrl) {
-      preconnect(publicUrl);
-    }
-  }, [publicUrl]);
-
-  // Optimized preloading with concurrency control
-  useEffect(() => {
-    if (data && data.length > 0 && publicUrl) {
+    if (data && data.length > 0) {
       const currentTypeImages = fetchByType 
         ? data.filter(img => img.imageType === selectedType)
         : data;
       
+      // Preload first few images
       const imagesToPreload = currentTypeImages.slice(0, 3);
-      const imageUrls = imagesToPreload.map(img => 
-        imageUtils.getOptimizedUrl(publicUrl, img.imageKey, {
-          quality: 80,
-          width: isMobile ? 640 : 1024
-        })
-      );
-      
-      // Use the optimized preloading utility
-      imageUtils.preloadImages(imageUrls, { concurrency: 2, maxImages: 3 }).catch(console.error);
+      imagesToPreload.forEach(img => {
+        const image = new Image();
+        image.onload = () => handleImageLoad(img.imageKey);
+        image.onerror = () => console.warn(`Failed to preload image: ${img.imageKey}`);
+        image.src = img.url;
+      });
     }
-  }, [data, selectedType, publicUrl, fetchByType, isMobile]);
+  }, [data, selectedType, fetchByType, handleImageLoad]);
 
   // Early returns after all hooks
   if (isLoading) return <LoadingState />;
   if (error) return <ErrorState />;
   if (!data || data.length === 0) return <EmptyState />;
-  if (!publicUrl) return <div>Error: Public URL not configured.</div>;
 
   return (
     <div className="grid place-items-center w-full">

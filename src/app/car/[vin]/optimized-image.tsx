@@ -1,8 +1,7 @@
 "use client";
 
 import Image from 'next/image';
-import { useState, useCallback, useEffect } from 'react';
-import { imageUtils } from '@/lib/utils';
+import { useState, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 
 interface OptimizedImageProps {
@@ -12,13 +11,8 @@ interface OptimizedImageProps {
   height: number;
   className?: string;
   priority?: boolean;
-  quality?: number;
-  format?: 'webp' | 'jpeg' | 'png' | 'avif';
-  usage?: 'thumbnail' | 'preview' | 'fullscreen' | 'gallery';
   onLoad?: () => void;
   onError?: () => void;
-  placeholder?: 'blur' | 'empty';
-  blurDataURL?: string;
 }
 
 export default function OptimizedImage({
@@ -28,55 +22,22 @@ export default function OptimizedImage({
   height,
   className = '',
   priority = false,
-  quality = 80,
-  format = 'webp',
-  usage = 'preview',
   onLoad,
   onError,
-  placeholder = 'empty',
-  blurDataURL
 }: OptimizedImageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [imageSrc, setImageSrc] = useState<string>('');
-
-  // Generate optimized image URL
-  useEffect(() => {
-    const optimizedUrl = imageUtils.getOptimizedUrl(src, '', {
-      width,
-      height,
-      quality,
-      format
-    });
-    setImageSrc(optimizedUrl);
-  }, [src, width, height, quality, format]);
-
-  // Generate responsive sizes
-  const responsiveSizes = imageUtils.getResponsiveSizes(usage);
-  const sizes = `(max-width: 640px) ${responsiveSizes.mobile}px, (max-width: 1024px) ${responsiveSizes.tablet}px, ${responsiveSizes.desktop}px`;
-
-  // Next.js Image component handles srcSet automatically based on sizes prop
 
   const handleLoad = useCallback(() => {
     setIsLoading(false);
-    imageUtils.cache.setCached(src);
     onLoad?.();
-  }, [src, onLoad]);
+  }, [onLoad]);
 
   const handleError = useCallback(() => {
     setIsLoading(false);
     setHasError(true);
     onError?.();
   }, [onError]);
-
-  // Generate placeholder if needed
-  const getPlaceholder = () => {
-    if (blurDataURL) return blurDataURL;
-    if (placeholder === 'blur') {
-      return imageUtils.generatePlaceholder(width, height);
-    }
-    return undefined;
-  };
 
   if (hasError) {
     return (
@@ -100,7 +61,7 @@ export default function OptimizedImage({
       )}
       
       <Image
-        src={imageSrc}
+        src={src}
         alt={alt}
         width={width}
         height={height}
@@ -108,10 +69,7 @@ export default function OptimizedImage({
           isLoading ? 'opacity-0' : 'opacity-100'
         }`}
         priority={priority}
-        quality={quality}
-        sizes={sizes}
-        placeholder={placeholder}
-        blurDataURL={getPlaceholder()}
+        sizes={`(max-width: 640px) ${width}px, ${width}px`}
         onLoad={handleLoad}
         onError={handleError}
         style={{
@@ -146,8 +104,6 @@ export function OptimizedThumbnail({
         width={size}
         height={size}
         className="hover:opacity-80 transition-opacity"
-        usage="thumbnail"
-        quality={70}
       />
     </div>
   );
@@ -173,8 +129,6 @@ export function OptimizedGalleryImage({
         width={400}
         height={300}
         className="hover:scale-105 transition-transform"
-        usage="gallery"
-        quality={85}
       />
     </div>
   );

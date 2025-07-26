@@ -130,7 +130,7 @@ export const imageUtils = {
   },
 
   // Get responsive image sizes based on viewport and usage
-  getResponsiveSizes: (usage: 'thumbnail' | 'preview' | 'fullscreen' | 'gallery') => {
+  getResponsiveSizes: (usage: 'thumbnail' | 'preview' | 'fullscreen' | 'gallery' | 'lightbox') => {
     const sizes = {
       thumbnail: {
         mobile: 90,
@@ -155,6 +155,12 @@ export const imageUtils = {
         tablet: 960,
         desktop: 1440,
         retina: 2880
+      },
+      lightbox: {
+        mobile: 800,
+        tablet: 1200,
+        desktop: 1920,
+        retina: 2560
       }
     };
     
@@ -252,6 +258,36 @@ export const imageUtils = {
     return canvas.toDataURL('image/jpeg', 0.1);
   },
 
+  // Generate blur data URL for placeholder
+  getBlurDataURL(): string {
+    return "data:image/webp;base64,UklGRiIAAABXRUJQVlA4ICwAAACwAgCdASoCAAIALmk0mk0iIiIiIgBoSywA";
+  },
+
+  // Calculate aspect ratio
+  getAspectRatio(width: number, height: number): number {
+    return width / height;
+  },
+
+  // Get optimal image dimensions for container
+  getOptimalDimensions(containerWidth: number, containerHeight: number, imageWidth: number, imageHeight: number) {
+    const containerRatio = containerWidth / containerHeight;
+    const imageRatio = imageWidth / imageHeight;
+    
+    if (imageRatio > containerRatio) {
+      // Image is wider than container
+      return {
+        width: containerWidth,
+        height: containerWidth / imageRatio,
+      };
+    } else {
+      // Image is taller than container
+      return {
+        width: containerHeight * imageRatio,
+        height: containerHeight,
+      };
+    }
+  },
+
   // Cache management utilities
   cache: {
     // Simple in-memory cache for image loading states
@@ -291,4 +327,92 @@ export const imageUtils = {
       }
     }
   }
+};
+
+// Performance utilities
+export const performanceUtils = {
+  // Debounce function
+  debounce<T extends (...args: any[]) => any>(
+    func: T,
+    wait: number
+  ): (...args: Parameters<T>) => void {
+    let timeout: NodeJS.Timeout;
+    return (...args: Parameters<T>) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  },
+
+  // Throttle function
+  throttle<T extends (...args: any[]) => any>(
+    func: T,
+    limit: number
+  ): (...args: Parameters<T>) => void {
+    let inThrottle: boolean;
+    return (...args: Parameters<T>) => {
+      if (!inThrottle) {
+        func(...args);
+        inThrottle = true;
+        setTimeout(() => (inThrottle = false), limit);
+      }
+    };
+  },
+
+  // Measure execution time
+  measureTime<T>(fn: () => T, label: string): T {
+    const start = performance.now();
+    const result = fn();
+    const end = performance.now();
+    console.log(`${label}: ${end - start}ms`);
+    return result;
+  },
+
+  // Async measure execution time
+  async measureTimeAsync<T>(fn: () => Promise<T>, label: string): Promise<T> {
+    const start = performance.now();
+    const result = await fn();
+    const end = performance.now();
+    console.log(`${label}: ${end - start}ms`);
+    return result;
+  },
+};
+
+// Cache utilities
+export const cacheUtils = {
+  // Simple in-memory cache
+  createCache<T>(maxSize: number = 100) {
+    const cache = new Map<string, { value: T; timestamp: number }>();
+    
+    return {
+      get(key: string): T | undefined {
+        const item = cache.get(key);
+        if (item) {
+          // Update timestamp for LRU
+          cache.delete(key);
+          cache.set(key, item);
+          return item.value;
+        }
+        return undefined;
+      },
+      
+      set(key: string, value: T): void {
+        // Implement LRU eviction
+        if (cache.size >= maxSize) {
+          const firstKey = cache.keys().next().value;
+          if (firstKey) {
+            cache.delete(firstKey);
+          }
+        }
+        cache.set(key, { value, timestamp: Date.now() });
+      },
+      
+      clear(): void {
+        cache.clear();
+      },
+      
+      size(): number {
+        return cache.size;
+      },
+    };
+  },
 };

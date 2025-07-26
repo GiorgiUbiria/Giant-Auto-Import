@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/drizzle/db';
-import { images } from '@/lib/drizzle/schema';
-import { eq, and } from 'drizzle-orm';
-import { sql } from 'drizzle-orm';
+import { imageCacheService } from '@/lib/image-cache';
 
-// Force dynamic rendering for this route
+// Force dynamic rendering since we need request URL
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
@@ -14,59 +11,34 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type');
     const page = parseInt(searchParams.get('page') || '1', 10);
     const pageSize = parseInt(searchParams.get('pageSize') || '12', 10);
-    const publicUrl = process.env.NEXT_PUBLIC_BUCKET_URL || '';
-    const noPagination = pageSize === 0;
 
     if (!vin) {
       return NextResponse.json({ error: 'VIN parameter required' }, { status: 400 });
     }
 
-    // Build where clause
-    const allowedTypes = ["AUCTION", "WAREHOUSE", "DELIVERED", "PICK_UP"];
-    let whereClause;
-    if (type && allowedTypes.includes(type)) {
-      whereClause = and(
-        eq(images.carVin, vin),
-        eq(images.imageType, type as "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP")
-      );
-    } else {
-      whereClause = eq(images.carVin, vin);
-    }
-
-    // Get total count for pagination
-    const totalCount = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(images)
-      .where(whereClause);
-    const count = totalCount[0]?.count || 0;
-
-    // Fetch images
-    let imageKeys;
-    if (noPagination) {
-      imageKeys = await db.query.images.findMany({
-        where: whereClause,
-      });
-    } else {
-      imageKeys = await db.query.images.findMany({
-        where: whereClause,
-        limit: pageSize,
-        offset: (page - 1) * pageSize,
-      });
-    }
-
-    // Add URLs to the response without checking thumbnails
-    const imagesWithUrls = imageKeys.map(img => ({
-      ...img,
-      url: `${publicUrl}/${img.imageKey}`,
-      thumbnailUrl: `${publicUrl}/${img.imageKey.replace(/\.[^/.]+$/, '')}-thumb.webp`,
-    }));
-
-    return NextResponse.json({
-      images: imagesWithUrls,
-      count,
-      totalPages: Math.ceil(count / pageSize),
-      currentPage: page,
+    // Use cache service with ISR revalidation
+    const result = await imageCacheService.getImageList({
+      vin,
+      type: type || undefined,
+      page,
+      pageSize,
+      revalidate: 30 * 1000, // 30 seconds cache for API responses
     });
+
+    // Add cache headers for better performance
+    const response = NextResponse.json({
+      images: result.images,
+      count: result.count,
+      totalPages: result.totalPages,
+      currentPage: result.currentPage,
+    });
+
+    // Set cache headers for ISR
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    response.headers.set('CDN-Cache-Control', 'public, s-maxage=60');
+    response.headers.set('Vercel-CDN-Cache-Control', 'public, s-maxage=60');
+
+    return response;
   } catch (error) {
     console.error('API Route: Error fetching images:', error);
     return NextResponse.json({ 

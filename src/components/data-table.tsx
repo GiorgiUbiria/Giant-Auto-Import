@@ -2,18 +2,19 @@
 
 import * as React from "react";
 
+// Selective imports for better tree shaking
 import {
-  ColumnDef,
+  type ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
   getSortedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
-  SortingState,
-  ColumnFiltersState,
-  VisibilityState,
-  Table,
+  type SortingState,
+  type ColumnFiltersState,
+  type VisibilityState,
+  type Table,
 } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";

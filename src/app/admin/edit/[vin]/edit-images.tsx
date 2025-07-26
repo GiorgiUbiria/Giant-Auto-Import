@@ -144,6 +144,7 @@ export const EditImages = ({ vin }: { vin: string }) => {
                 loading="lazy"
                 placeholder="blur"
                 blurDataURL="data:image/webp;base64,UklGRiIAAABXRUJQVlA4ICwAAACwAgCdASoCAAIALmk0mk0iIiIiIgBoSywA"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 onError={(e) => {
                   // fallback to original if thumbnail fails, then to placeholder
                   if (e.currentTarget.src !== image.url) {

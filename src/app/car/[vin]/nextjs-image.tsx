@@ -44,17 +44,23 @@ export default function NextJsImage({ slide, offset, rect }: any) {
         fill
         alt=""
         src={slide.src}
-        loading="eager"
+        loading={offset === 0 ? "eager" : "lazy"}
+        priority={offset === 0}
         draggable={false}
         placeholder={slide.blurDataURL ? "blur" : undefined}
         style={{
           objectFit: cover ? "cover" : "contain",
           cursor: click ? "pointer" : undefined,
         }}
-        sizes={`${Math.ceil((width / window.innerWidth) * 100)}vw`}
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 60vw"
         onClick={
           offset === 0 ? () => click?.({ index: currentIndex }) : undefined
         }
+        onError={(e) => {
+          // Fallback to placeholder if image fails to load
+          const target = e.target as HTMLImageElement;
+          target.src = "/no-car-image.webp";
+        }}
       />
     </div>
   );

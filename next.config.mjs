@@ -80,13 +80,32 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      // Add Cloudflare Images domain if configured
+      ...(process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGES_DOMAIN ? [{
+        protocol: 'https',
+        hostname: process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGES_DOMAIN,
+        port: '',
+        pathname: '/**',
+      }] : []),
+      // Add ImageKit domain if configured
+      ...(process.env.NEXT_PUBLIC_IMAGEKIT_URL ? [{
+        protocol: 'https',
+        hostname: new URL(process.env.NEXT_PUBLIC_IMAGEKIT_URL).hostname,
+        port: '',
+        pathname: '/**',
+      }] : []),
     ],
-    // Configure image sizes
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    // Configure image formats
+    // Configure image sizes for responsive loading
+    deviceSizes: [90, 150, 320, 480, 640, 750, 828, 960, 1024, 1080, 1200, 1440, 1920, 2048, 2880, 3840],
+    // Configure image formats with priority
     formats: ['image/avif', 'image/webp'],
-    // Configure minimum cache time
-    minimumCacheTTL: 60,
+    // Configure minimum cache time (7 days)
+    minimumCacheTTL: 60 * 60 * 24 * 7,
+    // Configure content disposition
+    contentDispositionType: 'attachment',
+    // Configure content security policy
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   // Enable React strict mode for better development experience
   reactStrictMode: true,

@@ -3,7 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getImageKeys } from "@/lib/actions/imageActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Lightbox from "yet-another-react-lightbox";
 import Download from "yet-another-react-lightbox/plugins/download";
 import Inline from "yet-another-react-lightbox/plugins/inline";
@@ -15,6 +15,7 @@ import NextJsImage from "./nextjs-image";
 import { useMedia } from "react-use";
 import { Loader2 } from "lucide-react";
 import { Suspense } from "react";
+import { preconnect, preload } from 'react-dom';
 
 const breakpoints = [3840, 1920, 1080, 640, 384, 256, 128];
 
@@ -53,7 +54,32 @@ export const ImageGallery = ({ vin }: { vin: string }) => {
   });
   const [open, setOpen] = useState<boolean>(false);
   const [startIndex, setStartIndex] = useState<number>(0);
+  const [selectedType, setSelectedType] = useState<string>(imageTypes[0]);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const isMobile = useMedia('(max-width: 640px)', false);
+
+  // Preconnect to CDN for better performance
+  useEffect(() => {
+    if (publicUrl) {
+      preconnect(publicUrl);
+    }
+  }, [publicUrl]);
+
+  // Preload first few images for better perceived performance
+  useEffect(() => {
+    if (data && data.length > 0 && publicUrl) {
+      // Preload first 3 images of current type
+      const currentTypeImages = data.filter(img => img.imageType === selectedType);
+      const imagesToPreload = currentTypeImages.slice(0, 3);
+      imagesToPreload.forEach(img => {
+        preload(`${publicUrl}/${img.imageKey}`, { as: 'image' });
+      });
+    }
+  }, [data, selectedType, publicUrl]);
+
+  const handleImageLoad = useCallback((imageKey: string) => {
+    setLoadedImages(prev => new Set(prev).add(imageKey));
+  }, []);
 
   console.log("ImageGallery: Render state", { 
     vin, 
@@ -95,7 +121,7 @@ export const ImageGallery = ({ vin }: { vin: string }) => {
 
   return (
     <div className="grid place-items-center w-full">
-      <Tabs defaultValue={imageTypes[0]} className="w-full text-black dark:text-white gap-2">
+      <Tabs value={selectedType} onValueChange={setSelectedType} className="w-full text-black dark:text-white gap-2">
         <TabsList className="grid w-full grid-cols-1 sm:grid-cols-4 bg-gray-300 dark:bg-gray-700 dark:text-white mb-4 sm:mb-10">
           {imageTypes.map((type) => (
             <TabsTrigger key={type} value={type} className="text-sm sm:text-base py-2 sm:py-1">

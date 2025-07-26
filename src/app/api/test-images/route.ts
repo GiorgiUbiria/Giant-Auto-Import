@@ -4,6 +4,9 @@ import { images } from '@/lib/drizzle/schema';
 import { eq, and } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -55,24 +58,18 @@ export async function GET(request: NextRequest) {
     const imagesWithUrls = imageKeys.map(img => ({
       ...img,
       url: `${publicUrl}/${img.imageKey}`,
+      thumbnailUrl: `${publicUrl}/${img.imageKey.replace(/\.[^/.]+$/, '')}-thumb.webp`,
     }));
 
     return NextResponse.json({
-      success: true,
       images: imagesWithUrls,
       count,
-      page,
-      pageSize,
-      message: 'Image data fetched successfully'
+      totalPages: Math.ceil(count / pageSize),
+      currentPage: page,
     });
-
   } catch (error) {
-    console.error('API Route: Error fetching images:', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
-    });
-
-    return NextResponse.json({
+    console.error('API Route: Error fetching images:', error);
+    return NextResponse.json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : String(error)
     }, { status: 500 });

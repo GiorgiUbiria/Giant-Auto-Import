@@ -21,6 +21,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { useServerAction } from "zsa-react";
 import imageCompression from "browser-image-compression";
+import Image from "next/image";
 
 const ACCEPTED_IMAGE_TYPES = [
   "image/png",
@@ -390,11 +391,13 @@ export function ImagesForm({ vin }: { vin: string }) {
                 {previews.auction_images && previews.auction_images.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {previews.auction_images.map((url, idx) => (
-                      <img
+                      <Image
                         key={url}
                         src={url}
                         alt={`Auction Preview ${idx + 1}`}
-                        className="w-20 h-20 object-cover rounded border"
+                        width={80}
+                        height={80}
+                        className="object-cover rounded border"
                         loading="lazy"
                       />
                     ))}
@@ -439,11 +442,13 @@ export function ImagesForm({ vin }: { vin: string }) {
                 {previews.warehouse_images && previews.warehouse_images.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {previews.warehouse_images.map((url, idx) => (
-                      <img
+                      <Image
                         key={url}
                         src={url}
                         alt={`Warehouse Preview ${idx + 1}`}
-                        className="w-20 h-20 object-cover rounded border"
+                        width={80}
+                        height={80}
+                        className="object-cover rounded border"
                         loading="lazy"
                       />
                     ))}
@@ -488,11 +493,13 @@ export function ImagesForm({ vin }: { vin: string }) {
                 {previews.delivery_images && previews.delivery_images.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {previews.delivery_images.map((url, idx) => (
-                      <img
+                      <Image
                         key={url}
                         src={url}
                         alt={`Delivery Preview ${idx + 1}`}
-                        className="w-20 h-20 object-cover rounded border"
+                        width={80}
+                        height={80}
+                        className="object-cover rounded border"
                         loading="lazy"
                       />
                     ))}
@@ -537,11 +544,13 @@ export function ImagesForm({ vin }: { vin: string }) {
                 {previews.pick_up_images && previews.pick_up_images.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {previews.pick_up_images.map((url, idx) => (
-                      <img
+                      <Image
                         key={url}
                         src={url}
                         alt={`Pick Up Preview ${idx + 1}`}
-                        className="w-20 h-20 object-cover rounded border"
+                        width={80}
+                        height={80}
+                        className="object-cover rounded border"
                         loading="lazy"
                       />
                     ))}

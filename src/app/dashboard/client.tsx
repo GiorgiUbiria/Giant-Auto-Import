@@ -101,17 +101,6 @@ const ErrorState = ({ refetch }: { refetch: () => void }) => (
   </div>
 );
 
-// Utility to handle both value and updater function
-function handleControlledChange<T>(setState: React.Dispatch<React.SetStateAction<T>>) {
-  return (updaterOrValue: T | ((old: T) => T)) => {
-    setState((old) =>
-      typeof updaterOrValue === "function"
-        ? (updaterOrValue as (old: T) => T)(old)
-        : updaterOrValue
-    );
-  };
-}
-
 export const Client = ({ userId }: { userId: string }) => {
   // Add state for table controls
   const [pageIndex, setPageIndex] = React.useState(0);
@@ -126,10 +115,21 @@ export const Client = ({ userId }: { userId: string }) => {
     setPageSize(pageSize);
   }, []);
 
-  const handleSortingChange = React.useCallback(handleControlledChange<SortingState>(setSorting), []);
-  const handleFiltersChange = React.useCallback(handleControlledChange<ColumnFiltersState>(setFilters), []);
-  const handleColumnVisibilityChange = React.useCallback(handleControlledChange<VisibilityState>(setColumnVisibility), []);
-  const handleRowSelectionChange = React.useCallback(handleControlledChange<any>(setRowSelection), []);
+  const handleSortingChange = React.useCallback((updaterOrValue: SortingState | ((old: SortingState) => SortingState)) => {
+    setSorting(typeof updaterOrValue === "function" ? updaterOrValue(sorting) : updaterOrValue);
+  }, [sorting]);
+
+  const handleFiltersChange = React.useCallback((updaterOrValue: ColumnFiltersState | ((old: ColumnFiltersState) => ColumnFiltersState)) => {
+    setFilters(typeof updaterOrValue === "function" ? updaterOrValue(filters) : updaterOrValue);
+  }, [filters]);
+
+  const handleColumnVisibilityChange = React.useCallback((updaterOrValue: VisibilityState | ((old: VisibilityState) => VisibilityState)) => {
+    setColumnVisibility(typeof updaterOrValue === "function" ? updaterOrValue(columnVisibility) : updaterOrValue);
+  }, [columnVisibility]);
+
+  const handleRowSelectionChange = React.useCallback((updaterOrValue: any | ((old: any) => any)) => {
+    setRowSelection(typeof updaterOrValue === "function" ? updaterOrValue(rowSelection) : updaterOrValue);
+  }, [rowSelection]);
 
   const { isLoading, data, error, refetch } = useQuery<CarsApiResponse>({
     queryKey: ["getUserCars", userId, pageIndex, pageSize, sorting, filters],

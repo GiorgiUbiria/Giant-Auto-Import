@@ -34,7 +34,6 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, useEffect } from "react";
 
-
 export const EditImages = ({ vin }: { vin: string }) => {
   const queryClient = useQueryClient();
   const publicUrl = process.env.NEXT_PUBLIC_BUCKET_URL as string;
@@ -137,7 +136,7 @@ export const EditImages = ({ vin }: { vin: string }) => {
           <TooltipTrigger className="w-full">
             <div className="w-full aspect-[3/2] relative rounded-lg overflow-hidden">
               <Image
-                src={image.thumbnailUrl || image.url}
+                src={image.url}
                 alt={image.imageKey || "Image"}
                 fill
                 style={{ objectFit: "cover" }}
@@ -146,12 +145,8 @@ export const EditImages = ({ vin }: { vin: string }) => {
                 blurDataURL="data:image/webp;base64,UklGRiIAAABXRUJQVlA4ICwAAACwAgCdASoCAAIALmk0mk0iIiIiIgBoSywA"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 onError={(e) => {
-                  // fallback to original if thumbnail fails, then to placeholder
-                  if (e.currentTarget.src !== image.url) {
-                    e.currentTarget.src = image.url;
-                  } else {
-                    e.currentTarget.src = "/no-car-image.webp";
-                  }
+                  // Fallback to placeholder if image fails to load
+                  e.currentTarget.src = "/no-car-image.webp";
                 }}
               />
             </div>

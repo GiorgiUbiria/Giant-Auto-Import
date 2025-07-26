@@ -1,7 +1,7 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Lightbox from "yet-another-react-lightbox";
 import Download from "yet-another-react-lightbox/plugins/download";
 import Inline from "yet-another-react-lightbox/plugins/inline";
@@ -16,6 +16,8 @@ import { Suspense } from "react";
 import type { GridChildComponentProps } from 'react-window';
 import { FixedSizeGrid as Grid } from 'react-window';
 import { preconnect, preload } from 'react-dom';
+import { imageUtils } from "@/lib/utils";
+import OptimizedImage, { OptimizedThumbnail } from "./optimized-image";
 
 const breakpoints = [3840, 1920, 1080, 640, 384, 256, 128];
 
@@ -40,30 +42,71 @@ const EmptyState = () => (
   </div>
 );
 
+// Move VirtualizedGrid outside to prevent hook recreation
+const VirtualizedGrid = ({ 
+  images, 
+  onThumbClick, 
+  publicUrl, 
+  loadedImages, 
+  isMobile 
+}: { 
+  images: ImageData[]; 
+  onThumbClick: (idx: number) => void;
+  publicUrl: string;
+  loadedImages: Set<string>;
+  isMobile: boolean;
+}) => {
+  const columnCount = isMobile ? 3 : 6;
+  const rowCount = Math.ceil(images.length / columnCount);
+  const cellWidth = 100;
+  const cellHeight = 80;
+  
+  return (
+    <Grid
+      columnCount={columnCount}
+      columnWidth={cellWidth}
+      height={Math.min(320, rowCount * cellHeight)}
+      rowCount={rowCount}
+      rowHeight={cellHeight}
+      width={columnCount * cellWidth}
+    >
+      {({ columnIndex, rowIndex, style }: GridChildComponentProps) => {
+        const idx = rowIndex * columnCount + columnIndex;
+        if (idx >= images.length) return null;
+        const image = images[idx];
+        const imageSrc = `${publicUrl}/${image.imageKey}`;
+        const isLoaded = loadedImages.has(image.imageKey);
+        
+        return (
+          <div style={style} key={image.imageKey} onClick={() => onThumbClick(idx)}>
+            <div className="relative w-full h-full p-1">
+              <OptimizedThumbnail
+                src={imageSrc}
+                alt={image.imageType}
+                size={90}
+                className={`rounded transition-opacity duration-300 ${
+                  isLoaded ? 'opacity-100' : 'opacity-70'
+                }`}
+                onClick={() => onThumbClick(idx)}
+              />
+              {!isLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }}
+    </Grid>
+  );
+};
+
 type ImageData = {
   imageKey: string;
   imageType: "WAREHOUSE" | "PICK_UP" | "DELIVERED" | "AUCTION";
   url: string;
 };
-
-// Helper: check if a thumbnail exists
-async function checkThumbnailExists(url: string): Promise<boolean> {
-  try {
-    const res = await fetch(url, { method: 'HEAD' });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
-// Helper: generate thumbnail URL
-function getThumbnailUrl(imageKey: string, publicUrl: string): string {
-  const extIdx = imageKey.lastIndexOf('.');
-  const thumbKey = extIdx !== -1
-    ? imageKey.slice(0, extIdx) + '-thumb' + imageKey.slice(extIdx)
-    : imageKey + '-thumb';
-  return `${publicUrl}/${thumbKey}`;
-}
 
 export const FallbackImageGallery = ({ vin, fetchByType = false }: { vin: string, fetchByType?: boolean }) => {
   const imageTypes = ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERED"];
@@ -74,8 +117,45 @@ export const FallbackImageGallery = ({ vin, fetchByType = false }: { vin: string
   const [open, setOpen] = useState<boolean>(false);
   const [startIndex, setStartIndex] = useState<number>(0);
   const [selectedType, setSelectedType] = useState<string>(imageTypes[0]);
-  const [thumbnailCache, setThumbnailCache] = useState<Record<string, boolean>>({});
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const isMobile = useMedia('(max-width: 640px)', false);
+
+  // Define all hooks before any early returns
+  const handleImageLoad = useCallback((imageKey: string) => {
+    setLoadedImages(prev => new Set(prev).add(imageKey));
+  }, []);
+
+  const filterImagesByType = useCallback((images: ImageData[], imageType: string) =>
+    images.filter((image) => image.imageType === imageType), []);
+
+  const getSlides = useCallback((filteredData: ImageData[]) => {
+    if (!publicUrl) return [];
+    
+    return filteredData.map(({ imageKey }) => {
+      const baseUrl = `${publicUrl}/${imageKey}`;
+      const responsiveSizes = imageUtils.getResponsiveSizes('fullscreen');
+      
+      return {
+        src: imageUtils.getOptimizedUrl(publicUrl, imageKey, {
+          quality: 90,
+          width: responsiveSizes.desktop,
+          format: 'webp'
+        }),
+        width: responsiveSizes.retina,
+        height: Math.round((2560 / 3840) * responsiveSizes.retina),
+        srcSet: Object.entries(responsiveSizes).map(([breakpoint, width]) => ({
+          src: imageUtils.getOptimizedUrl(publicUrl, imageKey, {
+            quality: 85,
+            width,
+            format: 'webp'
+          }),
+          width,
+          height: Math.round((2560 / 3840) * width),
+        })),
+        downloadUrl: baseUrl,
+      };
+    });
+  }, [publicUrl]);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -103,93 +183,38 @@ export const FallbackImageGallery = ({ vin, fetchByType = false }: { vin: string
     fetchImages();
   }, [vin, fetchByType, selectedType]);
 
-  // Check thumbnails for visible images
+  // Preconnect to CDN for better performance
   useEffect(() => {
-    if (!data || !publicUrl) return;
-
-    const checkThumbnails = async () => {
-      const newCache = { ...thumbnailCache };
-      const promises = data.map(async (img) => {
-        if (newCache[img.imageKey] !== undefined) return; // Already checked
-        
-        const thumbUrl = getThumbnailUrl(img.imageKey, publicUrl);
-        const hasThumb = await checkThumbnailExists(thumbUrl);
-        newCache[img.imageKey] = hasThumb;
-      });
-
-      await Promise.all(promises);
-      setThumbnailCache(newCache);
-    };
-
-    checkThumbnails();
-  }, [data, publicUrl, thumbnailCache]);
-
-  // Preconnect and preload for CDN
-  if (publicUrl) {
-    preconnect(publicUrl);
-    if (data && data.length > 0) {
-      preload(`${publicUrl}/${data[0].imageKey}`, { as: 'image' });
+    if (publicUrl) {
+      preconnect(publicUrl);
     }
-  }
+  }, [publicUrl]);
 
+  // Optimized preloading with concurrency control
+  useEffect(() => {
+    if (data && data.length > 0 && publicUrl) {
+      const currentTypeImages = fetchByType 
+        ? data.filter(img => img.imageType === selectedType)
+        : data;
+      
+      const imagesToPreload = currentTypeImages.slice(0, 3);
+      const imageUrls = imagesToPreload.map(img => 
+        imageUtils.getOptimizedUrl(publicUrl, img.imageKey, {
+          quality: 80,
+          width: isMobile ? 640 : 1024
+        })
+      );
+      
+      // Use the optimized preloading utility
+      imageUtils.preloadImages(imageUrls, { concurrency: 2, maxImages: 3 }).catch(console.error);
+    }
+  }, [data, selectedType, publicUrl, fetchByType, isMobile]);
+
+  // Early returns after all hooks
   if (isLoading) return <LoadingState />;
   if (error) return <ErrorState />;
   if (!data || data.length === 0) return <EmptyState />;
   if (!publicUrl) return <div>Error: Public URL not configured.</div>;
-
-  const filterImagesByType = (images: ImageData[], imageType: string) =>
-    images.filter((image) => image.imageType === imageType);
-
-  const VirtualizedGrid = ({ images, onThumbClick }: { images: ImageData[], onThumbClick: (idx: number) => void }) => {
-    const columnCount = isMobile ? 3 : 6;
-    const rowCount = Math.ceil(images.length / columnCount);
-    const cellWidth = 100;
-    const cellHeight = 80;
-    return (
-      <Grid
-        columnCount={columnCount}
-        columnWidth={cellWidth}
-        height={Math.min(320, rowCount * cellHeight)}
-        rowCount={rowCount}
-        rowHeight={cellHeight}
-        width={columnCount * cellWidth}
-      >
-        {({ columnIndex, rowIndex, style }: GridChildComponentProps) => {
-          const idx = rowIndex * columnCount + columnIndex;
-          if (idx >= images.length) return null;
-          const image = images[idx];
-          const thumbUrl = getThumbnailUrl(image.imageKey, publicUrl);
-          const hasThumb = thumbnailCache[image.imageKey];
-          
-          return (
-            <div style={style} key={image.imageKey} onClick={() => onThumbClick(idx)}>
-              <img
-                src={hasThumb ? thumbUrl : image.url}
-                alt={image.imageType}
-                width={90}
-                height={70}
-                style={{ objectFit: 'cover', borderRadius: 4, cursor: 'pointer', margin: 4 }}
-                loading="lazy"
-              />
-            </div>
-          );
-        }}
-      </Grid>
-    );
-  };
-
-  const getSlides = (filteredData: ImageData[]) =>
-    filteredData.map(({ imageKey }) => ({
-      src: `${publicUrl}/${imageKey}`,
-      width: 3840,
-      height: 2560,
-      srcSet: breakpoints.map((breakpoint) => ({
-        src: `${publicUrl}/${imageKey}`,
-        width: breakpoint,
-        height: Math.round((2560 / 3840) * breakpoint),
-      })),
-      downloadUrl: `${publicUrl}/${imageKey}`,
-    }));
 
   return (
     <div className="grid place-items-center w-full">

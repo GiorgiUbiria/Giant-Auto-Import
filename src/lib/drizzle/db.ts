@@ -46,7 +46,7 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
       }),
       { 
         schema, 
-        logger: process.env.NODE_ENV === "development"
+        logger: false // Disable verbose query logging
       }
     );
     

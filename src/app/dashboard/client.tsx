@@ -31,7 +31,7 @@ const fetchUserCars = async ({
 }) => {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // Reduced timeout to 15 seconds
 
     const params = new URLSearchParams();
     params.set("page", (pageIndex + 1).toString());
@@ -55,7 +55,8 @@ const fetchUserCars = async ({
     });
 
     const response = await fetch(`/api/cars?${params.toString()}`, {
-      signal: controller.signal
+      signal: controller.signal,
+      cache: 'default'
     });
     clearTimeout(timeoutId);
     
@@ -67,7 +68,7 @@ const fetchUserCars = async ({
     return response.json();
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Request timed out after 30 seconds');
+      throw new Error('Request timed out after 15 seconds');
     }
     throw error;
   }
@@ -134,7 +135,10 @@ export const Client = ({ userId }: { userId: string }) => {
   const { isLoading, data, error, refetch } = useQuery<CarsApiResponse>({
     queryKey: ["getUserCars", userId, pageIndex, pageSize, sorting, filters],
     queryFn: () => fetchUserCars({ userId, pageIndex, pageSize, sorting, filters }),
-    staleTime: 30000, // 30 seconds
+    staleTime: 5 * 60 * 1000, // 5 minutes - increased for better caching
+    gcTime: 10 * 60 * 1000, // 10 minutes cache
+    retry: 1, // Reduce retries
+    refetchOnWindowFocus: false, // Prevent refetch on focus
   });
 
   // Provide default values

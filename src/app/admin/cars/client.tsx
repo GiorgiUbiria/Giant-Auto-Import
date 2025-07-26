@@ -65,8 +65,8 @@ export const Client = () => {
   const { isLoading, data, error } = useQuery<CarsApiResponse>({
     queryKey: ["getCars", pageIndex, pageSize, sorting, filters],
     queryFn: () => fetchCars({ pageIndex, pageSize, sorting, filters }),
-    staleTime: 30000, // 30 seconds
-    gcTime: 5 * 60 * 1000, // 5 minutes cache
+    staleTime: 5 * 60 * 1000, // 5 minutes - increased for better caching
+    gcTime: 10 * 60 * 1000, // 10 minutes cache
     retry: 1, // Reduce retries
     refetchOnWindowFocus: false, // Prevent refetch on focus
   });

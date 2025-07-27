@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations } from 'next-intl';
 import { useServerAction } from "zsa-react";
 import { getCsvVersionsAction, activateCsvVersionAction, deleteCsvVersionAction } from "@/lib/actions/pricingActions";
+import { recalculateAllCarFeesAction } from "@/lib/actions/pricingActions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +36,8 @@ import {
   Trash2, 
   Calendar,
   User,
-  FileText
+  FileText,
+  RefreshCw
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -48,6 +50,7 @@ export const CsvVersionHistory = () => {
   const { execute: getVersions } = useServerAction(getCsvVersionsAction);
   const { execute: activateVersion, isPending: activating } = useServerAction(activateCsvVersionAction);
   const { execute: deleteVersion, isPending: deleting } = useServerAction(deleteCsvVersionAction);
+  const { execute: recalculateFees, isPending: recalculating } = useServerAction(recalculateAllCarFeesAction);
 
   useEffect(() => {
     loadVersions();
@@ -109,6 +112,23 @@ export const CsvVersionHistory = () => {
     }
   };
 
+  const handleRecalculateFees = async () => {
+    try {
+      const [result, error] = await recalculateFees();
+      if (error) {
+        toast.error("Failed to recalculate fees");
+        return;
+      }
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message || "Failed to recalculate fees");
+      }
+    } catch (error) {
+      toast.error("Failed to recalculate fees");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -132,9 +152,24 @@ export const CsvVersionHistory = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">CSV Versions</h3>
-        <Button onClick={loadVersions} variant="outline" size="sm">
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleRecalculateFees} 
+            variant="outline" 
+            size="sm"
+            disabled={recalculating}
+          >
+            {recalculating ? (
+              <Loader2 className="h-3 w-3 animate-spin mr-1" />
+            ) : (
+              <RefreshCw className="h-3 w-3 mr-1" />
+            )}
+            Recalculate All Fees
+          </Button>
+          <Button onClick={loadVersions} variant="outline" size="sm">
+            Refresh
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-md border">

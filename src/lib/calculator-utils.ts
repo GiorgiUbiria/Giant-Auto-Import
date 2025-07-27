@@ -17,7 +17,7 @@ export const extraFees: ExtraFee[] = [
   { type: "Service", rate: 100 },
 ];
 
-export const auctionData: AuctionData[] = csvToJson();
+export const auctionData: AuctionData[] = [];
 
 /**
  * Get active CSV data from database or fallback to static data
@@ -37,8 +37,8 @@ export const getActiveCsvData = async (): Promise<AuctionData[]> => {
     console.error("Error fetching active CSV data:", error);
   }
 
-  // Fallback to static data
-  return auctionData;
+  // Fallback to static data from csvData.ts
+  return csvToJson();
 };
 
 /**
@@ -75,6 +75,38 @@ export const getDefaultPricingConfig = async (): Promise<DefaultPricingConfig | 
     console.error("Error fetching default pricing config:", error);
     return null;
   }
+};
+
+/**
+ * Debug function to help troubleshoot pricing issues
+ */
+export const debugPricingConfig = async (userId?: string) => {
+  const userPricing = userId ? await getUserPricingConfig(userId) : null;
+  const defaultPricing = await getDefaultPricingConfig();
+  
+  console.log("Debug Pricing Config:", {
+    userId,
+    userPricing: userPricing ? {
+      id: userPricing.id,
+      oceanFee: userPricing.oceanFee,
+      groundFeeAdjustment: userPricing.groundFeeAdjustment,
+      pickupSurcharge: userPricing.pickupSurcharge,
+      serviceFee: userPricing.serviceFee,
+      hybridSurcharge: userPricing.hybridSurcharge,
+      isActive: userPricing.isActive,
+    } : null,
+    defaultPricing: defaultPricing ? {
+      id: defaultPricing.id,
+      oceanFee: defaultPricing.oceanFee,
+      groundFeeAdjustment: defaultPricing.groundFeeAdjustment,
+      pickupSurcharge: defaultPricing.pickupSurcharge,
+      serviceFee: defaultPricing.serviceFee,
+      hybridSurcharge: defaultPricing.hybridSurcharge,
+      isActive: defaultPricing.isActive,
+    } : null,
+  });
+  
+  return { userPricing, defaultPricing };
 };
 
 export function parseVirtualBidData(): any[] {
@@ -121,31 +153,74 @@ export function styleToJson(style: string): any[] {
 }
 
 export function csvToJson(): any[] {
-  const rows = csvData.trim().split('\n');
-  const jsonData: any[] = [];
+  try {
+    if (!csvData || typeof csvData !== 'string') {
+      console.error("CSV data is not available or invalid");
+      return [];
+    }
 
-  for (let i = 1; i < rows.length; i++) {
-    let values = rows[i].split(',').map((value, index) => {
-      if (value.startsWith('"') && value.endsWith('"')) {
-        return value.substring(1, value.length - 1);
+    const rows = csvData.trim().split('\n');
+    const jsonData: any[] = [];
+
+    for (let i = 1; i < rows.length; i++) {
+      try {
+        let values = rows[i].split(',').map((value, index) => {
+          if (value.startsWith('"') && value.endsWith('"')) {
+            return value.substring(1, value.length - 1);
+          }
+          return value;
+        });
+
+        // Ensure we have enough values
+        if (values.length < 7) {
+          console.warn(`Skipping row ${i + 1}: insufficient data`);
+          continue;
+        }
+
+        const obj: any = {};
+        obj.auction = values[0] === "Copart" ? "Copart" : "IAAI";
+        obj.auctionLocation = values[1] || '';
+
+        // Safely extract port information
+        const portValue = values[5] || '';
+        obj.port = portValue.trim().slice(0, Math.max(0, portValue.length - 2));
+
+        obj.zip = values[3] || '';
+        obj.rate = parseInt(values[6].replace(/\$/g, ''), 10) || 0;
+
+        // Only add valid entries
+        if (obj.auctionLocation && obj.port) {
+          jsonData.push(obj);
+        }
+      } catch (rowError) {
+        console.warn(`Error processing row ${i + 1}:`, rowError);
+        continue;
       }
-      return value;
-    });
+    }
 
-    const obj: any = {};
-    obj.auction = values[0] === "Copart" ? "Copart" : "IAAI";
-    obj.auctionLocation = values[1];
-
-    obj.port = values[5].trim().slice(0, values[5].length - 2);
-
-    obj.zip = values[3];
-    obj.rate = parseInt(values[6].replace(/\$/g, ''), 10);
-
-    jsonData.push(obj);
+    console.log("CSV Data loaded:", jsonData.length, "entries");
+    return jsonData;
+  } catch (error) {
+    console.error("Error parsing CSV data:", error);
+    return [];
   }
-
-  return jsonData;
 }
+
+// Initialize auctionData after csvToJson is defined
+export const getAuctionData = (): AuctionData[] => {
+  try {
+    const data = csvToJson();
+    // Ensure we return a valid array
+    if (!Array.isArray(data)) {
+      console.error("getAuctionData: csvToJson did not return an array");
+      return [];
+    }
+    return data;
+  } catch (error) {
+    console.error("Error getting auction data:", error);
+    return [];
+  }
+};
 
 export const calculateFee = (feeData: any[], value: number): number => {
   for (const entry of feeData) {
@@ -198,6 +273,8 @@ export const calculateShippingFee = async (
   // Get user or default pricing configuration
   const userPricing = userId ? await getUserPricingConfig(userId) : null;
   const defaultPricing = await getDefaultPricingConfig();
+  
+  // Use user pricing if available, otherwise use default pricing
   const pricing = userPricing || defaultPricing;
 
   // Get active CSV data
@@ -210,6 +287,15 @@ export const calculateShippingFee = async (
   
   const groundFeeAdjustment = pricing?.groundFeeAdjustment || 0;
   const adjustedGroundFee = baseGroundFee + groundFeeAdjustment;
+
+  console.log("Ground fee calculation:", {
+    auctionName,
+    auctionLoc,
+    csvDataLength: csvData.length,
+    baseGroundFee,
+    groundFeeAdjustment,
+    adjustedGroundFee
+  });
 
   // Calculate ocean fee with user adjustment
   const baseOceanFee = oceanShippingRates.find((rate) => rate.shorthand === portName)?.rate || 0;
@@ -258,6 +344,8 @@ export const calculateCarFeesWithUserPricing = async (
   // Get user or default pricing configuration
   const userPricing = userId ? await getUserPricingConfig(userId) : null;
   const defaultPricing = await getDefaultPricingConfig();
+  
+  // Use user pricing if available, otherwise use default pricing
   const pricing = userPricing || defaultPricing;
 
   // Calculate purchase fees

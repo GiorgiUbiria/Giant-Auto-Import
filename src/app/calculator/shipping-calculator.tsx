@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from 'next-intl';
 import {
-  auctionData,
+  getAuctionData,
   oceanShippingRates,
   extraFees,
   styleToJson,
@@ -22,7 +22,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function ShippingCalculator({ style }: { style: string }) {
+export function ShippingCalculator({ 
+  style, 
+  userId 
+}: { 
+  style: string; 
+  userId?: string; 
+}) {
   const t = useTranslations('ShippingCalculator');
   const [auctionLocation, setAuctionLocation] = useState("");
   const [auction, setAuction] = useState("");
@@ -34,18 +40,41 @@ export function ShippingCalculator({ style }: { style: string }) {
 
   const styleData = styleToJson(style);
   const virtualBidData = parseVirtualBidData();
+  const auctionData = getAuctionData();
 
   // Use imported utility functions instead of local ones
 
   const handleCalculate = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const totalPurchaseFee = await calculateTotalPurchaseFee(purchaseFee, styleData, virtualBidData, insurance);
+    // Validate required fields
+    if (!purchaseFee || purchaseFee <= 0) {
+      alert("Please enter a valid purchase fee");
+      return;
+    }
+
+    if (!auction) {
+      alert("Please select an auction");
+      return;
+    }
+
+    if (!auctionLocation) {
+      alert("Please select an auction location");
+      return;
+    }
+
+    if (!port) {
+      alert("Please select a port");
+      return;
+    }
+
+    const totalPurchaseFee = await calculateTotalPurchaseFee(purchaseFee, styleData, virtualBidData, insurance, userId);
     const shippingFee = await calculateShippingFee(
       auctionLocation,
       auction,
       port,
-      additionalFees
+      additionalFees,
+      userId
     );
     const totalFee = totalPurchaseFee + shippingFee;
 
@@ -195,7 +224,7 @@ export function ShippingCalculator({ style }: { style: string }) {
                         htmlFor={fee.type}
                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
-                        {fee.type} (${fee.rate})
+                        {fee.type}
                       </label>
                     </div>
                   ))}
@@ -211,7 +240,7 @@ export function ShippingCalculator({ style }: { style: string }) {
                       htmlFor="insurance"
                       className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
-                      {t('insurance')} (1.5%)
+                      {t('insurance')}
                     </label>
                   </div>
                 </div>
@@ -225,7 +254,8 @@ export function ShippingCalculator({ style }: { style: string }) {
                 </p>
                 <Button
                   type="submit"
-                  className="w-full transition-all duration-200 hover:scale-[1.02] bg-primary hover:bg-primary/90 dark:bg-primary/90 dark:hover:bg-primary/80"
+                  disabled={!purchaseFee || !auction || !auctionLocation || !port}
+                  className="w-full transition-all duration-200 hover:scale-[1.02] bg-primary hover:bg-primary/90 dark:bg-primary/90 dark:hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t('calculate')}
                 </Button>

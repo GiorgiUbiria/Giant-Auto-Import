@@ -18,6 +18,8 @@ import {
 import { isAdminProcedure, authedProcedure } from "./authProcedures";
 import { createServerAction } from "zsa";
 import { parseCsvToJson, validateCsvFormat } from "../csv-utils";
+import { calculateCarFeesWithUserPricing } from "../calculator-utils";
+import { cars } from "../drizzle/schema";
 
 // Schema for updating user pricing
 const UpdateUserPricingSchema = z.object({
@@ -282,12 +284,12 @@ export const uploadCsvAction = isAdminProcedure
         description: input.description,
       });
 
-      revalidatePath("/admin/csv-management");
+                    revalidatePath("/admin/csv-management");
 
-      return {
-        success: true,
-        message: "CSV data uploaded and activated successfully",
-      };
+              return {
+                success: true,
+                message: "CSV data uploaded and activated successfully. Note: You may need to recalculate fees for existing cars manually.",
+              };
     } catch (error) {
       console.error("Error uploading CSV:", error);
       return {
@@ -423,6 +425,148 @@ export const deleteCsvVersionAction = isAdminProcedure
       return {
         success: false,
         message: "Failed to delete CSV version",
+      };
+    }
+  });
+
+/**
+ * Recalculate fees for all cars based on updated CSV data
+ */
+export const recalculateAllCarFeesAction = isAdminProcedure
+  .createServerAction()
+  .output(
+    z.object({
+      success: z.boolean(),
+      message: z.string(),
+      updatedCount: z.number(),
+    })
+  )
+  .handler(async () => {
+    try {
+      // Get all cars
+      const allCars = await db.select().from(cars);
+      let updatedCount = 0;
+
+      for (const car of allCars) {
+        try {
+          // Recalculate fees for each car
+          const calculation = await calculateCarFeesWithUserPricing(
+            car.auction,
+            car.auctionLocation || "",
+            car.originPort,
+            car.bodyType,
+            car.fuelType,
+            car.purchaseFee,
+            car.insurance,
+            car.ownerId || undefined
+          );
+
+          // Update car with new fees
+          await db
+            .update(cars)
+            .set({
+              totalFee: calculation.totalFee,
+              shippingFee: calculation.shippingFee,
+              groundFee: calculation.groundFee,
+              oceanFee: calculation.oceanFee,
+            })
+            .where(eq(cars.id, car.id));
+
+          updatedCount++;
+        } catch (error) {
+          console.error(`Failed to recalculate fees for car ${car.vin}:`, error);
+          // Continue with other cars even if one fails
+        }
+      }
+
+      revalidatePath("/admin/cars");
+      revalidatePath("/dashboard");
+
+      return {
+        success: true,
+        message: `Successfully recalculated fees for ${updatedCount} cars`,
+        updatedCount,
+      };
+    } catch (error) {
+      console.error("Error recalculating car fees:", error);
+      return {
+        success: false,
+        message: "Failed to recalculate car fees",
+        updatedCount: 0,
+      };
+    }
+  });
+
+/**
+ * Recalculate fees for cars assigned to a specific user
+ */
+export const recalculateUserCarFeesAction = isAdminProcedure
+  .createServerAction()
+  .input(z.object({ userId: z.string() }))
+  .output(
+    z.object({
+      success: z.boolean(),
+      message: z.string(),
+      updatedCount: z.number(),
+    })
+  )
+  .handler(async ({ input }) => {
+    try {
+      // Get cars assigned to the user
+      const userCars = await db
+        .select()
+        .from(cars)
+        .where(eq(cars.ownerId, input.userId));
+
+      let updatedCount = 0;
+
+      for (const car of userCars) {
+        try {
+          // Recalculate fees for each car
+          const calculation = await calculateCarFeesWithUserPricing(
+            car.auction,
+            car.auctionLocation || "",
+            car.originPort,
+            car.bodyType,
+            car.fuelType,
+            car.purchaseFee,
+            car.insurance,
+            car.ownerId || undefined
+          );
+
+          // Update car with new fees
+          await db
+            .update(cars)
+            .set({
+              totalFee: calculation.totalFee,
+              shippingFee: calculation.shippingFee,
+              groundFee: calculation.groundFee,
+              oceanFee: calculation.oceanFee,
+            })
+            .where(eq(cars.id, car.id));
+
+          updatedCount++;
+        } catch (error) {
+          console.error(`Failed to recalculate fees for car ${car.vin}:`, error);
+          // Continue with other cars even if one fails
+        }
+      }
+
+      revalidatePath(`/admin/users/${input.userId}`);
+      revalidatePath("/admin/cars");
+      revalidatePath("/dashboard");
+
+      return {
+        success: true,
+        message: `Successfully recalculated fees for ${updatedCount} cars assigned to user`,
+        updatedCount,
+      };
+    } catch (error) {
+      console.error("Error recalculating user car fees:", error);
+      return {
+        success: false,
+        message: "Failed to recalculate user car fees",
+        updatedCount: 0,
       };
     }
   }); 

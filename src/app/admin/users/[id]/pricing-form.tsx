@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations } from 'next-intl';
 import { useServerAction } from "zsa-react";
 import { getUserPricingAction, updateUserPricingAction, getDefaultPricingAction } from "@/lib/actions/pricingActions";
+import { recalculateUserCarFeesAction } from "@/lib/actions/pricingActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +44,7 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
   const { execute: getUserPricing } = useServerAction(getUserPricingAction);
   const { execute: updateUserPricing } = useServerAction(updateUserPricingAction);
   const { execute: getDefaultPricing } = useServerAction(getDefaultPricingAction);
+  const { execute: recalculateUserFees } = useServerAction(recalculateUserCarFeesAction);
 
   useEffect(() => {
     loadPricingData();
@@ -98,6 +100,12 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Only submit if custom pricing is enabled
+    if (!useCustomPricing) {
+      toast.error("Please enable custom pricing to save changes");
+      return;
+    }
+    
     try {
       setSaving(true);
       const [result, error] = await updateUserPricing({
@@ -140,6 +148,25 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
     setPricing(defaultPricing);
   };
 
+  const handleRecalculateUserFees = async () => {
+    try {
+      const [result, error] = await recalculateUserFees({ userId });
+      if (error) {
+        toast.error("Failed to recalculate user fees");
+        return;
+      }
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message || "Failed to recalculate user fees");
+      }
+    } catch (error) {
+      toast.error("Failed to recalculate user fees");
+    }
+  };
+
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -176,6 +203,16 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
             <RefreshCw className="h-4 w-4 mr-2" />
             Reset to Defaults
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleRecalculateUserFees}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Recalculate User Fees
+          </Button>
+
         </div>
       </div>
 
@@ -218,6 +255,7 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                       onChange={(e) => handleInputChange("oceanFee", e.target.value)}
                       className="pl-8"
                       min="0"
+                      disabled={!useCustomPricing}
                     />
                   </div>
                   <div className="flex items-center gap-2 text-xs">
@@ -255,6 +293,7 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                       value={pricing.groundFeeAdjustment}
                       onChange={(e) => handleInputChange("groundFeeAdjustment", e.target.value)}
                       className="pl-8"
+                      disabled={!useCustomPricing}
                     />
                   </div>
                   <div className="flex items-center gap-2 text-xs">
@@ -295,6 +334,7 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                       onChange={(e) => handleInputChange("pickupSurcharge", e.target.value)}
                       className="pl-8"
                       min="0"
+                      disabled={!useCustomPricing}
                     />
                   </div>
                   <div className="flex items-center gap-2 text-xs">
@@ -333,6 +373,7 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                       onChange={(e) => handleInputChange("serviceFee", e.target.value)}
                       className="pl-8"
                       min="0"
+                      disabled={!useCustomPricing}
                     />
                   </div>
                   <div className="flex items-center gap-2 text-xs">
@@ -371,6 +412,7 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                       onChange={(e) => handleInputChange("hybridSurcharge", e.target.value)}
                       className="pl-8"
                       min="0"
+                      disabled={!useCustomPricing}
                     />
                   </div>
                   <div className="flex items-center gap-2 text-xs">
@@ -389,7 +431,7 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
           </div>
 
           <div className="flex justify-end">
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" disabled={saving || !useCustomPricing}>
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               <Save className="h-4 w-4 mr-2" />
               Save User Pricing

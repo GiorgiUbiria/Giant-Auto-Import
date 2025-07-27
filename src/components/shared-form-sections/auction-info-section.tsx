@@ -1,7 +1,7 @@
 "use client";
 
 import { UseFormReturn } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FormControl,
   FormField,
@@ -18,15 +18,51 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { auctionData, oceanShippingRates } from "@/lib/calculator-utils";
+import { oceanShippingRates } from "@/lib/calculator-utils";
 
 interface AuctionInfoSectionProps {
   form: UseFormReturn<any>;
 }
 
+// Define a type for auction data
+interface AuctionData {
+  auctionLocation: string;
+  auction: string;
+  port: string;
+  rate: number;
+}
+
 export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
   const [selectedAuctionLocation, setSelectedAuctionLocation] = useState("");
   const [selectedAuction, setSelectedAuction] = useState("Copart");
+  const [auctionData, setAuctionData] = useState<AuctionData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadAuctionData = async () => {
+      try {
+        // Use a try-catch around the dynamic import
+        const calculatorUtils = await import("@/lib/calculator-utils");
+        const data = calculatorUtils.getAuctionData();
+        
+        // Ensure data is valid and filter out any invalid entries
+        const validData = Array.isArray(data) ? data.filter(item => 
+          item && 
+          typeof item === 'object' && 
+          item.auctionLocation && 
+          item.auction
+        ) : [];
+        setAuctionData(validData);
+      } catch (error) {
+        console.error("Error loading auction data:", error);
+        setAuctionData([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAuctionData();
+  }, []);
 
   const handleAuctionLocationChange = (location: string) => {
     setSelectedAuctionLocation(location);
@@ -43,9 +79,18 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
   const originPorts = oceanShippingRates;
   const filteredOriginPorts = originPorts.filter((port) =>
     auctionData.some(
-      (data) =>
+      (data: AuctionData) =>
         data.auctionLocation === selectedAuctionLocation &&
         data.port === port.shorthand
+    )
+  );
+
+  // Get unique auction locations for the selected auction
+  const auctionLocations = Array.from(
+    new Set(
+      auctionData
+        .filter((data: AuctionData) => data.auction === selectedAuction)
+        .map((data: AuctionData) => data.auctionLocation)
     )
   );
 
@@ -93,17 +138,17 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
                 }} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select location" />
+                      <SelectValue placeholder={isLoading ? "Loading locations..." : "Select location"} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {auctionData
-                      .filter((data) => data.auction === selectedAuction)
-                      .map((data) => (
-                        <SelectItem key={data.auctionLocation} value={data.auctionLocation}>
-                          {data.auctionLocation}
+                    {!isLoading && auctionLocations.length > 0 ? (
+                      auctionLocations.map((location: string) => (
+                        <SelectItem key={location} value={location}>
+                          {location}
                         </SelectItem>
-                      ))}
+                      ))
+                    ) : null}
                   </SelectContent>
                 </Select>
                 <FormMessage />

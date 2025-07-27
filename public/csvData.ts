@@ -152,7 +152,6 @@ Copart,PA - Scranton,Duryea,18642,"New Jersey, NJ",$320
 Copart,PA - York Haven,York Haven,17370,"New Jersey, NJ",$320
 Copart,RI - Exeter,Exeter,2822,"New Jersey, NJ",$420
 Copart,SC - Columbia,Gaston,29053,"Savannah, GA",$300
-Copart,SC - Columbia,Gaston,29053,"Savannah, GA",$300
 Copart,SC - North Charleston,Harleyville,29448,"Savannah, GA",$545
 Copart,SC - Spartanburg,Spartanburg,29301,"Savannah, GA",$425
 Copart,TN - Knoxville,Madisonville,37354,"Savannah, GA",$595

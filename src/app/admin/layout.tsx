@@ -4,7 +4,7 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <section className="text-primary w-full">
+    <section className="text-primary w-full suppressHydrationWarning">
       {children}
     </section>
   );

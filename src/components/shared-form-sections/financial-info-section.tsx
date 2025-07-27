@@ -79,15 +79,17 @@ export function FinancialInfoSection({ form }: FinancialInfoSectionProps) {
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select owner" />
+                      <SelectValue placeholder={isLoading ? "Loading users..." : "Select owner"} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {users?.map((user: any) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.fullName}
-                      </SelectItem>
-                    ))}
+                    {!isLoading && users && users.length > 0 ? (
+                      users.map((user: any) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.fullName}
+                        </SelectItem>
+                      ))
+                    ) : null}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -190,7 +192,7 @@ export function FinancialInfoSection({ form }: FinancialInfoSectionProps) {
                       selected={field.value}
                       onSelect={field.onChange}
                       disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
+                        date < new Date("1900-01-01")
                       }
                       initialFocus
                     />
@@ -232,7 +234,7 @@ export function FinancialInfoSection({ form }: FinancialInfoSectionProps) {
                       selected={field.value}
                       onSelect={field.onChange}
                       disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
+                        date < new Date("1900-01-01")
                       }
                       initialFocus
                     />

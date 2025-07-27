@@ -43,6 +43,8 @@ export const users = sqliteTable("users", {
 
 export const usersRelations = relations(users, ({ many }) => ({
   ownedCars: many(cars),
+  userPricingConfig: many(userPricingConfig),
+  csvUploads: many(csvDataVersions),
 }));
 
 export const insertUserSchema = createInsertSchema(users, {
@@ -208,3 +210,73 @@ export const logs = sqliteTable("logs", {
 
 export const insertLogSchema = createInsertSchema(logs);
 export const selectLogSchema = createSelectSchema(logs);
+
+// New tables for user-based pricing system
+export const userPricingConfig = sqliteTable("user_pricing_config", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  oceanFee: integer("ocean_fee").notNull().default(1025),
+  groundFeeAdjustment: integer("ground_fee_adjustment").notNull().default(0),
+  pickupSurcharge: integer("pickup_surcharge").notNull().default(300),
+  serviceFee: integer("service_fee").notNull().default(100),
+  hybridSurcharge: integer("hybrid_surcharge").notNull().default(150),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+}, (table) => {
+  return {
+    userIdIdx: index("user_pricing_config_user_id_idx").on(table.userId),
+    isActiveIdx: index("user_pricing_config_is_active_idx").on(table.isActive),
+  }
+});
+
+export const defaultPricingConfig = sqliteTable("default_pricing_config", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  oceanFee: integer("ocean_fee").notNull().default(1025),
+  groundFeeAdjustment: integer("ground_fee_adjustment").notNull().default(0),
+  pickupSurcharge: integer("pickup_surcharge").notNull().default(300),
+  serviceFee: integer("service_fee").notNull().default(100),
+  hybridSurcharge: integer("hybrid_surcharge").notNull().default(150),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+});
+
+export const csvDataVersions = sqliteTable("csv_data_versions", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  versionName: text("version_name").notNull(),
+  csvData: text("csv_data").notNull(), // JSON string
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(false),
+  uploadedBy: text("uploaded_by").notNull().references(() => users.id),
+  uploadedAt: integer("uploaded_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  description: text("description"),
+}, (table) => {
+  return {
+    isActiveIdx: index("csv_data_versions_is_active_idx").on(table.isActive),
+    uploadedByIdx: index("csv_data_versions_uploaded_by_idx").on(table.uploadedBy),
+  }
+});
+
+// Relations for new tables
+export const userPricingConfigRelations = relations(userPricingConfig, ({ one }) => ({
+  user: one(users, {
+    fields: [userPricingConfig.userId],
+    references: [users.id],
+  }),
+}));
+
+export const csvDataVersionsRelations = relations(csvDataVersions, ({ one }) => ({
+  uploadedByUser: one(users, {
+    fields: [csvDataVersions.uploadedBy],
+    references: [users.id],
+  }),
+}));
+
+// Schemas for new tables
+export const insertUserPricingConfigSchema = createInsertSchema(userPricingConfig);
+export const selectUserPricingConfigSchema = createSelectSchema(userPricingConfig);
+
+export const insertDefaultPricingConfigSchema = createInsertSchema(defaultPricingConfig);
+export const selectDefaultPricingConfigSchema = createSelectSchema(defaultPricingConfig);
+
+export const insertCsvDataVersionSchema = createInsertSchema(csvDataVersions);
+export const selectCsvDataVersionSchema = createSelectSchema(csvDataVersions);

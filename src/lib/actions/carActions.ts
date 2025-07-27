@@ -15,6 +15,7 @@ import {
   oceanShippingRates,
   parseVirtualBidData,
   styleToJson,
+  calculateCarFeesWithUserPricing,
 } from "../calculator-utils";
 import { authedProcedure, isAdminProcedure } from "./authProcedures";
 import { createServerAction } from "zsa";
@@ -55,7 +56,7 @@ const calculateVirtualBidFee = (
   return 0;
 };
 
-function calculateCarFees(
+async function calculateCarFees(
   auction: string,
   auctionLocation: string,
   port: string,
@@ -63,53 +64,18 @@ function calculateCarFees(
   fuel: string,
   purchaseFee: number,
   insurance: "YES" | "NO",
-  owner?: string
+  ownerId?: string
 ) {
-  const styleData = styleToJson("a");
-  const auctionFee = calculateAuctionFee(styleData, purchaseFee);
-  const gateFee = 79;
-  const titleFee = 20;
-  const environmentalFee = 10;
-  const virtualBidData = parseVirtualBidData();
-  const virtualBidFee = calculateVirtualBidFee(virtualBidData, purchaseFee);
-
-  const totalPurchaseFee =
-    purchaseFee +
-    auctionFee +
-    gateFee +
-    titleFee +
-    environmentalFee +
-    virtualBidFee;
-
-  const groundFee =
-    auctionData.find(
-      (data) =>
-        data.auction === auction && data.auctionLocation === auctionLocation
-    )?.rate || 0;
-  const oceanFee =
-    oceanShippingRates.find((rate) => rate.shorthand === port)?.rate || 0;
-  const extraFeePickUp = body === "PICKUP" ? 300 : 0;
-  const extraFeeHybrid = fuel === "HYBRID_ELECTRIC" ? 150 : 0;
-
-  const shippingFee = groundFee + oceanFee + extraFeePickUp + extraFeeHybrid;
-
-  let totalFee = totalPurchaseFee + shippingFee;
-
-  if (insurance === "YES") {
-    totalFee = totalFee + (totalFee * 1.5) / 100;
-  }
-
-  return {
-    totalFee: totalFee,
-    shippingFee: shippingFee,
-    auctionFee: auctionFee,
-    gateFee: gateFee,
-    titleFee: titleFee,
-    environmentalFee: environmentalFee,
-    virtualBidFee: virtualBidFee,
-    groundFee: groundFee,
-    oceanFee: oceanFee,
-  };
+  return await calculateCarFeesWithUserPricing(
+    auction,
+    auctionLocation,
+    port,
+    body,
+    fuel,
+    purchaseFee,
+    insurance,
+    ownerId
+  );
 }
 
 export const addCarAction = isAdminProcedure
@@ -138,14 +104,15 @@ export const addCarAction = isAdminProcedure
   )
   .handler(async ({ input }) => {
     try {
-      const calculation = calculateCarFees(
+      const calculation = await calculateCarFees(
         input.auction,
         input.auctionLocation!,
         input.originPort,
         input.bodyType,
         input.fuelType,
         input.purchaseFee,
-        input.insurance
+        input.insurance,
+        input.ownerId || undefined
       );
 
       input.totalFee = calculation.totalFee;
@@ -547,14 +514,15 @@ export const updateCarAction = isAdminProcedure
   .handler(async ({ input }) => {
     input.ownerId = input.ownerId !== "none" ? input.ownerId : null;
 
-    const calculation = calculateCarFees(
+    const calculation = await calculateCarFees(
       input.auction,
       input.auctionLocation!,
       input.originPort,
       input.bodyType,
       input.fuelType,
       input.purchaseFee,
-      input.insurance
+      input.insurance,
+      input.ownerId || undefined
     );
 
     input.totalFee = calculation.totalFee;

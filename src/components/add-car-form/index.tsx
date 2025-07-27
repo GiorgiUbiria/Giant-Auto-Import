@@ -10,7 +10,7 @@ import { insertCarSchema } from "@/lib/drizzle/schema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useServerAction } from "zsa-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { handleUploadImagesAction } from "@/lib/actions/bucketActions";
 import { BasicInfoSection } from "../shared-form-sections/basic-info-section";
 import { AuctionInfoSection } from "../shared-form-sections/auction-info-section";
@@ -23,9 +23,10 @@ const FormSchema = insertCarSchema.omit({ id: true, destinationPort: true }).ext
   pick_up_images: z.any().optional(),
   warehouse_images: z.any().optional(),
   delivery_images: z.any().optional(),
+  purchaseDate: z.date().optional(), // Make purchaseDate optional for form validation
 });
 
-export function AddCarForm() {
+function AddCarFormContent() {
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -33,7 +34,7 @@ export function AddCarForm() {
     resolver: zodResolver(FormSchema),
     defaultValues: {
       vin: "",
-      year: new Date().getFullYear(),
+      year: 2024, // Use a static year instead of new Date().getFullYear()
       make: "",
       model: "",
       auction: "Copart",
@@ -51,7 +52,7 @@ export function AddCarForm() {
       purchaseFee: 0,
       departureDate: undefined,
       arrivalDate: undefined,
-      purchaseDate: new Date(),
+      purchaseDate: undefined, // Will be set in useEffect to avoid hydration issues
       ownerId: "",
       insurance: "NO",
       auction_images: undefined,
@@ -60,6 +61,21 @@ export function AddCarForm() {
       delivery_images: undefined,
     },
   });
+
+  // Set dynamic values after component mounts to avoid hydration issues
+  useEffect(() => {
+    // Only update if the values are different to avoid unnecessary re-renders
+    const currentYear = new Date().getFullYear();
+    if (form.getValues("year") !== currentYear) {
+      form.setValue("year", currentYear);
+    }
+    
+    // Set purchase date if it's not already set
+    const currentPurchaseDate = form.getValues("purchaseDate");
+    if (!currentPurchaseDate) {
+      form.setValue("purchaseDate", new Date());
+    }
+  }, [form]);
 
   const { isPending, execute } = useServerAction(addCarAction);
   const { execute: executeImageUpload } = useServerAction(handleUploadImagesAction);
@@ -99,10 +115,17 @@ export function AddCarForm() {
         auction_images,
         pick_up_images,
         delivery_images,
+        purchaseDate,
         ...carData
       } = values;
 
-      const [data, error] = await execute(carData);
+      // Ensure purchaseDate is set
+      const carDataWithDate = {
+        ...carData,
+        purchaseDate: purchaseDate || new Date(),
+      };
+
+      const [data, error] = await execute(carDataWithDate);
       
       if (error) {
         toast.error(error.data || "Failed to add car");
@@ -165,4 +188,27 @@ export function AddCarForm() {
       </Form>
     </div>
   );
+}
+
+export function AddCarForm() {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return (
+      <div className="w-full flex justify-center">
+        <div className="w-full md:w-2/3 space-y-8 my-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg transition-all">
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span className="ml-2 text-muted-foreground">Loading form...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return <AddCarFormContent />;
 } 

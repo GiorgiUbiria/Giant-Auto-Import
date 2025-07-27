@@ -7,6 +7,7 @@ import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { Loader2, Pencil } from "lucide-react";
 import { columns } from "./columns";
 import { UpdateProfileForm } from "./edit-profile-form";
+import { UserPricingForm } from "./pricing-form";
 import {
 	Dialog,
 	DialogContent,
@@ -103,7 +104,7 @@ export const Client = ({ id }: { id: string }) => {
 	};
 
 	return (
-		<div>
+		<div className="space-y-8">
 			<h1 className="text-3xl my-8 flex gap-2 items-center">
 				Profile of - {data.user.fullName}
 				<Suspense fallback={<LoadingState />}>
@@ -122,23 +123,33 @@ export const Client = ({ id }: { id: string }) => {
 					</Dialog>
 				</Suspense>
 			</h1>
-			<DataTable
-				columns={columns}
-				data={paginatedData}
-				filterKey="vin"
-				pageIndex={pageIndex}
-				pageSize={pageSize}
-				onPaginationChange={handlePaginationChange}
-				sorting={sorting}
-				onSortingChange={handleSortingChange}
-				filters={filters}
-				onFiltersChange={handleFiltersChange}
-				rowCount={rowCount}
-				columnVisibility={columnVisibility}
-				onColumnVisibilityChange={handleColumnVisibilityChange}
-				rowSelection={rowSelection}
-				onRowSelectionChange={handleRowSelectionChange}
-			/>
+			
+			{/* User Pricing Configuration */}
+			<div className="border rounded-lg p-6">
+				<UserPricingForm userId={data.user.id} userName={data.user.fullName} />
+			</div>
+			
+			{/* User's Cars */}
+			<div>
+				<h2 className="text-2xl font-semibold mb-4">User&apos;s Cars</h2>
+				<DataTable
+					columns={columns}
+					data={paginatedData}
+					filterKey="vin"
+					pageIndex={pageIndex}
+					pageSize={pageSize}
+					onPaginationChange={handlePaginationChange}
+					sorting={sorting}
+					onSortingChange={handleSortingChange}
+					filters={filters}
+					onFiltersChange={handleFiltersChange}
+					rowCount={rowCount}
+					columnVisibility={columnVisibility}
+					onColumnVisibilityChange={handleColumnVisibilityChange}
+					rowSelection={rowSelection}
+					onRowSelectionChange={handleRowSelectionChange}
+				/>
+			</div>
 		</div>
 	)
 }

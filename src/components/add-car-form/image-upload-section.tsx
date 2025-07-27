@@ -2,6 +2,7 @@
 
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
+import { useMemo } from "react";
 import {
   FormControl,
   FormField,
@@ -25,59 +26,27 @@ const sizeInMB = (sizeInBytes: number, decimalsNum = 2) => {
   return +result.toFixed(decimalsNum);
 };
 
-const ImageSchema = {
-  auction_images: z
-    .custom<FileList>()
-    .refine((files) => {
-      return Array.from(files ?? []).every(
-        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE
-      );
-    }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
-    .refine((files) => {
-      return Array.from(files ?? []).every((file) =>
-        ACCEPTED_IMAGE_TYPES.includes(file.type)
-      );
-    }, "File type is not supported")
-    .optional(),
-  pick_up_images: z
-    .custom<FileList>()
-    .refine((files) => {
-      return Array.from(files ?? []).every(
-        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE
-      );
-    }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
-    .refine((files) => {
-      return Array.from(files ?? []).every((file) =>
-        ACCEPTED_IMAGE_TYPES.includes(file.type)
-      );
-    }, "File type is not supported")
-    .optional(),
-  warehouse_images: z
-    .custom<FileList>()
-    .refine((files) => {
-      return Array.from(files ?? []).every(
-        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE
-      );
-    }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
-    .refine((files) => {
-      return Array.from(files ?? []).every((file) =>
-        ACCEPTED_IMAGE_TYPES.includes(file.type)
-      );
-    }, "File type is not supported")
-    .optional(),
-  delivery_images: z
-    .custom<FileList>()
-    .refine((files) => {
-      return Array.from(files ?? []).every(
-        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE
-      );
-    }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
-    .refine((files) => {
-      return Array.from(files ?? []).every((file) =>
-        ACCEPTED_IMAGE_TYPES.includes(file.type)
-      );
-    }, "File type is not supported")
-    .optional(),
+// Move validation schemas outside component to prevent recreation on every render
+const createImageSchema = (fieldName: string) => z
+  .custom<FileList>()
+  .refine((files) => {
+    return Array.from(files ?? []).every(
+      (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE
+    );
+  }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
+  .refine((files) => {
+    return Array.from(files ?? []).every((file) =>
+      ACCEPTED_IMAGE_TYPES.includes(file.type)
+    );
+  }, "File type is not supported")
+  .optional();
+
+// Pre-create schemas for better performance
+const ImageSchemas = {
+  auction_images: createImageSchema("auction_images"),
+  pick_up_images: createImageSchema("pick_up_images"),
+  warehouse_images: createImageSchema("warehouse_images"),
+  delivery_images: createImageSchema("delivery_images"),
 };
 
 interface ImageUploadSectionProps {
@@ -85,6 +54,30 @@ interface ImageUploadSectionProps {
 }
 
 export function ImageUploadSection({ form }: ImageUploadSectionProps) {
+  // Memoize image types to prevent unnecessary re-renders
+  const imageTypes = useMemo(() => [
+    {
+      name: "auction_images",
+      label: "Auction Images",
+      description: "Images from the auction"
+    },
+    {
+      name: "pick_up_images", 
+      label: "Pick-up Images",
+      description: "Images from pick-up"
+    },
+    {
+      name: "warehouse_images",
+      label: "Warehouse Images", 
+      description: "Images from warehouse"
+    },
+    {
+      name: "delivery_images",
+      label: "Delivery Images",
+      description: "Images from delivery"
+    }
+  ], []);
+
   return (
     <Card>
       <CardHeader>
@@ -92,105 +85,34 @@ export function ImageUploadSection({ form }: ImageUploadSectionProps) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="auction_images"
-            render={({ field: { onChange, value, ...field } }) => (
-              <FormItem>
-                <FormLabel>Auction Images</FormLabel>
-                <FormControl>
-                  <Input
-                    type="file"
-                    multiple
-                    accept={ACCEPTED_IMAGE_TYPES.join(",")}
-                    onChange={(e) => {
-                      const files = e.target.files;
-                      if (files) {
+          {imageTypes.map((imageType) => (
+            <FormField
+              key={imageType.name}
+              control={form.control}
+              name={imageType.name}
+              render={({ field: { onChange, value, ...field } }) => (
+                <FormItem>
+                  <FormLabel>{imageType.label}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                      multiple
+                      onChange={(e) => {
+                        const files = e.target.files;
                         onChange(files);
-                      }
-                    }}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="pick_up_images"
-            render={({ field: { onChange, value, ...field } }) => (
-              <FormItem>
-                <FormLabel>Pick Up Images</FormLabel>
-                <FormControl>
-                  <Input
-                    type="file"
-                    multiple
-                    accept={ACCEPTED_IMAGE_TYPES.join(",")}
-                    onChange={(e) => {
-                      const files = e.target.files;
-                      if (files) {
-                        onChange(files);
-                      }
-                    }}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="warehouse_images"
-            render={({ field: { onChange, value, ...field } }) => (
-              <FormItem>
-                <FormLabel>Warehouse Images</FormLabel>
-                <FormControl>
-                  <Input
-                    type="file"
-                    multiple
-                    accept={ACCEPTED_IMAGE_TYPES.join(",")}
-                    onChange={(e) => {
-                      const files = e.target.files;
-                      if (files) {
-                        onChange(files);
-                      }
-                    }}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="delivery_images"
-            render={({ field: { onChange, value, ...field } }) => (
-              <FormItem>
-                <FormLabel>Delivery Images</FormLabel>
-                <FormControl>
-                  <Input
-                    type="file"
-                    multiple
-                    accept={ACCEPTED_IMAGE_TYPES.join(",")}
-                    onChange={(e) => {
-                      const files = e.target.files;
-                      if (files) {
-                        onChange(files);
-                      }
-                    }}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                      }}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  <p className="text-sm text-muted-foreground">
+                    {imageType.description}. Max size: {MAX_IMAGE_SIZE}MB per file.
+                  </p>
+                </FormItem>
+              )}
+            />
+          ))}
         </div>
       </CardContent>
     </Card>

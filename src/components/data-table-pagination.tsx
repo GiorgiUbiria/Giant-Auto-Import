@@ -14,6 +14,15 @@ interface DataTablePaginationProps {
   rowCount: number;
   onPaginationChange: (updater: { pageIndex: number; pageSize: number }) => void;
   pageSizeOptions?: number[];
+  translations?: {
+    showing: string;
+    rowsPerPage: string;
+    page: string;
+    goToFirst: string;
+    goToPrevious: string;
+    goToNext: string;
+    goToLast: string;
+  };
 }
 
 export function DataTablePagination({
@@ -22,7 +31,9 @@ export function DataTablePagination({
   rowCount,
   onPaginationChange,
   pageSizeOptions = [10, 20, 30, 40, 50],
+  translations,
 }: DataTablePaginationProps) {
+
   const pageCount = Math.ceil(rowCount / pageSize);
   const canPreviousPage = pageIndex > 0;
   const canNextPage = pageIndex < pageCount - 1;
@@ -35,12 +46,16 @@ export function DataTablePagination({
       {/* Results info */}
       <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-4">
         <div className="whitespace-nowrap">
-          Showing {rowCount > 0 ? startItem : 0} to {endItem} of {rowCount} results
+          {translations?.showing?.replace('{start}', String(rowCount > 0 ? startItem : 0))
+            .replace('{end}', String(endItem))
+            .replace('{total}', String(rowCount)) || 
+            `Showing ${rowCount > 0 ? startItem : 0} to ${endItem} of ${rowCount} results`
+          }
         </div>
         
         {/* Rows per page control */}
         <div className="flex items-center gap-2">
-          <span className="whitespace-nowrap text-sm">Rows per page:</span>
+          <span className="whitespace-nowrap text-sm">{translations?.rowsPerPage || "Rows per page:"}</span>
           <Select
             value={`${pageSize}`}
             onValueChange={(value) => {
@@ -66,14 +81,17 @@ export function DataTablePagination({
         {/* Page info */}
         <div className="flex items-center gap-2 text-sm font-medium sm:mr-4">
           <span className="whitespace-nowrap">
-            Page {pageCount > 0 ? pageIndex + 1 : 0} of {pageCount}
+            {translations?.page?.replace('{current}', String(pageCount > 0 ? pageIndex + 1 : 0))
+              .replace('{total}', String(pageCount)) || 
+              `Page ${pageCount > 0 ? pageIndex + 1 : 0} of ${pageCount}`
+            }
           </span>
         </div>
 
         {/* Navigation buttons */}
         <div className="flex items-center gap-1">
           <Button
-            aria-label="Go to first page"
+            aria-label={translations?.goToFirst || "Go to first page"}
             variant="outline"
             size="sm"
             className="hidden h-8 w-8 p-0 md:flex"
@@ -84,7 +102,7 @@ export function DataTablePagination({
           </Button>
           
           <Button
-            aria-label="Go to previous page"
+            aria-label={translations?.goToPrevious || "Go to previous page"}
             variant="outline"
             size="sm"
             className="h-8 w-8 p-0"
@@ -95,7 +113,7 @@ export function DataTablePagination({
           </Button>
           
           <Button
-            aria-label="Go to next page"
+            aria-label={translations?.goToNext || "Go to next page"}
             variant="outline"
             size="sm"
             className="h-8 w-8 p-0"
@@ -106,7 +124,7 @@ export function DataTablePagination({
           </Button>
           
           <Button
-            aria-label="Go to last page"
+            aria-label={translations?.goToLast || "Go to last page"}
             variant="outline"
             size="sm"
             className="hidden h-8 w-8 p-0 md:flex"

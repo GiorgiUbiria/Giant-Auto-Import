@@ -22,10 +22,70 @@ import { TotalFeeDetails } from "./total-fee-details";
 const SelectSchema = selectCarSchema;
 type SelectSchemaType = z.infer<typeof SelectSchema>;
 
-export const columns: ColumnDef<SelectSchemaType>[] = [
+interface ColumnsTranslations {
+  columns: {
+    owner: string;
+    purchaseDate: string;
+    photo: string;
+    vehicle: string;
+    lotVin: string;
+    receiver: string;
+    fuel: string;
+    title: string;
+    keys: string;
+    usPort: string;
+    destinationPort: string;
+    purchaseDue: string;
+    shippingDue: string;
+    totalDue: string;
+    paidAmount: string;
+    actions: string;
+  };
+  actions: {
+    edit: string;
+    delete: string;
+    deleteConfirmDescription: string;
+    cancel: string;
+    deleteAction: string;
+    deleting: string;
+    deleteSuccess: string;
+    deleteError: string;
+  };
+  receiver: {
+    noReceiver: string;
+    assignSuccess: string;
+    assignError: string;
+  };
+  owner: {
+    loadError: string;
+  };
+  totalFee: {
+    totalPurchaseFee: string;
+    basePurchaseFee: string;
+    auctionFee: string;
+    gateFee: string;
+    titleFee: string;
+    environmentalFee: string;
+    virtualBidFee: string;
+    totalPurchaseFeeResult: string;
+    shippingFee: string;
+    groundFee: string;
+    oceanFee: string;
+  };
+  buttons: {
+    invoice: string;
+    comingSoon: string;
+  };
+  status: {
+    yes: string;
+    no: string;
+  };
+}
+
+export const columns = (translations: ColumnsTranslations): ColumnDef<SelectSchemaType>[] => [
   {
     accessorKey: "ownerId",
-    header: "Owner",
+    header: translations.columns.owner,
     cell: ({ row }) => {
       const ownerId = row.getValue("ownerId") as SelectSchemaType["ownerId"];
 
@@ -33,12 +93,12 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
         return <p> - </p>;
       }
 
-      return <Owner id={ownerId} />;
+      return <Owner id={ownerId} translations={translations.owner} />;
     },
   },
   {
     accessorKey: "purchaseDate",
-    header: () => <div className="text-center font-semibold">Purchase Date</div>,
+    header: () => <div className="text-center font-semibold">{translations.columns.purchaseDate}</div>,
     cell: ({ row }) => {
       const purchaseDate = row.getValue("purchaseDate") as Date;
 
@@ -64,7 +124,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   {
     id: "photo",
     accessorKey: "vin",
-    header: () => <div className="text-center font-semibold">Photo</div>,
+    header: () => <div className="text-center font-semibold">{translations.columns.photo}</div>,
     cell: ({ row }) => {
       const vin = row.original.vin as SelectSchemaType["vin"];
       return <TableImage vin={vin} />;
@@ -74,7 +134,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   },
   {
     accessorKey: "year",
-    header: () => <div className="font-semibold">Vehicle</div>,
+    header: () => <div className="font-semibold">{translations.columns.vehicle}</div>,
     cell: ({ row }) => {
       const year = row.getValue("year") as SelectSchemaType["year"];
       const make = row.original.make as SelectSchemaType["make"];
@@ -100,7 +160,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   {
     id: "vinDetails", 
     accessorKey: "vin",
-    header: () => <div className="font-semibold">LOT# VIN#</div>,
+    header: () => <div className="font-semibold">{translations.columns.lotVin}</div>,
     cell: ({ row }) => {
       const vin = row.original.vin as SelectSchemaType["vin"];
       const lotNumber = row.original.lotNumber as SelectSchemaType["lotNumber"];
@@ -135,17 +195,17 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   },
   {
     accessorKey: "reciever",
-    header: "Reciever",
+    header: translations.columns.receiver,
     cell: ({ row }) => {
       const reciever = row.getValue("reciever") as SelectSchemaType["reciever"];
       const vin = row.original.vin as SelectSchemaType["vin"];
 
-      return <AdminReciever reciever={reciever} vin={vin} />;
+      return <AdminReciever reciever={reciever} vin={vin} translations={translations.receiver} />;
     },
   },
   {
     accessorKey: "fuelType",
-    header: () => <div className="text-center font-semibold">Fuel</div>,
+    header: () => <div className="text-center font-semibold">{translations.columns.fuel}</div>,
     cell: ({ row }) => {
       const fuelType = row.getValue("fuelType") as string;
       return <div className="text-center font-medium">{fuelType || "-"}</div>;
@@ -153,7 +213,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   },
   {
     accessorKey: "title",
-    header: () => <div className="text-center font-semibold">Title</div>,
+    header: () => <div className="text-center font-semibold">{translations.columns.title}</div>,
     cell: ({ row }) => {
       const title = row.getValue("title") as string;
       const hasTitle = title === "Yes" || title === "yes" || title === "YES";
@@ -164,12 +224,12 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
           {hasTitle ? (
             <div className="flex items-center gap-1 bg-green-600 text-white px-2 py-1 rounded-md">
               <Check className="h-4 w-4" />
-              <span className="font-medium">Yes</span>
+              <span className="font-medium">{translations.status.yes}</span>
             </div>
           ) : noTitle ? (
             <div className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-md">
               <X className="h-4 w-4" />
-              <span className="font-medium">No</span>
+              <span className="font-medium">{translations.status.no}</span>
             </div>
           ) : (
             <span className="text-muted-foreground font-medium">{title || "-"}</span>
@@ -180,7 +240,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   },
   {
     accessorKey: "keys",
-    header: () => <div className="text-center font-semibold">Keys</div>,
+    header: () => <div className="text-center font-semibold">{translations.columns.keys}</div>,
     cell: ({ row }) => {
       const keys = row.getValue("keys") as string;
       const hasKeys = keys === "Yes" || keys === "yes" || keys === "YES";
@@ -191,12 +251,12 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
           {hasKeys ? (
             <div className="flex items-center gap-1 bg-green-600 text-white px-2 py-1 rounded-md">
               <Check className="h-4 w-4" />
-              <span className="font-medium">Yes</span>
+              <span className="font-medium">{translations.status.yes}</span>
             </div>
           ) : noKeys ? (
             <div className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-md">
               <X className="h-4 w-4" />
-              <span className="font-medium">No</span>
+              <span className="font-medium">{translations.status.no}</span>
             </div>
           ) : (
             <span className="text-muted-foreground font-medium">{keys || "-"}</span>
@@ -207,7 +267,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   },
   {
     accessorKey: "originPort",
-    header: "US Port",
+    header: translations.columns.usPort,
     cell: ({ row }) => {
       const originPort = row.getValue("originPort") as string;
       return <div className="font-medium">{originPort || "-"}</div>;
@@ -215,7 +275,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   },
   {
     accessorKey: "destinationPort",
-    header: "Destination Port",
+    header: translations.columns.destinationPort,
     cell: ({ row }) => {
       const destinationPort = row.getValue("destinationPort") as string;
       const displayPort = destinationPort ? `Georgia, ${destinationPort}` : "-";
@@ -224,7 +284,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   },
   {
     accessorKey: "purchaseFee",
-    header: "Purchase Due",
+    header: translations.columns.purchaseDue,
     cell: ({ row }) => {
       const purchaseFee = row.getValue("purchaseFee") as number;
       return (
@@ -240,7 +300,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             }}
           >
             <Download className="h-3 w-3 mr-1" />
-            Invoice
+            {translations.buttons.invoice}
           </Button>
         </div>
       );
@@ -248,7 +308,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   },
   {
     accessorKey: "shippingFee",
-    header: "Shipping Due",
+    header: translations.columns.shippingDue,
     cell: ({ row }) => {
       const shippingFee = row.getValue("shippingFee") as number;
       return (
@@ -264,7 +324,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             }}
           >
             <Download className="h-3 w-3 mr-1" />
-            Invoice
+            {translations.buttons.invoice}
           </Button>
         </div>
       );
@@ -272,7 +332,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   },
   {
     accessorKey: "totalFee",
-    header: "Total Due",
+    header: translations.columns.totalDue,
     cell: ({ row }) => {
       const purchaseFee = row.original
         .purchaseFee as SelectSchemaType["purchaseFee"];
@@ -303,6 +363,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             groundFee={groundFee || 0}
             oceanFee={oceanFee || 0}
             totalFee={Math.round(totalFee || 0)}
+            translations={translations.totalFee}
           />
           <Button 
             variant="outline" 
@@ -314,7 +375,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             }}
           >
             <Download className="h-3 w-3 mr-1" />
-            Invoice
+            {translations.buttons.invoice}
           </Button>
         </div>
       );
@@ -322,12 +383,12 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   },
   {
     id: "paidAmount",
-    header: "Paid Amount",
+    header: translations.columns.paidAmount,
     cell: ({ row }) => {
       // Currently empty/disabled as requested
       return (
         <div className="text-center text-muted-foreground">
-          <span className="italic">Coming soon</span>
+          <span className="italic">{translations.buttons.comingSoon}</span>
         </div>
       );
     },
@@ -335,9 +396,9 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
   },
   {
     id: "actions",
-    header: "Actions",
+    header: translations.columns.actions,
     cell: ({ row }) => {
-      return <Actions vin={row.original.vin as string} />;
+      return <Actions vin={row.original.vin as string} translations={translations.actions} />;
     },
   },
 ];

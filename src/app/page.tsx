@@ -20,6 +20,7 @@ export const metadata = {
 
 export default async function HomePage() {
   const t = await getTranslations('LandingFeatures');
+  const tHero = await getTranslations('Hero');
 
   const translations = {
     title: t('title'),
@@ -52,11 +53,18 @@ export default async function HomePage() {
     },
   };
 
+  const heroTranslations = {
+    title: tHero('title'),
+    subtitle: tHero('subtitle'),
+    startImporting: tHero('startImporting'),
+    howItWorks: tHero('howItWorks'),
+  };
+
   return (
     <div className="flex flex-col gap-8 scroll-smooth overflow-x-hidden">
       <section aria-label="Hero Section" className="w-full relative">
         <Suspense fallback={<LoadingSpinner height="h-96" variant="gradient" size="lg" />}>
-          <DynamicHero />
+          <DynamicHero translations={heroTranslations} />
         </Suspense>
       </section>
 

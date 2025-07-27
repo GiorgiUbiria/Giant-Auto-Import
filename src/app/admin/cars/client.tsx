@@ -7,6 +7,88 @@ import { useQuery } from "@tanstack/react-query";
 import * as React from "react";
 import { SortingState, ColumnFiltersState, VisibilityState } from "@tanstack/react-table";
 
+interface ClientProps {
+  translations: {
+    title: string;
+    loading: string;
+    error: string;
+    noCars: string;
+    columns: {
+      owner: string;
+      purchaseDate: string;
+      photo: string;
+      vehicle: string;
+      lotVin: string;
+      receiver: string;
+      fuel: string;
+      title: string;
+      keys: string;
+      usPort: string;
+      destinationPort: string;
+      purchaseDue: string;
+      shippingDue: string;
+      totalDue: string;
+      paidAmount: string;
+      actions: string;
+    };
+    actions: {
+      edit: string;
+      delete: string;
+      deleteConfirmDescription: string;
+      cancel: string;
+      deleteAction: string;
+      deleting: string;
+      deleteSuccess: string;
+      deleteError: string;
+    };
+    receiver: {
+      noReceiver: string;
+      assignSuccess: string;
+      assignError: string;
+    };
+    owner: {
+      loadError: string;
+    };
+    totalFee: {
+      totalPurchaseFee: string;
+      basePurchaseFee: string;
+      auctionFee: string;
+      gateFee: string;
+      titleFee: string;
+      environmentalFee: string;
+      virtualBidFee: string;
+      totalPurchaseFeeResult: string;
+      shippingFee: string;
+      groundFee: string;
+      oceanFee: string;
+    };
+    buttons: {
+      invoice: string;
+      comingSoon: string;
+    };
+    status: {
+      yes: string;
+      no: string;
+    };
+    dataTable: {
+      searchPlaceholder: string;
+      columns: string;
+      noResults: string;
+      noData: string;
+      clearFilter: string;
+    };
+    pagination: {
+      showing: string;
+      rowsPerPage: string;
+      page: string;
+      goToFirst: string;
+      goToPrevious: string;
+      goToNext: string;
+      goToLast: string;
+    };
+  };
+}
+
 // Add type for API response
 interface CarsApiResponse {
   cars: any[];
@@ -54,7 +136,7 @@ const fetchCars = async ({ pageIndex, pageSize, sorting, filters }: {
   }
 };
 
-export const Client = () => {
+export const Client = ({ translations }: ClientProps) => {
   const [pageIndex, setPageIndex] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(20);
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -100,7 +182,7 @@ export const Client = () => {
     <div className="w-full h-[400px] flex justify-center items-center">
       <div className="flex flex-col items-center gap-2">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-muted-foreground">Loading cars...</p>
+        <p className="text-muted-foreground">{translations.loading}</p>
       </div>
     </div>
   );
@@ -108,7 +190,7 @@ export const Client = () => {
   const ErrorState = () => (
     <div className="w-full h-[400px] flex justify-center items-center">
       <div className="text-center">
-        <p className="text-destructive font-medium">Error loading car data</p>
+        <p className="text-destructive font-medium">{translations.error}</p>
         <p className="text-muted-foreground text-sm mt-1">{error?.message}</p>
       </div>
     </div>
@@ -124,8 +206,9 @@ export const Client = () => {
 
     return (
     <div className="w-full px-4 md:px-6">
+      <h1 className="text-3xl font-bold pb-8 leading-tight">{translations.title}</h1>
       <DataTable
-          columns={columns}
+          columns={columns(translations)}
           data={tableData}
           filterKey="vinDetails"
         pageIndex={pageIndex}
@@ -140,6 +223,10 @@ export const Client = () => {
         onColumnVisibilityChange={handleColumnVisibilityChange}
         rowSelection={rowSelection}
         onRowSelectionChange={handleRowSelectionChange}
+        translations={{
+          ...translations.dataTable,
+          pagination: translations.pagination
+        }}
       />
     </div>
   );

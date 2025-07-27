@@ -11,9 +11,15 @@ import { toast } from "sonner";
 export const AdminReciever = ({
   reciever,
   vin,
+  translations,
 }: {
   reciever: string | null;
   vin: string;
+  translations: {
+    noReceiver: string;
+    assignSuccess: string;
+    assignError: string;
+  };
 }) => {
   const queryClient = useQueryClient();
 
@@ -22,11 +28,11 @@ export const AdminReciever = ({
 
   const { isPending, mutate } = useServerActionMutation(assignRecieverAction, {
     onError: (error) => {
-      const errorMessage = error?.data || "Failed to assign reciever";
+      const errorMessage = error?.data || translations.assignError;
       toast.error(errorMessage);
     },
     onSuccess: async ({ data }) => {
-      const successMessage = data?.message || "Receiver assigned successfully!";
+      const successMessage = data?.message || translations.assignSuccess;
       toast.success(successMessage);
 
       await queryClient.invalidateQueries({
@@ -69,7 +75,7 @@ export const AdminReciever = ({
           onClick={() => setIsEditing(true)}
           className="cursor-pointer hover:underline"
         >
-          {reciever || "No receiver assigned"}
+          {reciever || translations.noReceiver}
         </p>
       )}
     </div>

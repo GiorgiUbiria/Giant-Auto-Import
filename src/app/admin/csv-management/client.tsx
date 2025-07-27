@@ -31,14 +31,14 @@ export const CsvManagementClient = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-semibold">CSV Data Management</h2>
+          <h2 className="text-2xl font-semibold">{t("title")}</h2>
           <p className="text-muted-foreground">
-            Upload new pricing data and manage existing versions
+            {t("subtitle")}
           </p>
         </div>
         <Button onClick={handleDownloadTemplate} variant="outline">
           <Download className="h-4 w-4 mr-2" />
-          Download Template
+          {t("downloadTemplate")}
         </Button>
       </div>
 
@@ -46,20 +46,20 @@ export const CsvManagementClient = () => {
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="upload" className="flex items-center gap-2">
             <Upload className="h-4 w-4" />
-            Upload CSV
+            {t("uploadCsv")}
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <History className="h-4 w-4" />
-            Version History
+            {t("versionHistory")}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="upload" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Upload New CSV Data</CardTitle>
+              <CardTitle>{t("uploadNewCsv")}</CardTitle>
               <CardDescription>
-                Upload a new CSV file with updated pricing data. The file must follow the required format.
+                {t("uploadDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -71,9 +71,9 @@ export const CsvManagementClient = () => {
         <TabsContent value="history" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>CSV Version History</CardTitle>
+              <CardTitle>{t("csvVersionHistory")}</CardTitle>
               <CardDescription>
-                View and manage uploaded CSV versions. Only one version can be active at a time.
+                {t("historyDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent>

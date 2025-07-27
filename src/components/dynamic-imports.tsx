@@ -8,6 +8,39 @@ const LoadingSpinner = () => (
   </div>
 );
 
+// Form Section Components - Optimized with lazy loading
+export const DynamicBasicInfoSection = dynamic(
+  () => import('./shared-form-sections/basic-info-section').then(mod => ({ default: mod.BasicInfoSection })),
+  {
+    loading: LoadingSpinner,
+    ssr: true,
+  }
+);
+
+export const DynamicAuctionInfoSection = dynamic(
+  () => import('./shared-form-sections/auction-info-section').then(mod => ({ default: mod.AuctionInfoSection })),
+  {
+    loading: LoadingSpinner,
+    ssr: true,
+  }
+);
+
+export const DynamicFinancialInfoSection = dynamic(
+  () => import('./shared-form-sections/financial-info-section').then(mod => ({ default: mod.FinancialInfoSection })),
+  {
+    loading: LoadingSpinner,
+    ssr: true,
+  }
+);
+
+export const DynamicImageUploadSection = dynamic(
+  () => import('./add-car-form/image-upload-section').then(mod => ({ default: mod.ImageUploadSection })),
+  {
+    loading: LoadingSpinner,
+    ssr: false, // File upload components should be client-side
+  }
+);
+
 // Heavy UI Components - Dynamic imports
 export const DynamicDataTable = dynamic(
   () => import('./data-table').then(mod => ({ default: mod.DataTable })),
@@ -63,15 +96,6 @@ export const DynamicVirtualizedGrid = dynamic(
 // React Window Components - Heavy virtualization
 export const DynamicFixedSizeGrid = dynamic(
   () => import('react-window').then(mod => ({ default: mod.FixedSizeGrid })),
-  {
-    loading: LoadingSpinner,
-    ssr: false,
-  }
-);
-
-// Motion Components - Heavy animations (use specific motion components instead)
-export const DynamicMotionDiv = dynamic(
-  () => import('framer-motion').then(mod => ({ default: mod.motion.div })),
   {
     loading: LoadingSpinner,
     ssr: false,

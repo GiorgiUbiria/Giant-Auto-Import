@@ -76,7 +76,12 @@ export function UpdateProfileForm({ user }: Props) {
 	});
 
 	const onSubmit = (values: z.infer<typeof FormSchema>) => {
-		mutate(values)
+		// Normalize email to lowercase if provided
+		const normalizedValues = {
+			...values,
+			email: values.email ? values.email.toLowerCase() : values.email
+		};
+		mutate(normalizedValues)
 	}
 
 	const handleSubmit = form.handleSubmit(onSubmit)

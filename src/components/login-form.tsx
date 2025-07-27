@@ -34,8 +34,13 @@ export default function LoginForm() {
   const { isPending, execute } = useServerAction(action);
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
-    console.log(values);
-    const [data, error] = await execute(values);
+    // Normalize email to lowercase
+    const normalizedValues = {
+      ...values,
+      email: values.email.toLowerCase()
+    };
+    console.log(normalizedValues);
+    const [data, error] = await execute(normalizedValues);
 
     if (data?.success === false) {
       toast.error(data.message);

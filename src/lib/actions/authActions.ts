@@ -29,11 +29,12 @@ export const loginAction = createServerAction()
   .handler(async ({ input }) => {
     try {
       const { email, password } = input;
+      const normalizedEmail = email.toLowerCase();
 
       const [existingUser] = await db
         .select()
         .from(users)
-        .where(eq(users.email, email));
+        .where(eq(users.email, normalizedEmail));
 
       if (!existingUser) {
         return {
@@ -86,6 +87,7 @@ export const registerAction = isAdminProcedure
   )
   .handler(async ({ input }) => {
     const { email, password, fullName, phone, role } = input;
+    const normalizedEmail = email.toLowerCase();
     const hashedPassword = await new Argon2id().hash(password);
 
     const userId = generateId(15) as string;
@@ -93,7 +95,7 @@ export const registerAction = isAdminProcedure
     try {
       await db.insert(users).values({
         id: userId,
-        email,
+        email: normalizedEmail,
         phone,
         fullName,
         role,
@@ -174,7 +176,7 @@ export const updateUserAction = isAdminProcedure
     const { id, email, passwordText: password, fullName, phone, role } = input;
     const updateData: any = {};
 
-    if (email) updateData.email = email;
+    if (email) updateData.email = email.toLowerCase();
     if (phone) updateData.phone = phone;
     if (fullName) updateData.fullName = fullName;
     if (role) updateData.role = role;

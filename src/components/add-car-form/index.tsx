@@ -10,12 +10,35 @@ import { insertCarSchema } from "@/lib/drizzle/schema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useServerAction } from "zsa-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { handleUploadImagesAction } from "@/lib/actions/bucketActions";
-import { BasicInfoSection } from "../shared-form-sections/basic-info-section";
-import { AuctionInfoSection } from "../shared-form-sections/auction-info-section";
-import { FinancialInfoSection } from "../shared-form-sections/financial-info-section";
 import { ImageUploadSection } from "./image-upload-section";
+import { preloadAllFormResources } from "@/lib/preload-utils";
+
+// Lazy load form sections to reduce initial bundle size
+const BasicInfoSection = lazy(() => 
+  import("../shared-form-sections/basic-info-section").then(mod => ({ default: mod.BasicInfoSection }))
+);
+
+const AuctionInfoSection = lazy(() => 
+  import("../shared-form-sections/auction-info-section").then(mod => ({ default: mod.AuctionInfoSection }))
+);
+
+const FinancialInfoSection = lazy(() => 
+  import("../shared-form-sections/financial-info-section").then(mod => ({ default: mod.FinancialInfoSection }))
+);
+
+// Loading component for form sections
+const FormSectionLoader = () => (
+  <div className="w-full p-6 bg-gray-50 dark:bg-gray-800 rounded-lg animate-pulse">
+    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+      ))}
+    </div>
+  </div>
+);
 
 // Extended schema to include image fields
 const FormSchema = insertCarSchema.omit({ id: true, destinationPort: true }).extend({
@@ -23,18 +46,19 @@ const FormSchema = insertCarSchema.omit({ id: true, destinationPort: true }).ext
   pick_up_images: z.any().optional(),
   warehouse_images: z.any().optional(),
   delivery_images: z.any().optional(),
-  purchaseDate: z.date().optional(), // Make purchaseDate optional for form validation
+  purchaseDate: z.date().optional(),
 });
 
 function AddCarFormContent() {
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       vin: "",
-      year: 2024, // Use a static year instead of new Date().getFullYear()
+      year: 2024,
       make: "",
       model: "",
       auction: "Copart",
@@ -52,7 +76,7 @@ function AddCarFormContent() {
       purchaseFee: 0,
       departureDate: undefined,
       arrivalDate: undefined,
-      purchaseDate: undefined, // Will be set in useEffect to avoid hydration issues
+      purchaseDate: undefined,
       ownerId: "",
       insurance: "NO",
       auction_images: undefined,
@@ -62,15 +86,19 @@ function AddCarFormContent() {
     },
   });
 
-  // Set dynamic values after component mounts to avoid hydration issues
+  // Improved hydration handling with preloading
   useEffect(() => {
-    // Only update if the values are different to avoid unnecessary re-renders
+    setIsHydrated(true);
+    
+    // Preload all form resources for better performance
+    preloadAllFormResources();
+    
+    // Set dynamic values after hydration
     const currentYear = new Date().getFullYear();
     if (form.getValues("year") !== currentYear) {
       form.setValue("year", currentYear);
     }
     
-    // Set purchase date if it's not already set
     const currentPurchaseDate = form.getValues("purchaseDate");
     if (!currentPurchaseDate) {
       form.setValue("purchaseDate", new Date());
@@ -119,7 +147,6 @@ function AddCarFormContent() {
         ...carData
       } = values;
 
-      // Ensure purchaseDate is set
       const carDataWithDate = {
         ...carData,
         purchaseDate: purchaseDate || new Date(),
@@ -162,13 +189,36 @@ function AddCarFormContent() {
     }
   };
 
+  // Don't render form until hydrated
+  if (!isHydrated) {
+    return (
+      <div className="w-full flex justify-center">
+        <div className="w-full md:w-2/3 space-y-8 my-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span className="ml-2 text-muted-foreground">Loading form...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full flex justify-center">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="w-full md:w-2/3 space-y-8 my-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg transition-all">
-          <BasicInfoSection form={form} />
-          <AuctionInfoSection form={form} />
-          <FinancialInfoSection form={form} />
+          <Suspense fallback={<FormSectionLoader />}>
+            <BasicInfoSection form={form} />
+          </Suspense>
+          
+          <Suspense fallback={<FormSectionLoader />}>
+            <AuctionInfoSection form={form} />
+          </Suspense>
+          
+          <Suspense fallback={<FormSectionLoader />}>
+            <FinancialInfoSection form={form} />
+          </Suspense>
+          
           <ImageUploadSection form={form} />
           
           <div className="flex justify-end space-x-4">
@@ -191,24 +241,5 @@ function AddCarFormContent() {
 }
 
 export function AddCarForm() {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient) {
-    return (
-      <div className="w-full flex justify-center">
-        <div className="w-full md:w-2/3 space-y-8 my-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg transition-all">
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <span className="ml-2 text-muted-foreground">Loading form...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return <AddCarFormContent />;
 } 

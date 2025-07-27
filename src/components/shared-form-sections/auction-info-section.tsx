@@ -1,7 +1,7 @@
 "use client";
 
 import { UseFormReturn } from "react-hook-form";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   FormControl,
   FormField,
@@ -32,16 +32,17 @@ interface AuctionData {
   rate: number;
 }
 
-export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
-  const [selectedAuctionLocation, setSelectedAuctionLocation] = useState("");
-  const [selectedAuction, setSelectedAuction] = useState("Copart");
+// Memoized auction data to prevent unnecessary re-computations
+const useAuctionData = () => {
   const [auctionData, setAuctionData] = useState<AuctionData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     const loadAuctionData = async () => {
       try {
-        // Use a try-catch around the dynamic import
+        // Use dynamic import to reduce initial bundle size
         const calculatorUtils = await import("@/lib/calculator-utils");
         const data = calculatorUtils.getAuctionData();
         
@@ -52,47 +53,71 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
           item.auctionLocation && 
           item.auction
         ) : [];
-        setAuctionData(validData);
+        
+        if (isMounted) {
+          setAuctionData(validData);
+        }
       } catch (error) {
         console.error("Error loading auction data:", error);
-        setAuctionData([]);
+        if (isMounted) {
+          setAuctionData([]);
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     loadAuctionData();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const handleAuctionLocationChange = (location: string) => {
+  return { auctionData, isLoading };
+};
+
+export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
+  const [selectedAuctionLocation, setSelectedAuctionLocation] = useState("");
+  const [selectedAuction, setSelectedAuction] = useState("Copart");
+  const { auctionData, isLoading } = useAuctionData();
+
+  // Memoize filtered data to prevent unnecessary re-computations
+  const filteredOriginPorts = useMemo(() => {
+    return oceanShippingRates.filter((port) =>
+      auctionData.some(
+        (data: AuctionData) =>
+          data.auctionLocation === selectedAuctionLocation &&
+          data.port === port.shorthand
+      )
+    );
+  }, [auctionData, selectedAuctionLocation]);
+
+  // Memoize auction locations to prevent unnecessary re-computations
+  const auctionLocations = useMemo(() => {
+    return Array.from(
+      new Set(
+        auctionData
+          .filter((data: AuctionData) => data.auction === selectedAuction)
+          .map((data: AuctionData) => data.auctionLocation)
+      )
+    );
+  }, [auctionData, selectedAuction]);
+
+  // Memoize handlers to prevent unnecessary re-renders
+  const handleAuctionLocationChange = useCallback((location: string) => {
     setSelectedAuctionLocation(location);
     form.setValue("auctionLocation", location);
-  };
+  }, [form]);
 
-  const handleAuctionChange = (auction: string) => {
+  const handleAuctionChange = useCallback((auction: string) => {
     setSelectedAuction(auction);
     setSelectedAuctionLocation("");
     form.setValue("auction", auction);
     form.setValue("auctionLocation", "");
-  };
-
-  const originPorts = oceanShippingRates;
-  const filteredOriginPorts = originPorts.filter((port) =>
-    auctionData.some(
-      (data: AuctionData) =>
-        data.auctionLocation === selectedAuctionLocation &&
-        data.port === port.shorthand
-    )
-  );
-
-  // Get unique auction locations for the selected auction
-  const auctionLocations = Array.from(
-    new Set(
-      auctionData
-        .filter((data: AuctionData) => data.auction === selectedAuction)
-        .map((data: AuctionData) => data.auctionLocation)
-    )
-  );
+  }, [form]);
 
   return (
     <Card>
@@ -107,10 +132,7 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Auction</FormLabel>
-                <Select onValueChange={(value) => {
-                  field.onChange(value);
-                  handleAuctionChange(value);
-                }} defaultValue={field.value}>
+                <Select onValueChange={handleAuctionChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select auction" />
@@ -132,23 +154,18 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Auction Location</FormLabel>
-                <Select onValueChange={(value) => {
-                  field.onChange(value);
-                  handleAuctionLocationChange(value);
-                }} defaultValue={field.value}>
+                <Select onValueChange={handleAuctionLocationChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder={isLoading ? "Loading locations..." : "Select location"} />
+                      <SelectValue placeholder={isLoading ? "Loading..." : "Select location"} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {!isLoading && auctionLocations.length > 0 ? (
-                      auctionLocations.map((location: string) => (
-                        <SelectItem key={location} value={location}>
-                          {location}
-                        </SelectItem>
-                      ))
-                    ) : null}
+                    {auctionLocations.map((location) => (
+                      <SelectItem key={location} value={location}>
+                        {location}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -239,6 +256,52 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
 
           <FormField
             control={form.control}
+            name="keys"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Keys</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select key status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="YES">Yes</SelectItem>
+                    <SelectItem value="NO">No</SelectItem>
+                    <SelectItem value="UNKNOWN">Unknown</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Title</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select title status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="YES">Yes</SelectItem>
+                    <SelectItem value="NO">No</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="shippingStatus"
             render={({ field }) => (
               <FormItem>
@@ -246,13 +309,12 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue placeholder="Select shipping status" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="AUCTION">Auction</SelectItem>
                     <SelectItem value="WAREHOUSE">Warehouse</SelectItem>
-                    <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
                     <SelectItem value="DELIVERED">Delivered</SelectItem>
                   </SelectContent>
                 </Select>

@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getUsersAction } from "@/lib/actions/userActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
+import { useMemo } from "react";
 
 interface FinancialInfoSectionProps {
   form: UseFormReturn<any>;
@@ -38,11 +39,16 @@ export function FinancialInfoSection({ form }: FinancialInfoSectionProps) {
   const { isLoading, data: users } = useServerActionQuery(getUsersAction, {
     input: undefined,
     queryKey: ["getUsers"],
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 1,
     refetchOnWindowFocus: false,
   });
+
+  // Memoize users to prevent unnecessary re-renders
+  const memoizedUsers = useMemo(() => {
+    return users || [];
+  }, [users]);
 
   return (
     <Card>
@@ -83,35 +89,13 @@ export function FinancialInfoSection({ form }: FinancialInfoSectionProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {!isLoading && users && users.length > 0 ? (
-                      users.map((user: any) => (
+                    {!isLoading && memoizedUsers.length > 0 ? (
+                      memoizedUsers.map((user: any) => (
                         <SelectItem key={user.id} value={user.id}>
                           {user.fullName}
                         </SelectItem>
                       ))
                     ) : null}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="insurance"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Insurance</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select insurance" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="YES">Yes</SelectItem>
-                    <SelectItem value="NO">No</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -240,6 +224,28 @@ export function FinancialInfoSection({ form }: FinancialInfoSectionProps) {
                     />
                   </PopoverContent>
                 </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="insurance"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Insurance</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select insurance status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="YES">Yes</SelectItem>
+                    <SelectItem value="NO">No</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

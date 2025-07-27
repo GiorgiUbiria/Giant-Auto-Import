@@ -18,21 +18,33 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Pencil, Trash } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 type Props = {
 	userId: string;
+	translations: {
+		edit: string;
+		delete: string;
+		deleteConfirmDescription: string;
+		cancel: string;
+		deleteAction: string;
+		deleting: string;
+		deleteSuccess: string;
+		deleteError: string;
+	};
 };
 
-export function Actions({ userId }: Props) {
+export function Actions({ userId, translations }: Props) {
 	const queryClient = useQueryClient();
+	const t = useTranslations("AdminUsers.actions");
 
 	const { isPending, mutate } = useServerActionMutation(deleteUserAction, {
 		onError: (error) => {
-			const errorMessage = error?.data || "Failed to delete the user";
+			const errorMessage = error?.data || translations.deleteError;
 			toast.error(errorMessage);
 		},
 		onSuccess: async ({ data }) => {
-			const successMessage = data?.message || "User deleted successfully!";
+			const successMessage = data?.message || translations.deleteSuccess;
 			toast.success(successMessage);
 
 			await queryClient.invalidateQueries({
@@ -48,31 +60,33 @@ export function Actions({ userId }: Props) {
 
 	return (
 		<div className="flex justify-center items-center gap-x-2">
-			<Link href={`/admin/users/${userId}`} className="hover:text-blue-500 hover:underline">
+			<Link href={`/admin/users/${userId}`} className="hover:text-blue-500 hover:underline" title={translations.edit}>
 				<Pencil className="size-4 hover:opacity-50 transition" />
 			</Link>
 			
 			<AlertDialog>
 				<AlertDialogTrigger asChild>
-					<Button variant="link" size="icon">
+					<Button variant="link" size="icon" title={translations.delete}>
 						<Trash className="size-4 hover:opacity-50 hover:text-red-500 transition" />
 					</Button>
 				</AlertDialogTrigger>
 				<AlertDialogContent className="text-primary">
 					<AlertDialogHeader>
-						<AlertDialogTitle>Are you sure you want to delete the user with ID {userId}?</AlertDialogTitle>
-						<AlertDialogDescription>
-							This action cannot be undone. This will permanently delete the user from the database.
+						<AlertDialogTitle className="leading-relaxed">
+							{t("deleteConfirmTitle", { userId })}
+						</AlertDialogTitle>
+						<AlertDialogDescription className="leading-relaxed">
+							{translations.deleteConfirmDescription}
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogCancel>{translations.cancel}</AlertDialogCancel>
 						<AlertDialogAction asChild>
 							<Button variant="destructive" onClick={handleDelete}>
 								{isPending ? (
 									<Loader2 className="size-2 animate-spin transition" />
 								) : (
-									"Delete"
+									translations.deleteAction
 								)}
 							</Button>
 						</AlertDialogAction>

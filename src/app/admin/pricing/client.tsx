@@ -17,7 +17,7 @@ export const PricingManagementClient = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Default Pricing</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("defaultPricing")}</CardTitle>
             <Settings className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -30,7 +30,7 @@ export const PricingManagementClient = () => {
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">User Overrides</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("userPricing")}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -59,18 +59,18 @@ export const PricingManagementClient = () => {
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="default" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Default Pricing
+            {t("defaultPricing")}
           </TabsTrigger>
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            User Pricing
+            {t("userPricing")}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="default" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Default Pricing Configuration</CardTitle>
+              <CardTitle>{t("defaultPricing")} Configuration</CardTitle>
               <CardDescription>
                 Set the default pricing that applies to all users unless they have custom pricing configured.
               </CardDescription>
@@ -84,7 +84,7 @@ export const PricingManagementClient = () => {
         <TabsContent value="users" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>User-Specific Pricing</CardTitle>
+              <CardTitle>User-Specific {t("pricing")}</CardTitle>
               <CardDescription>
                 Manage custom pricing configurations for individual users. These override the default pricing.
               </CardDescription>

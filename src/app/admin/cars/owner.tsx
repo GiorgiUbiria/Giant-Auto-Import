@@ -5,7 +5,7 @@ import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 
-export const Owner = ({ id }: { id: string }) => {
+export const Owner = ({ id, translations }: { id: string; translations: { loadError: string } }) => {
   const { isLoading, data, error } = useServerActionQuery(getUserAction, {
     input: {
       id: id,
@@ -24,7 +24,7 @@ export const Owner = ({ id }: { id: string }) => {
   const ErrorState = () => {
     return (
       <div className="py-10 text-muted-foreground">
-        {data?.message || "Failed to load user data"}
+        {data?.message || translations.loadError}
       </div>
     );
   };

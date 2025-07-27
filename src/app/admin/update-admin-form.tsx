@@ -21,21 +21,23 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useServerAction } from "zsa-react";
-
-const FormSchema = z.object({
-	id: z.string().min(1, "User ID is required"),
-	email: z.string().email("Invalid email address").optional().or(z.literal("")),
-	phone: z.string().optional().or(z.literal("")),
-	fullName: z.string().min(1, "Full name is required"),
-	passwordText: z.string().optional().or(z.literal("")),
-})
+import { useTranslations } from "next-intl";
 
 type Props = {
 	user: z.infer<typeof selectUserSchema>
 }
 
 export function UpdateAdminForm({ user }: Props) {
+	const t = useTranslations("UpdateAdminForm");
 	const [showPassword, setShowPassword] = useState(false);
+	
+	const FormSchema = z.object({
+		id: z.string().min(1, t("validation.userIdRequired")),
+		email: z.string().email(t("validation.invalidEmail")).optional().or(z.literal("")),
+		phone: z.string().optional().or(z.literal("")),
+		fullName: z.string().min(1, t("validation.fullNameRequired")),
+		passwordText: z.string().optional().or(z.literal("")),
+	})
 	
 	const form = useForm<z.infer<typeof FormSchema>>({
 		resolver: zodResolver(FormSchema),
@@ -64,13 +66,13 @@ export function UpdateAdminForm({ user }: Props) {
 			const [data, error] = await execute(normalizedValues);
 
 			if (error || data?.success === false) {
-				toast.error(data?.message || "Failed to update profile");
+				toast.error(data?.message || t("updateFailed"));
 				console.error(error);
 			} else {
-				toast.success(data?.message || "Profile updated successfully");
+				toast.success(data?.message || t("profileUpdated"));
 			}
 		} catch (error) {
-			toast.error("An unexpected error occurred");
+			toast.error(t("unexpectedError"));
 			console.error(error);
 		}
 	}
@@ -85,9 +87,9 @@ export function UpdateAdminForm({ user }: Props) {
 					name="fullName"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>Full Name</FormLabel>
+							<FormLabel className="leading-relaxed">{t("fullName")}</FormLabel>
 							<FormControl>
-								<Input {...field} placeholder="Enter your full name" />
+								<Input {...field} placeholder={t("fullNamePlaceholder")} className="leading-relaxed" />
 							</FormControl>
 							<FormMessage />
 						</FormItem>
@@ -98,9 +100,9 @@ export function UpdateAdminForm({ user }: Props) {
 					name="email"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>Email</FormLabel>
+							<FormLabel className="leading-relaxed">{t("email")}</FormLabel>
 							<FormControl>
-								<Input type="email" {...field} placeholder="Enter your email" />
+								<Input type="email" {...field} placeholder={t("emailPlaceholder")} className="leading-relaxed" />
 							</FormControl>
 							<FormMessage />
 						</FormItem>
@@ -111,9 +113,9 @@ export function UpdateAdminForm({ user }: Props) {
 					name="phone"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>Phone Number</FormLabel>
+							<FormLabel className="leading-relaxed">{t("phone")}</FormLabel>
 							<FormControl>
-								<Input type="tel" {...field} placeholder="Enter your phone number" />
+								<Input type="tel" {...field} placeholder={t("phonePlaceholder")} className="leading-relaxed" />
 							</FormControl>
 							<FormMessage />
 						</FormItem>
@@ -124,12 +126,13 @@ export function UpdateAdminForm({ user }: Props) {
 					name="passwordText"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel>Password</FormLabel>
+							<FormLabel className="leading-relaxed">{t("password")}</FormLabel>
 							<FormControl>
 								<Input 
 									type={showPassword ? "text" : "password"} 
 									{...field} 
-									placeholder="Enter new password (optional)"
+									placeholder={t("passwordPlaceholder")}
+									className="leading-relaxed"
 								/>
 							</FormControl>
 							<FormMessage />
@@ -142,8 +145,8 @@ export function UpdateAdminForm({ user }: Props) {
 						checked={showPassword}
 						onCheckedChange={() => setShowPassword(!showPassword)}
 					/>
-					<label htmlFor="showPassword" className="text-sm text-muted-foreground">
-						Show password
+					<label htmlFor="showPassword" className="text-sm text-muted-foreground leading-relaxed">
+						{t("showPassword")}
 					</label>
 				</div>
 				<div className="md:col-span-2">
@@ -151,10 +154,10 @@ export function UpdateAdminForm({ user }: Props) {
 						{isPending ? (
 							<>
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-								Updating...
+								{t("updating")}
 							</>
 						) : (
-							"Update Profile"
+							t("updateProfile")
 						)}
 					</Button>
 				</div>

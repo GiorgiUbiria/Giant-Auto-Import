@@ -7,8 +7,10 @@ import { UpdateAdminForm } from "./update-admin-form";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useTranslations } from "next-intl";
 
 export const Client = ({ id }: { id: string }) => {
+	const t = useTranslations("AdminPanel");
 	const { isLoading, data, error } = useServerActionQuery(getUserAction, {
 		input: {
 			id: id,
@@ -28,7 +30,7 @@ export const Client = ({ id }: { id: string }) => {
 		return (
 			<Alert variant="destructive">
 				<AlertDescription>
-					{data?.message || "Failed to load user data. Please try refreshing the page."}
+					{data?.message || t("error")}
 				</AlertDescription>
 			</Alert>
 		)
@@ -36,15 +38,15 @@ export const Client = ({ id }: { id: string }) => {
 
 	const QuickAccessCard = ({ title, description, icon: Icon, href }: { title: string; description: string; icon: any; href: string }) => (
 		<Link href={href}>
-			<Card className="hover:bg-accent/50 transition-all duration-200 cursor-pointer group">
-				<CardHeader className="space-y-2">
+			<Card className="hover:bg-accent/50 transition-all duration-200 cursor-pointer group h-full">
+				<CardHeader className="space-y-2 h-full flex flex-col">
 					<div className="flex items-center gap-3">
-						<div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+						<div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors flex-shrink-0">
 							<Icon className="h-5 w-5 text-primary" />
 						</div>
-						<CardTitle className="text-lg">{title}</CardTitle>
+						<CardTitle className="text-lg leading-tight min-h-[1.5rem] flex items-center">{title}</CardTitle>
 					</div>
-					<CardDescription className="text-sm">{description}</CardDescription>
+					<CardDescription className="text-sm leading-relaxed flex-grow">{description}</CardDescription>
 				</CardHeader>
 			</Card>
 		</Link>
@@ -52,40 +54,40 @@ export const Client = ({ id }: { id: string }) => {
 
 	return (
 		<div className="space-y-8">
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
 				<QuickAccessCard
-					title="Users"
-					description="Manage user accounts and permissions"
+					title={t("quickAccess.users.title")}
+					description={t("quickAccess.users.description")}
 					icon={Users}
 					href="/admin/users"
 				/>
 				<QuickAccessCard
-					title="Cars"
-					description="Browse and manage imported vehicles"
+					title={t("quickAccess.cars.title")}
+					description={t("quickAccess.cars.description")}
 					icon={Car}
 					href="/admin/cars"
 				/>
 				<QuickAccessCard
-					title="Add Car"
-					description="Add new vehicles to inventory"
+					title={t("quickAccess.addCar.title")}
+					description={t("quickAccess.addCar.description")}
 					icon={PlusCircle}
 					href="/admin/add_car"
 				/>
 				<QuickAccessCard
-					title="Register User"
-					description="Create new user accounts"
+					title={t("quickAccess.registerUser.title")}
+					description={t("quickAccess.registerUser.description")}
 					icon={UserPlus}
 					href="/admin/signup"
 				/>
 				<QuickAccessCard
-					title="Pricing Management"
-					description="Configure default and user-specific pricing"
+					title={t("quickAccess.pricingManagement.title")}
+					description={t("quickAccess.pricingManagement.description")}
 					icon={DollarSign}
 					href="/admin/pricing"
 				/>
 				<QuickAccessCard
-					title="CSV Management"
-					description="Upload and manage pricing CSV data"
+					title={t("quickAccess.csvManagement.title")}
+					description={t("quickAccess.csvManagement.description")}
 					icon={FileText}
 					href="/admin/csv-management"
 				/>
@@ -98,8 +100,8 @@ export const Client = ({ id }: { id: string }) => {
 			) : data?.user ? (
 				<Card className="border-t">
 					<CardHeader>
-						<CardTitle className="text-xl">Admin Profile</CardTitle>
-						<CardDescription>Update your account information and preferences</CardDescription>
+						<CardTitle className="text-xl leading-tight">{t("adminProfile.title")}</CardTitle>
+						<CardDescription className="leading-relaxed">{t("adminProfile.description")}</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<UpdateAdminForm user={data.user} />

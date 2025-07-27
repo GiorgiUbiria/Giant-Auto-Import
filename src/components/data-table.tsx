@@ -53,6 +53,22 @@ interface DataTableProps<TData, TValue> {
   onColumnVisibilityChange?: (updaterOrValue: VisibilityState | ((old: VisibilityState) => VisibilityState)) => void;
   rowSelection?: {};
   onRowSelectionChange?: (updaterOrValue: any | ((old: any) => any)) => void;
+  translations?: {
+    searchPlaceholder: string;
+    columns: string;
+    noResults: string;
+    noData: string;
+    clearFilter: string;
+    pagination?: {
+      showing: string;
+      rowsPerPage: string;
+      page: string;
+      goToFirst: string;
+      goToPrevious: string;
+      goToNext: string;
+      goToLast: string;
+    };
+  };
 }
 
 export function DataTable<TData, TValue>({
@@ -71,7 +87,9 @@ export function DataTable<TData, TValue>({
   onColumnVisibilityChange,
   rowSelection = {},
   onRowSelectionChange,
+  translations,
 }: DataTableProps<TData, TValue>) {
+
   const table = useReactTable({
     data,
     columns,
@@ -115,7 +133,7 @@ export function DataTable<TData, TValue>({
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    placeholder={`Search by ${filterKey}...`}
+                    placeholder={translations?.searchPlaceholder?.replace('{filterKey}', filterKey) || `Search by ${filterKey}...`}
                     value={
                       (filters.find(f => f.id === filterKey)?.value as string) ?? ""
                     }
@@ -139,7 +157,7 @@ export function DataTable<TData, TValue>({
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-9">
                     <Settings2 className="mr-2 h-4 w-4" />
-                    <span className="hidden sm:inline">Columns</span>
+                    <span className="hidden sm:inline">{translations?.columns || "Columns"}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-[200px]">
@@ -165,15 +183,7 @@ export function DataTable<TData, TValue>({
             </div>
           </div>
 
-          {/* Pagination Top - Hidden on mobile */}
-          <div className="pt-2 hidden md:block">
-            <DataTablePagination
-              pageIndex={pageIndex}
-              pageSize={pageSize}
-              rowCount={rowCount}
-              onPaginationChange={onPaginationChange}
-            />
-          </div>
+
         </CardHeader>
 
         <CardContent className="px-0 md:px-6 w-full">
@@ -236,13 +246,13 @@ export function DataTable<TData, TValue>({
                           <div className="text-4xl">📭</div>
                           <div className="text-sm font-medium">
                             {filterKey && filters.find(f => f.id === filterKey)?.value 
-                              ? "No results match your search" 
-                              : "No cars found"
+                              ? (translations?.noResults || "No results match your search")
+                              : (translations?.noData || "No data found")
                             }
                           </div>
                           {Boolean(filterKey && filters.find(f => f.id === filterKey)?.value) && (
                             <div className="text-xs text-muted-foreground">
-                              Try adjusting your search criteria or clear the filter
+                              {translations?.clearFilter || "Try adjusting your search criteria or clear the filter"}
                             </div>
                           )}
                         </div>
@@ -261,6 +271,7 @@ export function DataTable<TData, TValue>({
               pageSize={pageSize}
               rowCount={rowCount}
               onPaginationChange={onPaginationChange}
+              translations={translations?.pagination}
             />
           </div>
         </CardContent>

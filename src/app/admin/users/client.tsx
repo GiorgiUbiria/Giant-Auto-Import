@@ -8,7 +8,50 @@ import { getUsersAction } from "@/lib/actions/userActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { SortingState, ColumnFiltersState, VisibilityState } from "@tanstack/react-table";
 
-export const Client = () => {
+interface ClientProps {
+  translations: {
+    title: string;
+    loading: string;
+    error: string;
+    noUsers: string;
+    columns: {
+      id: string;
+      fullName: string;
+      email: string;
+      phone: string;
+      role: string;
+      actions: string;
+    };
+    actions: {
+      edit: string;
+      delete: string;
+      deleteConfirmDescription: string;
+      cancel: string;
+      deleteAction: string;
+      deleting: string;
+      deleteSuccess: string;
+      deleteError: string;
+    };
+    dataTable: {
+      searchPlaceholder: string;
+      columns: string;
+      noResults: string;
+      noData: string;
+      clearFilter: string;
+    };
+    pagination: {
+      showing: string;
+      rowsPerPage: string;
+      page: string;
+      goToFirst: string;
+      goToPrevious: string;
+      goToNext: string;
+      goToLast: string;
+    };
+  };
+}
+
+export const Client = ({ translations }: ClientProps) => {
   const { isLoading, data = [], error } = useServerActionQuery(getUsersAction, {
     input: undefined,
     queryKey: ["getUsers"],
@@ -77,21 +120,24 @@ export const Client = () => {
 
   const ErrorState = () => (
     <div className="w-full h-[400px] flex justify-center items-center">
-      <p>Error loading user data. Please try again later.</p>
+      <p>{translations.error}</p>
       <p>{error?.message}</p>
     </div>
   );
 
   return (
     <div className="container mx-auto py-10 text-primary">
-      <h1 className="text-3xl font-bold pb-8">Users</h1>
+      <h1 className="text-3xl font-bold pb-8 leading-tight">{translations.title}</h1>
       {isLoading ? (
         <LoadingState />
       ) : error ? (
         <ErrorState />
       ) : rowCount > 0 ? (
         <DataTable
-          columns={columns}
+          columns={columns({
+            ...translations.columns,
+            actionsTranslations: translations.actions
+          })}
           data={paginatedData}
           filterKey="fullName"
           pageIndex={pageIndex}
@@ -106,9 +152,13 @@ export const Client = () => {
           onColumnVisibilityChange={handleColumnVisibilityChange}
           rowSelection={rowSelection}
           onRowSelectionChange={handleRowSelectionChange}
+          translations={{
+            ...translations.dataTable,
+            pagination: translations.pagination
+          }}
         />
       ) : (
-        <div>No users found</div>
+        <div className="leading-relaxed">{translations.noUsers}</div>
       )}
     </div>
   );

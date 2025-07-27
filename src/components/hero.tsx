@@ -4,14 +4,23 @@ import { motion, useScroll, useTransform } from "motion/react";
 import { useState, useEffect } from "react";
 import HeroImageComponent from "./hero-image";
 
-export default function Hero() {
+interface HeroProps {
+  translations?: {
+    title: string;
+    subtitle: string;
+    startImporting: string;
+    howItWorks: string;
+  };
+}
+
+export default function Hero({ translations }: HeroProps) {
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 500], [0, -150]);
   const heroOpacity = useTransform(scrollY, [0, 300], [1, 0.8]);
 
   const [displayText, setDisplayText] = useState("");
   const [showCursor, setShowCursor] = useState(true);
-  const fullText = "Giant Auto Import";
+  const fullText = translations?.title || "Giant Auto Import";
 
   useEffect(() => {
     let currentIndex = 0;
@@ -60,7 +69,7 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          Your trusted partner in importing premium vehicles from Copart USA
+          {translations?.subtitle || "Your trusted partner in importing premium vehicles from Copart USA"}
         </motion.p>
         
         <motion.div 
@@ -84,7 +93,7 @@ export default function Hero() {
               whileHover={{ x: 3 }}
               transition={{ duration: 0.2 }}
             >
-              Start Importing
+              {translations?.startImporting || "Start Importing"}
               <motion.svg 
                 className="w-4 h-4" 
                 fill="none" 
@@ -109,7 +118,7 @@ export default function Hero() {
             }}
             whileTap={{ scale: 0.98 }}
           >
-            How It Works
+            {translations?.howItWorks || "How It Works"}
           </motion.a>
         </motion.div>
       </motion.div>

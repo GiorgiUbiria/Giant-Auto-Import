@@ -252,5 +252,230 @@
         "description": "Thorough vehicle inspection and condition reports before bidding to ensure you know exactly what you're getting"
       }
     }
+  },
+  "CsvManagement": {
+    "title": "CSV Data Management",
+    "subtitle": "Upload new pricing data and manage existing versions",
+    "downloadTemplate": "Download Template",
+    "uploadCsv": "Upload CSV",
+    "versionHistory": "Version History",
+    "uploadNewCsv": "Upload New CSV Data",
+    "uploadDescription": "Upload a new CSV file with updated pricing data. The file must follow the required format.",
+    "csvVersionHistory": "CSV Version History",
+    "historyDescription": "View and manage uploaded CSV versions. Only one version can be active at a time.",
+    "upload": "Upload",
+    "history": "History",
+    "download": "Download"
+  },
+  "PricingManagement": {
+    "title": "Pricing Management",
+    "subtitle": "Manage default pricing and user-specific pricing",
+    "defaultPricing": "Default Pricing",
+    "userPricing": "User Pricing",
+    "addUserPricing": "Add User Pricing",
+    "editUserPricing": "Edit User Pricing",
+    "deleteUserPricing": "Delete User Pricing",
+    "user": "User",
+    "pricing": "Pricing",
+    "actions": "Actions",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "confirmDelete": "Are you sure you want to delete this pricing?",
+    "pricingSaved": "Pricing saved successfully",
+    "pricingDeleted": "Pricing deleted successfully",
+    "errorSaving": "Error saving pricing",
+    "errorDeleting": "Error deleting pricing"
+  },
+  "UserPricing": {
+    "title": "User Pricing",
+    "subtitle": "Manage pricing for specific users",
+    "addPricing": "Add Pricing",
+    "editPricing": "Edit Pricing",
+    "deletePricing": "Delete Pricing",
+    "user": "User",
+    "pricing": "Pricing",
+    "actions": "Actions",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "confirmDelete": "Are you sure you want to delete this pricing?",
+    "pricingSaved": "Pricing saved successfully",
+    "pricingDeleted": "Pricing deleted successfully",
+    "errorSaving": "Error saving pricing",
+    "errorDeleting": "Error deleting pricing"
+  },
+  "Hero": {
+    "title": "Giant Auto Import",
+    "subtitle": "Your trusted partner in importing premium vehicles from Copart USA",
+    "startImporting": "Start Importing",
+    "howItWorks": "How It Works"
+  },
+  "AdminPanel": {
+    "title": "Admin Panel",
+    "subtitle": "Manage your auto import business efficiently",
+    "quickAccess": {
+      "users": {
+        "title": "Users",
+        "description": "Manage user accounts and permissions"
+      },
+      "cars": {
+        "title": "Cars",
+        "description": "Browse and manage imported vehicles"
+      },
+      "addCar": {
+        "title": "Add Car",
+        "description": "Add new vehicles to inventory"
+      },
+      "registerUser": {
+        "title": "Register User",
+        "description": "Create new user accounts"
+      },
+      "pricingManagement": {
+        "title": "Pricing Management",
+        "description": "Configure default and user-specific pricing"
+      },
+      "csvManagement": {
+        "title": "CSV Management",
+        "description": "Upload and manage pricing CSV data"
+      }
+    },
+    "adminProfile": {
+      "title": "Admin Profile",
+      "description": "Update your account information and preferences"
+    },
+    "loading": "Loading...",
+    "error": "Failed to load user data. Please try refreshing the page."
+  },
+  "UpdateAdminForm": {
+    "title": "Update Profile",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Enter your full name",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "phone": "Phone Number",
+    "phonePlaceholder": "Enter your phone number",
+    "password": "Password",
+    "passwordPlaceholder": "Enter new password (optional)",
+    "showPassword": "Show password",
+    "updateProfile": "Update Profile",
+    "updating": "Updating...",
+    "profileUpdated": "Profile updated successfully",
+    "updateFailed": "Failed to update profile",
+    "unexpectedError": "An unexpected error occurred",
+    "validation": {
+      "userIdRequired": "User ID is required",
+      "invalidEmail": "Invalid email address",
+      "fullNameRequired": "Full name is required"
+    }
+  },
+  "AdminUsers": {
+    "title": "Users",
+    "loading": "Loading users...",
+    "error": "Error loading user data. Please try again later.",
+    "noUsers": "No users found",
+    "columns": {
+      "id": "ID",
+      "fullName": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "role": "Role",
+      "actions": "Actions"
+    },
+    "actions": {
+      "edit": "Edit user",
+      "delete": "Delete user",
+      "deleteConfirmTitle": "Are you sure you want to delete the user with ID {userId}?",
+      "deleteConfirmDescription": "This action cannot be undone. This will permanently delete the user from the database.",
+      "cancel": "Cancel",
+      "deleteAction": "Delete",
+      "deleting": "Deleting...",
+      "deleteSuccess": "User deleted successfully!",
+      "deleteError": "Failed to delete the user"
+    }
+  },
+  "DataTable": {
+    "searchPlaceholder": "Search by {filterKey}...",
+    "columns": "Columns",
+    "noResults": "No results match your search",
+    "noData": "No data found",
+    "clearFilter": "Try adjusting your search criteria or clear the filter"
+  },
+  "DataTablePagination": {
+    "showing": "Showing {start} to {end} of {total} results",
+    "rowsPerPage": "Rows per page:",
+    "page": "Page {current} of {total}",
+    "goToFirst": "Go to first page",
+    "goToPrevious": "Go to previous page",
+    "goToNext": "Go to next page",
+    "goToLast": "Go to last page"
+  },
+  "AdminCars": {
+    "title": "Cars",
+    "loading": "Loading cars...",
+    "error": "Error loading car data. Please try again later.",
+    "noCars": "No cars found",
+    "columns": {
+      "owner": "Owner",
+      "purchaseDate": "Purchase Date",
+      "photo": "Photo",
+      "vehicle": "Vehicle",
+      "lotVin": "LOT# VIN#",
+      "receiver": "Receiver",
+      "fuel": "Fuel",
+      "title": "Title",
+      "keys": "Keys",
+      "usPort": "US Port",
+      "destinationPort": "Destination Port",
+      "purchaseDue": "Purchase Due",
+      "shippingDue": "Shipping Due",
+      "totalDue": "Total Due",
+      "paidAmount": "Paid Amount",
+      "actions": "Actions"
+    },
+    "actions": {
+      "edit": "Edit car",
+      "delete": "Delete car",
+      "deleteConfirmTitle": "Are you sure you want to delete the car with VIN code {vin}?",
+      "deleteConfirmDescription": "This action cannot be undone. This will permanently delete the car from the database.",
+      "cancel": "Cancel",
+      "deleteAction": "Delete",
+      "deleting": "Deleting...",
+      "deleteSuccess": "Car deleted successfully!",
+      "deleteError": "Failed to delete the car"
+    },
+    "receiver": {
+      "noReceiver": "No receiver assigned",
+      "assignSuccess": "Receiver assigned successfully!",
+      "assignError": "Failed to assign receiver"
+    },
+    "owner": {
+      "loadError": "Failed to load user data"
+    },
+    "totalFee": {
+      "totalPurchaseFee": "Total Purchase Fee:",
+      "basePurchaseFee": "Base Purchase Fee:",
+      "auctionFee": "+ Auction Fee:",
+      "gateFee": "+ Gate Fee:",
+      "titleFee": "+ Title Fee:",
+      "environmentalFee": "+ Environmental Fee:",
+      "virtualBidFee": "+ Virtual Bid Fee:",
+      "totalPurchaseFeeResult": "= Total Purchase Fee:",
+      "shippingFee": "Shipping Fee:",
+      "groundFee": "Ground Fee:",
+      "oceanFee": "Ocean Fee:"
+    },
+    "buttons": {
+      "invoice": "Invoice",
+      "comingSoon": "Coming soon"
+    },
+    "status": {
+      "yes": "Yes",
+      "no": "No"
+    }
   }
 }

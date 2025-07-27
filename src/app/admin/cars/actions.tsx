@@ -21,18 +21,28 @@ import { toast } from "sonner";
 
 type Props = {
   vin: string;
+  translations: {
+    edit: string;
+    delete: string;
+    deleteConfirmDescription: string;
+    cancel: string;
+    deleteAction: string;
+    deleting: string;
+    deleteSuccess: string;
+    deleteError: string;
+  };
 };
 
-export function Actions({ vin }: Props) {
+export function Actions({ vin, translations }: Props) {
   const queryClient = useQueryClient();
 
   const { isPending, mutate } = useServerActionMutation(deleteCarAction, {
     onError: (error) => {
-      const errorMessage = error?.data || "Failed to delete the car";
+      const errorMessage = error?.data || translations.deleteError;
       toast.error(errorMessage);
     },
     onSuccess: async (data) => {
-      const successMessage = data?.message || "Car deleted successfully!";
+      const successMessage = data?.message || translations.deleteSuccess;
       toast.success(successMessage);
 
       await queryClient.invalidateQueries({
@@ -51,34 +61,34 @@ export function Actions({ vin }: Props) {
       <Link
         href={`/admin/edit/${vin}`}
         className="hover:text-blue-500 hover:underline"
+        title={translations.edit}
       >
         <Pencil className="size-4 hover:opacity-50 transition" />
       </Link>
 
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="link" size="icon">
+          <Button variant="link" size="icon" title={translations.delete}>
             <Trash className="size-4 hover:opacity-50 hover:text-red-500 transition" />
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent className="text-primary">
           <AlertDialogHeader>
-            <AlertDialogTitle>
+            <AlertDialogTitle className="leading-relaxed">
               Are you sure you want to delete the car with VIN code {vin}?
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the car
-              from the database.
+            <AlertDialogDescription className="leading-relaxed">
+              {translations.deleteConfirmDescription}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{translations.cancel}</AlertDialogCancel>
             <AlertDialogAction asChild>
               <Button variant="destructive" onClick={handleDelete}>
                 {isPending ? (
                   <Loader2 className="size-2 animate-spin transition" />
                 ) : (
-                  "Delete"
+                  translations.deleteAction
                 )}
               </Button>
             </AlertDialogAction>

@@ -18,6 +18,19 @@ type Props = {
   groundFee: number;
   oceanFee: number;
   totalFee: number;
+  translations: {
+    totalPurchaseFee: string;
+    basePurchaseFee: string;
+    auctionFee: string;
+    gateFee: string;
+    titleFee: string;
+    environmentalFee: string;
+    virtualBidFee: string;
+    totalPurchaseFeeResult: string;
+    shippingFee: string;
+    groundFee: string;
+    oceanFee: string;
+  };
 };
 
 export const TotalFeeDetails = ({
@@ -31,6 +44,7 @@ export const TotalFeeDetails = ({
   groundFee,
   oceanFee,
   totalFee,
+  translations,
 }: Props) => {
   return (
     <div>
@@ -41,7 +55,7 @@ export const TotalFeeDetails = ({
         <HoverCardContent>
           <div>
             <h3 className="font-bold mb-2">
-              Total Purchase Fee:{" "}
+              {translations.totalPurchaseFee}{" "}
               {purchaseFee +
                 auctionFee +
                 gateFee +
@@ -51,21 +65,21 @@ export const TotalFeeDetails = ({
               $
             </h3>
             <ul className="list-none pl-4 mb-4">
-              <li>Base Purchase Fee: {purchaseFee}$</li>
-              <li>+ Auction Fee: {auctionFee}$</li>
-              <li>+ Gate Fee: {gateFee}$</li>
-              <li>+ Title Fee: {titleFee}$</li>
-              <li>+ Environmental Fee: {environmentalFee}$</li>
-              <li>+ Virtual Bid Fee: {virtualBidFee}$</li>
+              <li>{translations.basePurchaseFee} {purchaseFee}$</li>
+              <li>{translations.auctionFee} {auctionFee}$</li>
+              <li>{translations.gateFee} {gateFee}$</li>
+              <li>{translations.titleFee} {titleFee}$</li>
+              <li>{translations.environmentalFee} {environmentalFee}$</li>
+              <li>{translations.virtualBidFee} {virtualBidFee}$</li>
             </ul>
             <p className="font-semibold text-sm pl-4">
-              = Total Purchase Fee: {purchaseFee}$
+              {translations.totalPurchaseFeeResult} {purchaseFee}$
             </p>
             <Separator className="my-2" />
-            <h3 className="font-bold mb-2">Shipping Fee: {shippingFee}$</h3>
+            <h3 className="font-bold mb-2">{translations.shippingFee} {shippingFee}$</h3>
             <ul className="list-none pl-4">
-              <li>Ground Fee: {groundFee}$</li>
-              <li>Ocean Fee: {oceanFee}$</li>
+              <li>{translations.groundFee} {groundFee}$</li>
+              <li>{translations.oceanFee} {oceanFee}$</li>
             </ul>
           </div>
         </HoverCardContent>

@@ -6,6 +6,25 @@ import { selectUserSchema } from "@/lib/drizzle/schema";
 import { z } from "zod";
 import { Actions } from "./actions";
 
+interface ColumnsTranslations {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  role: string;
+  actions: string;
+  actionsTranslations: {
+    edit: string;
+    delete: string;
+    deleteConfirmDescription: string;
+    cancel: string;
+    deleteAction: string;
+    deleting: string;
+    deleteSuccess: string;
+    deleteError: string;
+  };
+}
+
 const SelectSchema = selectUserSchema.omit({
   password: true,
   passwordText: true,
@@ -13,17 +32,17 @@ const SelectSchema = selectUserSchema.omit({
 });
 type SelectSchemaType = z.infer<typeof SelectSchema>;
 
-export const columns: ColumnDef<SelectSchemaType>[] = [
-  { accessorKey: "id", header: "ID" },
-  { accessorKey: "fullName", header: "Full Name" },
-  { accessorKey: "email", header: "Email" },
-  { accessorKey: "phone", header: "Phone" },
-  { accessorKey: "role", header: "Role" },
+export const columns = (translations: ColumnsTranslations): ColumnDef<SelectSchemaType>[] => [
+  { accessorKey: "id", header: translations.id },
+  { accessorKey: "fullName", header: translations.fullName },
+  { accessorKey: "email", header: translations.email },
+  { accessorKey: "phone", header: translations.phone },
+  { accessorKey: "role", header: translations.role },
   {
     id: "actions",
-    header: "Actions",
+    header: translations.actions,
     cell: ({ row }) => {
-      return <Actions userId={row.getValue("id") as string} />;
+      return <Actions userId={row.getValue("id") as string} translations={translations.actionsTranslations} />;
     },
   },
 ];

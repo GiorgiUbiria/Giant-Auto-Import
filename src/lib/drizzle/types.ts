@@ -35,3 +35,42 @@ const AuctionData = z.object({
 })
 
 export type AuctionData = z.infer<typeof AuctionData>;
+
+// New types for user-based pricing system
+const UserPricingConfig = z.object({
+	id: z.number(),
+	userId: z.string(),
+	oceanFee: z.number().min(0),
+	groundFeeAdjustment: z.number(), // Can be negative for decreases
+	pickupSurcharge: z.number().min(0),
+	serviceFee: z.number().min(0),
+	hybridSurcharge: z.number().min(0),
+	isActive: z.boolean(),
+	createdAt: z.date(),
+	updatedAt: z.date(),
+});
+
+const DefaultPricingConfig = z.object({
+	id: z.number(),
+	oceanFee: z.number().min(0),
+	groundFeeAdjustment: z.number(),
+	pickupSurcharge: z.number().min(0),
+	serviceFee: z.number().min(0),
+	hybridSurcharge: z.number().min(0),
+	isActive: z.boolean(),
+	updatedAt: z.date(),
+});
+
+const CsvDataVersion = z.object({
+	id: z.number(),
+	versionName: z.string(),
+	csvData: z.string(), // JSON string
+	isActive: z.boolean(),
+	uploadedBy: z.string(),
+	uploadedAt: z.date(),
+	description: z.string().optional(),
+});
+
+export type UserPricingConfig = z.infer<typeof UserPricingConfig>;
+export type DefaultPricingConfig = z.infer<typeof DefaultPricingConfig>;
+export type CsvDataVersion = z.infer<typeof CsvDataVersion>;

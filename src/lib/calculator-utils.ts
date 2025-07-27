@@ -1,5 +1,8 @@
 import { csvData, a_styleData, c_styleData, virtualBidData } from "../../public/csvData";
-import { AuctionData, ExtraFee, OceanFee } from "./drizzle/types";
+import { AuctionData, ExtraFee, OceanFee, UserPricingConfig, DefaultPricingConfig } from "./drizzle/types";
+import { db } from "./drizzle/db";
+import { defaultPricingConfig, userPricingConfig, csvDataVersions } from "./drizzle/schema";
+import { eq, and } from "drizzle-orm";
 
 export const oceanShippingRates: OceanFee[] = [
   { state: "Los Angeles, CA", shorthand: "CA", rate: 1675 },
@@ -15,6 +18,64 @@ export const extraFees: ExtraFee[] = [
 ];
 
 export const auctionData: AuctionData[] = csvToJson();
+
+/**
+ * Get active CSV data from database or fallback to static data
+ */
+export const getActiveCsvData = async (): Promise<AuctionData[]> => {
+  try {
+    const [activeVersion] = await db
+      .select()
+      .from(csvDataVersions)
+      .where(eq(csvDataVersions.isActive, true))
+      .limit(1);
+
+    if (activeVersion) {
+      return JSON.parse(activeVersion.csvData) as AuctionData[];
+    }
+  } catch (error) {
+    console.error("Error fetching active CSV data:", error);
+  }
+
+  // Fallback to static data
+  return auctionData;
+};
+
+/**
+ * Get user-specific pricing configuration
+ */
+export const getUserPricingConfig = async (userId: string): Promise<UserPricingConfig | null> => {
+  try {
+    const [config] = await db
+      .select()
+      .from(userPricingConfig)
+      .where(and(eq(userPricingConfig.userId, userId), eq(userPricingConfig.isActive, true)))
+      .limit(1);
+
+    return config || null;
+  } catch (error) {
+    console.error("Error fetching user pricing config:", error);
+    return null;
+  }
+};
+
+/**
+ * Get default pricing configuration
+ */
+export const getDefaultPricingConfig = async (): Promise<DefaultPricingConfig | null> => {
+  try {
+    const [config] = await db
+      .select()
+      .from(defaultPricingConfig)
+      .where(eq(defaultPricingConfig.isActive, true))
+      .limit(1);
+
+    return config || null;
+  } catch (error) {
+    console.error("Error fetching default pricing config:", error);
+    return null;
+  }
+};
 
 export function parseVirtualBidData(): any[] {
   const rows = virtualBidData.trim().split("\n").slice(1);
@@ -103,10 +164,20 @@ export const calculateFee = (feeData: any[], value: number): number => {
   return 0;
 };
 
-export const calculateTotalPurchaseFee = (purchasePrice: number, styleData: any[], virtualBidData: any[], insurance: boolean): number => {
+/**
+ * Calculate total purchase fee with user-based pricing support
+ */
+export const calculateTotalPurchaseFee = async (
+  purchasePrice: number, 
+  styleData: any[], 
+  virtualBidData: any[], 
+  insurance: boolean,
+  userId?: string
+): Promise<number> => {
   const auctionFee = calculateFee(styleData, purchasePrice);
   const virtualBidFee = calculateFee(virtualBidData, purchasePrice);
   const fixedFees = 79 + 20 + 10;
+  
   if (insurance) {
     return purchasePrice * 1.015 + auctionFee + virtualBidFee + fixedFees;
   } else {
@@ -114,24 +185,133 @@ export const calculateTotalPurchaseFee = (purchasePrice: number, styleData: any[
   }
 };
 
-export const calculateShippingFee = (
+/**
+ * Calculate shipping fee with user-based pricing support
+ */
+export const calculateShippingFee = async (
   auctionLoc: string,
   auctionName: string,
   portName: string,
-  additionalFeeTypes: string[]
-): number => {
-  const groundFee =
-    auctionData.find(
-      (data) =>
-        data.auction === auctionName && data.auctionLocation === auctionLoc
-    )?.rate || 0;
-  const oceanFee =
-    oceanShippingRates.find((rate) => rate.shorthand === portName)?.rate || 0;
-  const extraFeesTotal = additionalFeeTypes.reduce(
-    (total, fee) =>
-      total +
-      (extraFees.find((extraFee) => extraFee.type === fee)?.rate ?? 0),
-    0
+  additionalFeeTypes: string[],
+  userId?: string
+): Promise<number> => {
+  // Get user or default pricing configuration
+  const userPricing = userId ? await getUserPricingConfig(userId) : null;
+  const defaultPricing = await getDefaultPricingConfig();
+  const pricing = userPricing || defaultPricing;
+
+  // Get active CSV data
+  const csvData = await getActiveCsvData();
+  
+  // Calculate ground fee with user adjustment
+  const baseGroundFee = csvData.find(
+    (data) => data.auction === auctionName && data.auctionLocation === auctionLoc
+  )?.rate || 0;
+  
+  const groundFeeAdjustment = pricing?.groundFeeAdjustment || 0;
+  const adjustedGroundFee = baseGroundFee + groundFeeAdjustment;
+
+  // Calculate ocean fee with user adjustment
+  const baseOceanFee = oceanShippingRates.find((rate) => rate.shorthand === portName)?.rate || 0;
+  const userOceanFee = pricing?.oceanFee || baseOceanFee;
+
+  // Calculate extra fees with user adjustments
+  const extraFeesTotal = additionalFeeTypes.reduce((total, feeType) => {
+    let feeRate = 0;
+    
+    switch (feeType) {
+      case "EV/Hybrid":
+        feeRate = pricing?.hybridSurcharge || extraFees.find(f => f.type === "EV/Hybrid")?.rate || 0;
+        break;
+      case "Pickup":
+        feeRate = pricing?.pickupSurcharge || extraFees.find(f => f.type === "Pickup")?.rate || 0;
+        break;
+      case "Service":
+        feeRate = pricing?.serviceFee || extraFees.find(f => f.type === "Service")?.rate || 0;
+        break;
+      default:
+        feeRate = extraFees.find(f => f.type === feeType)?.rate || 0;
+    }
+    
+    return total + feeRate;
+  }, 0);
+
+  return adjustedGroundFee + userOceanFee + extraFeesTotal;
+};
+
+/**
+ * Calculate all car fees with user-based pricing support
+ */
+export const calculateCarFeesWithUserPricing = async (
+  auction: string,
+  auctionLocation: string,
+  port: string,
+  body: string,
+  fuel: string,
+  purchaseFee: number,
+  insurance: "YES" | "NO",
+  userId?: string
+) => {
+  const styleData = styleToJson("a");
+  const virtualBidData = parseVirtualBidData();
+  
+  // Get user or default pricing configuration
+  const userPricing = userId ? await getUserPricingConfig(userId) : null;
+  const defaultPricing = await getDefaultPricingConfig();
+  const pricing = userPricing || defaultPricing;
+
+  // Calculate purchase fees
+  const auctionFee = calculateFee(styleData, purchaseFee);
+  const gateFee = 79;
+  const titleFee = 20;
+  const environmentalFee = 10;
+  const virtualBidFee = calculateFee(virtualBidData, purchaseFee);
+
+  const totalPurchaseFee = purchaseFee + auctionFee + gateFee + titleFee + environmentalFee + virtualBidFee;
+
+  // Calculate shipping fees with user pricing
+  const additionalFees: string[] = [];
+  if (body === "PICKUP") additionalFees.push("Pickup");
+  if (fuel === "HYBRID_ELECTRIC") additionalFees.push("EV/Hybrid");
+
+  const shippingFee = await calculateShippingFee(
+    auctionLocation,
+    auction,
+    port,
+    additionalFees,
+    userId
   );
-  return groundFee + oceanFee + extraFeesTotal;
+
+  let totalFee = totalPurchaseFee + shippingFee;
+
+  if (insurance === "YES") {
+    totalFee = totalFee + (totalFee * 1.5) / 100;
+  }
+
+  // Get individual fee breakdown
+  const csvData = await getActiveCsvData();
+  const baseGroundFee = csvData.find(
+    (data) => data.auction === auction && data.auctionLocation === auctionLocation
+  )?.rate || 0;
+  
+  const groundFeeAdjustment = pricing?.groundFeeAdjustment || 0;
+  const adjustedGroundFee = baseGroundFee + groundFeeAdjustment;
+  
+  const baseOceanFee = oceanShippingRates.find((rate) => rate.shorthand === port)?.rate || 0;
+  const userOceanFee = pricing?.oceanFee || baseOceanFee;
+
+  return {
+    totalFee: totalFee,
+    shippingFee: shippingFee,
+    auctionFee: auctionFee,
+    gateFee: gateFee,
+    titleFee: titleFee,
+    environmentalFee: environmentalFee,
+    virtualBidFee: virtualBidFee,
+    groundFee: adjustedGroundFee,
+    oceanFee: userOceanFee,
+    groundFeeAdjustment: groundFeeAdjustment,
+    baseGroundFee: baseGroundFee,
+    baseOceanFee: baseOceanFee,
+  };
 }; 

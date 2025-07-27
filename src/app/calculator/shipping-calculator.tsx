@@ -37,11 +37,11 @@ export function ShippingCalculator({ style }: { style: string }) {
 
   // Use imported utility functions instead of local ones
 
-  const handleCalculate = (e: React.FormEvent) => {
+  const handleCalculate = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const totalPurchaseFee = calculateTotalPurchaseFee(purchaseFee, styleData, virtualBidData, insurance);
-    const shippingFee = calculateShippingFee(
+    const totalPurchaseFee = await calculateTotalPurchaseFee(purchaseFee, styleData, virtualBidData, insurance);
+    const shippingFee = await calculateShippingFee(
       auctionLocation,
       auction,
       port,

@@ -2,7 +2,7 @@
 
 import { getUserAction } from "@/lib/actions/userActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
-import { Loader2, Users, Car, PlusCircle, UserPlus } from "lucide-react";
+import { Loader2, Users, Car, PlusCircle, UserPlus, DollarSign, FileText } from "lucide-react";
 import { UpdateAdminForm } from "./update-admin-form";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,7 +52,7 @@ export const Client = ({ id }: { id: string }) => {
 
 	return (
 		<div className="space-y-8">
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 				<QuickAccessCard
 					title="Users"
 					description="Manage user accounts and permissions"
@@ -76,6 +76,18 @@ export const Client = ({ id }: { id: string }) => {
 					description="Create new user accounts"
 					icon={UserPlus}
 					href="/admin/signup"
+				/>
+				<QuickAccessCard
+					title="Pricing Management"
+					description="Configure default and user-specific pricing"
+					icon={DollarSign}
+					href="/admin/pricing"
+				/>
+				<QuickAccessCard
+					title="CSV Management"
+					description="Upload and manage pricing CSV data"
+					icon={FileText}
+					href="/admin/csv-management"
 				/>
 			</div>
 

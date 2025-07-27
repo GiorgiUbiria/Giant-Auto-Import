@@ -56,7 +56,12 @@ export function UpdateAdminForm({ user }: Props) {
 
 	const onSubmit = async (values: z.infer<typeof FormSchema>) => {
 		try {
-			const [data, error] = await execute(values);
+			// Normalize email to lowercase if provided
+			const normalizedValues = {
+				...values,
+				email: values.email ? values.email.toLowerCase() : values.email
+			};
+			const [data, error] = await execute(normalizedValues);
 
 			if (error || data?.success === false) {
 				toast.error(data?.message || "Failed to update profile");

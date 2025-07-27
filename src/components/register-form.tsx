@@ -46,7 +46,12 @@ export default function RegisterForm() {
   const { isPending, execute } = useServerAction(action);
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
-    const [data, error] = await execute(values);
+    // Normalize email to lowercase
+    const normalizedValues = {
+      ...values,
+      email: values.email.toLowerCase()
+    };
+    const [data, error] = await execute(normalizedValues);
 
     if (data?.success === false) {
       toast.error(data?.message);

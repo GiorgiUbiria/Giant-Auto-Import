@@ -80,21 +80,7 @@ async function calculateCarFees(
 
 export const addCarAction = isAdminProcedure
   .createServerAction()
-  .input(
-    z.object({
-      ...AddCarSchema.shape,
-      images: z
-        .array(
-          z.object({
-            buffer: Uint8ArraySchema,
-            size: z.number(),
-            name: z.string(),
-            type: z.enum(["AUCTION", "WAREHOUSE", "DELIVERED", "PICK_UP"]),
-          })
-        )
-        .optional(),
-    })
-  )
+  .input(AddCarSchema)
   .output(
     z.object({
       message: z.string().optional(),
@@ -104,8 +90,11 @@ export const addCarAction = isAdminProcedure
   )
   .handler(async ({ input }) => {
     try {
+      console.log("addCarAction: Starting car addition", { vin: input.vin, auction: input.auction });
+      
       // Validate required fields
       if (!input.vin || !input.auction || !input.originPort) {
+        console.log("addCarAction: Missing required fields", { vin: input.vin, auction: input.auction, originPort: input.originPort });
         return {
           success: false,
           message: "Missing required fields: VIN, auction, or origin port",
@@ -117,6 +106,7 @@ export const addCarAction = isAdminProcedure
         input.ownerId = null;
       }
 
+      console.log("addCarAction: Calculating fees...");
       const calculation = await calculateCarFees(
         input.auction,
         input.auctionLocation!,
@@ -138,6 +128,7 @@ export const addCarAction = isAdminProcedure
       input.oceanFee = calculation.oceanFee;
       input.shippingFee = calculation.shippingFee;
 
+      console.log("addCarAction: Inserting car into database...");
       const result = await db.transaction(async (tx) => {
         const insertedCars = await tx
           .insert(cars)
@@ -153,6 +144,7 @@ export const addCarAction = isAdminProcedure
         return vin;
       });
 
+      console.log("addCarAction: Car added successfully", { vin: result });
       return {
         success: true,
         message: `Car with VIN code ${result} was added successfully`,

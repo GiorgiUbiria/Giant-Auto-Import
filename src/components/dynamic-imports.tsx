@@ -163,15 +163,6 @@ export const DynamicCarClientView = dynamic(
   }
 );
 
-// Add Car Form - Heavy form with image upload
-export const DynamicAddCarForm = dynamic(
-  () => import('./add-car-form').then(mod => ({ default: mod.AddCarForm })),
-  {
-    loading: LoadingSpinner,
-    ssr: false,
-  }
-);
-
 // Edit Car Form - Heavy form with image management
 export const DynamicEditCarForm = dynamic(
   () => import('./edit-car-form').then(mod => ({ default: mod.EditCarForm })),

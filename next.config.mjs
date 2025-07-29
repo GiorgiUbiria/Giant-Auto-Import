@@ -18,7 +18,7 @@ const nextConfig = {
       type: 'javascript/auto',
     });
     
-    // Enhanced webpack optimization
+    // Simplified webpack optimization for better production stability
     config.optimization = {
       ...config.optimization,
       splitChunks: {
@@ -56,13 +56,6 @@ const nextConfig = {
             chunks: 'all',
             priority: 15,
           },
-          // Heavy Libraries
-          heavy: {
-            test: /[\\/]node_modules[\\/](pdf-lib|@pdf-lib|yet-another-react-lightbox|react-window|motion|react-photo-album)[\\/]/,
-            name: 'heavy',
-            chunks: 'async',
-            priority: 10,
-          },
           // Commons
           commons: {
             name: 'commons',
@@ -70,29 +63,15 @@ const nextConfig = {
             minChunks: 2,
             priority: 5,
           },
-          // Other libraries
-          lib: {
-            test: /[\\/]node_modules[\\/]/,
-            name(module) {
-              const match = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/);
-              return match ? `npm.${match[1].replace('@', '')}` : 'npm.unknown';
-            },
-            priority: 1,
-          },
         },
       },
       // Runtime chunk optimization
       runtimeChunk: 'single',
-      // Module concatenation for better tree shaking (commented out due to compatibility issues)
-      // concatenateModules: !dev,
     };
 
     // Optimize for production
     if (!dev && !isServer) {
       config.optimization.minimize = true;
-      // Enable tree shaking (commented out due to compatibility issues)
-      // config.optimization.usedExports = true;
-      // config.optimization.sideEffects = false;
     }
 
     return config;
@@ -116,16 +95,6 @@ const nextConfig = {
     },
     // Performance optimizations
     optimizeCss: true,
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
-    },
-    // Enable modern JavaScript features (commented out due to compatibility issues)
-    // esmExternals: 'loose',
   },
   images: {
     // Enable image optimization

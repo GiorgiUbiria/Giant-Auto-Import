@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -10,35 +11,13 @@ import { insertCarSchema } from "@/lib/drizzle/schema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useServerAction } from "zsa-react";
-import { useState, useEffect, Suspense, lazy } from "react";
+import { useState, useEffect } from "react";
 import { handleUploadImagesAction } from "@/lib/actions/bucketActions";
 import { ImageUploadSection } from "./image-upload-section";
-import { preloadAllFormResources } from "@/lib/preload-utils";
-
-// Lazy load form sections to reduce initial bundle size
-const BasicInfoSection = lazy(() => 
-  import("../shared-form-sections/basic-info-section").then(mod => ({ default: mod.BasicInfoSection }))
-);
-
-const AuctionInfoSection = lazy(() => 
-  import("../shared-form-sections/auction-info-section").then(mod => ({ default: mod.AuctionInfoSection }))
-);
-
-const FinancialInfoSection = lazy(() => 
-  import("../shared-form-sections/financial-info-section").then(mod => ({ default: mod.FinancialInfoSection }))
-);
-
-// Loading component for form sections
-const FormSectionLoader = () => (
-  <div className="w-full p-6 bg-gray-50 dark:bg-gray-800 rounded-lg animate-pulse">
-    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
-      ))}
-    </div>
-  </div>
-);
+import { BasicInfoSection } from "../shared-form-sections/basic-info-section";
+import { AuctionInfoSection } from "../shared-form-sections/auction-info-section";
+import { FinancialInfoSection } from "../shared-form-sections/financial-info-section";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 // Extended schema to include image fields
 const FormSchema = insertCarSchema.omit({ id: true, destinationPort: true }).extend({
@@ -49,16 +28,16 @@ const FormSchema = insertCarSchema.omit({ id: true, destinationPort: true }).ext
   purchaseDate: z.date().optional(),
 });
 
-function AddCarFormContent() {
+export function AddCarForm() {
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       vin: "",
-      year: 2024,
+      year: new Date().getFullYear(),
       make: "",
       model: "",
       auction: "Copart",
@@ -76,7 +55,7 @@ function AddCarFormContent() {
       purchaseFee: 0,
       departureDate: undefined,
       arrivalDate: undefined,
-      purchaseDate: undefined,
+      purchaseDate: new Date(),
       ownerId: "",
       insurance: "NO",
       auction_images: undefined,
@@ -86,24 +65,15 @@ function AddCarFormContent() {
     },
   });
 
-  // Improved hydration handling with preloading
+  // Improved hydration handling
   useEffect(() => {
-    setIsHydrated(true);
-    
-    // Preload all form resources for better performance
-    preloadAllFormResources();
-    
-    // Set dynamic values after hydration
-    const currentYear = new Date().getFullYear();
-    if (form.getValues("year") !== currentYear) {
-      form.setValue("year", currentYear);
-    }
-    
-    const currentPurchaseDate = form.getValues("purchaseDate");
-    if (!currentPurchaseDate) {
-      form.setValue("purchaseDate", new Date());
-    }
-  }, [form]);
+    // Use a small delay to ensure proper hydration
+    const timer = setTimeout(() => {
+      setIsMounted(true);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const { isPending, execute } = useServerAction(addCarAction);
   const { execute: executeImageUpload } = useServerAction(handleUploadImagesAction);
@@ -115,24 +85,29 @@ function AddCarFormContent() {
   ) => {
     if (!images || images.length === 0) return;
 
-    const imageData = await Promise.all(
-      Array.from(images).map(async (file: File) => {
-        const arrayBuffer = await file.arrayBuffer();
-        return {
-          buffer: Array.from(new Uint8Array(arrayBuffer)),
-          size: file.size,
-          name: file.name,
-          type: type,
-        };
-      })
-    );
+    try {
+      const imageData = await Promise.all(
+        Array.from(images).map(async (file: File) => {
+          const arrayBuffer = await file.arrayBuffer();
+          return {
+            buffer: Array.from(new Uint8Array(arrayBuffer)),
+            size: file.size,
+            name: file.name,
+            type: type,
+          };
+        })
+      );
 
-    const result = await executeImageUpload({
-      vin,
-      images: imageData,
-    });
+      const result = await executeImageUpload({
+        vin,
+        images: imageData,
+      });
 
-    return result;
+      return result;
+    } catch (error) {
+      console.error(`Error processing images for ${type}:`, error);
+      throw error;
+    }
   };
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
@@ -182,15 +157,15 @@ function AddCarFormContent() {
       toast.success(data?.message || "Car added successfully!");
       router.push("/admin/cars");
     } catch (error) {
-      console.error(error);
+      console.error("Form submission error:", error);
       toast.error("An error occurred while submitting the form or processing images");
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Don't render form until hydrated
-  if (!isHydrated) {
+  // Don't render form until mounted to prevent hydration issues
+  if (!isMounted) {
     return (
       <div className="w-full flex justify-center">
         <div className="w-full md:w-2/3 space-y-8 my-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
@@ -207,18 +182,9 @@ function AddCarFormContent() {
     <div className="w-full flex justify-center">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="w-full md:w-2/3 space-y-8 my-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg transition-all">
-          <Suspense fallback={<FormSectionLoader />}>
-            <BasicInfoSection form={form} />
-          </Suspense>
-          
-          <Suspense fallback={<FormSectionLoader />}>
-            <AuctionInfoSection form={form} />
-          </Suspense>
-          
-          <Suspense fallback={<FormSectionLoader />}>
-            <FinancialInfoSection form={form} />
-          </Suspense>
-          
+          <BasicInfoSection form={form} />
+          <AuctionInfoSection form={form} />
+          <FinancialInfoSection form={form} />
           <ImageUploadSection form={form} />
           
           <div className="flex justify-end space-x-4">
@@ -238,8 +204,4 @@ function AddCarFormContent() {
       </Form>
     </div>
   );
-}
-
-export function AddCarForm() {
-  return <AddCarFormContent />;
 } 

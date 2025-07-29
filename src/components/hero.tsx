@@ -39,7 +39,7 @@ export default function Hero({ translations }: HeroProps) {
     }, 150);
 
     return () => clearInterval(typeInterval);
-  }, []);
+  }, [fullText]);
 
   return (
     <motion.div 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from 'next-intl';
 import { useServerAction } from "zsa-react";
 import { getUserPricingAction, updateUserPricingAction, getDefaultPricingAction } from "@/lib/actions/pricingActions";
@@ -46,11 +46,7 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
   const { execute: getDefaultPricing } = useServerAction(getDefaultPricingAction);
   const { execute: recalculateUserFees } = useServerAction(recalculateUserCarFeesAction);
 
-  useEffect(() => {
-    loadPricingData();
-  }, [userId]);
-
-  const loadPricingData = async () => {
+  const loadPricingData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -95,7 +91,11 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, getUserPricing, getDefaultPricing, defaultPricing]);
+
+  useEffect(() => {
+    loadPricingData();
+  }, [loadPricingData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

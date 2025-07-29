@@ -3,33 +3,83 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from 'next-intl';
 import { useServerAction } from "zsa-react";
-import { getDefaultPricingAction, updateDefaultPricingAction } from "@/lib/actions/pricingActions";
+import { 
+  getDefaultPricingAction, 
+  updateDefaultPricingAction,
+  getOceanShippingRatesAction,
+  addOceanShippingRateAction,
+  updateOceanShippingRateAction,
+  deleteOceanShippingRateAction,
+  seedOceanShippingRatesAction
+} from "@/lib/actions/pricingActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Save, DollarSign, Truck, FileText, Zap } from "lucide-react";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { 
+  Loader2, 
+  Save, 
+  DollarSign, 
+  Truck, 
+  FileText, 
+  Zap, 
+  Plus, 
+  Edit, 
+  Trash2,
+  X,
+  Check
+} from "lucide-react";
 import { toast } from "sonner";
+
+interface OceanRate {
+  id?: number;
+  state: string;
+  shorthand: string;
+  rate: number;
+}
 
 export const DefaultPricingForm = () => {
   const t = useTranslations('PricingManagement');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [pricing, setPricing] = useState({
-    oceanFee: 1025,
+    oceanRates: [] as OceanRate[],
     groundFeeAdjustment: 0,
     pickupSurcharge: 300,
     serviceFee: 100,
     hybridSurcharge: 150,
   });
 
+  // Ocean rates management
+  const [oceanRates, setOceanRates] = useState<OceanRate[]>([]);
+  const [editingRate, setEditingRate] = useState<OceanRate | null>(null);
+  const [newRate, setNewRate] = useState<OceanRate>({
+    state: "",
+    shorthand: "",
+    rate: 0,
+  });
+
   const { execute: getDefaultPricing } = useServerAction(getDefaultPricingAction);
   const { execute: updateDefaultPricing } = useServerAction(updateDefaultPricingAction);
+  const { execute: getOceanShippingRates } = useServerAction(getOceanShippingRatesAction);
+  const { execute: addOceanShippingRate } = useServerAction(addOceanShippingRateAction);
+  const { execute: updateOceanShippingRate } = useServerAction(updateOceanShippingRateAction);
+  const { execute: deleteOceanShippingRate } = useServerAction(deleteOceanShippingRateAction);
+  const { execute: seedOceanShippingRates } = useServerAction(seedOceanShippingRatesAction);
 
   useEffect(() => {
     loadDefaultPricing();
+    loadOceanShippingRates();
   }, []);
 
   const loadDefaultPricing = async () => {
@@ -42,7 +92,7 @@ export const DefaultPricingForm = () => {
       }
       if (result.success && result.data) {
         setPricing({
-          oceanFee: result.data.oceanFee,
+          oceanRates: Array.isArray(result.data.oceanRates) ? (result.data.oceanRates as unknown as OceanRate[]) : [],
           groundFeeAdjustment: result.data.groundFeeAdjustment,
           pickupSurcharge: result.data.pickupSurcharge,
           serviceFee: result.data.serviceFee,
@@ -53,6 +103,21 @@ export const DefaultPricingForm = () => {
       toast.error("Failed to load default pricing");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadOceanShippingRates = async () => {
+    try {
+      const [result, error] = await getOceanShippingRates();
+      if (error) {
+        toast.error("Failed to load ocean shipping rates");
+        return;
+      }
+      if (result.success) {
+        setOceanRates(result.data);
+      }
+    } catch (error) {
+      toast.error("Failed to load ocean shipping rates");
     }
   };
 
@@ -88,6 +153,87 @@ export const DefaultPricingForm = () => {
     }));
   };
 
+  const handleAddOceanRate = async () => {
+    if (!newRate.state || !newRate.shorthand || newRate.rate <= 0) {
+      toast.error("Please fill in all fields for the ocean rate");
+      return;
+    }
+
+    try {
+      const [result, error] = await addOceanShippingRate(newRate);
+      if (error) {
+        toast.error("Failed to add ocean rate");
+        return;
+      }
+      if (result.success) {
+        toast.success("Ocean rate added successfully");
+        setNewRate({ state: "", shorthand: "", rate: 0 });
+        loadOceanShippingRates();
+      }
+    } catch (error) {
+      toast.error("Failed to add ocean rate");
+    }
+  };
+
+  const handleUpdateOceanRate = async () => {
+    if (!editingRate?.id || !editingRate.state || !editingRate.shorthand || editingRate.rate <= 0) {
+      toast.error("Please fill in all fields for the ocean rate");
+      return;
+    }
+
+    try {
+      const [result, error] = await updateOceanShippingRate({
+        id: editingRate.id,
+        state: editingRate.state,
+        shorthand: editingRate.shorthand,
+        rate: editingRate.rate,
+      });
+      if (error) {
+        toast.error("Failed to update ocean rate");
+        return;
+      }
+      if (result.success) {
+        toast.success("Ocean rate updated successfully");
+        setEditingRate(null);
+        loadOceanShippingRates();
+      }
+    } catch (error) {
+      toast.error("Failed to update ocean rate");
+    }
+  };
+
+  const handleDeleteOceanRate = async (id: number) => {
+    try {
+      const [result, error] = await deleteOceanShippingRate({ id });
+      if (error) {
+        toast.error("Failed to delete ocean rate");
+        return;
+      }
+      if (result.success) {
+        toast.success("Ocean rate deleted successfully");
+        loadOceanShippingRates();
+      }
+    } catch (error) {
+      toast.error("Failed to delete ocean rate");
+    }
+  };
+
+  const handleSeedOceanRates = async () => {
+    try {
+      const [result, error] = await seedOceanShippingRates();
+      if (error) {
+        toast.error("Failed to seed ocean rates");
+        return;
+      }
+      if (result.success) {
+        toast.success(`Ocean rates seeded successfully: ${result.seededCount} rates added`);
+        loadOceanShippingRates();
+      }
+    } catch (error) {
+      toast.error("Failed to seed ocean rates");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -105,38 +251,174 @@ export const DefaultPricingForm = () => {
         </AlertDescription>
       </Alert>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Ocean Fee */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              Ocean Fee
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="oceanFee">Savannah → Poti</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                  $
-                </span>
-                <Input
-                  id="oceanFee"
-                  type="number"
-                  value={pricing.oceanFee}
-                  onChange={(e) => handleInputChange("oceanFee", e.target.value)}
-                  className="pl-8"
-                  min="0"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Default ocean shipping fee
-              </p>
+      {/* Ocean Shipping Rates Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            Ocean Shipping Rates
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Add New Rate */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg bg-muted/50">
+            <div>
+              <Label htmlFor="newState">State/Location</Label>
+              <Input
+                id="newState"
+                placeholder="e.g., Los Angeles, CA"
+                value={newRate.state}
+                onChange={(e) => setNewRate(prev => ({ ...prev, state: e.target.value }))}
+              />
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <Label htmlFor="newShorthand">Shorthand</Label>
+              <Input
+                id="newShorthand"
+                placeholder="e.g., CA"
+                value={newRate.shorthand}
+                onChange={(e) => setNewRate(prev => ({ ...prev, shorthand: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="newRate">Rate ($)</Label>
+              <Input
+                id="newRate"
+                type="number"
+                placeholder="1025"
+                value={newRate.rate}
+                onChange={(e) => setNewRate(prev => ({ ...prev, rate: parseInt(e.target.value) || 0 }))}
+                min="0"
+              />
+            </div>
+            <div className="flex items-end">
+              <Button 
+                type="button" 
+                onClick={handleAddOceanRate}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Rate
+              </Button>
+            </div>
+          </div>
 
+          {/* Ocean Rates Table */}
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>State/Location</TableHead>
+                  <TableHead>Shorthand</TableHead>
+                  <TableHead>Rate</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {oceanRates.map((rate) => (
+                  <TableRow key={rate.id}>
+                    <TableCell>
+                      {editingRate?.id === rate.id ? (
+                        <Input
+                          value={editingRate?.state || ""}
+                          onChange={(e) => setEditingRate(prev => prev ? { ...prev, state: e.target.value } : null)}
+                        />
+                      ) : (
+                        rate.state
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingRate?.id === rate.id ? (
+                        <Input
+                          value={editingRate?.shorthand || ""}
+                          onChange={(e) => setEditingRate(prev => prev ? { ...prev, shorthand: e.target.value } : null)}
+                        />
+                      ) : (
+                        rate.shorthand
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingRate?.id === rate.id ? (
+                        <Input
+                          type="number"
+                          value={editingRate?.rate || 0}
+                          onChange={(e) => setEditingRate(prev => prev ? { ...prev, rate: parseInt(e.target.value) || 0 } : null)}
+                          min="0"
+                        />
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="h-3 w-3 text-muted-foreground" />
+                          <span className="font-mono">{rate.rate}</span>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {editingRate?.id === rate.id ? (
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={handleUpdateOceanRate}
+                          >
+                            <Check className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditingRate(null)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditingRate(rate)}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteOceanRate(rate.id!)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {oceanRates.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                      <div className="space-y-4">
+                        <p>No ocean shipping rates configured.</p>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={handleSeedOceanRates}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Seed Default Ocean Rates
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Ground Fee Adjustment */}
         <Card>
           <CardHeader className="pb-3">

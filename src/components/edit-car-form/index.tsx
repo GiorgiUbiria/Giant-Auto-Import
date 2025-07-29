@@ -74,9 +74,24 @@ export function EditCarForm({ car }: EditCarFormProps) {
       const successMessage = data?.message || "Car updated successfully!";
       toast.success(successMessage);
 
+      // Invalidate both the specific car and the cars list
       await queryClient.invalidateQueries({
         queryKey: ["getCar", car.vin],
         refetchType: "active",
+      });
+
+      // Also invalidate the cars list to ensure table updates
+      await queryClient.invalidateQueries({
+        queryKey: ["getCars"],
+        exact: false,
+        refetchType: "active",
+      });
+
+      // Force refetch to ensure immediate UI update
+      await queryClient.refetchQueries({
+        queryKey: ["getCars"],
+        exact: false,
+        type: "active",
       });
     },
   });

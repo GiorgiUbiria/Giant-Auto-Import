@@ -100,7 +100,7 @@ export const debugPricingConfig = async (userId?: string) => {
     userId,
     userPricing: userPricing ? {
       id: userPricing.id,
-      oceanFee: userPricing.oceanFee,
+      oceanRates: userPricing.oceanRates,
       groundFeeAdjustment: userPricing.groundFeeAdjustment,
       pickupSurcharge: userPricing.pickupSurcharge,
       serviceFee: userPricing.serviceFee,
@@ -109,7 +109,7 @@ export const debugPricingConfig = async (userId?: string) => {
     } : null,
     defaultPricing: defaultPricing ? {
       id: defaultPricing.id,
-      oceanFee: defaultPricing.oceanFee,
+      oceanRates: defaultPricing.oceanRates,
       groundFeeAdjustment: defaultPricing.groundFeeAdjustment,
       pickupSurcharge: defaultPricing.pickupSurcharge,
       serviceFee: defaultPricing.serviceFee,
@@ -239,8 +239,19 @@ export const calculateShippingFee = async (
   });
 
   // Calculate ocean fee with user adjustment
-  const baseOceanFee = oceanShippingRates.find((rate) => rate.shorthand === portName)?.rate || 0;
-  const userOceanFee = pricing?.oceanFee || baseOceanFee;
+  // First try to find rate in user/default pricing ocean rates
+  let oceanFee = 0;
+  if (pricing?.oceanRates && pricing.oceanRates.length > 0) {
+    const userRate = pricing.oceanRates.find((rate: any) => rate.shorthand === portName);
+    if (userRate) {
+      oceanFee = userRate.rate;
+    }
+  }
+  
+  // Fallback to hardcoded rates if no user/default rates found
+  if (oceanFee === 0) {
+    oceanFee = oceanShippingRates.find((rate) => rate.shorthand === portName)?.rate || 0;
+  }
 
   // Calculate extra fees with user adjustments
   const extraFeesTotal = additionalFeeTypes.reduce((total, feeType) => {
@@ -263,7 +274,7 @@ export const calculateShippingFee = async (
     return total + feeRate;
   }, 0);
 
-  return adjustedGroundFee + userOceanFee + extraFeesTotal;
+  return adjustedGroundFee + oceanFee + extraFeesTotal;
 };
 
 /**
@@ -326,8 +337,20 @@ export const calculateCarFeesWithUserPricing = async (
   const groundFeeAdjustment = pricing?.groundFeeAdjustment || 0;
   const adjustedGroundFee = baseGroundFee + groundFeeAdjustment;
   
-  const baseOceanFee = oceanShippingRates.find((rate) => rate.shorthand === port)?.rate || 0;
-  const userOceanFee = pricing?.oceanFee || baseOceanFee;
+  // Calculate ocean fee with user adjustment
+  // First try to find rate in user/default pricing ocean rates
+  let oceanFee = 0;
+  if (pricing?.oceanRates && pricing.oceanRates.length > 0) {
+    const userRate = pricing.oceanRates.find((rate: any) => rate.shorthand === port);
+    if (userRate) {
+      oceanFee = userRate.rate;
+    }
+  }
+
+  // Fallback to hardcoded rates if no user/default rates found
+  if (oceanFee === 0) {
+    oceanFee = oceanShippingRates.find((rate) => rate.shorthand === port)?.rate || 0;
+  }
 
   return {
     totalFee: totalFee,
@@ -338,10 +361,10 @@ export const calculateCarFeesWithUserPricing = async (
     environmentalFee: environmentalFee,
     virtualBidFee: virtualBidFee,
     groundFee: adjustedGroundFee,
-    oceanFee: userOceanFee,
+    oceanFee: oceanFee,
     groundFeeAdjustment: groundFeeAdjustment,
     baseGroundFee: baseGroundFee,
-    baseOceanFee: baseOceanFee,
+    baseOceanFee: oceanFee,
   };
 }; 
 

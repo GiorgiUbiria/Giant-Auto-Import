@@ -8,12 +8,15 @@ import {
   userPricingConfig,
   defaultPricingConfig,
   csvDataVersions,
+  oceanShippingRates,
   insertUserPricingConfigSchema,
   selectUserPricingConfigSchema,
   insertDefaultPricingConfigSchema,
   selectDefaultPricingConfigSchema,
   insertCsvDataVersionSchema,
   selectCsvDataVersionSchema,
+  insertOceanShippingRatesSchema,
+  selectOceanShippingRatesSchema,
 } from "../drizzle/schema";
 import { isAdminProcedure, authedProcedure } from "./authProcedures";
 import { createServerAction } from "zsa";
@@ -21,10 +24,17 @@ import { parseCsvToJson, validateCsvFormat } from "../csv-utils";
 import { calculateCarFeesWithUserPricing } from "../calculator-utils";
 import { cars } from "../drizzle/schema";
 
+// Schema for ocean rate
+const OceanRateSchema = z.object({
+  state: z.string(),
+  shorthand: z.string(),
+  rate: z.number().min(0),
+});
+
 // Schema for updating user pricing
 const UpdateUserPricingSchema = z.object({
   userId: z.string(),
-  oceanFee: z.number().min(0),
+  oceanRates: z.array(OceanRateSchema),
   groundFeeAdjustment: z.number(),
   pickupSurcharge: z.number().min(0),
   serviceFee: z.number().min(0),
@@ -33,11 +43,18 @@ const UpdateUserPricingSchema = z.object({
 
 // Schema for updating default pricing
 const UpdateDefaultPricingSchema = z.object({
-  oceanFee: z.number().min(0),
+  oceanRates: z.array(OceanRateSchema),
   groundFeeAdjustment: z.number(),
   pickupSurcharge: z.number().min(0),
   serviceFee: z.number().min(0),
   hybridSurcharge: z.number().min(0),
+});
+
+// Schema for managing ocean shipping rates
+const OceanRateInputSchema = z.object({
+  state: z.string(),
+  shorthand: z.string(),
+  rate: z.number().min(0),
 });
 
 // Schema for uploading CSV data
@@ -46,6 +63,153 @@ const UploadCsvSchema = z.object({
   csvContent: z.string().min(1),
   description: z.string().optional(),
 });
+
+/**
+ * Get all active ocean shipping rates
+ */
+export const getOceanShippingRatesAction = isAdminProcedure
+  .createServerAction()
+  .output(
+    z.object({
+      success: z.boolean(),
+      data: z.array(selectOceanShippingRatesSchema),
+      message: z.string().optional(),
+    })
+  )
+  .handler(async () => {
+    try {
+      const rates = await db
+        .select()
+        .from(oceanShippingRates)
+        .where(eq(oceanShippingRates.isActive, true))
+        .orderBy(oceanShippingRates.state);
+
+      return {
+        success: true,
+        data: rates,
+        message: "Ocean shipping rates fetched successfully",
+      };
+    } catch (error) {
+      console.error("Error fetching ocean shipping rates:", error);
+      return {
+        success: false,
+        data: [],
+        message: "Failed to fetch ocean shipping rates",
+      };
+    }
+  });
+
+/**
+ * Add new ocean shipping rate
+ */
+export const addOceanShippingRateAction = isAdminProcedure
+  .createServerAction()
+  .input(OceanRateInputSchema)
+  .output(
+    z.object({
+      success: z.boolean(),
+      message: z.string(),
+    })
+  )
+  .handler(async ({ input }) => {
+    try {
+      await db.insert(oceanShippingRates).values({
+        state: input.state,
+        shorthand: input.shorthand,
+        rate: input.rate,
+      });
+
+      revalidatePath("/admin/pricing");
+
+      return {
+        success: true,
+        message: "Ocean shipping rate added successfully",
+      };
+    } catch (error) {
+      console.error("Error adding ocean shipping rate:", error);
+      return {
+        success: false,
+        message: "Failed to add ocean shipping rate",
+      };
+    }
+  });
+
+/**
+ * Update ocean shipping rate
+ */
+export const updateOceanShippingRateAction = isAdminProcedure
+  .createServerAction()
+  .input(z.object({
+    id: z.number(),
+    state: z.string(),
+    shorthand: z.string(),
+    rate: z.number().min(0),
+  }))
+  .output(
+    z.object({
+      success: z.boolean(),
+      message: z.string(),
+    })
+  )
+  .handler(async ({ input }) => {
+    try {
+      await db
+        .update(oceanShippingRates)
+        .set({
+          state: input.state,
+          shorthand: input.shorthand,
+          rate: input.rate,
+          updatedAt: new Date(),
+        })
+        .where(eq(oceanShippingRates.id, input.id));
+
+      revalidatePath("/admin/pricing");
+
+      return {
+        success: true,
+        message: "Ocean shipping rate updated successfully",
+      };
+    } catch (error) {
+      console.error("Error updating ocean shipping rate:", error);
+      return {
+        success: false,
+        message: "Failed to update ocean shipping rate",
+      };
+    }
+  });
+
+/**
+ * Delete ocean shipping rate
+ */
+export const deleteOceanShippingRateAction = isAdminProcedure
+  .createServerAction()
+  .input(z.object({ id: z.number() }))
+  .output(
+    z.object({
+      success: z.boolean(),
+      message: z.string(),
+    })
+  )
+  .handler(async ({ input }) => {
+    try {
+      await db
+        .delete(oceanShippingRates)
+        .where(eq(oceanShippingRates.id, input.id));
+
+      revalidatePath("/admin/pricing");
+
+      return {
+        success: true,
+        message: "Ocean shipping rate deleted successfully",
+      };
+    } catch (error) {
+      console.error("Error deleting ocean shipping rate:", error);
+      return {
+        success: false,
+        message: "Failed to delete ocean shipping rate",
+      };
+    }
+  });
 
 /**
  * Get user pricing configuration
@@ -109,7 +273,7 @@ export const updateUserPricingAction = isAdminProcedure
         await db
           .update(userPricingConfig)
           .set({
-            oceanFee: input.oceanFee,
+            oceanRates: input.oceanRates,
             groundFeeAdjustment: input.groundFeeAdjustment,
             pickupSurcharge: input.pickupSurcharge,
             serviceFee: input.serviceFee,
@@ -121,7 +285,7 @@ export const updateUserPricingAction = isAdminProcedure
         // Create new config
         await db.insert(userPricingConfig).values({
           userId: input.userId,
-          oceanFee: input.oceanFee,
+          oceanRates: input.oceanRates,
           groundFeeAdjustment: input.groundFeeAdjustment,
           pickupSurcharge: input.pickupSurcharge,
           serviceFee: input.serviceFee,
@@ -206,7 +370,7 @@ export const updateDefaultPricingAction = isAdminProcedure
         await db
           .update(defaultPricingConfig)
           .set({
-            oceanFee: input.oceanFee,
+            oceanRates: input.oceanRates,
             groundFeeAdjustment: input.groundFeeAdjustment,
             pickupSurcharge: input.pickupSurcharge,
             serviceFee: input.serviceFee,
@@ -217,7 +381,7 @@ export const updateDefaultPricingAction = isAdminProcedure
       } else {
         // Create new config
         await db.insert(defaultPricingConfig).values({
-          oceanFee: input.oceanFee,
+          oceanRates: input.oceanRates,
           groundFeeAdjustment: input.groundFeeAdjustment,
           pickupSurcharge: input.pickupSurcharge,
           serviceFee: input.serviceFee,
@@ -567,6 +731,61 @@ export const recalculateUserCarFeesAction = isAdminProcedure
         success: false,
         message: "Failed to recalculate user car fees",
         updatedCount: 0,
+      };
+    }
+  });
+
+/**
+ * Seed initial ocean shipping rates
+ */
+export const seedOceanShippingRatesAction = isAdminProcedure
+  .createServerAction()
+  .output(
+    z.object({
+      success: z.boolean(),
+      message: z.string(),
+      seededCount: z.number(),
+    })
+  )
+  .handler(async () => {
+    try {
+      // Check if rates already exist
+      const existingRates = await db
+        .select()
+        .from(oceanShippingRates)
+        .where(eq(oceanShippingRates.isActive, true));
+
+      if (existingRates.length > 0) {
+        return {
+          success: true,
+          message: "Ocean shipping rates already exist",
+          seededCount: existingRates.length,
+        };
+      }
+
+      // Seed initial rates
+      const initialRates = [
+        { state: "Los Angeles, CA", shorthand: "CA", rate: 1675 },
+        { state: "Houston, TX", shorthand: "TX", rate: 1075 },
+        { state: "New Jersey, NJ", shorthand: "NJ", rate: 1100 },
+        { state: "Savannah, GA", shorthand: "GA", rate: 1025 },
+      ];
+
+      await db.insert(oceanShippingRates).values(initialRates);
+
+      revalidatePath("/admin/pricing");
+
+      return {
+        success: true,
+        message: "Ocean shipping rates seeded successfully",
+        seededCount: initialRates.length,
+      };
+    } catch (error) {
+      console.error("Error seeding ocean shipping rates:", error);
+      return {
+        success: false,
+        message: "Failed to seed ocean shipping rates",
+        seededCount: 0,
       };
     }
   }); 

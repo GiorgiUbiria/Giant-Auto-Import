@@ -27,14 +27,14 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
   const [saving, setSaving] = useState(false);
   const [useCustomPricing, setUseCustomPricing] = useState(false);
   const [pricing, setPricing] = useState({
-    oceanFee: 1025,
+    oceanRates: [] as Array<{state: string, shorthand: string, rate: number}>,
     groundFeeAdjustment: 0,
     pickupSurcharge: 300,
     serviceFee: 100,
     hybridSurcharge: 150,
   });
   const [defaultPricing, setDefaultPricing] = useState({
-    oceanFee: 1025,
+    oceanRates: [] as Array<{state: string, shorthand: string, rate: number}>,
     groundFeeAdjustment: 0,
     pickupSurcharge: 300,
     serviceFee: 100,
@@ -62,7 +62,7 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
       }
       if (defaultResult.success && defaultResult.data) {
         setDefaultPricing({
-          oceanFee: defaultResult.data.oceanFee,
+          oceanRates: Array.isArray(defaultResult.data.oceanRates) ? (defaultResult.data.oceanRates as unknown as Array<{state: string, shorthand: string, rate: number}>) : [],
           groundFeeAdjustment: defaultResult.data.groundFeeAdjustment,
           pickupSurcharge: defaultResult.data.pickupSurcharge,
           serviceFee: defaultResult.data.serviceFee,
@@ -78,7 +78,7 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
       }
       if (userResult.success && userResult.data) {
         setPricing({
-          oceanFee: userResult.data.oceanFee,
+          oceanRates: Array.isArray(userResult.data.oceanRates) ? (userResult.data.oceanRates as unknown as Array<{state: string, shorthand: string, rate: number}>) : [],
           groundFeeAdjustment: userResult.data.groundFeeAdjustment,
           pickupSurcharge: userResult.data.pickupSurcharge,
           serviceFee: userResult.data.serviceFee,
@@ -251,8 +251,17 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                     <Input
                       id="oceanFee"
                       type="number"
-                      value={pricing.oceanFee}
-                      onChange={(e) => handleInputChange("oceanFee", e.target.value)}
+                      value={pricing.oceanRates[0]?.rate || 0}
+                      onChange={(e) => {
+                        const newRate = parseInt(e.target.value) || 0;
+                        const newRates = [...pricing.oceanRates];
+                        if (newRates.length > 0) {
+                          newRates[0] = { ...newRates[0], rate: newRate };
+                        } else {
+                          newRates.push({ state: "Savannah, GA", shorthand: "GA", rate: newRate });
+                        }
+                        setPricing(prev => ({ ...prev, oceanRates: newRates }));
+                      }}
                       className="pl-8"
                       min="0"
                       disabled={!useCustomPricing}
@@ -260,11 +269,11 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     <span className="text-muted-foreground">Default:</span>
-                    <span className="font-mono">${defaultPricing.oceanFee}</span>
-                    {pricing.oceanFee !== defaultPricing.oceanFee && (
-                      <Badge variant={pricing.oceanFee > defaultPricing.oceanFee ? "default" : "secondary"}>
-                        {pricing.oceanFee > defaultPricing.oceanFee ? "+" : ""}
-                        {pricing.oceanFee - defaultPricing.oceanFee}
+                    <span className="font-mono">${defaultPricing.oceanRates[0]?.rate || 0}</span>
+                    {pricing.oceanRates[0]?.rate !== defaultPricing.oceanRates[0]?.rate && (
+                      <Badge variant={pricing.oceanRates[0]?.rate > defaultPricing.oceanRates[0]?.rate ? "default" : "secondary"}>
+                        {pricing.oceanRates[0]?.rate > defaultPricing.oceanRates[0]?.rate ? "+" : ""}
+                        {pricing.oceanRates[0]?.rate - defaultPricing.oceanRates[0]?.rate}
                       </Badge>
                     )}
                   </div>

@@ -117,3 +117,66 @@ export const users = sqliteTable("users", {
 		email_unique: uniqueIndex("users_email_unique").on(table.email),
 	}
 });
+
+export const csv_data_versions = sqliteTable("csv_data_versions", {
+	id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+	version_name: text("version_name").notNull(),
+	csv_data: text("csv_data").notNull(),
+	is_active: integer("is_active").default(false).notNull(),
+	uploaded_by: text("uploaded_by").notNull().references(() => users.id),
+	uploaded_at: integer("uploaded_at").default(sql`(unixepoch())`).notNull(),
+	description: text("description"),
+},
+(table) => {
+	return {
+		uploaded_by_idx: index("csv_data_versions_uploaded_by_idx").on(table.uploaded_by),
+		is_active_idx: index("csv_data_versions_is_active_idx").on(table.is_active),
+	}
+});
+
+export const default_pricing_config = sqliteTable("default_pricing_config", {
+	id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+	ground_fee_adjustment: integer("ground_fee_adjustment").default(0).notNull(),
+	pickup_surcharge: integer("pickup_surcharge").default(300).notNull(),
+	service_fee: integer("service_fee").default(100).notNull(),
+	hybrid_surcharge: integer("hybrid_surcharge").default(150).notNull(),
+	is_active: integer("is_active").default(true).notNull(),
+	updated_at: integer("updated_at").default(sql`(unixepoch())`).notNull(),
+	ocean_rates: text("ocean_rates").default("[]").notNull(),
+});
+
+export const user_pricing_config = sqliteTable("user_pricing_config", {
+	id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+	user_id: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" } ),
+	ground_fee_adjustment: integer("ground_fee_adjustment").default(0).notNull(),
+	pickup_surcharge: integer("pickup_surcharge").default(300).notNull(),
+	service_fee: integer("service_fee").default(100).notNull(),
+	hybrid_surcharge: integer("hybrid_surcharge").default(150).notNull(),
+	is_active: integer("is_active").default(true).notNull(),
+	created_at: integer("created_at").default(sql`(unixepoch())`).notNull(),
+	updated_at: integer("updated_at").default(sql`(unixepoch())`).notNull(),
+	ocean_rates: text("ocean_rates").default("[]").notNull(),
+},
+(table) => {
+	return {
+		is_active_idx: index("user_pricing_config_is_active_idx").on(table.is_active),
+		user_id_idx: index("user_pricing_config_user_id_idx").on(table.user_id),
+	}
+});
+
+export const ocean_shipping_rates = sqliteTable("ocean_shipping_rates", {
+	id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+	state: text("state").notNull(),
+	shorthand: text("shorthand").notNull(),
+	rate: integer("rate").notNull(),
+	is_active: integer("is_active").default(true).notNull(),
+	created_at: integer("created_at").default(sql`(unixepoch())`).notNull(),
+	updated_at: integer("updated_at").default(sql`(unixepoch())`).notNull(),
+},
+(table) => {
+	return {
+		is_active_idx: index("ocean_shipping_rates_is_active_idx").on(table.is_active),
+		shorthand_idx: index("ocean_shipping_rates_shorthand_idx").on(table.shorthand),
+		state_idx: index("ocean_shipping_rates_state_idx").on(table.state),
+	}
+});

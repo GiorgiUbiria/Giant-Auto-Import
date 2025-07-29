@@ -29,10 +29,17 @@ import {
   Settings, 
   User, 
   DollarSign,
-  Users
+  Users,
+  MapPin
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+
+interface OceanRate {
+  state: string;
+  shorthand: string;
+  rate: number;
+}
 
 export const UserPricingList = () => {
   const t = useTranslations('PricingManagement');
@@ -111,6 +118,26 @@ export const UserPricingList = () => {
     }
   };
 
+  const formatOceanRates = (oceanRates: OceanRate[] | null | undefined) => {
+    if (!oceanRates || oceanRates.length === 0) {
+      return "Default";
+    }
+    
+    if (oceanRates.length === 1) {
+      return `${oceanRates[0].shorthand}: $${oceanRates[0].rate}`;
+    }
+    
+    return `${oceanRates.length} rates configured`;
+  };
+
+  const getOceanRatesTooltip = (oceanRates: OceanRate[] | null | undefined) => {
+    if (!oceanRates || oceanRates.length === 0) {
+      return "Using system default ocean rates";
+    }
+    
+    return oceanRates.map(rate => `${rate.state}: $${rate.rate}`).join('\n');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -154,7 +181,7 @@ export const UserPricingList = () => {
                 <TableHead>User</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Pricing Status</TableHead>
-                <TableHead>Ocean Fee</TableHead>
+                <TableHead>Ocean Rates</TableHead>
                 <TableHead>Ground Adjustment</TableHead>
                 <TableHead>Pickup Surcharge</TableHead>
                 <TableHead>Service Fee</TableHead>
@@ -184,11 +211,16 @@ export const UserPricingList = () => {
                       {getPricingStatusBadge(status)}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="h-3 w-3 text-muted-foreground" />
-                        <span className="font-mono">
-                          {pricing?.oceanFee || "Default"}
+                      <div className="flex items-center gap-1" title={getOceanRatesTooltip(pricing?.oceanRates)}>
+                        <MapPin className="h-3 w-3 text-muted-foreground" />
+                        <span className="font-mono text-sm">
+                          {formatOceanRates(pricing?.oceanRates)}
                         </span>
+                        {pricing?.oceanRates && pricing.oceanRates.length > 1 && (
+                          <Badge variant="outline" className="ml-1 text-xs">
+                            {pricing.oceanRates.length}
+                          </Badge>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -240,6 +272,7 @@ export const UserPricingList = () => {
         <p>• <strong>Default:</strong> Uses system-wide default pricing</p>
         <p>• <strong>Custom:</strong> Has user-specific pricing configuration</p>
         <p>• <strong>Inactive:</strong> Custom pricing exists but is disabled</p>
+        <p>• <strong>Ocean Rates:</strong> Shows configured rates or "Default" if using system rates</p>
         <p>• Click &quot;Configure&quot; to set up custom pricing for a user</p>
       </div>
     </div>

@@ -40,7 +40,11 @@ export type AuctionData = z.infer<typeof AuctionData>;
 const UserPricingConfig = z.object({
 	id: z.number(),
 	userId: z.string(),
-	oceanFee: z.number().min(0),
+	oceanRates: z.array(z.object({
+		state: z.string(),
+		shorthand: z.string(),
+		rate: z.number().min(0),
+	})),
 	groundFeeAdjustment: z.number(), // Can be negative for decreases
 	pickupSurcharge: z.number().min(0),
 	serviceFee: z.number().min(0),
@@ -52,7 +56,11 @@ const UserPricingConfig = z.object({
 
 const DefaultPricingConfig = z.object({
 	id: z.number(),
-	oceanFee: z.number().min(0),
+	oceanRates: z.array(z.object({
+		state: z.string(),
+		shorthand: z.string(),
+		rate: z.number().min(0),
+	})),
 	groundFeeAdjustment: z.number(),
 	pickupSurcharge: z.number().min(0),
 	serviceFee: z.number().min(0),

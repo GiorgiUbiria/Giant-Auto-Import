@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { users, cars, images, logs, payment_cars, payments, sessions } from "./schema";
+import { users, cars, images, logs, payment_cars, payments, sessions, csv_data_versions, user_pricing_config } from "./schema";
 
 export const carsRelations = relations(cars, ({one, many}) => ({
 	user: one(users, {
@@ -15,6 +15,8 @@ export const usersRelations = relations(users, ({many}) => ({
 	logs: many(logs),
 	payments: many(payments),
 	sessions: many(sessions),
+	csv_data_versions: many(csv_data_versions),
+	user_pricing_configs: many(user_pricing_config),
 }));
 
 export const imagesRelations = relations(images, ({one}) => ({
@@ -53,6 +55,20 @@ export const paymentsRelations = relations(payments, ({one, many}) => ({
 export const sessionsRelations = relations(sessions, ({one}) => ({
 	user: one(users, {
 		fields: [sessions.user_id],
+		references: [users.id]
+	}),
+}));
+
+export const csv_data_versionsRelations = relations(csv_data_versions, ({one}) => ({
+	user: one(users, {
+		fields: [csv_data_versions.uploaded_by],
+		references: [users.id]
+	}),
+}));
+
+export const user_pricing_configRelations = relations(user_pricing_config, ({one}) => ({
+	user: one(users, {
+		fields: [user_pricing_config.user_id],
 		references: [users.id]
 	}),
 }));

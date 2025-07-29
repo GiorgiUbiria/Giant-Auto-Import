@@ -225,7 +225,8 @@ export const selectLogSchema = createSelectSchema(logs);
 export const userPricingConfig = sqliteTable("user_pricing_config", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  oceanFee: integer("ocean_fee").notNull().default(1025),
+  // Remove single oceanFee field and replace with oceanRates JSON
+  oceanRates: text("ocean_rates", { mode: "json" }).$type<Array<{state: string, shorthand: string, rate: number}>>().notNull().default(sql`'[]'`),
   groundFeeAdjustment: integer("ground_fee_adjustment").notNull().default(0),
   pickupSurcharge: integer("pickup_surcharge").notNull().default(300),
   serviceFee: integer("service_fee").notNull().default(100),
@@ -240,9 +241,11 @@ export const userPricingConfig = sqliteTable("user_pricing_config", {
   }
 });
 
+// Updated default pricing config to support multiple ocean rates
 export const defaultPricingConfig = sqliteTable("default_pricing_config", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-  oceanFee: integer("ocean_fee").notNull().default(1025),
+  // Remove single oceanFee field and replace with oceanRates JSON
+  oceanRates: text("ocean_rates", { mode: "json" }).$type<Array<{state: string, shorthand: string, rate: number}>>().notNull().default(sql`'[]'`),
   groundFeeAdjustment: integer("ground_fee_adjustment").notNull().default(0),
   pickupSurcharge: integer("pickup_surcharge").notNull().default(300),
   serviceFee: integer("service_fee").notNull().default(100),
@@ -263,6 +266,23 @@ export const csvDataVersions = sqliteTable("csv_data_versions", {
   return {
     isActiveIdx: index("csv_data_versions_is_active_idx").on(table.isActive),
     uploadedByIdx: index("csv_data_versions_uploaded_by_idx").on(table.uploadedBy),
+  }
+});
+
+// New table for ocean shipping rates
+export const oceanShippingRates = sqliteTable("ocean_shipping_rates", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  state: text("state").notNull(), // e.g., "Los Angeles, CA"
+  shorthand: text("shorthand").notNull(), // e.g., "CA"
+  rate: integer("rate").notNull(), // Rate in dollars
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+}, (table) => {
+  return {
+    stateIdx: index("ocean_shipping_rates_state_idx").on(table.state),
+    shorthandIdx: index("ocean_shipping_rates_shorthand_idx").on(table.shorthand),
+    isActiveIdx: index("ocean_shipping_rates_is_active_idx").on(table.isActive),
   }
 });
 
@@ -290,3 +310,6 @@ export const selectDefaultPricingConfigSchema = createSelectSchema(defaultPricin
 
 export const insertCsvDataVersionSchema = createInsertSchema(csvDataVersions);
 export const selectCsvDataVersionSchema = createSelectSchema(csvDataVersions);
+
+export const insertOceanShippingRatesSchema = createInsertSchema(oceanShippingRates);
+export const selectOceanShippingRatesSchema = createSelectSchema(oceanShippingRates);

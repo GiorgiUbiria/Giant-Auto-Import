@@ -19,7 +19,8 @@ import {
 } from "../calculator-utils";
 import { authedProcedure, isAdminProcedure } from "./authProcedures";
 import { createServerAction } from "zsa";
-import { deleteObjectFromBucket } from "./bucketActions";
+import { deleteObjectFromBucket, cleanUpBucketForVin } from "./bucketActions";
+import { getAuth } from "@/lib/auth";
 
 const AddCarSchema = insertCarSchema.omit({ id: true, destinationPort: true });
 const SelectSchema = selectCarSchema;
@@ -78,8 +79,7 @@ async function calculateCarFees(
   );
 }
 
-export const addCarAction = isAdminProcedure
-  .createServerAction()
+export const addCarAction = createServerAction()
   .input(AddCarSchema)
   .output(
     z.object({
@@ -91,6 +91,25 @@ export const addCarAction = isAdminProcedure
   .handler(async ({ input }) => {
     try {
       console.log("addCarAction: Starting car addition", { vin: input.vin, auction: input.auction });
+      
+      // Manual authentication check
+      const { user } = await getAuth();
+      
+      if (!user) {
+        console.error("addCarAction: No authenticated user");
+        return {
+          success: false,
+          message: "Authentication required",
+        };
+      }
+
+      if (user.role !== "ADMIN") {
+        console.error("addCarAction: User is not admin", { role: user.role });
+        return {
+          success: false,
+          message: "Admin access required",
+        };
+      }
       
       // Validate required fields
       if (!input.vin || !input.auction || !input.originPort) {
@@ -188,11 +207,23 @@ export const addCarAction = isAdminProcedure
     }
   });
 
-export const getCarsAction = authedProcedure
-  .createServerAction()
+export const getCarsAction = createServerAction()
   .output(z.array(SelectSchema))
   .handler(async () => {
     try {
+      // Manual authentication check
+      const { user } = await getAuth();
+      
+      if (!user) {
+        console.error("getCarsAction: No authenticated user");
+        return [];
+      }
+
+      if (user.role !== "ADMIN") {
+        console.error("getCarsAction: User is not admin", { role: user.role });
+        return [];
+      }
+
       const query = await db.query.cars.findMany({
         orderBy: desc(cars.purchaseDate),
         limit: 50,
@@ -329,8 +360,7 @@ export const getCarAction = authedProcedure
     }
   });
 
-export const deleteCarAction = isAdminProcedure
-  .createServerAction()
+export const deleteCarAction = createServerAction()
   .input(
     z.object({
       vin: z.string(),
@@ -339,6 +369,7 @@ export const deleteCarAction = isAdminProcedure
   .output(
     z.object({
       message: z.string().optional(),
+      data: z.any().optional(),
       success: z.boolean(),
     })
   )
@@ -346,37 +377,67 @@ export const deleteCarAction = isAdminProcedure
     const { vin } = input;
 
     try {
-      const imageRecords = await db
-        .select({ imageKey: images.imageKey })
-        .from(images)
-        .where(eq(images.carVin, vin));
+      // Manual authentication check
+      const { user } = await getAuth();
+      
+      if (!user) {
+        return {
+          success: false,
+          message: "Authentication required",
+        };
+      }
 
-      await Promise.all(
-        imageRecords.map(async (record) => {
-          if (record.imageKey) {
-            await deleteObjectFromBucket(record.imageKey);
-          }
-        })
-      );
+      if (user.role !== "ADMIN") {
+        return {
+          success: false,
+          message: "Admin access required",
+        };
+      }
 
-      const deletedCar = await db
+      if (!vin) {
+        return {
+          success: false,
+          message: "Provide the car's vin code",
+        };
+      }
+
+      const carExists = await db
+        .select()
+        .from(cars)
+        .where(eq(cars.vin, vin))
+        .limit(1);
+
+      if (!carExists.length) {
+        return {
+          success: false,
+          message: "Car does not exist",
+        };
+      }
+
+      // Delete all images for this car first
+      await cleanUpBucketForVin(vin);
+
+      const [isDeleted] = await db
         .delete(cars)
         .where(eq(cars.vin, vin))
         .returning({ vin: cars.vin });
 
-      if (!deletedCar.length) {
+      if (!isDeleted) {
         return {
           success: false,
-          message: "Car not found or could not be deleted",
+          message: "Could not delete the car",
         };
       }
 
+      revalidatePath("/admin/cars");
+      revalidatePath("/dashboard");
+
       return {
         success: true,
-        message: `Car with VIN ${vin} and its associated images were successfully deleted`,
+        message: `Car with vin code ${isDeleted.vin} was deleted successfully`,
       };
     } catch (error) {
-      console.error("Error deleting car:", error);
+      console.error("Error deleting the car:", error);
       return {
         success: false,
         message: "An error occurred while deleting the car and its images",

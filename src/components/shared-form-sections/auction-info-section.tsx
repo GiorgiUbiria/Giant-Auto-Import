@@ -42,16 +42,29 @@ const useAuctionData = () => {
 
     const loadAuctionData = async () => {
       try {
-        // Use dynamic import to reduce initial bundle size
+        setIsLoading(true);
+        
+        // Check if we're in the browser environment
+        if (typeof window === 'undefined') {
+          // SSR: Use fallback data
+          if (isMounted) {
+            setAuctionData([]);
+            setIsLoading(false);
+          }
+          return;
+        }
+        
+        // Client-side: Load dynamic data
         const calculatorUtils = await import("@/lib/calculator-utils");
-        const data = calculatorUtils.getAuctionData();
+        const dynamicData = await calculatorUtils.getActiveCsvData();
         
         // Ensure data is valid and filter out any invalid entries
-        const validData = Array.isArray(data) ? data.filter(item => 
+        const validData = Array.isArray(dynamicData) ? dynamicData.filter(item => 
           item && 
           typeof item === 'object' && 
           item.auctionLocation && 
-          item.auction
+          item.auction &&
+          item.port
         ) : [];
         
         if (isMounted) {
@@ -84,39 +97,56 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
   const [selectedAuction, setSelectedAuction] = useState("Copart");
   const { auctionData, isLoading } = useAuctionData();
 
-  // Memoize filtered data to prevent unnecessary re-computations
-  const filteredOriginPorts = useMemo(() => {
-    return oceanShippingRates.filter((port) =>
-      auctionData.some(
-        (data: AuctionData) =>
-          data.auctionLocation === selectedAuctionLocation &&
-          data.port === port.shorthand
-      )
-    );
-  }, [auctionData, selectedAuctionLocation]);
+  // Get available ports for the selected auction location
+  const availablePorts = useMemo(() => {
+    if (!selectedAuctionLocation || !auctionData.length) {
+      return [];
+    }
 
-  // Memoize auction locations to prevent unnecessary re-computations
+    // Find all unique ports for the selected auction location
+    const locationPorts = auctionData
+      .filter((data: AuctionData) => 
+        data.auctionLocation === selectedAuctionLocation && 
+        data.auction === selectedAuction
+      )
+      .map((data: AuctionData) => data.port);
+
+    // Remove duplicates and return unique ports
+    return Array.from(new Set(locationPorts));
+  }, [selectedAuctionLocation, selectedAuction, auctionData]);
+
+  // Get auction locations for the selected auction
   const auctionLocations = useMemo(() => {
-    return Array.from(
-      new Set(
-        auctionData
-          .filter((data: AuctionData) => data.auction === selectedAuction)
-          .map((data: AuctionData) => data.auctionLocation)
-      )
-    );
-  }, [auctionData, selectedAuction]);
+    if (!selectedAuction || !auctionData.length) {
+      return [];
+    }
 
-  // Memoize handlers to prevent unnecessary re-renders
-  const handleAuctionLocationChange = useCallback((location: string) => {
-    setSelectedAuctionLocation(location);
-    form.setValue("auctionLocation", location);
+    // Find all unique auction locations for the selected auction
+    const locations = auctionData
+      .filter((data: AuctionData) => data.auction === selectedAuction)
+      .map((data: AuctionData) => data.auctionLocation);
+
+    // Remove duplicates and return unique locations
+    return Array.from(new Set(locations));
+  }, [selectedAuction, auctionData]);
+
+  // Handle auction change
+  const handleAuctionChange = useCallback((value: string) => {
+    setSelectedAuction(value);
+    setSelectedAuctionLocation("");
+    form.setValue("auctionLocation", "");
+    form.setValue("originPort", "");
   }, [form]);
 
-  const handleAuctionChange = useCallback((auction: string) => {
-    setSelectedAuction(auction);
-    setSelectedAuctionLocation("");
-    form.setValue("auction", auction);
-    form.setValue("auctionLocation", "");
+  // Handle auction location change
+  const handleAuctionLocationChange = useCallback((value: string) => {
+    setSelectedAuctionLocation(value);
+    form.setValue("originPort", "");
+  }, [form]);
+
+  // Handle origin port change
+  const handleOriginPortChange = useCallback((value: string) => {
+    form.setValue("originPort", value);
   }, [form]);
 
   return (
@@ -124,205 +154,113 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
       <CardHeader>
         <CardTitle>Auction Information</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <FormField
-            control={form.control}
-            name="auction"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Auction</FormLabel>
-                <Select onValueChange={handleAuctionChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select auction" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Copart">Copart</SelectItem>
-                    <SelectItem value="IAAI">IAAI</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="auctionLocation"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Auction Location</FormLabel>
-                <Select onValueChange={handleAuctionLocationChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={isLoading ? "Loading..." : "Select location"} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {auctionLocations.map((location) => (
-                      <SelectItem key={location} value={location}>
-                        {location}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="originPort"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Origin Port</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select port" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {filteredOriginPorts.map((port) => (
-                      <SelectItem key={port.shorthand} value={port.shorthand}>
-                        {port.state}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="lotNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Lot Number</FormLabel>
+      <CardContent className="space-y-4">
+        <FormField
+          control={form.control}
+          name="auction"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Auction</FormLabel>
+              <Select
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  handleAuctionChange(value);
+                }}
+                defaultValue={field.value}
+                disabled={isLoading}
+              >
                 <FormControl>
-                  <Input placeholder="Lot number" {...field} />
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select auction" />
+                  </SelectTrigger>
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <SelectContent>
+                  <SelectItem value="Copart">Copart</SelectItem>
+                  <SelectItem value="IAAI">IAAI</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="bookingNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Booking Number</FormLabel>
+        <FormField
+          control={form.control}
+          name="auctionLocation"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Auction Location</FormLabel>
+              <Select
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  handleAuctionLocationChange(value);
+                }}
+                value={field.value}
+                disabled={!selectedAuction || isLoading}
+              >
                 <FormControl>
-                  <Input placeholder="Booking number" {...field} />
+                  <SelectTrigger>
+                    <SelectValue placeholder={!selectedAuction ? "Select auction first" : auctionLocations.length === 0 ? "No locations available" : "Select auction location"} />
+                  </SelectTrigger>
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <SelectContent>
+                  {auctionLocations.map((location) => (
+                    <SelectItem key={location} value={location}>
+                      {location}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="containerNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Container Number</FormLabel>
+        <FormField
+          control={form.control}
+          name="originPort"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Origin Port</FormLabel>
+              <Select
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  handleOriginPortChange(value);
+                }}
+                value={field.value}
+                disabled={!selectedAuctionLocation || availablePorts.length === 0}
+              >
                 <FormControl>
-                  <Input placeholder="Container number" {...field} />
+                  <SelectTrigger>
+                    <SelectValue placeholder={!selectedAuctionLocation ? "Select auction location first" : availablePorts.length === 0 ? "No ports available" : "Select origin port"} />
+                  </SelectTrigger>
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <SelectContent>
+                  {availablePorts.map((port) => (
+                    <SelectItem key={port} value={port}>
+                      {port}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="trackingLink"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tracking Link</FormLabel>
-                <FormControl>
-                  <Input placeholder="Tracking link" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="keys"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Keys</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select key status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="YES">Yes</SelectItem>
-                    <SelectItem value="NO">No</SelectItem>
-                    <SelectItem value="UNKNOWN">Unknown</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Title</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select title status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="YES">Yes</SelectItem>
-                    <SelectItem value="NO">No</SelectItem>
-                    <SelectItem value="PENDING">Pending</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="shippingStatus"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Shipping Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select shipping status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="AUCTION">Auction</SelectItem>
-                    <SelectItem value="WAREHOUSE">Warehouse</SelectItem>
-                    <SelectItem value="DELIVERED">Delivered</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="trackingLink"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tracking Link</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter tracking link" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </CardContent>
     </Card>
   );

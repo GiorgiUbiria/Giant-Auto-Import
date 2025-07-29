@@ -104,6 +104,19 @@ export const addCarAction = isAdminProcedure
   )
   .handler(async ({ input }) => {
     try {
+      // Validate required fields
+      if (!input.vin || !input.auction || !input.originPort) {
+        return {
+          success: false,
+          message: "Missing required fields: VIN, auction, or origin port",
+        };
+      }
+
+      // Handle empty ownerId - convert to null for database
+      if (input.ownerId === "" || input.ownerId === "none") {
+        input.ownerId = null;
+      }
+
       const calculation = await calculateCarFees(
         input.auction,
         input.auctionLocation!,
@@ -145,9 +158,36 @@ export const addCarAction = isAdminProcedure
         message: `Car with VIN code ${result} was added successfully`,
       };
     } catch (error) {
-      console.error(error);
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      console.error("addCarAction error:", error);
+      
+      // Enhanced error handling for different constraint violations
+      let errorMessage = "An error occurred while adding the car";
+      
+      if (error instanceof Error) {
+        const errorStr = error.message;
+        
+        if (errorStr.includes("SQLITE_CONSTRAINT")) {
+          if (errorStr.includes("FOREIGN KEY constraint failed")) {
+            if (errorStr.includes("owner_id")) {
+              errorMessage = "Invalid owner ID provided. Please select a valid user or leave owner field empty.";
+            } else {
+              errorMessage = "Database constraint violation. Please check all required fields and relationships.";
+            }
+          } else if (errorStr.includes("UNIQUE constraint failed")) {
+            if (errorStr.includes("vin")) {
+              errorMessage = "A car with this VIN already exists in the database.";
+            } else {
+              errorMessage = "Duplicate entry detected. Please check for duplicate values.";
+            }
+          } else if (errorStr.includes("NOT NULL constraint failed")) {
+            errorMessage = "Required field is missing. Please fill in all required fields.";
+          } else {
+            errorMessage = "Database constraint violation: " + errorStr;
+          }
+        } else {
+          errorMessage = errorStr;
+        }
+      }
 
       return {
         success: false,
@@ -426,7 +466,34 @@ export const assignOwnerAction = isAdminProcedure
       };
     } catch (error) {
       console.error("Error assigning owner:", error);
-      throw new Error("Failed to assign the owner to car");
+      
+      // Enhanced error handling for different constraint violations
+      let errorMessage = "Failed to assign the owner to car";
+      
+      if (error instanceof Error) {
+        const errorStr = error.message;
+        
+        if (errorStr.includes("SQLITE_CONSTRAINT")) {
+          if (errorStr.includes("FOREIGN KEY constraint failed")) {
+            if (errorStr.includes("owner_id")) {
+              errorMessage = "Invalid owner ID provided. The specified user does not exist in the database.";
+            } else {
+              errorMessage = "Database constraint violation. Please check all required fields and relationships.";
+            }
+          } else if (errorStr.includes("NOT NULL constraint failed")) {
+            errorMessage = "Required field is missing. Please fill in all required fields.";
+          } else {
+            errorMessage = "Database constraint violation: " + errorStr;
+          }
+        } else {
+          errorMessage = errorStr;
+        }
+      }
+
+      return {
+        success: false,
+        message: errorMessage,
+      };
     }
   });
 
@@ -512,7 +579,10 @@ export const updateCarAction = isAdminProcedure
     })
   )
   .handler(async ({ input }) => {
-    input.ownerId = input.ownerId !== "none" ? input.ownerId : null;
+    // Handle empty ownerId - convert to null for database
+    if (input.ownerId === "" || input.ownerId === "none") {
+      input.ownerId = null;
+    }
 
     const calculation = await calculateCarFees(
       input.auction,
@@ -554,9 +624,36 @@ export const updateCarAction = isAdminProcedure
         message: `Car with VIN ${input.vin} was updated successfully`,
       };
     } catch (error) {
-      console.error(error);
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      console.error("updateCarAction error:", error);
+      
+      // Enhanced error handling for different constraint violations
+      let errorMessage = "An error occurred while updating the car";
+      
+      if (error instanceof Error) {
+        const errorStr = error.message;
+        
+        if (errorStr.includes("SQLITE_CONSTRAINT")) {
+          if (errorStr.includes("FOREIGN KEY constraint failed")) {
+            if (errorStr.includes("owner_id")) {
+              errorMessage = "Invalid owner ID provided. Please select a valid user or leave owner field empty.";
+            } else {
+              errorMessage = "Database constraint violation. Please check all required fields and relationships.";
+            }
+          } else if (errorStr.includes("UNIQUE constraint failed")) {
+            if (errorStr.includes("vin")) {
+              errorMessage = "A car with this VIN already exists in the database.";
+            } else {
+              errorMessage = "Duplicate entry detected. Please check for duplicate values.";
+            }
+          } else if (errorStr.includes("NOT NULL constraint failed")) {
+            errorMessage = "Required field is missing. Please fill in all required fields.";
+          } else {
+            errorMessage = "Database constraint violation: " + errorStr;
+          }
+        } else {
+          errorMessage = errorStr;
+        }
+      }
 
       return {
         success: false,

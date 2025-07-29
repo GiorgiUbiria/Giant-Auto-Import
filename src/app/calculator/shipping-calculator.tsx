@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from 'next-intl';
 import {
   getAuctionData,
@@ -21,6 +21,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AuctionData } from "@/lib/drizzle/types";
 
 export function ShippingCalculator({ 
   style, 
@@ -37,10 +38,28 @@ export function ShippingCalculator({
   const [additionalFees, setAdditionalFees] = useState<string[]>([]);
   const [insurance, setInsurance] = useState(false);
   const [estimatedFee, setEstimatedFee] = useState(0);
+  const [auctionData, setAuctionData] = useState<AuctionData[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const styleData = styleToJson(style);
   const virtualBidData = parseVirtualBidData();
-  const auctionData = getAuctionData();
+
+  // Load auction data on component mount
+  useEffect(() => {
+    const loadAuctionData = async () => {
+      try {
+        const data = await getAuctionData();
+        setAuctionData(data);
+      } catch (error) {
+        console.error("Error loading auction data:", error);
+        setAuctionData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAuctionData();
+  }, []);
 
   // Use imported utility functions instead of local ones
 
@@ -84,8 +103,8 @@ export function ShippingCalculator({
   const handleAuctionLocationChange = (location: string) => {
     setAuctionLocation(location);
     const availablePorts = auctionData
-      .filter((data) => data.auctionLocation === location)
-      .map((data) => data.port);
+      .filter((data: AuctionData) => data.auctionLocation === location)
+      .map((data: AuctionData) => data.port);
     const [availablePort] = availablePorts;
     setPort(availablePort || "");
   };
@@ -95,6 +114,27 @@ export function ShippingCalculator({
     setAuctionLocation("");
     setPort("");
   };
+
+  // Get unique auction locations for the selected auction
+  const getAuctionLocations = (selectedAuction: string): string[] => {
+    return Array.from(
+      new Set(
+        auctionData
+          .filter((data: AuctionData) => data.auction === selectedAuction)
+          .map((data: AuctionData) => data.auctionLocation)
+      )
+    );
+  };
+
+  if (loading) {
+    return (
+      <Card className="w-full max-w-4xl shadow-lg transition-all duration-300 hover:shadow-xl border-black dark:border-border/20">
+        <CardContent className="flex items-center justify-center p-8">
+          <p>Loading auction data...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-4xl shadow-lg transition-all duration-300 hover:shadow-xl border-black dark:border-border/20">
@@ -153,13 +193,7 @@ export function ShippingCalculator({
                       <CommandList>
                         <CommandEmpty>{t('noAuctionLocationFound')}</CommandEmpty>
                         <CommandGroup>
-                          {Array.from(
-                            new Set(
-                              auctionData
-                                .filter((data) => data.auction === auction)
-                                .map((data) => data.auctionLocation)
-                            )
-                          ).map((location) => (
+                          {getAuctionLocations(auction).map((location: string) => (
                             <CommandItem
                               key={location}
                               value={location}

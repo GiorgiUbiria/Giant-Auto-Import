@@ -34,19 +34,31 @@ const validateEnvironment = () => {
   }
 };
 
-validateEnvironment();
+const getS3Client = () => {
+  validateEnvironment();
+  
+  const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
+  const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
+  const secretAccessKey = process.env.CLOUDFLARE_SECRET_ACCESS_KEY as string;
+  
+  return new S3({
+    region: "auto",
+    endpoint: endpoint,
+    credentials: {
+      accessKeyId: accessKeyId,
+      secretAccessKey: secretAccessKey,
+    },
+    forcePathStyle: true,
+    requestHandler: {
+      requestTimeout: 10000,
+    },
+  });
+};
 
-const endpoint = process.env.CLOUDFLARE_API_ENDPOINT as string;
-const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
-const secretAccessKey = process.env.CLOUDFLARE_SECRET_ACCESS_KEY as string;
-const bucketName = process.env.CLOUDFLARE_BUCKET_NAME as string;
-
-console.log('R2 Configuration:', {
-  endpoint: endpoint ? 'SET' : 'MISSING',
-  accessKeyId: accessKeyId ? 'SET' : 'MISSING', 
-  secretAccessKey: secretAccessKey ? 'SET' : 'MISSING',
-  bucketName: bucketName ? 'SET' : 'MISSING'
-});
+const getBucketName = () => {
+  validateEnvironment();
+  return process.env.CLOUDFLARE_BUCKET_NAME as string;
+};
 
 const SelectImageSchema = selectImageSchema.omit({ id: true }).merge(
   z.object({
@@ -59,21 +71,11 @@ const Uint8ArraySchema = z
   .array(z.number())
   .transform((arr) => new Uint8Array(arr));
 
-const S3Client = new S3({
-  region: "auto",
-  endpoint: endpoint,
-  credentials: {
-    accessKeyId: accessKeyId,
-    secretAccessKey: secretAccessKey,
-  },
-  forcePathStyle: true,
-  requestHandler: {
-    requestTimeout: 10000,
-  },
-});
-
 async function getFileCount(prefix: string): Promise<number> {
   try {
+    const S3Client = getS3Client();
+    const bucketName = getBucketName();
+    
     const command = new ListObjectsV2Command({
       Bucket: bucketName,
       Prefix: prefix,
@@ -117,40 +119,48 @@ export const handleUploadImagesAction = isAdminProcedure
     const { vin, images: imageData } = input;
     const uploadedImages: string[] = [];
 
-    for (const file of imageData) {
-      try {
-        const prefix = `${vin}/${file.type}/`;
-        const existingFileCount = await getFileCount(prefix);
+    try {
+      const S3Client = getS3Client();
+      const bucketName = getBucketName();
 
-        const key = `${prefix}${existingFileCount + 1}.png`;
+      for (const file of imageData) {
+        try {
+          const prefix = `${vin}/${file.type}/`;
+          const existingFileCount = await getFileCount(prefix);
 
-        const command = new PutObjectCommand({
-          Bucket: bucketName,
-          Key: key,
-          Body: file.buffer,
-          ContentLength: file.size,
-          ContentType: "image/png",
-        });
+          const key = `${prefix}${existingFileCount + 1}.png`;
 
-        // Upload directly using S3 SDK instead of signed URL
-        await S3Client.send(command);
+          const command = new PutObjectCommand({
+            Bucket: bucketName,
+            Key: key,
+            Body: file.buffer,
+            ContentLength: file.size,
+            ContentType: "image/png",
+          });
 
-        const insertValues: z.infer<typeof insertImageSchema> = {
-          carVin: vin,
-          imageType: file.type,
-          imageKey: key,
-          priority: null,
-        };
+          // Upload directly using S3 SDK instead of signed URL
+          await S3Client.send(command);
 
-        await db.insert(images).values(insertValues);
+          const insertValues: z.infer<typeof insertImageSchema> = {
+            carVin: vin,
+            imageType: file.type,
+            imageKey: key,
+            priority: null,
+          };
 
-        uploadedImages.push(key);
-      } catch (error) {
-        console.error(`Error uploading image for VIN ${vin}:`, error);
+          await db.insert(images).values(insertValues);
+
+          uploadedImages.push(key);
+        } catch (error) {
+          console.error(`Error uploading image for VIN ${vin}:`, error);
+        }
       }
-    }
 
-    return uploadedImages;
+      return uploadedImages;
+    } catch (error) {
+      console.error("Error in handleUploadImagesAction:", error);
+      throw error;
+    }
   });
 
 export async function handleImages(
@@ -158,45 +168,56 @@ export async function handleImages(
   vin: string,
   sizes: number[]
 ): Promise<string[]> {
-  const prefix = `${vin}/${type}/`;
-  const existingFileCount = await getFileCount(prefix);
+  try {
+    const S3Client = getS3Client();
+    const bucketName = getBucketName();
+    
+    const prefix = `${vin}/${type}/`;
+    const existingFileCount = await getFileCount(prefix);
 
-  const keys = sizes.map((_, index) => {
-    const newIndex = existingFileCount + index + 1;
-    return `${prefix}${newIndex}.png`;
-  });
+    const keys = sizes.map((_, index) => {
+      const newIndex = existingFileCount + index + 1;
+      return `${prefix}${newIndex}.png`;
+    });
 
-  const urls = await Promise.all(
-    keys.map(async (key, index) => {
-      const command = new PutObjectCommand({
-        Bucket: bucketName,
-        Key: key,
-        ContentLength: sizes[index],
-        ContentType: "image/png",
-      });
+    const urls = await Promise.all(
+      keys.map(async (key, index) => {
+        const command = new PutObjectCommand({
+          Bucket: bucketName,
+          Key: key,
+          ContentLength: sizes[index],
+          ContentType: "image/png",
+        });
 
-      const signedUrl = await getSignedUrl(S3Client, command, {
-        expiresIn: 3600,
-      });
+        const signedUrl = await getSignedUrl(S3Client, command, {
+          expiresIn: 3600,
+        });
 
-      return signedUrl;
-    })
-  );
+        return signedUrl;
+      })
+    );
 
-  const insertUrls = keys.map((key, index) => ({
-    carVin: vin,
-    imageType: type as "WAREHOUSE" | "AUCTION" | "DELIVERED" | "PICK_UP",
-    imageKey: key,
-    imageUrl: urls[index],
-  }));
+    const insertUrls = keys.map((key, index) => ({
+      carVin: vin,
+      imageType: type as "WAREHOUSE" | "AUCTION" | "DELIVERED" | "PICK_UP",
+      imageKey: key,
+      imageUrl: urls[index],
+    }));
 
-  await db.insert(images).values(insertUrls);
+    await db.insert(images).values(insertUrls);
 
-  return urls;
+    return urls;
+  } catch (error) {
+    console.error("Error in handleImages:", error);
+    throw error;
+  }
 }
 
 export async function cleanUpBucket(): Promise<void> {
   try {
+    const S3Client = getS3Client();
+    const bucketName = getBucketName();
+    
     const listObjectsParams = {
       Bucket: bucketName,
     };
@@ -226,24 +247,29 @@ export async function cleanUpBucket(): Promise<void> {
 }
 
 export async function deleteObjectFromBucket(key: string): Promise<void> {
-  const deleteParams = {
-    Bucket: bucketName,
-    Key: key,
-  };
-
-  const deleteCommand = new DeleteObjectCommand(deleteParams);
-
   try {
-    await S3Client.send(deleteCommand);
+    const S3Client = getS3Client();
+    const bucketName = getBucketName();
+    
+    const deleteParams = {
+      Bucket: bucketName,
+      Key: key,
+    };
 
+    const deleteCommand = new DeleteObjectCommand(deleteParams);
+
+    await S3Client.send(deleteCommand);
     await db.delete(images).where(eq(images.imageKey, key));
   } catch (error) {
-    console.error(`Error deleting ${key} from ${bucketName}:`, error);
+    console.error(`Error deleting ${key} from bucket:`, error);
   }
 }
 
 export async function getSignedUrlForKey(key: string): Promise<string> {
   try {
+    const S3Client = getS3Client();
+    const bucketName = getBucketName();
+    
     const command = new GetObjectCommand({
       Bucket: bucketName,
       Key: key,
@@ -370,6 +396,9 @@ export async function fetchImagesForDisplay(
 
 export async function cleanUpBucketForVin(vin: string): Promise<void> {
   try {
+    const S3Client = getS3Client();
+    const bucketName = getBucketName();
+    
     const listObjectsParams = {
       Bucket: bucketName,
       Prefix: `${vin}/`,
@@ -401,8 +430,11 @@ export async function cleanUpBucketForVin(vin: string): Promise<void> {
 
 export async function testR2Connection(): Promise<boolean> {
   try {
+    const S3Client = getS3Client();
+    const bucketName = getBucketName();
+    
     console.log('Testing R2 connection with configuration:');
-    console.log('Endpoint:', endpoint);
+    console.log('Endpoint:', process.env.CLOUDFLARE_API_ENDPOINT);
     console.log('Bucket:', bucketName);
     
     const command = new ListObjectsV2Command({

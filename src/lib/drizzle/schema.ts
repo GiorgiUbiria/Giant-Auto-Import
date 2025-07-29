@@ -135,6 +135,16 @@ export const insertCarSchema = createInsertSchema(cars, {
   departureDate: z.date().optional(),
   arrivalDate: z.date().optional(),
   purchaseDate: z.date(),
+  ownerId: (schema) => schema.ownerId
+    .optional()
+    .nullable()
+    .transform((val) => {
+      // Convert empty string to null for database consistency
+      if (val === "" || val === "none") {
+        return null;
+      }
+      return val;
+    }),
 });
 export const selectCarSchema = createSelectSchema(cars);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from 'next-intl';
 import { useServerAction } from "zsa-react";
 import { getCsvVersionsAction, activateCsvVersionAction, deleteCsvVersionAction } from "@/lib/actions/pricingActions";
@@ -52,11 +52,7 @@ export const CsvVersionHistory = () => {
   const { execute: deleteVersion, isPending: deleting } = useServerAction(deleteCsvVersionAction);
   const { execute: recalculateFees, isPending: recalculating } = useServerAction(recalculateAllCarFeesAction);
 
-  useEffect(() => {
-    loadVersions();
-  }, []);
-
-  const loadVersions = async () => {
+  const loadVersions = useCallback(async () => {
     try {
       setLoading(true);
       const [result, error] = await getVersions();
@@ -74,7 +70,11 @@ export const CsvVersionHistory = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getVersions]);
+
+  useEffect(() => {
+    loadVersions();
+  }, [loadVersions]);
 
   const handleActivate = async (versionId: number) => {
     try {

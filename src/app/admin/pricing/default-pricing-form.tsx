@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from 'next-intl';
 import { useServerAction } from "zsa-react";
 import { 
@@ -77,12 +77,7 @@ export const DefaultPricingForm = () => {
   const { execute: deleteOceanShippingRate } = useServerAction(deleteOceanShippingRateAction);
   const { execute: seedOceanShippingRates } = useServerAction(seedOceanShippingRatesAction);
 
-  useEffect(() => {
-    loadDefaultPricing();
-    loadOceanShippingRates();
-  }, []);
-
-  const loadDefaultPricing = async () => {
+  const loadDefaultPricing = useCallback(async () => {
     try {
       setLoading(true);
       const [result, error] = await getDefaultPricing();
@@ -104,9 +99,9 @@ export const DefaultPricingForm = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getDefaultPricing]);
 
-  const loadOceanShippingRates = async () => {
+  const loadOceanShippingRates = useCallback(async () => {
     try {
       const [result, error] = await getOceanShippingRates();
       if (error) {
@@ -119,7 +114,12 @@ export const DefaultPricingForm = () => {
     } catch (error) {
       toast.error("Failed to load ocean shipping rates");
     }
-  };
+  }, [getOceanShippingRates]);
+
+  useEffect(() => {
+    loadDefaultPricing();
+    loadOceanShippingRates();
+  }, [loadDefaultPricing, loadOceanShippingRates]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

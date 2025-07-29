@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from 'next-intl';
 import { useServerAction } from "zsa-react";
 import { getUsersAction } from "@/lib/actions/userActions";
@@ -51,29 +51,7 @@ export const UserPricingList = () => {
   const { execute: getUsers } = useServerAction(getUsersAction);
   const { execute: getUserPricing } = useServerAction(getUserPricingAction);
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
-  const loadUsers = async () => {
-    try {
-      setLoading(true);
-      const [result, error] = await getUsers();
-      if (error) {
-        toast.error("Failed to load users");
-        return;
-      }
-      setUsers(result || []);
-      // Load pricing for each user
-      await loadUserPricing(result || []);
-    } catch (error) {
-      toast.error("Failed to load users");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadUserPricing = async (userList: any[]) => {
+  const loadUserPricing = useCallback(async (userList: any[]) => {
     const pricingData: Record<string, any> = {};
     
     for (const user of userList) {
@@ -92,7 +70,29 @@ export const UserPricingList = () => {
     }
     
     setUserPricing(pricingData);
-  };
+  }, [getUserPricing]);
+
+  const loadUsers = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [result, error] = await getUsers();
+      if (error) {
+        toast.error("Failed to load users");
+        return;
+      }
+      setUsers(result || []);
+      // Load pricing for each user
+      await loadUserPricing(result || []);
+    } catch (error) {
+      toast.error("Failed to load users");
+    } finally {
+      setLoading(false);
+    }
+  }, [getUsers, loadUserPricing]);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   const filteredUsers = users.filter(user => 
     user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -272,7 +272,7 @@ export const UserPricingList = () => {
         <p>• <strong>Default:</strong> Uses system-wide default pricing</p>
         <p>• <strong>Custom:</strong> Has user-specific pricing configuration</p>
         <p>• <strong>Inactive:</strong> Custom pricing exists but is disabled</p>
-        <p>• <strong>Ocean Rates:</strong> Shows configured rates or "Default" if using system rates</p>
+        <p>• <strong>Ocean Rates:</strong> Shows configured rates or &quot;Default&quot; if using system rates</p>
         <p>• Click &quot;Configure&quot; to set up custom pricing for a user</p>
       </div>
     </div>

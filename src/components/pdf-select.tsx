@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { User } from "lucia";
+import type { AuthenticatedUser } from "@/lib/auth";
 
 let PDFDocument: any;
 let fontkit: any;
@@ -19,7 +19,7 @@ async function loadPDFLibs() {
 }
 
 type Props = {
-  user: User;
+  user: AuthenticatedUser;
 };
 
 export default function PdfSelect({ user }: Props) {

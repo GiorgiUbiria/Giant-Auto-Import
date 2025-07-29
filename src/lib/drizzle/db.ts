@@ -65,5 +65,15 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
   }
 }
 
-// Export the cached instance
-export const db = tursoClient();
+// Export a function that safely gets the database instance
+export function getDb(): LibSQLDatabase<typeof schema> {
+  try {
+    return tursoClient();
+  } catch (error) {
+    console.error("Failed to get database instance:", error);
+    throw new Error("Database connection failed");
+  }
+}
+
+// Export the cached instance for backward compatibility
+export const db = getDb();

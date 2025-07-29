@@ -7,43 +7,77 @@ import type { Session, User } from "lucia";
 
 import { z } from "zod";
 
-import { db } from "./drizzle/db";
+import { getDb } from "./drizzle/db";
 import { selectUserSchema, sessions, users } from "./drizzle/schema";
 
 const AuthSchema = selectUserSchema.omit({ id: true, password: true, passwordText: true });
 type AuthSchemaType = z.infer<typeof AuthSchema>; 
 
-const adapter = new DrizzleSQLiteAdapter(db, sessions as any, users as any);
+// Define the authenticated user type with role
+export type AuthenticatedUser = User & {
+  role: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  deposit: number;
+  balance: number;
+  priceList: string;
+};
 
-export const lucia = new Lucia(adapter, {
-  sessionCookie: {
-    expires: false,
-    attributes: {
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-    },
-  },
-  getUserAttributes: (attributes) => {
-    return {
-      fullName: attributes.fullName,
-      email: attributes.email,
-      role: attributes.role,
-      phone: attributes.phone,
-      deposit: attributes.deposit,
-      balance: attributes.balance,
-      priceList: attributes.priceList,
-    };
-  },
-});
+// Create adapter lazily to prevent client-side database access
+let adapter: DrizzleSQLiteAdapter | null = null;
+let lucia: Lucia<typeof AuthSchema> | null = null;
+
+export function getLucia(): Lucia<typeof AuthSchema> {
+  if (lucia) {
+    return lucia;
+  }
+
+  // Ensure this only runs on the server side
+  if (typeof window !== "undefined") {
+    throw new Error("Lucia cannot be initialized on the client side");
+  }
+
+  if (!adapter) {
+    const db = getDb();
+    adapter = new DrizzleSQLiteAdapter(db, sessions as any, users as any);
+  }
+
+  if (!lucia) {
+    lucia = new Lucia(adapter, {
+      sessionCookie: {
+        expires: false,
+        attributes: {
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+        },
+      },
+      getUserAttributes: (attributes) => {
+        return {
+          fullName: attributes.fullName,
+          email: attributes.email,
+          role: attributes.role,
+          phone: attributes.phone,
+          deposit: attributes.deposit,
+          balance: attributes.balance,
+          priceList: attributes.priceList,
+        };
+      },
+    });
+  }
+
+  return lucia;
+}
 
 // Enhanced caching for authentication with better error handling
 export const getAuth = cache(
-  async (): Promise<{ user: User; session: Session } | { user: null; session: null }> => {
+  async (): Promise<{ user: AuthenticatedUser; session: Session } | { user: null; session: null }> => {
     try {
       const cookieStore = cookies();
+      const luciaInstance = getLucia();
       
       // Safe session ID extraction
-      const sessionCookie = cookieStore.get(lucia.sessionCookieName);
+      const sessionCookie = cookieStore.get(luciaInstance.sessionCookieName);
       const sessionId = sessionCookie ? sessionCookie.value : null;
       
       if (!sessionId) {
@@ -57,7 +91,7 @@ export const getAuth = cache(
       console.log("getAuth: Validating session", { sessionId: sessionId.substring(0, 10) + "..." });
 
       // Validate session with better error handling
-      const result = await lucia.validateSession(sessionId);
+      const result = await luciaInstance.validateSession(sessionId);
 
       // Safe user role extraction
       const userRole = result.user && typeof result.user === 'object' && 'role' in result.user 
@@ -72,22 +106,23 @@ export const getAuth = cache(
 
       // Only update cookies if session is fresh or invalid
       if (result.session && result.session.fresh) {
-        const sessionCookie = lucia.createSessionCookie(result.session.id);
+        const sessionCookie = luciaInstance.createSessionCookie(result.session.id);
         cookieStore.set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
         console.log("getAuth: Updated session cookie (fresh)");
       } else if (!result.session) {
-        const sessionCookie = lucia.createBlankSessionCookie();
+        const sessionCookie = luciaInstance.createBlankSessionCookie();
         cookieStore.set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
         console.log("getAuth: Cleared session cookie (invalid)");
       }
 
-      return result;
+      return result as { user: AuthenticatedUser; session: Session } | { user: null; session: null };
     } catch (error) {
       console.error("getAuth: Authentication error:", error);
       
       // Clear invalid session cookie on error
       try {
-        const sessionCookie = lucia.createBlankSessionCookie();
+        const luciaInstance = getLucia();
+        const sessionCookie = luciaInstance.createBlankSessionCookie();
         cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
         console.log("getAuth: Cleared session cookie due to error");
       } catch (cookieError) {
@@ -104,7 +139,7 @@ export const getAuth = cache(
 
 declare module "lucia" {
   interface Register {
-    Lucia: typeof lucia;
+    Lucia: typeof getLucia;
     DatabaseUserAttributes: AuthSchemaType;
   }
 }

@@ -1,8 +1,3 @@
-import { db } from '@/lib/drizzle/db';
-import { images } from '@/lib/drizzle/schema';
-import { eq, and } from 'drizzle-orm';
-import { sql } from 'drizzle-orm';
-
 // Cache configuration
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 const ISR_REVALIDATE_TIME = 60; // 60 seconds for ISR
@@ -45,62 +40,28 @@ class ImageCacheService {
     return Date.now() - entry.timestamp < revalidateTime;
   }
 
-  private async fetchFromDatabase(options: FetchOptions): Promise<{
+  private async fetchFromAPI(options: FetchOptions): Promise<{
     images: ImageData[];
     count: number;
     totalPages: number;
     currentPage: number;
   }> {
     const { vin, type, page = 1, pageSize = 12 } = options;
-    const noPagination = pageSize === 0;
 
-    // Build where clause
-    const allowedTypes = ["AUCTION", "WAREHOUSE", "DELIVERED", "PICK_UP"];
-    let whereClause;
-    if (type && allowedTypes.includes(type)) {
-      whereClause = and(
-        eq(images.carVin, vin),
-        eq(images.imageType, type as "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP")
-      );
-    } else {
-      whereClause = eq(images.carVin, vin);
+    // Build query parameters
+    const params = new URLSearchParams();
+    if (type) params.append('type', type);
+    params.append('page', page.toString());
+    params.append('pageSize', pageSize.toString());
+
+    const response = await fetch(`/api/images/${vin}?${params.toString()}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch images: ${response.statusText}`);
     }
 
-    // Get total count for pagination
-    const totalCount = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(images)
-      .where(whereClause);
-    const count = totalCount[0]?.count || 0;
-
-    // Fetch images
-    let imageKeys;
-    if (noPagination) {
-      imageKeys = await db.query.images.findMany({
-        where: whereClause,
-        orderBy: (images, { desc }) => [desc(images.priority), desc(images.id)],
-      });
-    } else {
-      imageKeys = await db.query.images.findMany({
-        where: whereClause,
-        limit: pageSize,
-        offset: (page - 1) * pageSize,
-        orderBy: (images, { desc }) => [desc(images.priority), desc(images.id)],
-      });
-    }
-
-    // Add URLs to the response
-    const imagesWithUrls = imageKeys.map(img => ({
-      ...img,
-      url: `${this.publicUrl}/${img.imageKey}`,
-    }));
-
-    return {
-      images: imagesWithUrls,
-      count,
-      totalPages: Math.ceil(count / pageSize),
-      currentPage: page,
-    };
+    const data = await response.json();
+    return data;
   }
 
   async getImageList(options: FetchOptions): Promise<{
@@ -122,8 +83,8 @@ class ImageCacheService {
       };
     }
 
-    // Fetch fresh data
-    const freshData = await this.fetchFromDatabase(options);
+    // Fetch fresh data from API
+    const freshData = await this.fetchFromAPI(options);
 
     // Update cache
     this.cache.set(cacheKey, {

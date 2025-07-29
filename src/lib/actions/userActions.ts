@@ -2,7 +2,7 @@
 
 import { eq, ne } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "../drizzle/db";
+import { getDb } from "../drizzle/db";
 import { selectCarSchema, selectUserSchema, users } from "../drizzle/schema";
 import { isAdminProcedure } from "./authProcedures";
 import { revalidatePath } from "next/cache";
@@ -15,6 +15,8 @@ export const getUsersAction = isAdminProcedure
   .handler(async () => {
     try {
       console.log("getUsersAction: Fetching users");
+      
+      const db = getDb();
       
       // Validate database connection
       if (!db) {
@@ -67,6 +69,8 @@ export const getUserAction = isAdminProcedure
     try {
       console.log("getUserAction: Fetching user", id);
       
+      const db = getDb();
+      
       // Validate database connection
       if (!db) {
         console.error("getUserAction: Database connection not available");
@@ -98,13 +102,13 @@ export const getUserAction = isAdminProcedure
 
       // Safe destructuring with fallbacks
       const { ownedCars = [], ...user } = result;
-      
-      console.log("getUserAction: Successfully fetched user", id, "with", ownedCars?.length || 0, "cars");
-      
+
+      console.log("getUserAction: Successfully fetched user", id, "with", ownedCars.length, "cars");
+
       return {
         success: true,
         user,
-        cars: Array.isArray(ownedCars) ? ownedCars : [],
+        cars: ownedCars,
         message: "User fetched successfully",
       };
     } catch (error) {
@@ -113,7 +117,7 @@ export const getUserAction = isAdminProcedure
         success: false,
         user: null,
         cars: null,
-        message: "Failed to fetch user",
+        message: "Error fetching user data",
       };
     }
   });
@@ -144,7 +148,7 @@ export const deleteUserAction = isAdminProcedure
 
     try {
       // Validate database connection
-      if (!db) {
+      if (!getDb()) {
         console.error("deleteUserAction: Database connection not available");
         return {
           success: false,
@@ -152,7 +156,7 @@ export const deleteUserAction = isAdminProcedure
         };
       }
 
-      const userExists = await db
+      const userExists = await getDb()
         .select()
         .from(users)
         .where(eq(users.id, id))
@@ -165,7 +169,7 @@ export const deleteUserAction = isAdminProcedure
         };
       }
 
-      const [isDeleted] = await db
+      const [isDeleted] = await getDb()
         .delete(users)
         .where(eq(users.id, id))
         .returning({ fullName: users.fullName });

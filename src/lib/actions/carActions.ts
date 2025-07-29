@@ -103,8 +103,8 @@ export const addCarAction = createServerAction()
         };
       }
 
-      if (user.role !== "ADMIN") {
-        console.error("addCarAction: User is not admin", { role: user.role });
+      if ((user as any).role !== "ADMIN") {
+        console.error("addCarAction: User is not admin", { role: (user as any).role });
         return {
           success: false,
           message: "Admin access required",
@@ -219,8 +219,8 @@ export const getCarsAction = createServerAction()
         return [];
       }
 
-      if (user.role !== "ADMIN") {
-        console.error("getCarsAction: User is not admin", { role: user.role });
+      if ((user as any).role !== "ADMIN") {
+        console.error("getCarsAction: User is not admin", { role: (user as any).role });
         return [];
       }
 

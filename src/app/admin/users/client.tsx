@@ -52,6 +52,7 @@ interface ClientProps {
 }
 
 export const Client = ({ translations }: ClientProps) => {
+  // Optimized React Query configuration to prevent excessive calls
   const { isLoading, data = [], error } = useServerActionQuery(getUsersAction, {
     input: undefined,
     queryKey: ["getUsers"],
@@ -60,6 +61,8 @@ export const Client = ({ translations }: ClientProps) => {
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 1,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   // Table state

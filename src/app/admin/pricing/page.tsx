@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { PricingManagementClient } from "./client";
 
+// Force dynamic rendering for authenticated routes
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "Pricing Management | Giant Auto Import",
   description: "Manage default and user-specific pricing configurations",

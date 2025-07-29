@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { CsvManagementClient } from "./client";
 
+// Force dynamic rendering for authenticated routes
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "CSV Management | Giant Auto Import",
   description: "Manage CSV pricing data and versions",

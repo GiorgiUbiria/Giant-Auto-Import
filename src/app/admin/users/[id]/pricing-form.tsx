@@ -57,41 +57,42 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
         return;
       }
       if (defaultResult.success && defaultResult.data) {
-        setDefaultPricing({
+        const newDefaultPricing = {
           oceanRates: Array.isArray(defaultResult.data.oceanRates) ? (defaultResult.data.oceanRates as unknown as Array<{state: string, shorthand: string, rate: number}>) : [],
           groundFeeAdjustment: defaultResult.data.groundFeeAdjustment,
           pickupSurcharge: defaultResult.data.pickupSurcharge,
           serviceFee: defaultResult.data.serviceFee,
           hybridSurcharge: defaultResult.data.hybridSurcharge,
-        });
-      }
+        };
+        setDefaultPricing(newDefaultPricing);
 
-      // Load user pricing
-      const [userResult, userError] = await getUserPricing({ userId });
-      if (userError) {
-        toast.error("Failed to load user pricing");
-        return;
-      }
-      if (userResult.success && userResult.data) {
-        setPricing({
-          oceanRates: Array.isArray(userResult.data.oceanRates) ? (userResult.data.oceanRates as unknown as Array<{state: string, shorthand: string, rate: number}>) : [],
-          groundFeeAdjustment: userResult.data.groundFeeAdjustment,
-          pickupSurcharge: userResult.data.pickupSurcharge,
-          serviceFee: userResult.data.serviceFee,
-          hybridSurcharge: userResult.data.hybridSurcharge,
-        });
-        setUseCustomPricing(userResult.data.isActive);
-      } else {
-        // No custom pricing, use defaults
-        setPricing(defaultPricing);
-        setUseCustomPricing(false);
+        // Load user pricing
+        const [userResult, userError] = await getUserPricing({ userId });
+        if (userError) {
+          toast.error("Failed to load user pricing");
+          return;
+        }
+        if (userResult.success && userResult.data) {
+          setPricing({
+            oceanRates: Array.isArray(userResult.data.oceanRates) ? (userResult.data.oceanRates as unknown as Array<{state: string, shorthand: string, rate: number}>) : [],
+            groundFeeAdjustment: userResult.data.groundFeeAdjustment,
+            pickupSurcharge: userResult.data.pickupSurcharge,
+            serviceFee: userResult.data.serviceFee,
+            hybridSurcharge: userResult.data.hybridSurcharge,
+          });
+          setUseCustomPricing(userResult.data.isActive);
+        } else {
+          // No custom pricing, use defaults
+          setPricing(newDefaultPricing);
+          setUseCustomPricing(false);
+        }
       }
     } catch (error) {
       toast.error("Failed to load pricing data");
     } finally {
       setLoading(false);
     }
-  }, [userId, getUserPricing, getDefaultPricing, defaultPricing]);
+  }, [userId, getUserPricing, getDefaultPricing]);
 
   useEffect(() => {
     loadPricingData();
@@ -164,8 +165,6 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
       toast.error("Failed to recalculate user fees");
     }
   };
-
-
 
   if (loading) {
     return (

@@ -14,15 +14,17 @@ export const getUsersAction = isAdminProcedure
   .output(z.array(SelectSchema))
   .handler(async () => {
     try {
+      console.log("getUsersAction: Fetching users");
       const userQuery = await db
         .select()
         .from(users)
         .where(ne(users.role, "ADMIN"))
         .orderBy(users.role);
 
+      console.log("getUsersAction: Found", userQuery.length, "users");
       return userQuery || [];
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error("getUsersAction: Error fetching users:", error);
       return [];
     }
   });
@@ -46,6 +48,7 @@ export const getUserAction = isAdminProcedure
     const { id } = input;
 
     if (!id) {
+      console.log("getUserAction: No user ID provided");
       return {
         success: false,
         user: null,
@@ -55,6 +58,8 @@ export const getUserAction = isAdminProcedure
     }
 
     try {
+      console.log("getUserAction: Fetching user", id);
+      
       const [result] = await db.query.users.findMany({
         where: eq(users.id, id),
         with: {
@@ -64,6 +69,7 @@ export const getUserAction = isAdminProcedure
       });
 
       if (!result) {
+        console.log("getUserAction: User not found", id);
         return {
           success: false,
           user: null,
@@ -74,8 +80,7 @@ export const getUserAction = isAdminProcedure
 
       const { ownedCars, ...user } = result;
       
-      // Revalidate the user's page
-      revalidatePath(`/admin/users/${id}`);
+      console.log("getUserAction: Successfully fetched user", id, "with", ownedCars?.length || 0, "cars");
       
       return {
         success: true,
@@ -84,7 +89,7 @@ export const getUserAction = isAdminProcedure
         message: "User fetched successfully",
       };
     } catch (error) {
-      console.error("Error fetching user:", error);
+      console.error("getUserAction: Error fetching user:", error);
       return {
         success: false,
         user: null,

@@ -59,6 +59,7 @@ export function UpdateProfileForm({ user }: Props) {
 
 	const queryClient = useQueryClient();
 	
+	// Optimized mutation configuration to prevent excessive calls
 	const { isPending, mutate } = useServerActionMutation(updateUserAction, {
 		onError: (error) => {
 			const errorMessage = error?.data || "Failed to update the user";
@@ -68,11 +69,15 @@ export function UpdateProfileForm({ user }: Props) {
 			const successMessage = data?.message || "User updated successfully!";
 			toast.success(successMessage);
 
+			// Invalidate specific queries instead of all
 			await queryClient.invalidateQueries({
 				queryKey: ["getUser", user.id],
 				refetchType: "active",
 			});
 		},
+		// Add mutation optimization options
+		retry: 1,
+		retryDelay: 1000,
 	});
 
 	const onSubmit = (values: z.infer<typeof FormSchema>) => {

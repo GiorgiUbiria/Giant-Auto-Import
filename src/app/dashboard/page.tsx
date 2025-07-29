@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { Client } from "./client";
 import { Metadata } from "next";
 
+// Force dynamic rendering for authenticated routes
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "Dashboard | Giant Auto Import",
   description: "Manage and track your imported vehicles",

@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { Client } from "./client";
 import { getTranslations } from "next-intl/server";
 
+// Force dynamic rendering for authenticated routes
+export const dynamic = 'force-dynamic';
+
 export default async function Page() {
   const { user } = await getAuth();
   if (!user || user.role !== "ADMIN") {

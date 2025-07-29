@@ -1,7 +1,10 @@
 import { getAuth } from "@/lib/auth";
-import dynamic from "next/dynamic";
+import dynamicImport from "next/dynamic";
 
-const ShippingCalculator = dynamic(() => import("./shipping-calculator").then(mod => ({ default: mod.ShippingCalculator })), {
+// Force dynamic rendering for authenticated routes
+export const dynamic = 'force-dynamic';
+
+const ShippingCalculator = dynamicImport(() => import("./shipping-calculator").then(mod => ({ default: mod.ShippingCalculator })), {
   ssr: false,
   loading: () => (
     <div className="min-h-screen flex items-center justify-center py-8 px-4">

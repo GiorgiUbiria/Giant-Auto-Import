@@ -11,11 +11,20 @@ import { useTranslations } from "next-intl";
 
 export const Client = ({ id }: { id: string }) => {
 	const t = useTranslations("AdminPanel");
+	
+	// Optimized React Query configuration to prevent excessive calls
 	const { isLoading, data, error } = useServerActionQuery(getUserAction, {
 		input: {
 			id: id,
 		},
 		queryKey: ["getUser", id],
+		// Add React Query optimization options
+		staleTime: 5 * 60 * 1000, // 5 minutes
+		gcTime: 10 * 60 * 1000, // 10 minutes
+		retry: 1,
+		refetchOnWindowFocus: false,
+		refetchOnMount: false,
+		refetchOnReconnect: false,
 	})
 
 	const LoadingState = () => {
@@ -27,10 +36,12 @@ export const Client = ({ id }: { id: string }) => {
 	}
 
 	const ErrorState = () => {
+		// Safe error message extraction
+		const errorMessage = data?.message || error?.message || t("error");
 		return (
 			<Alert variant="destructive">
 				<AlertDescription>
-					{data?.message || t("error")}
+					{errorMessage}
 				</AlertDescription>
 			</Alert>
 		)
@@ -51,6 +62,10 @@ export const Client = ({ id }: { id: string }) => {
 			</Card>
 		</Link>
 	);
+
+	// Safe data validation
+	const isValidData = data && typeof data === 'object' && 'success' in data;
+	const hasValidUser = isValidData && data.success && data.user && typeof data.user === 'object';
 
 	return (
 		<div className="space-y-8">
@@ -95,9 +110,9 @@ export const Client = ({ id }: { id: string }) => {
 
 			{isLoading ? (
 				<LoadingState />
-			) : error || !data?.success ? (
+			) : error || !isValidData || !data.success ? (
 				<ErrorState />
-			) : data?.user ? (
+			) : hasValidUser && data.user ? (
 				<Card className="border-t">
 					<CardHeader>
 						<CardTitle className="text-xl leading-tight">{t("adminProfile.title")}</CardTitle>

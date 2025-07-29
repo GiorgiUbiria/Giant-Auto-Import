@@ -17,14 +17,15 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
     );
   }
 
-  const url = process.env.NEXT_PUBLIC_TURSO_DATABASE_URL?.trim();
-  if (url === undefined) {
-    console.error("Database configuration error: TURSO_URL is not defined");
-    throw new Error("TURSO_URL is not defined");
+  // Use proper server-side environment variables
+  const url = process.env.TURSO_DATABASE_URL?.trim();
+  if (!url) {
+    console.error("Database configuration error: TURSO_DATABASE_URL is not defined");
+    throw new Error("TURSO_DATABASE_URL is not defined");
   }
 
-  const authToken = process.env.NEXT_PUBLIC_TURSO_AUTH_TOKEN?.trim();
-  if (authToken === undefined && !url.includes("file:")) {
+  const authToken = process.env.TURSO_AUTH_TOKEN?.trim();
+  if (!authToken && !url.includes("file:")) {
     console.error("Database configuration error: TURSO_AUTH_TOKEN is not defined");
     throw new Error("TURSO_AUTH_TOKEN is not defined");
   }
@@ -46,7 +47,7 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
       }),
       { 
         schema, 
-        logger: false // Disable verbose query logging
+        logger: process.env.NODE_ENV === "development" // Only log in development
       }
     );
     

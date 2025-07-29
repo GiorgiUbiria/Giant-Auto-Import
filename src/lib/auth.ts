@@ -41,7 +41,10 @@ export const getAuth = cache(
   async (): Promise<{ user: User; session: Session } | { user: null; session: null }> => {
     try {
       const cookieStore = cookies();
-      const sessionId = cookieStore.get(lucia.sessionCookieName)?.value ?? null;
+      
+      // Safe session ID extraction
+      const sessionCookie = cookieStore.get(lucia.sessionCookieName);
+      const sessionId = sessionCookie ? sessionCookie.value : null;
       
       if (!sessionId) {
         console.log("getAuth: No session ID found");
@@ -56,10 +59,15 @@ export const getAuth = cache(
       // Validate session with better error handling
       const result = await lucia.validateSession(sessionId);
 
+      // Safe user role extraction
+      const userRole = result.user && typeof result.user === 'object' && 'role' in result.user 
+        ? (result.user as { role: string }).role 
+        : undefined;
+
       console.log("getAuth: Session validation result", { 
         hasUser: !!result.user, 
         hasSession: !!result.session,
-        userRole: (result.user as any)?.role 
+        userRole: userRole
       });
 
       // Only update cookies if session is fresh or invalid

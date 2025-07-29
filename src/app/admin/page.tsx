@@ -4,6 +4,9 @@ import { Client } from "./client";
 import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
+// Force dynamic rendering for authenticated routes
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "Admin Panel | Giant Auto Import",
   description: "Manage your auto import business",

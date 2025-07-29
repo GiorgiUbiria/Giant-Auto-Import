@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import Logo from "../../../public/logo.png";
 import { getTranslations } from 'next-intl/server';
 
+// Force dynamic rendering for authenticated routes
+export const dynamic = 'force-dynamic';
+
 export default async function Page() {
   const { user } = await getAuth();
   if (user) {

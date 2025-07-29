@@ -1,29 +1,26 @@
 import { AuctionData, ExtraFee, OceanFee, UserPricingConfig, DefaultPricingConfig } from "./drizzle/types";
-import { db } from "./drizzle/db";
-import { defaultPricingConfig, userPricingConfig, csvDataVersions } from "./drizzle/schema";
-import { eq, and } from "drizzle-orm";
 
 export const auctionData: AuctionData[] = [];
 
 /**
- * Get active CSV data from database or fallback to static data
+ * Get active CSV data from API or fallback to static data
  */
 export const getActiveCsvData = async (): Promise<AuctionData[]> => {
   try {
-    const [activeVersion] = await db
-      .select()
-      .from(csvDataVersions)
-      .where(eq(csvDataVersions.isActive, true))
-      .limit(1);
-
-    if (activeVersion) {
-      return JSON.parse(activeVersion.csvData) as AuctionData[];
+    const response = await fetch('/api/csv-data');
+    if (response.ok) {
+      const data = await response.json();
+      // If API returns valid data, use it
+      if (Array.isArray(data) && data.length > 0) {
+        return data;
+      }
     }
   } catch (error) {
     console.error("Error fetching active CSV data:", error);
   }
 
   // Fallback to static data
+  console.log("Using fallback auction data");
   return fallbackAuctionData;
 };
 
@@ -54,39 +51,33 @@ export const styleToJson = (style: string): any[] => {
 };
 
 /**
- * Get user-specific pricing configuration
+ * Get user-specific pricing configuration via API
  */
 export const getUserPricingConfig = async (userId: string): Promise<UserPricingConfig | null> => {
   try {
-    const [config] = await db
-      .select()
-      .from(userPricingConfig)
-      .where(and(eq(userPricingConfig.userId, userId), eq(userPricingConfig.isActive, true)))
-      .limit(1);
-
-    return config || null;
+    const response = await fetch(`/api/pricing/user/${userId}`);
+    if (response.ok) {
+      return await response.json();
+    }
   } catch (error) {
     console.error("Error fetching user pricing config:", error);
-    return null;
   }
+  return null;
 };
 
 /**
- * Get default pricing configuration
+ * Get default pricing configuration via API
  */
 export const getDefaultPricingConfig = async (): Promise<DefaultPricingConfig | null> => {
   try {
-    const [config] = await db
-      .select()
-      .from(defaultPricingConfig)
-      .where(eq(defaultPricingConfig.isActive, true))
-      .limit(1);
-
-    return config || null;
+    const response = await fetch('/api/pricing/default');
+    if (response.ok) {
+      return await response.json();
+    }
   } catch (error) {
     console.error("Error fetching default pricing config:", error);
-    return null;
   }
+  return null;
 };
 
 /**
@@ -98,24 +89,8 @@ export const debugPricingConfig = async (userId?: string) => {
   
   console.log("Debug Pricing Config:", {
     userId,
-    userPricing: userPricing ? {
-      id: userPricing.id,
-      oceanRates: userPricing.oceanRates,
-      groundFeeAdjustment: userPricing.groundFeeAdjustment,
-      pickupSurcharge: userPricing.pickupSurcharge,
-      serviceFee: userPricing.serviceFee,
-      hybridSurcharge: userPricing.hybridSurcharge,
-      isActive: userPricing.isActive,
-    } : null,
-    defaultPricing: defaultPricing ? {
-      id: defaultPricing.id,
-      oceanRates: defaultPricing.oceanRates,
-      groundFeeAdjustment: defaultPricing.groundFeeAdjustment,
-      pickupSurcharge: defaultPricing.pickupSurcharge,
-      serviceFee: defaultPricing.serviceFee,
-      hybridSurcharge: defaultPricing.hybridSurcharge,
-      isActive: defaultPricing.isActive,
-    } : null,
+    userPricing,
+    defaultPricing
   });
   
   return { userPricing, defaultPricing };

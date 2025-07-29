@@ -11,6 +11,13 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
     return dbInstance;
   }
 
+  // Ensure this only runs on the server side
+  if (typeof window !== "undefined") {
+    throw new Error(
+      "Database connection cannot be established on the client side"
+    );
+  }
+
   if (typeof process === "undefined") {
     throw new Error(
       "process is not defined. Are you trying to run this on the client?"

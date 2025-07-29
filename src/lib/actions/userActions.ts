@@ -15,6 +15,13 @@ export const getUsersAction = isAdminProcedure
   .handler(async () => {
     try {
       console.log("getUsersAction: Fetching users");
+      
+      // Validate database connection
+      if (!db) {
+        console.error("getUsersAction: Database connection not available");
+        return [];
+      }
+
       const userQuery = await db
         .select()
         .from(users)
@@ -33,7 +40,7 @@ export const getUserAction = isAdminProcedure
   .createServerAction()
   .input(
     z.object({
-      id: z.string(),
+      id: z.string().min(1, "User ID is required"),
     })
   )
   .output(
@@ -47,18 +54,29 @@ export const getUserAction = isAdminProcedure
   .handler(async ({ input }) => {
     const { id } = input;
 
-    if (!id) {
-      console.log("getUserAction: No user ID provided");
+    if (!id || typeof id !== "string") {
+      console.log("getUserAction: Invalid user ID provided", { id });
       return {
         success: false,
         user: null,
         cars: null,
-        message: "No user ID provided",
+        message: "Invalid user ID provided",
       };
     }
 
     try {
       console.log("getUserAction: Fetching user", id);
+      
+      // Validate database connection
+      if (!db) {
+        console.error("getUserAction: Database connection not available");
+        return {
+          success: false,
+          user: null,
+          cars: null,
+          message: "Database connection error",
+        };
+      }
       
       const [result] = await db.query.users.findMany({
         where: eq(users.id, id),
@@ -78,14 +96,15 @@ export const getUserAction = isAdminProcedure
         };
       }
 
-      const { ownedCars, ...user } = result;
+      // Safe destructuring with fallbacks
+      const { ownedCars = [], ...user } = result;
       
       console.log("getUserAction: Successfully fetched user", id, "with", ownedCars?.length || 0, "cars");
       
       return {
         success: true,
         user,
-        cars: ownedCars ?? [],
+        cars: Array.isArray(ownedCars) ? ownedCars : [],
         message: "User fetched successfully",
       };
     } catch (error) {
@@ -103,7 +122,7 @@ export const deleteUserAction = isAdminProcedure
   .createServerAction()
   .input(
     z.object({
-      id: z.string(),
+      id: z.string().min(1, "User ID is required"),
     })
   )
   .output(
@@ -116,14 +135,23 @@ export const deleteUserAction = isAdminProcedure
   .handler(async ({ input }) => {
     const { id } = input;
 
-    if (!id) {
+    if (!id || typeof id !== "string") {
       return {
         success: false,
-        message: "Provide the user's id",
+        message: "Invalid user ID provided",
       };
     }
 
     try {
+      // Validate database connection
+      if (!db) {
+        console.error("deleteUserAction: Database connection not available");
+        return {
+          success: false,
+          message: "Database connection error",
+        };
+      }
+
       const userExists = await db
         .select()
         .from(users)
@@ -154,7 +182,7 @@ export const deleteUserAction = isAdminProcedure
       
       return {
         success: true,
-        message: `User ${isDeleted.fullName} was deleted successfully`,
+        message: `User ${isDeleted.fullName || 'Unknown'} was deleted successfully`,
       };
     } catch (error) {
       console.error("Error deleting the user:", error);

@@ -1,176 +1,130 @@
-'use client';
+"use client";
 
 import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from './alert';
 import { Button } from './button';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 
 interface ErrorBoundaryState {
   hasError: boolean;
-  error: Error | null;
-  errorInfo: React.ErrorInfo | null;
+  error?: Error;
+  errorInfo?: React.ErrorInfo;
 }
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
-  fallback?: React.ComponentType<{ error: Error; resetError: () => void }>;
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  fallback?: React.ComponentType<{ error?: Error; resetError: () => void }>;
 }
 
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
+    this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error, errorInfo: null };
+    // Update state so the next render will show the fallback UI
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    this.setState({ error, errorInfo });
-    
-    // Log error to console
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
-    // Call custom error handler if provided
-    if (this.props.onError) {
-      this.props.onError(error, errorInfo);
+    // Log error to console in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('ErrorBoundary caught an error:', error, errorInfo);
     }
+
+    // Log error to production monitoring service if available
+    if (process.env.NODE_ENV === 'production') {
+      console.error('Production error caught by ErrorBoundary:', {
+        message: error.message,
+        stack: error.stack,
+        componentStack: errorInfo.componentStack,
+      });
+    }
+
+    this.setState({
+      error,
+      errorInfo,
+    });
   }
 
   resetError = () => {
-    this.setState({ hasError: false, error: null, errorInfo: null });
+    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
   };
 
   render() {
     if (this.state.hasError) {
-      // Use custom fallback if provided
+      // Custom fallback component
       if (this.props.fallback) {
         const FallbackComponent = this.props.fallback;
-        return <FallbackComponent error={this.state.error!} resetError={this.resetError} />;
+        return <FallbackComponent error={this.state.error} resetError={this.resetError} />;
       }
 
-      // Default error UI
-      return <DefaultErrorFallback error={this.state.error!} resetError={this.resetError} />;
+      // Default fallback UI
+      return (
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="max-w-md w-full space-y-4">
+            <Alert variant="destructive">
+              <AlertTitle>Something went wrong</AlertTitle>
+              <AlertDescription>
+                {process.env.NODE_ENV === 'development' 
+                  ? this.state.error?.message 
+                  : 'An unexpected error occurred. Please try refreshing the page.'
+                }
+              </AlertDescription>
+            </Alert>
+            
+            <div className="flex gap-2">
+              <Button 
+                onClick={this.resetError}
+                variant="outline"
+                className="flex-1"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
+              <Button 
+                onClick={() => window.location.reload()}
+                className="flex-1"
+              >
+                Refresh Page
+              </Button>
+            </div>
+
+            {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
+              <details className="mt-4 p-4 bg-muted rounded-lg text-sm">
+                <summary className="cursor-pointer font-medium mb-2">
+                  Error Details (Development Only)
+                </summary>
+                <pre className="whitespace-pre-wrap text-xs overflow-auto">
+                  {this.state.errorInfo.componentStack}
+                </pre>
+              </details>
+            )}
+          </div>
+        </div>
+      );
     }
 
     return this.props.children;
   }
 }
 
-interface ErrorFallbackProps {
-  error: Error;
-  resetError: () => void;
-}
+// Hook for functional components to use error boundary
+export const useErrorHandler = () => {
+  const [error, setError] = React.useState<Error | null>(null);
 
-export function DefaultErrorFallback({ error, resetError }: ErrorFallbackProps) {
-  const getErrorMessage = (error: Error): string => {
-    const errorMessage = error.message;
-    
-    // Handle specific database constraint errors
-    if (errorMessage.includes('SQLITE_CONSTRAINT')) {
-      if (errorMessage.includes('FOREIGN KEY constraint failed')) {
-        if (errorMessage.includes('owner_id')) {
-          return 'Invalid owner ID provided. Please select a valid user or leave the owner field empty.';
-        }
-        return 'Database constraint violation. Please check all required fields and relationships.';
-      }
-      if (errorMessage.includes('UNIQUE constraint failed')) {
-        if (errorMessage.includes('vin')) {
-          return 'A car with this VIN already exists in the database.';
-        }
-        return 'Duplicate entry detected. Please check for duplicate values.';
-      }
-      if (errorMessage.includes('NOT NULL constraint failed')) {
-        return 'Required field is missing. Please fill in all required fields.';
-      }
-      return `Database constraint violation: ${errorMessage}`;
-    }
-    
-    // Handle network errors
-    if (errorMessage.includes('fetch') || errorMessage.includes('network')) {
-      return 'Network error. Please check your internet connection and try again.';
-    }
-    
-    // Handle validation errors
-    if (errorMessage.includes('validation') || errorMessage.includes('invalid')) {
-      return 'Validation error. Please check your input and try again.';
-    }
-    
-    // Default error message
-    return errorMessage || 'An unexpected error occurred. Please try again.';
-  };
-
-  return (
-    <div className="w-full max-w-md mx-auto p-4">
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription className="mt-2">
-          {getErrorMessage(error)}
-        </AlertDescription>
-      </Alert>
-      
-      <div className="mt-4 flex gap-2">
-        <Button 
-          onClick={resetError} 
-          variant="outline" 
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Try Again
-        </Button>
-      </div>
-      
-      {process.env.NODE_ENV === 'development' && (
-        <details className="mt-4 text-xs text-gray-500">
-          <summary className="cursor-pointer">Error Details (Development)</summary>
-          <pre className="mt-2 p-2 bg-gray-100 rounded overflow-auto">
-            {error.stack}
-          </pre>
-        </details>
-      )}
-    </div>
-  );
-}
-
-// Hook for functional components to handle errors
-export function useErrorHandler() {
   const handleError = React.useCallback((error: Error) => {
     console.error('Error caught by useErrorHandler:', error);
-    
-    // You can add additional error handling logic here
-    // For example, sending to an error reporting service
-    
-    return getErrorMessage(error);
+    setError(error);
   }, []);
 
-  const getErrorMessage = (error: Error): string => {
-    const errorMessage = error.message;
-    
-    if (errorMessage.includes('SQLITE_CONSTRAINT')) {
-      if (errorMessage.includes('FOREIGN KEY constraint failed')) {
-        if (errorMessage.includes('owner_id')) {
-          return 'Invalid owner ID provided. Please select a valid user or leave the owner field empty.';
-        }
-        return 'Database constraint violation. Please check all required fields and relationships.';
-      }
-      if (errorMessage.includes('UNIQUE constraint failed')) {
-        if (errorMessage.includes('vin')) {
-          return 'A car with this VIN already exists in the database.';
-        }
-        return 'Duplicate entry detected. Please check for duplicate values.';
-      }
-      if (errorMessage.includes('NOT NULL constraint failed')) {
-        return 'Required field is missing. Please fill in all required fields.';
-      }
-      return `Database constraint violation: ${errorMessage}`;
-    }
-    
-    return errorMessage || 'An unexpected error occurred. Please try again.';
-  };
+  const resetError = React.useCallback(() => {
+    setError(null);
+  }, []);
 
-  return { handleError, getErrorMessage };
-}
+  return { error, handleError, resetError };
+};
+
+// Default export for backward compatibility
+export default ErrorBoundary;

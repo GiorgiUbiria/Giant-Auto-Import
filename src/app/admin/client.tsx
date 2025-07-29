@@ -36,10 +36,12 @@ export const Client = ({ id }: { id: string }) => {
 	}
 
 	const ErrorState = () => {
+		// Safe error message extraction
+		const errorMessage = data?.message || error?.message || t("error");
 		return (
 			<Alert variant="destructive">
 				<AlertDescription>
-					{data?.message || t("error")}
+					{errorMessage}
 				</AlertDescription>
 			</Alert>
 		)
@@ -60,6 +62,10 @@ export const Client = ({ id }: { id: string }) => {
 			</Card>
 		</Link>
 	);
+
+	// Safe data validation
+	const isValidData = data && typeof data === 'object' && 'success' in data;
+	const hasValidUser = isValidData && data.success && data.user && typeof data.user === 'object';
 
 	return (
 		<div className="space-y-8">
@@ -104,9 +110,9 @@ export const Client = ({ id }: { id: string }) => {
 
 			{isLoading ? (
 				<LoadingState />
-			) : error || !data?.success ? (
+			) : error || !isValidData || !data.success ? (
 				<ErrorState />
-			) : data?.user ? (
+			) : hasValidUser && data.user ? (
 				<Card className="border-t">
 					<CardHeader>
 						<CardTitle className="text-xl leading-tight">{t("adminProfile.title")}</CardTitle>

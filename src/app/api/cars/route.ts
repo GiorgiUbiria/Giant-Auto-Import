@@ -97,11 +97,13 @@ export async function GET(req: Request) {
 
     const count = countResult[0]?.count ?? 0;
     
-    // Create response with caching headers
+    // Create response without caching headers to allow React Query to manage caching
     const response = NextResponse.json({ cars: data, count });
     
-    // Add caching headers for better performance
-    response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    // Add headers to prevent caching and ensure fresh data
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
     
     return response;
   } catch (error) {

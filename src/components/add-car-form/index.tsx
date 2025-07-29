@@ -18,6 +18,7 @@ import { BasicInfoSection } from "../shared-form-sections/basic-info-section";
 import { AuctionInfoSection } from "../shared-form-sections/auction-info-section";
 import { FinancialInfoSection } from "../shared-form-sections/financial-info-section";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Extended schema to include image fields
 const FormSchema = insertCarSchema.omit({ id: true, destinationPort: true }).extend({
@@ -30,6 +31,7 @@ const FormSchema = insertCarSchema.omit({ id: true, destinationPort: true }).ext
 
 export function AddCarForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -153,6 +155,23 @@ export function AddCarForm() {
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
       }
+
+      // Invalidate React Query cache before redirecting
+      console.log("Invalidating getCars queries after adding car...");
+      await queryClient.invalidateQueries({
+        queryKey: ["getCars"],
+        exact: false, // This will invalidate all queries that start with ["getCars"]
+        refetchType: "active",
+      });
+
+      // Force refetch to ensure immediate UI update
+      await queryClient.refetchQueries({
+        queryKey: ["getCars"],
+        exact: false,
+        type: "active",
+      });
+
+      console.log("Cache invalidation completed, redirecting...");
 
       toast.success(data?.message || "Car added successfully!");
       router.push("/admin/cars");

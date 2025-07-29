@@ -35,9 +35,18 @@ export const AdminReciever = ({
       const successMessage = data?.message || translations.assignSuccess;
       toast.success(successMessage);
 
+      // Invalidate all getCars queries to ensure UI updates
       await queryClient.invalidateQueries({
         queryKey: ["getCars"],
+        exact: false, // This will invalidate all queries that start with ["getCars"]
         refetchType: "active",
+      });
+
+      // Force refetch to ensure immediate UI update
+      await queryClient.refetchQueries({
+        queryKey: ["getCars"],
+        exact: false,
+        type: "active",
       });
 
       setIsEditing(false);

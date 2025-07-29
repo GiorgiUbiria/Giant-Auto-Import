@@ -38,21 +38,39 @@ export function Actions({ vin, translations }: Props) {
 
   const { isPending, mutate } = useServerActionMutation(deleteCarAction, {
     onError: (error) => {
+      console.error("Delete car error:", error);
       const errorMessage = error?.data || translations.deleteError;
       toast.error(errorMessage);
     },
     onSuccess: async (data) => {
+      console.log("Delete car success:", data);
       const successMessage = data?.message || translations.deleteSuccess;
       toast.success(successMessage);
 
+      console.log("Invalidating getCars queries...");
+      
+      // Invalidate all getCars queries to ensure UI updates
       await queryClient.invalidateQueries({
         queryKey: ["getCars"],
+        exact: false, // This will invalidate all queries that start with ["getCars"]
         refetchType: "active",
       });
+
+      console.log("Forcing refetch of getCars queries...");
+      
+      // Force refetch to ensure immediate UI update
+      await queryClient.refetchQueries({
+        queryKey: ["getCars"],
+        exact: false,
+        type: "active",
+      });
+
+      console.log("Cache invalidation and refetch completed");
     },
   });
 
   const handleDelete = () => {
+    console.log("Deleting car with VIN:", vin);
     mutate({ vin });
   };
 

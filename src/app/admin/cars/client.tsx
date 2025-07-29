@@ -118,8 +118,8 @@ const fetchCars = async ({ pageIndex, pageSize, sorting, filters }: {
 
     const response = await fetch(`/api/cars?${params.toString()}`, {
       signal: controller.signal,
-      // Add cache control
-      cache: 'default'
+      // Add cache control to prevent caching issues
+      cache: 'no-store'
     });
     clearTimeout(timeoutId);
     
@@ -147,10 +147,12 @@ export const Client = ({ translations }: ClientProps) => {
   const { isLoading, data, error } = useQuery<CarsApiResponse>({
     queryKey: ["getCars", pageIndex, pageSize, sorting, filters],
     queryFn: () => fetchCars({ pageIndex, pageSize, sorting, filters }),
-    staleTime: 5 * 60 * 1000, // 5 minutes - increased for better caching
+    staleTime: 2 * 60 * 1000, // 2 minutes - reduced for better real-time updates
     gcTime: 10 * 60 * 1000, // 10 minutes cache
     retry: 1, // Reduce retries
     refetchOnWindowFocus: false, // Prevent refetch on focus
+    refetchOnMount: true, // Ensure fresh data on mount
+    refetchOnReconnect: true, // Refetch on reconnect
   });
 
   // Provide default values

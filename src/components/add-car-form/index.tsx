@@ -32,7 +32,6 @@ const FormSchema = insertCarSchema.omit({ id: true, destinationPort: true }).ext
 export function AddCarForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [isProcessing, setIsProcessing] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   // Add debugging for router initialization
@@ -120,15 +119,6 @@ export function AddCarForm() {
   };
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
-    setIsProcessing(true);
-
-    // Add a timeout to prevent hanging
-    const timeoutId = setTimeout(() => {
-      console.error("Form submission timed out after 30 seconds");
-      toast.error("Form submission timed out. Please try again.");
-      setIsProcessing(false);
-    }, 30000);
-
     try {
       const {
         warehouse_images,
@@ -146,22 +136,13 @@ export function AddCarForm() {
 
       console.log("Submitting car data:", { vin: carDataWithDate.vin, auction: carDataWithDate.auction });
 
-      // Add more detailed logging for debugging
-      console.log("Form data being sent:", carDataWithDate);
-
+      // Execute the car addition
       const [data, error] = await execute(carDataWithDate);
-
-      // Clear the timeout since we got a response
-      clearTimeout(timeoutId);
 
       console.log("Server action response:", { data, error });
 
       if (error) {
         console.error("Car addition failed:", error);
-        console.error("Error details:", {
-          message: error.message,
-          data: error.data
-        });
         toast.error(error.data || "Failed to add car");
         return;
       }
@@ -174,7 +155,10 @@ export function AddCarForm() {
 
       console.log("Car added successfully:", data);
 
-      // Process all image types in parallel
+      // Show success message immediately
+      toast.success(data?.message || "Car added successfully!");
+
+      // Process images in the background (non-blocking)
       const imagePromises = [];
 
       if (auction_images && auction_images.length > 0) {
@@ -190,22 +174,19 @@ export function AddCarForm() {
         imagePromises.push(processImages(pick_up_images, "PICK_UP", values.vin));
       }
 
-      // Process images if any exist, but don't block redirection on image processing errors
+      // Process images if any exist, but don't block redirection
       if (imagePromises.length > 0) {
-        try {
-          await Promise.all(imagePromises);
-          console.log("All images processed successfully");
-        } catch (imageError) {
-          console.error("Image processing failed, but continuing with redirect:", imageError);
-          // Don't block redirection on image processing errors
-        }
+        Promise.all(imagePromises)
+          .then(() => {
+            console.log("All images processed successfully");
+          })
+          .catch((imageError) => {
+            console.error("Image processing failed:", imageError);
+            // Don't show error toast for image processing failures
+          });
       }
 
-      // Show success message immediately
-      toast.success(data?.message || "Car added successfully!");
-
-      // Invalidate React Query cache in the background (non-blocking)
-      console.log("Invalidating getCars queries after adding car...");
+      // Invalidate React Query cache (non-blocking)
       queryClient.invalidateQueries({
         queryKey: ["getCars"],
         exact: false,
@@ -214,56 +195,13 @@ export function AddCarForm() {
         console.error("Cache invalidation failed:", cacheError);
       });
 
-      // Redirect immediately without waiting for cache invalidation
+      // Simple redirect to admin/cars
       console.log("Redirecting to /admin/cars...");
-
-      // Use a more robust redirection approach with multiple fallbacks
-      const performRedirect = () => {
-        try {
-          // Method 1: Try router.push first
-          router.push("/admin/cars");
-          console.log("Router.push called successfully");
-        } catch (error) {
-          console.error("Router.push failed:", error);
-          // Method 2: Fallback to window.location.href
-          window.location.href = "/admin/cars";
-        }
-      };
-
-      // Execute redirect immediately
-      performRedirect();
-
-      // Fallback 1: Check if redirect worked after 500ms
-      setTimeout(() => {
-        if (window.location.pathname !== "/admin/cars") {
-          console.log("Redirect check 1: Still on same page, trying window.location.href");
-          window.location.href = "/admin/cars";
-        }
-      }, 500);
-
-      // Fallback 2: Final check after 1 second
-      setTimeout(() => {
-        if (window.location.pathname !== "/admin/cars") {
-          console.log("Redirect check 2: Still on same page, forcing redirect");
-          window.location.href = "/admin/cars";
-        }
-      }, 1000);
-
-      // Fallback 3: Last resort after 2 seconds
-      setTimeout(() => {
-        if (window.location.pathname !== "/admin/cars") {
-          console.log("Redirect check 3: Final fallback, using window.location.replace");
-          window.location.replace("/admin/cars");
-        }
-      }, 2000);
+      router.push("/admin/cars");
 
     } catch (error) {
-      // Clear the timeout since we got an error
-      clearTimeout(timeoutId);
       console.error("Form submission error:", error);
-      toast.error("An error occurred while submitting the form or processing images");
-    } finally {
-      setIsProcessing(false);
+      toast.error("An error occurred while submitting the form");
     }
   };
 
@@ -295,12 +233,12 @@ export function AddCarForm() {
               type="button"
               variant="outline"
               onClick={() => router.back()}
-              disabled={isPending || isProcessing}
+              disabled={isPending}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending || isProcessing}>
-              {isPending || isProcessing ? "Adding Car..." : "Add Car"}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Adding Car..." : "Add Car"}
             </Button>
           </div>
         </form>

@@ -52,14 +52,13 @@ interface ClientProps {
 }
 
 export const Client = ({ translations }: ClientProps) => {
-  // Validate translations prop
-  if (!translations || typeof translations !== 'object') {
-    return (
-      <div className="container mx-auto py-10 text-primary">
-        <p>Configuration error</p>
-      </div>
-    );
-  }
+  // Table state - must be called before any early returns
+  const [pageIndex, setPageIndex] = React.useState(0);
+  const [pageSize, setPageSize] = React.useState(20);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [filters, setFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = React.useState({});
 
   // Optimized React Query configuration to prevent excessive calls
   const { isLoading, data = [], error } = useServerActionQuery(getUsersAction, {
@@ -74,13 +73,14 @@ export const Client = ({ translations }: ClientProps) => {
     refetchOnReconnect: false,
   });
 
-  // Table state
-  const [pageIndex, setPageIndex] = React.useState(0);
-  const [pageSize, setPageSize] = React.useState(20);
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [filters, setFilters] = React.useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
+  // Validate translations prop after hooks
+  if (!translations || typeof translations !== 'object') {
+    return (
+      <div className="container mx-auto py-10 text-primary">
+        <p>Configuration error</p>
+      </div>
+    );
+  }
 
   // Safe data validation
   const safeData = Array.isArray(data) ? data : [];

@@ -1,7 +1,7 @@
 'use client';
 
 import { AddCarForm } from "@/components/add-car-form";
-import { ErrorBoundary } from "@/components/ui/error-boundary";
+import ErrorBoundary from "@/components/ui/error-boundary";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -18,7 +18,7 @@ export default function Page() {
           method: 'GET',
           credentials: 'include',
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           if (data.user && data.user.role === 'ADMIN') {

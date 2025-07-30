@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { getAuth } from "@/lib/auth";
 
+// Force dynamic rendering since this route uses cookies
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const authResult = await getAuth();
-    
+
     if (authResult.user && authResult.session) {
       return NextResponse.json({
         user: authResult.user,

@@ -18,6 +18,12 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
     );
   }
 
+  // Check if we're in a build environment
+  if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE === "phase-production-build") {
+    console.log("Database: Skipping connection during build phase");
+    throw new Error("Database connection not available during build");
+  }
+
   if (typeof process === "undefined") {
     throw new Error(
       "process is not defined. Are you trying to run this on the client?"
@@ -88,5 +94,10 @@ export function getDb(): LibSQLDatabase<typeof schema> {
   }
 }
 
-// Export the cached instance for backward compatibility
-export const db = getDb();
+// Export a lazy database instance that only connects when needed
+export const db = new Proxy({} as LibSQLDatabase<typeof schema>, {
+  get(target, prop) {
+    const dbInstance = getDb();
+    return (dbInstance as any)[prop];
+  }
+});

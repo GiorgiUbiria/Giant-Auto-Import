@@ -24,7 +24,6 @@ function ReactQueryProvider({ children }: React.PropsWithChildren) {
         // Add network mode for better error handling
         networkMode: 'online',
         // Add suspense mode for better SSR
-        suspense: false,
       },
       mutations: {
         retry: 1,

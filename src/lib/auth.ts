@@ -141,6 +141,12 @@ export const getAuth = cache(
     } catch (error) {
       console.error("getAuth: Authentication error:", error);
 
+      // Handle build-time database unavailability
+      if (error instanceof Error && error.message.includes("build")) {
+        console.log("getAuth: Database not available during build, returning unauthenticated");
+        return { user: null, session: null };
+      }
+
       // Clear invalid session cookie on error
       try {
         const luciaInstance = getLucia();

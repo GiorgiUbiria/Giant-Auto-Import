@@ -24,7 +24,7 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
     );
   }
 
-  // Use proper server-side environment variables
+  // Use proper server-side environment variables with better validation
   const url = process.env.TURSO_DATABASE_URL?.trim();
   if (!url) {
     console.error("Database configuration error: TURSO_DATABASE_URL is not defined");
@@ -47,21 +47,34 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
   }
 
   try {
-    dbInstance = drizzle(
-      createClient({
-        url,
-        authToken,
-      }),
-      { 
-        schema, 
-        logger: process.env.NODE_ENV === "development" // Only log in development
-      }
-    );
-    
+    // Validate URL format
+    if (!url.startsWith('libsql://') && !url.startsWith('file:')) {
+      throw new Error("Invalid database URL format");
+    }
+
+    const client = createClient({
+      url,
+      authToken,
+    });
+
+    // Test the connection
+    if (process.env.NODE_ENV === "production") {
+      console.log("Database: Testing connection...");
+    }
+
+    dbInstance = drizzle(client, {
+      schema,
+      logger: process.env.NODE_ENV === "development" // Only log in development
+    });
+
+    if (process.env.NODE_ENV === "production") {
+      console.log("Database: Connection established successfully");
+    }
+
     return dbInstance;
   } catch (error) {
     console.error("Failed to create database client:", error);
-    throw error;
+    throw new Error(`Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 

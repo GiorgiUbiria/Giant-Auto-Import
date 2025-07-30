@@ -52,6 +52,15 @@ interface ClientProps {
 }
 
 export const Client = ({ translations }: ClientProps) => {
+  // Validate translations prop
+  if (!translations || typeof translations !== 'object') {
+    return (
+      <div className="container mx-auto py-10 text-primary">
+        <p>Configuration error</p>
+      </div>
+    );
+  }
+
   // Optimized React Query configuration to prevent excessive calls
   const { isLoading, data = [], error } = useServerActionQuery(getUsersAction, {
     input: undefined,
@@ -73,15 +82,18 @@ export const Client = ({ translations }: ClientProps) => {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  // Client-side filtering
-  let filteredData = data;
+  // Safe data validation
+  const safeData = Array.isArray(data) ? data : [];
+
+  // Client-side filtering with safe data
+  let filteredData = safeData;
   filters.forEach(f => {
-    if (f.value && data.length > 0 && Object.prototype.hasOwnProperty.call(data[0], f.id)) {
+    if (f.value && safeData.length > 0 && Object.prototype.hasOwnProperty.call(safeData[0], f.id)) {
       filteredData = filteredData.filter((row: Record<string, any>) => String(row[f.id as keyof typeof row] ?? '').toLowerCase().includes(String(f.value).toLowerCase()));
     }
   });
 
-  // Client-side sorting
+  // Client-side sorting with safe data
   if (sorting.length > 0) {
     const { id, desc } = sorting[0];
     filteredData = [...filteredData].sort((a: Record<string, any>, b: Record<string, any>) => {

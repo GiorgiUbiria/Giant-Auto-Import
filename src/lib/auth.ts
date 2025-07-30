@@ -11,7 +11,7 @@ import { getDb } from "./drizzle/db";
 import { selectUserSchema, sessions, users } from "./drizzle/schema";
 
 const AuthSchema = selectUserSchema.omit({ id: true, password: true, passwordText: true });
-type AuthSchemaType = z.infer<typeof AuthSchema>; 
+type AuthSchemaType = z.infer<typeof AuthSchema>;
 
 // Define the authenticated user type with role
 export type AuthenticatedUser = User & {
@@ -39,31 +39,44 @@ export function getLucia(): Lucia<typeof AuthSchema> {
   }
 
   if (!adapter) {
-    const db = getDb();
-    adapter = new DrizzleSQLiteAdapter(db, sessions as any, users as any);
+    try {
+      const db = getDb();
+      if (!db) {
+        throw new Error("Database connection failed");
+      }
+      adapter = new DrizzleSQLiteAdapter(db, sessions as any, users as any);
+    } catch (error) {
+      console.error("Failed to create adapter:", error);
+      throw new Error("Failed to initialize authentication adapter");
+    }
   }
 
   if (!lucia) {
-    lucia = new Lucia(adapter, {
-      sessionCookie: {
-        expires: false,
-        attributes: {
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
+    try {
+      lucia = new Lucia(adapter, {
+        sessionCookie: {
+          expires: false,
+          attributes: {
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+          },
         },
-      },
-      getUserAttributes: (attributes) => {
-        return {
-          fullName: attributes.fullName,
-          email: attributes.email,
-          role: attributes.role,
-          phone: attributes.phone,
-          deposit: attributes.deposit,
-          balance: attributes.balance,
-          priceList: attributes.priceList,
-        };
-      },
-    });
+        getUserAttributes: (attributes) => {
+          return {
+            fullName: attributes.fullName || "",
+            email: attributes.email || "",
+            role: attributes.role || "CUSTOMER_SINGULAR",
+            phone: attributes.phone || "",
+            deposit: attributes.deposit || 0,
+            balance: attributes.balance || 0,
+            priceList: attributes.priceList || "[]",
+          };
+        },
+      });
+    } catch (error) {
+      console.error("Failed to create Lucia instance:", error);
+      throw new Error("Failed to initialize authentication");
+    }
   }
 
   return lucia;
@@ -74,12 +87,21 @@ export const getAuth = cache(
   async (): Promise<{ user: AuthenticatedUser; session: Session } | { user: null; session: null }> => {
     try {
       const cookieStore = cookies();
+      if (!cookieStore) {
+        console.log("getAuth: No cookie store available");
+        return { user: null, session: null };
+      }
+
       const luciaInstance = getLucia();
-      
+      if (!luciaInstance) {
+        console.error("getAuth: Failed to get Lucia instance");
+        return { user: null, session: null };
+      }
+
       // Safe session ID extraction
       const sessionCookie = cookieStore.get(luciaInstance.sessionCookieName);
       const sessionId = sessionCookie ? sessionCookie.value : null;
-      
+
       if (!sessionId) {
         console.log("getAuth: No session ID found");
         return {
@@ -93,13 +115,13 @@ export const getAuth = cache(
       // Validate session with better error handling
       const result = await luciaInstance.validateSession(sessionId);
 
-      // Safe user role extraction
-      const userRole = result.user && typeof result.user === 'object' && 'role' in result.user 
-        ? (result.user as { role: string }).role 
-        : undefined;
+      // Safe user role extraction with fallbacks
+      const userRole = result.user && typeof result.user === 'object' && 'role' in result.user
+        ? (result.user as { role: string }).role
+        : "CUSTOMER_SINGULAR";
 
-      console.log("getAuth: Session validation result", { 
-        hasUser: !!result.user, 
+      console.log("getAuth: Session validation result", {
+        hasUser: !!result.user,
         hasSession: !!result.session,
         userRole: userRole
       });
@@ -118,17 +140,19 @@ export const getAuth = cache(
       return result as { user: AuthenticatedUser; session: Session } | { user: null; session: null };
     } catch (error) {
       console.error("getAuth: Authentication error:", error);
-      
+
       // Clear invalid session cookie on error
       try {
         const luciaInstance = getLucia();
-        const sessionCookie = luciaInstance.createBlankSessionCookie();
-        cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
-        console.log("getAuth: Cleared session cookie due to error");
+        if (luciaInstance) {
+          const sessionCookie = luciaInstance.createBlankSessionCookie();
+          cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+          console.log("getAuth: Cleared session cookie due to error");
+        }
       } catch (cookieError) {
         console.error("getAuth: Failed to clear session cookie:", cookieError);
       }
-      
+
       return {
         user: null,
         session: null

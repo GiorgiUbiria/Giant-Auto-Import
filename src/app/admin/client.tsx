@@ -11,7 +11,18 @@ import { useTranslations } from "next-intl";
 
 export const Client = ({ id }: { id: string }) => {
 	const t = useTranslations("AdminPanel");
-	
+
+	// Validate input
+	if (!id || typeof id !== 'string') {
+		return (
+			<Alert variant="destructive">
+				<AlertDescription>
+					{t("error")}
+				</AlertDescription>
+			</Alert>
+		);
+	}
+
 	// Optimized React Query configuration to prevent excessive calls
 	const { isLoading, data, error } = useServerActionQuery(getUserAction, {
 		input: {
@@ -63,9 +74,9 @@ export const Client = ({ id }: { id: string }) => {
 		</Link>
 	);
 
-	// Safe data validation
+	// Safe data validation with better type checking
 	const isValidData = data && typeof data === 'object' && 'success' in data;
-	const hasValidUser = isValidData && data.success && data.user && typeof data.user === 'object';
+	const hasValidUser = isValidData && data.success && data.user && typeof data.user === 'object' && 'id' in data.user;
 
 	return (
 		<div className="space-y-8">

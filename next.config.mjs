@@ -3,7 +3,7 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 
 // Bundle analyzer configuration
-const withBundleAnalyzer = process.env.ANALYZE === 'true' 
+const withBundleAnalyzer = process.env.ANALYZE === 'true'
   ? require('@next/bundle-analyzer')({ enabled: true })
   : (config) => config;
 
@@ -11,13 +11,21 @@ const withBundleAnalyzer = process.env.ANALYZE === 'true'
 const nextConfig = {
   webpack: (config, { dev, isServer }) => {
     config.externals.push("@node-rs/argon2", "@node-rs/bcrypt");
-    
+
     // Fix for @tanstack/react-table module parsing
     config.module.rules.push({
       test: /node_modules\/@tanstack\/react-table/,
       type: 'javascript/auto',
     });
-    
+
+    // Add better error handling for undefined modules
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+    };
+
     // Simplified webpack optimization for better production stability
     config.optimization = {
       ...config.optimization,
@@ -77,7 +85,7 @@ const nextConfig = {
     return config;
   },
   experimental: {
-    serverComponentsExternalPackages: ["@node-rs/argon2", "nodemailer"],
+    serverComponentsExternalPackages: ["@node-rs/argon2", "nodemailer", "@libsql/client"],
     optimizePackageImports: [
       '@radix-ui/react-icons',
       '@radix-ui/react-slot',

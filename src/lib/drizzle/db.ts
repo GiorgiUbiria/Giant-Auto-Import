@@ -18,13 +18,19 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
     );
   }
 
+  // Check if we're in a build environment
+  if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE === "phase-production-build") {
+    console.log("Database: Skipping connection during build phase");
+    throw new Error("Database connection not available during build");
+  }
+
   if (typeof process === "undefined") {
     throw new Error(
       "process is not defined. Are you trying to run this on the client?"
     );
   }
 
-  // Use proper server-side environment variables
+  // Use proper server-side environment variables with better validation
   const url = process.env.TURSO_DATABASE_URL?.trim();
   if (!url) {
     console.error("Database configuration error: TURSO_DATABASE_URL is not defined");
@@ -47,21 +53,34 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
   }
 
   try {
-    dbInstance = drizzle(
-      createClient({
-        url,
-        authToken,
-      }),
-      { 
-        schema, 
-        logger: process.env.NODE_ENV === "development" // Only log in development
-      }
-    );
-    
+    // Validate URL format
+    if (!url.startsWith('libsql://') && !url.startsWith('file:')) {
+      throw new Error("Invalid database URL format");
+    }
+
+    const client = createClient({
+      url,
+      authToken,
+    });
+
+    // Test the connection
+    if (process.env.NODE_ENV === "production") {
+      console.log("Database: Testing connection...");
+    }
+
+    dbInstance = drizzle(client, {
+      schema,
+      logger: process.env.NODE_ENV === "development" // Only log in development
+    });
+
+    if (process.env.NODE_ENV === "production") {
+      console.log("Database: Connection established successfully");
+    }
+
     return dbInstance;
   } catch (error) {
     console.error("Failed to create database client:", error);
-    throw error;
+    throw new Error(`Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -75,5 +94,10 @@ export function getDb(): LibSQLDatabase<typeof schema> {
   }
 }
 
-// Export the cached instance for backward compatibility
-export const db = getDb();
+// Export a lazy database instance that only connects when needed
+export const db = new Proxy({} as LibSQLDatabase<typeof schema>, {
+  get(target, prop) {
+    const dbInstance = getDb();
+    return (dbInstance as any)[prop];
+  }
+});

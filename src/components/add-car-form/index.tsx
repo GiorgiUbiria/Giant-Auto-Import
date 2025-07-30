@@ -17,7 +17,7 @@ import { ImageUploadSection } from "./image-upload-section";
 import { BasicInfoSection } from "../shared-form-sections/basic-info-section";
 import { AuctionInfoSection } from "../shared-form-sections/auction-info-section";
 import { FinancialInfoSection } from "../shared-form-sections/financial-info-section";
-import { ErrorBoundary } from "@/components/ui/error-boundary";
+import ErrorBoundary from "@/components/ui/error-boundary";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Extended schema to include image fields
@@ -37,7 +37,7 @@ export function AddCarForm() {
 
   // Add debugging for router initialization
   useEffect(() => {
-    console.log("AddCarForm: Router initialized", { 
+    console.log("AddCarForm: Router initialized", {
       pathname: typeof window !== 'undefined' ? window.location.pathname : 'server'
     });
   }, [router]);
@@ -121,14 +121,14 @@ export function AddCarForm() {
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
     setIsProcessing(true);
-    
+
     // Add a timeout to prevent hanging
     const timeoutId = setTimeout(() => {
       console.error("Form submission timed out after 30 seconds");
       toast.error("Form submission timed out. Please try again.");
       setIsProcessing(false);
     }, 30000);
-    
+
     try {
       const {
         warehouse_images,
@@ -145,17 +145,17 @@ export function AddCarForm() {
       };
 
       console.log("Submitting car data:", { vin: carDataWithDate.vin, auction: carDataWithDate.auction });
-      
+
       // Add more detailed logging for debugging
       console.log("Form data being sent:", carDataWithDate);
-      
+
       const [data, error] = await execute(carDataWithDate);
-      
+
       // Clear the timeout since we got a response
       clearTimeout(timeoutId);
-      
+
       console.log("Server action response:", { data, error });
-      
+
       if (error) {
         console.error("Car addition failed:", error);
         console.error("Error details:", {
@@ -176,7 +176,7 @@ export function AddCarForm() {
 
       // Process all image types in parallel
       const imagePromises = [];
-      
+
       if (auction_images && auction_images.length > 0) {
         imagePromises.push(processImages(auction_images, "AUCTION", values.vin));
       }
@@ -203,7 +203,7 @@ export function AddCarForm() {
 
       // Show success message immediately
       toast.success(data?.message || "Car added successfully!");
-      
+
       // Invalidate React Query cache in the background (non-blocking)
       console.log("Invalidating getCars queries after adding car...");
       queryClient.invalidateQueries({
@@ -216,7 +216,7 @@ export function AddCarForm() {
 
       // Redirect immediately without waiting for cache invalidation
       console.log("Redirecting to /admin/cars...");
-      
+
       // Use a more robust redirection approach with multiple fallbacks
       const performRedirect = () => {
         try {
@@ -232,7 +232,7 @@ export function AddCarForm() {
 
       // Execute redirect immediately
       performRedirect();
-      
+
       // Fallback 1: Check if redirect worked after 500ms
       setTimeout(() => {
         if (window.location.pathname !== "/admin/cars") {
@@ -240,7 +240,7 @@ export function AddCarForm() {
           window.location.href = "/admin/cars";
         }
       }, 500);
-      
+
       // Fallback 2: Final check after 1 second
       setTimeout(() => {
         if (window.location.pathname !== "/admin/cars") {
@@ -248,7 +248,7 @@ export function AddCarForm() {
           window.location.href = "/admin/cars";
         }
       }, 1000);
-      
+
       // Fallback 3: Last resort after 2 seconds
       setTimeout(() => {
         if (window.location.pathname !== "/admin/cars") {
@@ -256,7 +256,7 @@ export function AddCarForm() {
           window.location.replace("/admin/cars");
         }
       }, 2000);
-      
+
     } catch (error) {
       // Clear the timeout since we got an error
       clearTimeout(timeoutId);
@@ -289,7 +289,7 @@ export function AddCarForm() {
           <AuctionInfoSection form={form} />
           <FinancialInfoSection form={form} />
           <ImageUploadSection form={form} />
-          
+
           <div className="flex justify-end space-x-4">
             <Button
               type="button"

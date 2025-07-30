@@ -15,18 +15,31 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   try {
+    console.log("Admin page: Starting authentication check");
     const authResult = await getAuth();
 
     // Safe destructuring with fallbacks
     const user = authResult?.user || null;
 
+    console.log("Admin page: Auth result", {
+      hasUser: !!user,
+      userRole: user?.role,
+      userId: user?.id
+    });
+
     if (!user || typeof user !== 'object' || user.role !== "ADMIN") {
       console.log("Admin page: User not authenticated or not admin", {
         hasUser: !!user,
-        userRole: user?.role
+        userRole: user?.role,
+        userId: user?.id
       });
       return redirect("/");
     }
+
+    console.log("Admin page: User authenticated successfully", {
+      userId: user.id,
+      userRole: user.role
+    });
 
     const t = await getTranslations("AdminPanel");
 

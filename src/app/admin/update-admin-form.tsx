@@ -30,7 +30,7 @@ type Props = {
 export function UpdateAdminForm({ user }: Props) {
 	const t = useTranslations("UpdateAdminForm");
 	const [showPassword, setShowPassword] = useState(false);
-	
+
 	const FormSchema = z.object({
 		id: z.string().min(1, t("validation.userIdRequired")),
 		email: z.string().email(t("validation.invalidEmail")).optional().or(z.literal("")),
@@ -38,7 +38,7 @@ export function UpdateAdminForm({ user }: Props) {
 		fullName: z.string().min(1, t("validation.fullNameRequired")),
 		passwordText: z.string().optional().or(z.literal("")),
 	})
-	
+
 	const form = useForm<z.infer<typeof FormSchema>>({
 		resolver: zodResolver(FormSchema),
 		defaultValues: {
@@ -63,17 +63,31 @@ export function UpdateAdminForm({ user }: Props) {
 				...values,
 				email: values.email ? values.email.toLowerCase() : values.email
 			};
+
+			console.log("Submitting user update:", { id: normalizedValues.id, email: normalizedValues.email });
+
 			const [data, error] = await execute(normalizedValues);
 
-			if (error || data?.success === false) {
-				toast.error(data?.message || t("updateFailed"));
-				console.error(error);
-			} else {
-				toast.success(data?.message || t("profileUpdated"));
+			console.log("Server action response:", { data, error });
+
+			if (error) {
+				console.error("User update failed:", error);
+				toast.error(error.data || t("updateFailed"));
+				return;
 			}
+
+			if (!data || !data.success) {
+				console.error("User update failed - no success response:", data);
+				toast.error(data?.message || t("updateFailed"));
+				return;
+			}
+
+			console.log("User updated successfully:", data);
+			toast.success(data?.message || t("profileUpdated"));
+
 		} catch (error) {
+			console.error("Form submission error:", error);
 			toast.error(t("unexpectedError"));
-			console.error(error);
 		}
 	}
 
@@ -128,9 +142,9 @@ export function UpdateAdminForm({ user }: Props) {
 						<FormItem>
 							<FormLabel className="leading-relaxed">{t("password")}</FormLabel>
 							<FormControl>
-								<Input 
-									type={showPassword ? "text" : "password"} 
-									{...field} 
+								<Input
+									type={showPassword ? "text" : "password"}
+									{...field}
 									placeholder={t("passwordPlaceholder")}
 									className="leading-relaxed"
 								/>

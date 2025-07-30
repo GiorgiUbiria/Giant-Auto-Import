@@ -29,6 +29,7 @@ export const Client = ({ id }: { id: string }) => {
 
 	// Validate input
 	if (!id || typeof id !== 'string') {
+		console.error("Client: Invalid user ID provided", { id });
 		return (
 			<Alert variant="destructive">
 				<AlertDescription>
@@ -47,8 +48,17 @@ export const Client = ({ id }: { id: string }) => {
 	}
 
 	const ErrorState = () => {
-		// Safe error message extraction
-		const errorMessage = data?.message || error?.message || t("error");
+		// Enhanced error message extraction with better debugging
+		let errorMessage = t("error");
+
+		if (error) {
+			console.error("Client: Query error:", error);
+			errorMessage = error.message || error.toString();
+		} else if (data && !data.success) {
+			console.error("Client: Server action error:", data);
+			errorMessage = data.message || t("error");
+		}
+
 		return (
 			<Alert variant="destructive">
 				<AlertDescription>
@@ -74,9 +84,19 @@ export const Client = ({ id }: { id: string }) => {
 		</Link>
 	);
 
-	// Safe data validation with better type checking
+	// Enhanced data validation with better type checking and debugging
 	const isValidData = data && typeof data === 'object' && 'success' in data;
 	const hasValidUser = isValidData && data.success && data.user && typeof data.user === 'object' && 'id' in data.user;
+
+	// Debug logging for troubleshooting
+	if (data) {
+		console.log("Client: Query data received:", {
+			success: data.success,
+			hasUser: !!data.user,
+			userType: typeof data.user,
+			userId: data.user?.id
+		});
+	}
 
 	return (
 		<div className="space-y-8">

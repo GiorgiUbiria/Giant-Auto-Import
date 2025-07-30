@@ -1,10 +1,11 @@
-import { db } from "@/lib/drizzle/db";
+import { getDb } from "@/lib/drizzle/db";
 import { cars } from "@/lib/drizzle/schema";
 import { eq } from "drizzle-orm";
 import CarClientView from "./CarClientView";
 
 export const ServerClient = async ({ vin }: { vin: string }) => {
   try {
+    const db = getDb();
     const [carData] = await db
       .select()
       .from(cars)

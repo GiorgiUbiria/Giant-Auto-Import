@@ -10,7 +10,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { logoutAction } from "@/lib/actions/authActions";
-import type { User } from "lucia";
+import type { AuthenticatedUser } from "@/lib/auth";
 import { ChevronDown, CircleUser, LogOut } from "lucide-react";
 import { useTranslations } from 'next-intl';
 import Link from "next/link";
@@ -19,7 +19,7 @@ import { useServerAction } from "zsa-react";
 import { useMedia } from "react-use";
 
 type AvatarProps = {
-	user: User | null;
+	user: AuthenticatedUser | null;
 }
 
 const Avatar = ({ user }: AvatarProps) => {

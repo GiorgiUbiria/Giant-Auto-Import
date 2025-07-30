@@ -11,6 +11,13 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
     return dbInstance;
   }
 
+  // Ensure this only runs on the server side
+  if (typeof window !== "undefined") {
+    throw new Error(
+      "Database connection cannot be established on the client side"
+    );
+  }
+
   if (typeof process === "undefined") {
     throw new Error(
       "process is not defined. Are you trying to run this on the client?"
@@ -58,5 +65,15 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
   }
 }
 
-// Export the cached instance
-export const db = tursoClient();
+// Export a function that safely gets the database instance
+export function getDb(): LibSQLDatabase<typeof schema> {
+  try {
+    return tursoClient();
+  } catch (error) {
+    console.error("Failed to get database instance:", error);
+    throw new Error("Database connection failed");
+  }
+}
+
+// Export the cached instance for backward compatibility
+export const db = getDb();

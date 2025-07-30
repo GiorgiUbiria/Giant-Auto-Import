@@ -1,6 +1,6 @@
 "use server";
 
-import { lucia } from "@/lib/auth";
+import { getDb } from "../drizzle/db";
 import { SqliteError } from "better-sqlite3";
 import { eq } from "drizzle-orm";
 import { generateId } from "lucia";
@@ -9,7 +9,6 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Argon2id } from "oslo/password";
 import { z } from "zod";
-import { db } from "../drizzle/db";
 import { insertUserSchema, users } from "../drizzle/schema";
 import { authedProcedure, isAdminProcedure } from "./authProcedures";
 import { createServerAction } from "zsa";
@@ -30,6 +29,7 @@ export const loginAction = createServerAction()
     try {
       const { email, password } = input;
       const normalizedEmail = email.toLowerCase();
+      const db = getDb();
 
       const [existingUser] = await db
         .select()
@@ -54,6 +54,10 @@ export const loginAction = createServerAction()
         };
       }
 
+      // Import lucia dynamically to avoid client-side issues
+      const { getLucia } = await import("../auth");
+      const lucia = getLucia();
+      
       const session = await lucia.createSession(existingUser.id, {});
       const sessionCookie = lucia.createSessionCookie(session.id);
       cookies().set(
@@ -91,6 +95,7 @@ export const registerAction = isAdminProcedure
     const hashedPassword = await new Argon2id().hash(password);
 
     const userId = generateId(15) as string;
+    const db = getDb();
 
     try {
       await db.insert(users).values({
@@ -133,6 +138,10 @@ export const logoutAction = authedProcedure
       throw new Error("Session not found");
     }
 
+    // Import lucia dynamically to avoid client-side issues
+    const { getLucia } = await import("../auth");
+    const lucia = getLucia();
+    
     await lucia.invalidateSession(session.id);
 
     const sessionCookie = lucia.createBlankSessionCookie();
@@ -188,6 +197,7 @@ export const updateUserAction = isAdminProcedure
     }
 
     try {
+      const db = getDb();
       const updatedUser = await db
         .update(users)
         .set(updateData)

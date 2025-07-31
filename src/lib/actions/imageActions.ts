@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { createServerAction } from "zsa";
 import { db } from "../drizzle/db";
@@ -111,13 +111,13 @@ export const getImageAction = createServerAction()
   )
   .handler(async ({ input }) => {
     const { vin } = input;
-    
+
     console.log("getImageAction: Input received", { vin });
-    
-    if (!process.env.CLOUDFLARE_API_ENDPOINT || 
-        !process.env.CLOUDFLARE_ACCESS_KEY_ID || 
-        !process.env.CLOUDFLARE_SECRET_ACCESS_KEY || 
-        !process.env.CLOUDFLARE_BUCKET_NAME) {
+
+    if (!process.env.CLOUDFLARE_API_ENDPOINT ||
+      !process.env.CLOUDFLARE_ACCESS_KEY_ID ||
+      !process.env.CLOUDFLARE_SECRET_ACCESS_KEY ||
+      !process.env.CLOUDFLARE_BUCKET_NAME) {
       console.error("getImageAction: Missing Cloudflare R2 environment variables", {
         endpoint: !!process.env.CLOUDFLARE_API_ENDPOINT,
         accessKey: !!process.env.CLOUDFLARE_ACCESS_KEY_ID,
@@ -126,7 +126,7 @@ export const getImageAction = createServerAction()
       });
       return null; // Return null instead of throwing
     }
-    
+
     try {
       console.log("getImageAction: Fetching image for VIN", vin);
       const query = await fetchImageForDisplay(vin);
@@ -164,31 +164,81 @@ export const makeImageMainAction = isAdminProcedure
   )
   .handler(async ({ input }) => {
     const { imageKey } = input;
-    const isMain = await db
-      .select({
-        imageKey: images.imageKey,
-      })
-      .from(images)
-      .where(eq(images.priority, true));
 
-    if (isMain.length === 0) {
-      await db
-        .update(images)
-        .set({
-          priority: true,
+    try {
+      console.log("makeImageMainAction: Starting priority update", { imageKey });
+
+      // First, get the car VIN for this image to scope the priority update
+      const imageInfo = await db
+        .select({
+          carVin: images.carVin,
+          imageKey: images.imageKey,
         })
+        .from(images)
         .where(eq(images.imageKey, imageKey));
-    } else {
-      await db.transaction(async (tx) => {
-        await tx
-          .update(images)
-          .set({ priority: null })
-          .where(eq(images.imageKey, isMain[0].imageKey!));
-        await tx
-          .update(images)
-          .set({ priority: true })
-          .where(eq(images.imageKey, imageKey));
+
+      if (imageInfo.length === 0) {
+        console.error("makeImageMainAction: Image not found", { imageKey });
+        throw new Error("Image not found");
+      }
+
+      const carVin = imageInfo[0].carVin;
+      console.log("makeImageMainAction: Found car VIN", { imageKey, carVin });
+
+      // Find the current priority image for this specific car
+      const currentMain = await db
+        .select({
+          imageKey: images.imageKey,
+        })
+        .from(images)
+        .where(
+          and(
+            eq(images.carVin, carVin),
+            eq(images.priority, true)
+          )
+        );
+
+      console.log("makeImageMainAction: Current priority images", {
+        carVin,
+        currentMainCount: currentMain.length,
+        currentMainKey: currentMain[0]?.imageKey
       });
+
+      if (currentMain.length === 0) {
+        // No current priority image for this car, set this one as priority
+        console.log("makeImageMainAction: Setting new priority image", { imageKey, carVin });
+        await db
+          .update(images)
+          .set({
+            priority: true,
+          })
+          .where(eq(images.imageKey, imageKey));
+      } else {
+        // Update priority within the same car's scope
+        console.log("makeImageMainAction: Updating priority image", {
+          oldKey: currentMain[0].imageKey,
+          newKey: imageKey,
+          carVin
+        });
+        await db.transaction(async (tx) => {
+          await tx
+            .update(images)
+            .set({ priority: null })
+            .where(eq(images.imageKey, currentMain[0].imageKey!));
+          await tx
+            .update(images)
+            .set({ priority: true })
+            .where(eq(images.imageKey, imageKey));
+        });
+      }
+
+      console.log("makeImageMainAction: Priority update completed successfully", { imageKey, carVin });
+    } catch (error) {
+      console.error("makeImageMainAction: Error updating priority", {
+        imageKey,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      throw error;
     }
   });
 

@@ -271,6 +271,7 @@ export async function cleanUpBucket(): Promise<void> {
 
 export async function deleteObjectFromBucket(key: string): Promise<void> {
   try {
+    console.log(`deleteObjectFromBucket: Deleting object ${key}`);
     const S3Client = getS3Client();
     const bucketName = getBucketName();
 
@@ -282,9 +283,15 @@ export async function deleteObjectFromBucket(key: string): Promise<void> {
     const deleteCommand = new DeleteObjectCommand(deleteParams);
 
     await S3Client.send(deleteCommand);
+    console.log(`deleteObjectFromBucket: Successfully deleted object from bucket: ${key}`);
+
     await db.delete(images).where(eq(images.imageKey, key));
+    console.log(`deleteObjectFromBucket: Successfully deleted image record from database: ${key}`);
   } catch (error) {
-    console.error(`Error deleting ${key} from bucket:`, error);
+    console.error(`deleteObjectFromBucket: Error deleting ${key} from bucket:`, {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
   }
 }
 
@@ -419,6 +426,7 @@ export async function fetchImagesForDisplay(
 
 export async function cleanUpBucketForVin(vin: string): Promise<void> {
   try {
+    console.log(`cleanUpBucketForVin: Starting cleanup for VIN ${vin}`);
     const S3Client = getS3Client();
     const bucketName = getBucketName();
 
@@ -428,6 +436,7 @@ export async function cleanUpBucketForVin(vin: string): Promise<void> {
     };
 
     let continuationToken;
+    let totalDeleted = 0;
 
     do {
       const listCommand = new ListObjectsV2Command({
@@ -436,18 +445,29 @@ export async function cleanUpBucketForVin(vin: string): Promise<void> {
       });
       const listedObjects: any = await S3Client.send(listCommand);
 
-      if (listedObjects.Contents) {
+      if (listedObjects.Contents && listedObjects.Contents.length > 0) {
+        console.log(`cleanUpBucketForVin: Found ${listedObjects.Contents.length} objects to delete for VIN ${vin}`);
+
         for (const item of listedObjects.Contents) {
           if (item.Key) {
+            console.log(`cleanUpBucketForVin: Deleting object ${item.Key}`);
             await deleteObjectFromBucket(item.Key);
+            totalDeleted++;
           }
         }
+      } else {
+        console.log(`cleanUpBucketForVin: No objects found for VIN ${vin}`);
       }
 
       continuationToken = listedObjects.NextContinuationToken;
     } while (continuationToken);
+
+    console.log(`cleanUpBucketForVin: Cleanup completed for VIN ${vin}. Total objects deleted: ${totalDeleted}`);
   } catch (error) {
-    console.error(`Error cleaning up the bucket for VIN ${vin}:`, error);
+    console.error(`cleanUpBucketForVin: Error cleaning up the bucket for VIN ${vin}:`, {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
   }
 }
 

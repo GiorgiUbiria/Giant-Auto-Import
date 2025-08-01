@@ -91,10 +91,10 @@ export const addCarAction = createServerAction()
   .handler(async ({ input }) => {
     try {
       console.log("addCarAction: Starting car addition", { vin: input.vin, auction: input.auction });
-      
+
       // Manual authentication check
       const { user } = await getAuth();
-      
+
       if (!user) {
         console.error("addCarAction: No authenticated user");
         return {
@@ -110,7 +110,7 @@ export const addCarAction = createServerAction()
           message: "Admin access required",
         };
       }
-      
+
       // Validate required fields
       if (!input.vin || !input.auction || !input.originPort) {
         console.log("addCarAction: Missing required fields", { vin: input.vin, auction: input.auction, originPort: input.originPort });
@@ -170,13 +170,13 @@ export const addCarAction = createServerAction()
       };
     } catch (error) {
       console.error("addCarAction error:", error);
-      
+
       // Enhanced error handling for different constraint violations
       let errorMessage = "An error occurred while adding the car";
-      
+
       if (error instanceof Error) {
         const errorStr = error.message;
-        
+
         if (errorStr.includes("SQLITE_CONSTRAINT")) {
           if (errorStr.includes("FOREIGN KEY constraint failed")) {
             if (errorStr.includes("owner_id")) {
@@ -213,7 +213,7 @@ export const getCarsAction = createServerAction()
     try {
       // Manual authentication check
       const { user } = await getAuth();
-      
+
       if (!user) {
         console.error("getCarsAction: No authenticated user");
         return [];
@@ -303,7 +303,7 @@ export const getCarPublicAction = createServerAction()
         vin,
         id
       });
-      
+
       // Instead of throwing, return null to prevent 500 errors
       return null;
     }
@@ -354,7 +354,7 @@ export const getCarAction = authedProcedure
         id,
         userId: ctx.user?.id
       });
-      
+
       // Instead of throwing, return null to prevent 500 errors
       return null;
     }
@@ -377,10 +377,13 @@ export const deleteCarAction = createServerAction()
     const { vin } = input;
 
     try {
+      console.log("deleteCarAction: Starting deletion process", { vin });
+
       // Manual authentication check
       const { user } = await getAuth();
-      
+
       if (!user) {
+        console.error("deleteCarAction: No authenticated user");
         return {
           success: false,
           message: "Authentication required",
@@ -388,6 +391,7 @@ export const deleteCarAction = createServerAction()
       }
 
       if (user.role !== "ADMIN") {
+        console.error("deleteCarAction: User is not admin", { role: user.role });
         return {
           success: false,
           message: "Admin access required",
@@ -395,12 +399,14 @@ export const deleteCarAction = createServerAction()
       }
 
       if (!vin) {
+        console.error("deleteCarAction: No VIN provided");
         return {
           success: false,
           message: "Provide the car's vin code",
         };
       }
 
+      console.log("deleteCarAction: Checking if car exists", { vin });
       const carExists = await db
         .select()
         .from(cars)
@@ -408,36 +414,49 @@ export const deleteCarAction = createServerAction()
         .limit(1);
 
       if (!carExists.length) {
+        console.error("deleteCarAction: Car not found", { vin });
         return {
           success: false,
           message: "Car does not exist",
         };
       }
 
-      // Delete all images for this car first
-      await cleanUpBucketForVin(vin);
+      console.log("deleteCarAction: Car found, starting cleanup", { vin });
 
+      // Delete all images for this car first
+      console.log("deleteCarAction: Cleaning up bucket for VIN", { vin });
+      await cleanUpBucketForVin(vin);
+      console.log("deleteCarAction: Bucket cleanup completed", { vin });
+
+      console.log("deleteCarAction: Deleting car from database", { vin });
       const [isDeleted] = await db
         .delete(cars)
         .where(eq(cars.vin, vin))
         .returning({ vin: cars.vin });
 
       if (!isDeleted) {
+        console.error("deleteCarAction: Failed to delete car from database", { vin });
         return {
           success: false,
           message: "Could not delete the car",
         };
       }
 
+      console.log("deleteCarAction: Car deleted successfully, revalidating paths", { vin });
       revalidatePath("/admin/cars");
       revalidatePath("/dashboard");
 
+      console.log("deleteCarAction: Deletion process completed successfully", { vin });
       return {
         success: true,
         message: `Car with vin code ${isDeleted.vin} was deleted successfully`,
       };
     } catch (error) {
-      console.error("Error deleting the car:", error);
+      console.error("deleteCarAction: Error during deletion process", {
+        vin,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       return {
         success: false,
         message: "An error occurred while deleting the car and its images",
@@ -519,13 +538,13 @@ export const assignOwnerAction = isAdminProcedure
       };
     } catch (error) {
       console.error("Error assigning owner:", error);
-      
+
       // Enhanced error handling for different constraint violations
       let errorMessage = "Failed to assign the owner to car";
-      
+
       if (error instanceof Error) {
         const errorStr = error.message;
-        
+
         if (errorStr.includes("SQLITE_CONSTRAINT")) {
           if (errorStr.includes("FOREIGN KEY constraint failed")) {
             if (errorStr.includes("owner_id")) {
@@ -678,13 +697,13 @@ export const updateCarAction = isAdminProcedure
       };
     } catch (error) {
       console.error("updateCarAction error:", error);
-      
+
       // Enhanced error handling for different constraint violations
       let errorMessage = "An error occurred while updating the car";
-      
+
       if (error instanceof Error) {
         const errorStr = error.message;
-        
+
         if (errorStr.includes("SQLITE_CONSTRAINT")) {
           if (errorStr.includes("FOREIGN KEY constraint failed")) {
             if (errorStr.includes("owner_id")) {

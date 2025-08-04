@@ -64,13 +64,14 @@ export const EditImages = ({ vin }: { vin: string }) => {
           pageSize,
           revalidate: 30, // 30 seconds cache for admin
         });
-        
+
         setImagesData(data.images || []);
         setTotalCount(data.count || 0);
       } catch (err) {
         console.error('Failed to fetch images:', err);
         setImagesData([]);
         setTotalCount(0);
+        toast.error('Failed to load images. Please try again.');
       }
       setIsLoading(false);
     }
@@ -83,17 +84,33 @@ export const EditImages = ({ vin }: { vin: string }) => {
         const errorMessage = error?.data || "Failed to delete the image";
         toast.error(errorMessage);
       },
-      onSuccess: async () => {
-        const successMessage = "Image deleted successfully!"; 
+      onSuccess: async (data, variables) => {
+        const successMessage = "Image deleted successfully!";
         toast.success(successMessage);
-        
+
         // Clear image cache for this VIN
         clearImageCache(vin);
-        
-        await queryClient.invalidateQueries({
-          queryKey: ["getImagesForCar", vin],
-          refetchType: "active",
-        });
+
+        // Update local state immediately for better UX
+        setImagesData(prevImages =>
+          prevImages.filter(img => img.imageKey !== variables.imageKey)
+        );
+
+        // Invalidate all related queries
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: ["getImagesForCar", vin],
+            refetchType: "active",
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["getImage", vin],
+            refetchType: "active",
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["getImages"],
+            refetchType: "active",
+          }),
+        ]);
       },
     });
 
@@ -103,17 +120,36 @@ export const EditImages = ({ vin }: { vin: string }) => {
         const errorMessage = error?.data || "Failed to make the image main";
         toast.error(errorMessage);
       },
-      onSuccess: async () => {
+      onSuccess: async (data, variables) => {
         const successMessage = "Image prioritized successfully!";
         toast.success(successMessage);
 
         // Clear image cache for this VIN
         clearImageCache(vin);
 
-        await queryClient.invalidateQueries({
-          queryKey: ["getImagesForCar", vin],
-          refetchType: "active",
-        });
+        // Update local state immediately for better UX
+        setImagesData(prevImages =>
+          prevImages.map(img => ({
+            ...img,
+            priority: img.imageKey === variables.imageKey
+          }))
+        );
+
+        // Invalidate all related queries
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: ["getImagesForCar", vin],
+            refetchType: "active",
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["getImage", vin],
+            refetchType: "active",
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["getImages"],
+            refetchType: "active",
+          }),
+        ]);
       },
     });
 
@@ -130,10 +166,25 @@ export const EditImages = ({ vin }: { vin: string }) => {
         // Clear image cache for this VIN
         clearImageCache(vin);
 
-        await queryClient.invalidateQueries({
-          queryKey: ["getImagesForCar", vin],
-          refetchType: "active",
-        });
+        // Update local state immediately for better UX
+        setImagesData([]);
+        setTotalCount(0);
+
+        // Invalidate all related queries
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: ["getImagesForCar", vin],
+            refetchType: "active",
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["getImage", vin],
+            refetchType: "active",
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["getImages"],
+            refetchType: "active",
+          }),
+        ]);
       },
     });
 
@@ -176,6 +227,12 @@ export const EditImages = ({ vin }: { vin: string }) => {
                   }
                 }}
               />
+              {/* Priority indicator */}
+              {image.priority && (
+                <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium shadow-lg">
+                  Main
+                </div>
+              )}
             </div>
           </TooltipTrigger>
           <TooltipContent>
@@ -193,12 +250,15 @@ export const EditImages = ({ vin }: { vin: string }) => {
               <Button
                 variant="link"
                 size="icon"
-                disabled={makeMainPending || deletePending}
+                disabled={makeMainPending || deletePending || image.priority}
                 onClick={() => {
                   makeMainMutate({ imageKey: image.imageKey });
                 }}
               >
-                <Stamp className="w-4 h-4 hover:opacity-50 hover:text-red-500 transition" />
+                <Stamp className={`w-4 h-4 transition ${image.priority
+                  ? 'text-green-500'
+                  : 'hover:opacity-50 hover:text-blue-500'
+                  }`} />
               </Button>
             </div>
           </TooltipContent>

@@ -185,52 +185,20 @@ export const makeImageMainAction = isAdminProcedure
       const carVin = imageInfo[0].carVin;
       console.log("makeImageMainAction: Found car VIN", { imageKey, carVin });
 
-      // Find the current priority image for this specific car
-      const currentMain = await db
-        .select({
-          imageKey: images.imageKey,
-        })
-        .from(images)
-        .where(
-          and(
-            eq(images.carVin, carVin),
-            eq(images.priority, true)
-          )
-        );
-
-      console.log("makeImageMainAction: Current priority images", {
-        carVin,
-        currentMainCount: currentMain.length,
-        currentMainKey: currentMain[0]?.imageKey
-      });
-
-      if (currentMain.length === 0) {
-        // No current priority image for this car, set this one as priority
-        console.log("makeImageMainAction: Setting new priority image", { imageKey, carVin });
-        await db
+      // Use transaction to ensure atomicity
+      await db.transaction(async (tx) => {
+        // First, reset all priorities for this car to false
+        await tx
           .update(images)
-          .set({
-            priority: true,
-          })
+          .set({ priority: false })
+          .where(eq(images.carVin, carVin));
+
+        // Then set the selected image as priority
+        await tx
+          .update(images)
+          .set({ priority: true })
           .where(eq(images.imageKey, imageKey));
-      } else {
-        // Update priority within the same car's scope
-        console.log("makeImageMainAction: Updating priority image", {
-          oldKey: currentMain[0].imageKey,
-          newKey: imageKey,
-          carVin
-        });
-        await db.transaction(async (tx) => {
-          await tx
-            .update(images)
-            .set({ priority: null })
-            .where(eq(images.imageKey, currentMain[0].imageKey!));
-          await tx
-            .update(images)
-            .set({ priority: true })
-            .where(eq(images.imageKey, imageKey));
-        });
-      }
+      });
 
       console.log("makeImageMainAction: Priority update completed successfully", { imageKey, carVin });
     } catch (error) {

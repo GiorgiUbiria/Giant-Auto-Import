@@ -198,10 +198,12 @@ export const images = sqliteTable("images", {
     enum: ["AUCTION", "PICK_UP", "WAREHOUSE", "DELIVERED"],
   }).notNull(),
   imageKey: text("image_key").notNull(),
-  priority: integer("priority", { mode: "boolean" }),
+  priority: integer("priority", { mode: "boolean" }).default(false),
 }, (table) => {
   return {
-    imageKeyIdx: uniqueIndex("image_key_idx").on(table.imageKey)
+    imageKeyIdx: uniqueIndex("image_key_idx").on(table.imageKey),
+    carVinIdx: index("images_car_vin_idx").on(table.carVin),
+    priorityIdx: index("images_priority_idx").on(table.priority),
   }
 });
 
@@ -226,7 +228,7 @@ export const userPricingConfig = sqliteTable("user_pricing_config", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   // Remove single oceanFee field and replace with oceanRates JSON
-  oceanRates: text("ocean_rates", { mode: "json" }).$type<Array<{state: string, shorthand: string, rate: number}>>().notNull().default(sql`'[]'`),
+  oceanRates: text("ocean_rates", { mode: "json" }).$type<Array<{ state: string, shorthand: string, rate: number }>>().notNull().default(sql`'[]'`),
   groundFeeAdjustment: integer("ground_fee_adjustment").notNull().default(0),
   pickupSurcharge: integer("pickup_surcharge").notNull().default(300),
   serviceFee: integer("service_fee").notNull().default(100),
@@ -245,7 +247,7 @@ export const userPricingConfig = sqliteTable("user_pricing_config", {
 export const defaultPricingConfig = sqliteTable("default_pricing_config", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   // Remove single oceanFee field and replace with oceanRates JSON
-  oceanRates: text("ocean_rates", { mode: "json" }).$type<Array<{state: string, shorthand: string, rate: number}>>().notNull().default(sql`'[]'`),
+  oceanRates: text("ocean_rates", { mode: "json" }).$type<Array<{ state: string, shorthand: string, rate: number }>>().notNull().default(sql`'[]'`),
   groundFeeAdjustment: integer("ground_fee_adjustment").notNull().default(0),
   pickupSurcharge: integer("pickup_surcharge").notNull().default(300),
   serviceFee: integer("service_fee").notNull().default(100),

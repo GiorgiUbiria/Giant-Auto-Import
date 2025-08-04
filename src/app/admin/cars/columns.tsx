@@ -18,6 +18,8 @@ import { Owner } from "./owner";
 import { TableImage } from "./table-image";
 import { AdminReciever } from "./admin-reciever";
 import { TotalFeeDetails } from "./total-fee-details";
+import { PurchaseFeeDetails } from "../../dashboard/purchase-fee-details";
+import { ShippingFeeDetails } from "../../dashboard/shipping-fee-details";
 
 const SelectSchema = selectCarSchema;
 type SelectSchemaType = z.infer<typeof SelectSchema>;
@@ -158,7 +160,7 @@ export const columns = (translations: ColumnsTranslations): ColumnDef<SelectSche
     },
   },
   {
-    id: "vinDetails", 
+    id: "vinDetails",
     accessorKey: "vin",
     header: () => <div className="font-semibold">{translations.columns.lotVin}</div>,
     cell: ({ row }) => {
@@ -218,7 +220,7 @@ export const columns = (translations: ColumnsTranslations): ColumnDef<SelectSche
       const title = row.getValue("title") as string;
       const hasTitle = title === "Yes" || title === "yes" || title === "YES";
       const noTitle = title === "No" || title === "no" || title === "NO";
-      
+
       return (
         <div className="text-center flex items-center justify-center">
           {hasTitle ? (
@@ -245,7 +247,7 @@ export const columns = (translations: ColumnsTranslations): ColumnDef<SelectSche
       const keys = row.getValue("keys") as string;
       const hasKeys = keys === "Yes" || keys === "yes" || keys === "YES";
       const noKeys = keys === "No" || keys === "no" || keys === "NO";
-      
+
       return (
         <div className="text-center flex items-center justify-center">
           {hasKeys ? (
@@ -286,12 +288,25 @@ export const columns = (translations: ColumnsTranslations): ColumnDef<SelectSche
     accessorKey: "purchaseFee",
     header: translations.columns.purchaseDue,
     cell: ({ row }) => {
-      const purchaseFee = row.getValue("purchaseFee") as number;
+      const purchaseFee = row.original.purchaseFee as SelectSchemaType["purchaseFee"];
+      const auctionFee = row.original.auctionFee as SelectSchemaType["auctionFee"];
+      const gateFee = row.original.gateFee as SelectSchemaType["gateFee"];
+      const titleFee = row.original.titleFee as SelectSchemaType["titleFee"];
+      const environmentalFee = row.original.environmentalFee as SelectSchemaType["environmentalFee"];
+      const virtualBidFee = row.original.virtualBidFee as SelectSchemaType["virtualBidFee"];
+
       return (
         <div className="space-y-2">
-          <div className="font-medium">${purchaseFee || 0}</div>
-          <Button 
-            variant="outline" 
+          <PurchaseFeeDetails
+            purchaseFee={purchaseFee || 0}
+            auctionFee={auctionFee || 0}
+            gateFee={gateFee || 0}
+            titleFee={titleFee || 0}
+            environmentalFee={environmentalFee || 0}
+            virtualBidFee={virtualBidFee || 0}
+          />
+          <Button
+            variant="outline"
             size="sm"
             className="h-6 px-2 text-xs"
             onClick={() => {
@@ -310,12 +325,19 @@ export const columns = (translations: ColumnsTranslations): ColumnDef<SelectSche
     accessorKey: "shippingFee",
     header: translations.columns.shippingDue,
     cell: ({ row }) => {
-      const shippingFee = row.getValue("shippingFee") as number;
+      const shippingFee = row.original.shippingFee as SelectSchemaType["shippingFee"];
+      const groundFee = row.original.groundFee as SelectSchemaType["groundFee"];
+      const oceanFee = row.original.oceanFee as SelectSchemaType["oceanFee"];
+
       return (
         <div className="space-y-2">
-          <div className="font-medium">${shippingFee || 0}</div>
-          <Button 
-            variant="outline" 
+          <ShippingFeeDetails
+            shippingFee={shippingFee || 0}
+            groundFee={groundFee || 0}
+            oceanFee={oceanFee || 0}
+          />
+          <Button
+            variant="outline"
             size="sm"
             className="h-6 px-2 text-xs"
             onClick={() => {
@@ -349,6 +371,7 @@ export const columns = (translations: ColumnsTranslations): ColumnDef<SelectSche
       const groundFee = row.original.groundFee as SelectSchemaType["groundFee"];
       const oceanFee = row.original.oceanFee as SelectSchemaType["oceanFee"];
       const totalFee = row.original.totalFee as SelectSchemaType["totalFee"];
+      const insurance = row.original.insurance as SelectSchemaType["insurance"];
 
       return (
         <div className="space-y-2">
@@ -363,10 +386,11 @@ export const columns = (translations: ColumnsTranslations): ColumnDef<SelectSche
             groundFee={groundFee || 0}
             oceanFee={oceanFee || 0}
             totalFee={Math.round(totalFee || 0)}
+            insurance={insurance}
             translations={translations.totalFee}
           />
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             className="h-6 px-2 text-xs"
             onClick={() => {

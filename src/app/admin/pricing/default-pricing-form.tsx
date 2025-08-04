@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import { useTranslations } from 'next-intl';
 import { useServerAction } from "zsa-react";
-import { 
-  getDefaultPricingAction, 
+import { useAtom, useAtomValue } from 'jotai';
+import {
+  getDefaultPricingAction,
   updateDefaultPricingAction,
   getOceanShippingRatesAction,
   addOceanShippingRateAction,
@@ -12,62 +13,78 @@ import {
   deleteOceanShippingRateAction,
   seedOceanShippingRatesAction
 } from "@/lib/actions/pricingActions";
+import {
+  defaultPricingAtom,
+  oceanRatesAtom,
+  editingRateAtom,
+  newRateAtom,
+  pricingLoadingAtom,
+  pricingSavingAtom,
+  updateDefaultPricingFieldAtom,
+  setDefaultPricingAtom,
+  addOceanRateAtom,
+  updateOceanRateAtom,
+  deleteOceanRateAtom,
+  setOceanRatesAtom,
+  setEditingRateAtom,
+  updateNewRateFieldAtom,
+  resetNewRateAtom,
+  setPricingLoadingAtom,
+  setPricingSavingAtom,
+  OceanRate,
+} from '@/lib/pricing-atoms';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
-import { 
-  Loader2, 
-  Save, 
-  DollarSign, 
-  Truck, 
-  FileText, 
-  Zap, 
-  Plus, 
-  Edit, 
+import {
+  Loader2,
+  Save,
+  DollarSign,
+  Truck,
+  FileText,
+  Zap,
+  Plus,
+  Edit,
   Trash2,
   X,
   Check
 } from "lucide-react";
 import { toast } from "sonner";
 
-interface OceanRate {
-  id?: number;
-  state: string;
-  shorthand: string;
-  rate: number;
-}
-
 export const DefaultPricingForm = () => {
   const t = useTranslations('PricingManagement');
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [pricing, setPricing] = useState({
-    oceanRates: [] as OceanRate[],
-    groundFeeAdjustment: 0,
-    pickupSurcharge: 300,
-    serviceFee: 100,
-    hybridSurcharge: 150,
-  });
 
-  // Ocean rates management
-  const [oceanRates, setOceanRates] = useState<OceanRate[]>([]);
-  const [editingRate, setEditingRate] = useState<OceanRate | null>(null);
-  const [newRate, setNewRate] = useState<OceanRate>({
-    state: "",
-    shorthand: "",
-    rate: 0,
-  });
+  // Jotai atoms
+  const pricing = useAtomValue(defaultPricingAtom);
+  const oceanRates = useAtomValue(oceanRatesAtom);
+  const editingRate = useAtomValue(editingRateAtom);
+  const newRate = useAtomValue(newRateAtom);
+  const loading = useAtomValue(pricingLoadingAtom);
+  const saving = useAtomValue(pricingSavingAtom);
+
+  // Action atoms
+  const [, updatePricingField] = useAtom(updateDefaultPricingFieldAtom);
+  const [, setPricing] = useAtom(setDefaultPricingAtom);
+  const [, addRate] = useAtom(addOceanRateAtom);
+  const [, updateRate] = useAtom(updateOceanRateAtom);
+  const [, deleteRate] = useAtom(deleteOceanRateAtom);
+  const [, setRates] = useAtom(setOceanRatesAtom);
+  const [, setEditing] = useAtom(setEditingRateAtom);
+  const [, updateNewRateField] = useAtom(updateNewRateFieldAtom);
+  const [, resetNewRate] = useAtom(resetNewRateAtom);
+  const [, setLoading] = useAtom(setPricingLoadingAtom);
+  const [, setSaving] = useAtom(setPricingSavingAtom);
 
   const { execute: getDefaultPricing } = useServerAction(getDefaultPricingAction);
   const { execute: updateDefaultPricing } = useServerAction(updateDefaultPricingAction);
@@ -99,7 +116,7 @@ export const DefaultPricingForm = () => {
     } finally {
       setLoading(false);
     }
-  }, [getDefaultPricing]);
+  }, [getDefaultPricing, setPricing, setLoading]);
 
   const loadOceanShippingRates = useCallback(async () => {
     try {
@@ -109,12 +126,12 @@ export const DefaultPricingForm = () => {
         return;
       }
       if (result.success) {
-        setOceanRates(result.data);
+        setRates(result.data);
       }
     } catch (error) {
       toast.error("Failed to load ocean shipping rates");
     }
-  }, [getOceanShippingRates]);
+  }, [getOceanShippingRates, setRates]);
 
   useEffect(() => {
     loadDefaultPricing();
@@ -123,16 +140,16 @@ export const DefaultPricingForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setSaving(true);
       const [result, error] = await updateDefaultPricing(pricing);
-      
+
       if (error) {
         toast.error("Failed to update default pricing");
         return;
       }
-      
+
       if (result.success) {
         toast.success("Default pricing updated successfully");
       } else {
@@ -145,12 +162,9 @@ export const DefaultPricingForm = () => {
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: 'groundFeeAdjustment' | 'pickupSurcharge' | 'serviceFee' | 'hybridSurcharge', value: string) => {
     const numValue = parseInt(value) || 0;
-    setPricing(prev => ({
-      ...prev,
-      [field]: numValue,
-    }));
+    updatePricingField(field, numValue);
   };
 
   const handleAddOceanRate = async () => {
@@ -167,7 +181,7 @@ export const DefaultPricingForm = () => {
       }
       if (result.success) {
         toast.success("Ocean rate added successfully");
-        setNewRate({ state: "", shorthand: "", rate: 0 });
+        resetNewRate();
         loadOceanShippingRates();
       }
     } catch (error) {
@@ -194,7 +208,7 @@ export const DefaultPricingForm = () => {
       }
       if (result.success) {
         toast.success("Ocean rate updated successfully");
-        setEditingRate(null);
+        setEditing(null);
         loadOceanShippingRates();
       }
     } catch (error) {
@@ -268,7 +282,7 @@ export const DefaultPricingForm = () => {
                 id="newState"
                 placeholder="e.g., Los Angeles, CA"
                 value={newRate.state}
-                onChange={(e) => setNewRate(prev => ({ ...prev, state: e.target.value }))}
+                onChange={(e) => updateNewRateField('state', e.target.value)}
               />
             </div>
             <div>
@@ -277,7 +291,7 @@ export const DefaultPricingForm = () => {
                 id="newShorthand"
                 placeholder="e.g., CA"
                 value={newRate.shorthand}
-                onChange={(e) => setNewRate(prev => ({ ...prev, shorthand: e.target.value }))}
+                onChange={(e) => updateNewRateField('shorthand', e.target.value)}
               />
             </div>
             <div>
@@ -287,13 +301,13 @@ export const DefaultPricingForm = () => {
                 type="number"
                 placeholder="1025"
                 value={newRate.rate}
-                onChange={(e) => setNewRate(prev => ({ ...prev, rate: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => updateNewRateField('rate', parseInt(e.target.value) || 0)}
                 min="0"
               />
             </div>
             <div className="flex items-end">
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 onClick={handleAddOceanRate}
                 className="w-full"
               >
@@ -321,7 +335,7 @@ export const DefaultPricingForm = () => {
                       {editingRate?.id === rate.id ? (
                         <Input
                           value={editingRate?.state || ""}
-                          onChange={(e) => setEditingRate(prev => prev ? { ...prev, state: e.target.value } : null)}
+                          onChange={(e) => setEditing(editingRate ? { ...editingRate, state: e.target.value } : null)}
                         />
                       ) : (
                         rate.state
@@ -331,7 +345,7 @@ export const DefaultPricingForm = () => {
                       {editingRate?.id === rate.id ? (
                         <Input
                           value={editingRate?.shorthand || ""}
-                          onChange={(e) => setEditingRate(prev => prev ? { ...prev, shorthand: e.target.value } : null)}
+                          onChange={(e) => setEditing(editingRate ? { ...editingRate, shorthand: e.target.value } : null)}
                         />
                       ) : (
                         rate.shorthand
@@ -342,7 +356,7 @@ export const DefaultPricingForm = () => {
                         <Input
                           type="number"
                           value={editingRate?.rate || 0}
-                          onChange={(e) => setEditingRate(prev => prev ? { ...prev, rate: parseInt(e.target.value) || 0 } : null)}
+                          onChange={(e) => setEditing(editingRate ? { ...editingRate, rate: parseInt(e.target.value) || 0 } : null)}
                           min="0"
                         />
                       ) : (
@@ -367,7 +381,7 @@ export const DefaultPricingForm = () => {
                             type="button"
                             size="sm"
                             variant="outline"
-                            onClick={() => setEditingRate(null)}
+                            onClick={() => setEditing(null)}
                           >
                             <X className="h-3 w-3" />
                           </Button>
@@ -378,7 +392,7 @@ export const DefaultPricingForm = () => {
                             type="button"
                             size="sm"
                             variant="outline"
-                            onClick={() => setEditingRate(rate)}
+                            onClick={() => setEditing(rate)}
                           >
                             <Edit className="h-3 w-3" />
                           </Button>
@@ -400,9 +414,9 @@ export const DefaultPricingForm = () => {
                     <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                       <div className="space-y-4">
                         <p>No ocean shipping rates configured.</p>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
+                        <Button
+                          type="button"
+                          variant="outline"
                           onClick={handleSeedOceanRates}
                         >
                           <Plus className="h-4 w-4 mr-2" />

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useTranslations } from 'next-intl';
+import { useAtom, useAtomValue } from 'jotai';
 import {
   getAuctionData,
   oceanShippingRates,
@@ -11,6 +12,24 @@ import {
   calculateTotalPurchaseFee,
   calculateShippingFee,
 } from "@/lib/calculator-utils";
+import {
+  purchaseFeeAtom,
+  auctionAtom,
+  auctionLocationAtom,
+  portAtom,
+  additionalFeesAtom,
+  insuranceAtom,
+  estimatedFeeAtom,
+  loadingAtom,
+  auctionDataAtom,
+  availableAuctionLocationsAtom,
+  isFormValidAtom,
+  userIdAtom,
+  setAuctionLocationAtom,
+  setAuctionAtom,
+  toggleAdditionalFeeAtom,
+  saveCalculationAtom,
+} from "@/lib/calculator-atoms";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,25 +40,42 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AuctionData } from "@/lib/drizzle/types";
 
-export function ShippingCalculator({ 
-  style, 
-  userId 
-}: { 
-  style: string; 
-  userId?: string; 
+export function ShippingCalculator({
+  style,
+  userId
+}: {
+  style: string;
+  userId?: string;
 }) {
   const t = useTranslations('ShippingCalculator');
-  const [auctionLocation, setAuctionLocation] = useState("");
-  const [auction, setAuction] = useState("");
-  const [purchaseFee, setPurchaseFee] = useState(0);
-  const [port, setPort] = useState("");
-  const [additionalFees, setAdditionalFees] = useState<string[]>([]);
-  const [insurance, setInsurance] = useState(false);
-  const [estimatedFee, setEstimatedFee] = useState(0);
-  const [auctionData, setAuctionData] = useState<AuctionData[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  // Initialize user ID atom
+  const [, setUserId] = useAtom(userIdAtom);
+  useEffect(() => {
+    setUserId(userId);
+  }, [userId, setUserId]);
+
+  // State atoms
+  const [purchaseFee, setPurchaseFee] = useAtom(purchaseFeeAtom);
+  const [auction, setAuction] = useAtom(auctionAtom);
+  const [auctionLocation, setAuctionLocation] = useAtom(auctionLocationAtom);
+  const [port, setPort] = useAtom(portAtom);
+  const [additionalFees, setAdditionalFees] = useAtom(additionalFeesAtom);
+  const [insurance, setInsurance] = useAtom(insuranceAtom);
+  const [estimatedFee, setEstimatedFee] = useAtom(estimatedFeeAtom);
+  const [loading, setLoading] = useAtom(loadingAtom);
+  const [auctionData, setAuctionData] = useAtom(auctionDataAtom);
+
+  // Derived atoms
+  const availableAuctionLocations = useAtomValue(availableAuctionLocationsAtom);
+  const isFormValid = useAtomValue(isFormValidAtom);
+
+  // Action atoms
+  const [, setAuctionLocationAction] = useAtom(setAuctionLocationAtom);
+  const [, setAuctionAction] = useAtom(setAuctionAtom);
+  const [, toggleAdditionalFee] = useAtom(toggleAdditionalFeeAtom);
+  const [, saveCalculation] = useAtom(saveCalculationAtom);
 
   const styleData = styleToJson(style);
   const virtualBidData = parseVirtualBidData();
@@ -59,9 +95,7 @@ export function ShippingCalculator({
     };
 
     loadAuctionData();
-  }, []);
-
-  // Use imported utility functions instead of local ones
+  }, [setAuctionData, setLoading]);
 
   const handleCalculate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,32 +132,17 @@ export function ShippingCalculator({
     const totalFee = totalPurchaseFee + shippingFee;
 
     setEstimatedFee(totalFee);
+
+    // Save calculation to history
+    saveCalculation();
   };
 
   const handleAuctionLocationChange = (location: string) => {
-    setAuctionLocation(location);
-    const availablePorts = auctionData
-      .filter((data: AuctionData) => data.auctionLocation === location)
-      .map((data: AuctionData) => data.port);
-    const [availablePort] = availablePorts;
-    setPort(availablePort || "");
+    setAuctionLocationAction(location);
   };
 
   const handleAuctionChange = (auction: string) => {
-    setAuction(auction);
-    setAuctionLocation("");
-    setPort("");
-  };
-
-  // Get unique auction locations for the selected auction
-  const getAuctionLocations = (selectedAuction: string): string[] => {
-    return Array.from(
-      new Set(
-        auctionData
-          .filter((data: AuctionData) => data.auction === selectedAuction)
-          .map((data: AuctionData) => data.auctionLocation)
-      )
-    );
+    setAuctionAction(auction);
   };
 
   if (loading) {
@@ -153,7 +172,7 @@ export function ShippingCalculator({
                 <Input
                   id="bid"
                   value={purchaseFee}
-                  onChange={(e) => setPurchaseFee(parseFloat(e.target.value))}
+                  onChange={(e) => setPurchaseFee(parseFloat(e.target.value) || 0)}
                   type="number"
                   className="transition-all duration-200 focus:ring-2 focus:ring-primary dark:focus:ring-primary/80 dark:bg-muted/50"
                   placeholder="0.00"
@@ -193,7 +212,7 @@ export function ShippingCalculator({
                       <CommandList>
                         <CommandEmpty>{t('noAuctionLocationFound')}</CommandEmpty>
                         <CommandGroup>
-                          {getAuctionLocations(auction).map((location: string) => (
+                          {availableAuctionLocations.map((location: string) => (
                             <CommandItem
                               key={location}
                               value={location}
@@ -243,15 +262,7 @@ export function ShippingCalculator({
                       <Checkbox
                         id={fee.type}
                         checked={additionalFees.includes(fee.type)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setAdditionalFees([...additionalFees, fee.type]);
-                          } else {
-                            setAdditionalFees(
-                              additionalFees.filter((f) => f !== fee.type)
-                            );
-                          }
-                        }}
+                        onCheckedChange={() => toggleAdditionalFee(fee.type)}
                         className="data-[state=checked]:bg-primary dark:data-[state=checked]:bg-primary/90"
                       />
                       <label
@@ -288,7 +299,7 @@ export function ShippingCalculator({
                 </p>
                 <Button
                   type="submit"
-                  disabled={!purchaseFee || !auction || !auctionLocation || !port}
+                  disabled={!isFormValid}
                   className="w-full transition-all duration-200 hover:scale-[1.02] bg-primary hover:bg-primary/90 dark:bg-primary/90 dark:hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t('calculate')}

@@ -5,8 +5,26 @@ import CarInfo from "./car-info";
 import { FallbackImageGallery } from "./fallback-image-gallery";
 import { selectCarSchema } from "@/lib/drizzle/schema";
 import { z } from "zod";
+import { useEffect } from "react";
+import { useCarStateAndActions } from "./use-car-state";
 
 export default function CarClientView({ carData }: { carData?: z.infer<typeof selectCarSchema> }) {
+  const { setCarData, resetCarState } = useCarStateAndActions();
+
+  // Sync car data with Jotai atoms
+  useEffect(() => {
+    if (carData) {
+      setCarData(carData);
+    }
+  }, [carData, setCarData]);
+
+  // Reset state when component unmounts
+  useEffect(() => {
+    return () => {
+      resetCarState();
+    };
+  }, [resetCarState]);
+
   if (!carData) {
     return (
       <div className="w-full h-[50vh] grid place-items-center">
@@ -20,6 +38,7 @@ export default function CarClientView({ carData }: { carData?: z.infer<typeof se
       </div>
     );
   }
+  
   return (
     <TooltipProvider>
       <div className="flex flex-col mb-4 mt-8 md:mt-4 px-4 sm:px-6 lg:px-8">

@@ -16,12 +16,22 @@ import { updateUserAction } from "@/lib/actions/authActions";
 import { selectUserSchema } from "@/lib/drizzle/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useServerAction } from "zsa-react";
 import { useTranslations } from "next-intl";
+import { useAtom, useAtomValue } from 'jotai';
+import { useEffect } from 'react';
+import {
+	formDataAtom,
+	showPasswordAtom,
+	isFormPendingAtom,
+	updateFormFieldAtom,
+	togglePasswordVisibilityAtom,
+	addNotificationAtom,
+	addActivityLogAtom,
+} from '@/lib/admin-atoms';
 
 type Props = {
 	user: z.infer<typeof selectUserSchema>
@@ -29,8 +39,16 @@ type Props = {
 
 export function UpdateAdminForm({ user }: Props) {
 	const t = useTranslations("UpdateAdminForm");
-	const [showPassword, setShowPassword] = useState(false);
-	
+
+	// Jotai atoms
+	const formData = useAtomValue(formDataAtom);
+	const showPassword = useAtomValue(showPasswordAtom);
+	const isPending = useAtomValue(isFormPendingAtom);
+	const [, updateFormField] = useAtom(updateFormFieldAtom);
+	const [, togglePasswordVisibility] = useAtom(togglePasswordVisibilityAtom);
+	const [, addNotification] = useAtom(addNotificationAtom);
+	const [, addActivity] = useAtom(addActivityLogAtom);
+
 	const FormSchema = z.object({
 		id: z.string().min(1, t("validation.userIdRequired")),
 		email: z.string().email(t("validation.invalidEmail")).optional().or(z.literal("")),
@@ -38,19 +56,20 @@ export function UpdateAdminForm({ user }: Props) {
 		fullName: z.string().min(1, t("validation.fullNameRequired")),
 		passwordText: z.string().optional().or(z.literal("")),
 	})
-	
+
 	const form = useForm<z.infer<typeof FormSchema>>({
 		resolver: zodResolver(FormSchema),
-		defaultValues: {
-			id: user?.id || "",
-			fullName: user?.fullName || "",
-			email: user?.email || "",
-			passwordText: user?.passwordText || "",
-			phone: user?.phone || "",
-		},
-	})
+		defaultValues: formData,
+	});
 
-	const { isPending, execute } = useServerAction(updateUserAction);
+	// Sync form data with Jotai atoms
+	useEffect(() => {
+		Object.entries(formData).forEach(([key, value]) => {
+			form.setValue(key as keyof z.infer<typeof FormSchema>, value);
+		});
+	}, [formData, form]);
+
+	const { execute } = useServerAction(updateUserAction);
 
 	if (!user) {
 		return null;
@@ -66,18 +85,43 @@ export function UpdateAdminForm({ user }: Props) {
 			const [data, error] = await execute(normalizedValues);
 
 			if (error || data?.success === false) {
-				toast.error(data?.message || t("updateFailed"));
+				const errorMessage = data?.message || t("updateFailed");
+				toast.error(errorMessage);
+				addNotification({
+					type: 'error',
+					message: errorMessage,
+				});
 				console.error(error);
 			} else {
-				toast.success(data?.message || t("profileUpdated"));
+				const successMessage = data?.message || t("profileUpdated");
+				toast.success(successMessage);
+				addNotification({
+					type: 'success',
+					message: successMessage,
+				});
+				addActivity({
+					action: 'Admin profile updated',
+					details: `Admin user ${values.fullName} updated their profile`,
+					userId: values.id,
+				});
 			}
 		} catch (error) {
-			toast.error(t("unexpectedError"));
+			const errorMessage = t("unexpectedError");
+			toast.error(errorMessage);
+			addNotification({
+				type: 'error',
+				message: errorMessage,
+			});
 			console.error(error);
 		}
 	}
 
-	const handleSubmit = form.handleSubmit(onSubmit)
+	const handleSubmit = form.handleSubmit(onSubmit);
+
+	// Handle form field changes
+	const handleFieldChange = (field: 'id' | 'fullName' | 'email' | 'phone' | 'passwordText', value: string) => {
+		updateFormField(field, value);
+	};
 
 	return (
 		<Form {...form}>
@@ -89,7 +133,15 @@ export function UpdateAdminForm({ user }: Props) {
 						<FormItem>
 							<FormLabel className="leading-relaxed">{t("fullName")}</FormLabel>
 							<FormControl>
-								<Input {...field} placeholder={t("fullNamePlaceholder")} className="leading-relaxed" />
+								<Input
+									{...field}
+									placeholder={t("fullNamePlaceholder")}
+									className="leading-relaxed"
+									onChange={(e) => {
+										field.onChange(e);
+										handleFieldChange('fullName', e.target.value);
+									}}
+								/>
 							</FormControl>
 							<FormMessage />
 						</FormItem>
@@ -102,7 +154,16 @@ export function UpdateAdminForm({ user }: Props) {
 						<FormItem>
 							<FormLabel className="leading-relaxed">{t("email")}</FormLabel>
 							<FormControl>
-								<Input type="email" {...field} placeholder={t("emailPlaceholder")} className="leading-relaxed" />
+								<Input
+									type="email"
+									{...field}
+									placeholder={t("emailPlaceholder")}
+									className="leading-relaxed"
+									onChange={(e) => {
+										field.onChange(e);
+										handleFieldChange('email', e.target.value);
+									}}
+								/>
 							</FormControl>
 							<FormMessage />
 						</FormItem>
@@ -115,7 +176,16 @@ export function UpdateAdminForm({ user }: Props) {
 						<FormItem>
 							<FormLabel className="leading-relaxed">{t("phone")}</FormLabel>
 							<FormControl>
-								<Input type="tel" {...field} placeholder={t("phonePlaceholder")} className="leading-relaxed" />
+								<Input
+									type="tel"
+									{...field}
+									placeholder={t("phonePlaceholder")}
+									className="leading-relaxed"
+									onChange={(e) => {
+										field.onChange(e);
+										handleFieldChange('phone', e.target.value);
+									}}
+								/>
 							</FormControl>
 							<FormMessage />
 						</FormItem>
@@ -128,11 +198,15 @@ export function UpdateAdminForm({ user }: Props) {
 						<FormItem>
 							<FormLabel className="leading-relaxed">{t("password")}</FormLabel>
 							<FormControl>
-								<Input 
-									type={showPassword ? "text" : "password"} 
-									{...field} 
+								<Input
+									type={showPassword ? "text" : "password"}
+									{...field}
 									placeholder={t("passwordPlaceholder")}
 									className="leading-relaxed"
+									onChange={(e) => {
+										field.onChange(e);
+										handleFieldChange('passwordText', e.target.value);
+									}}
 								/>
 							</FormControl>
 							<FormMessage />
@@ -143,7 +217,7 @@ export function UpdateAdminForm({ user }: Props) {
 					<Checkbox
 						id="showPassword"
 						checked={showPassword}
-						onCheckedChange={() => setShowPassword(!showPassword)}
+						onCheckedChange={togglePasswordVisibility}
 					/>
 					<label htmlFor="showPassword" className="text-sm text-muted-foreground leading-relaxed">
 						{t("showPassword")}

@@ -9,7 +9,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import "dotenv/config";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../drizzle/db";
 import {
@@ -332,39 +332,62 @@ export async function fetchImageForDisplay(
   try {
     console.log(`fetchImageForDisplay: Starting fetch for VIN ${vin}`);
 
-    const [imageRecord] = await db
+    // First try to get the prioritized image (handle both true and non-null values for backward compatibility)
+    let imageRecord = await db
       .select()
       .from(images)
-      .where(eq(images.carVin, vin))
-      .orderBy(desc(images.priority))
+      .where(
+        and(
+          eq(images.carVin, vin),
+          eq(images.priority, true)
+        )
+      )
       .limit(1);
 
-    if (!imageRecord || !imageRecord.imageKey) {
+    // If no prioritized image, get the first available image
+    if (!imageRecord || imageRecord.length === 0) {
+      console.log(`fetchImageForDisplay: No prioritized image found for VIN ${vin}, getting first available`);
+      imageRecord = await db
+        .select()
+        .from(images)
+        .where(eq(images.carVin, vin))
+        .orderBy(desc(images.id))
+        .limit(1);
+    }
+
+    if (!imageRecord || imageRecord.length === 0 || !imageRecord[0].imageKey) {
       console.log(`fetchImageForDisplay: No image found for VIN: ${vin}`);
       return null;
     }
 
+    const record = imageRecord[0];
     console.log(`fetchImageForDisplay: Found image record for VIN ${vin}:`, {
-      imageKey: imageRecord.imageKey,
-      imageType: imageRecord.imageType
+      imageKey: record.imageKey,
+      imageType: record.imageType,
+      priority: record.priority
     });
 
     let url: string;
 
-    if (process.env.NEXT_PUBLIC_BUCKET_URL) {
-      url = await getPublicUrlForKey(imageRecord.imageKey);
-      console.log(`fetchImageForDisplay: Using public URL for key: ${imageRecord.imageKey}`);
-    } else {
-      url = await getSignedUrlForKey(imageRecord.imageKey);
-      console.log(`fetchImageForDisplay: Using presigned URL for key: ${imageRecord.imageKey}`);
+    try {
+      if (process.env.NEXT_PUBLIC_BUCKET_URL) {
+        url = await getPublicUrlForKey(record.imageKey);
+        console.log(`fetchImageForDisplay: Using public URL for key: ${record.imageKey}`);
+      } else {
+        url = await getSignedUrlForKey(record.imageKey);
+        console.log(`fetchImageForDisplay: Using presigned URL for key: ${record.imageKey}`);
+      }
+    } catch (urlError) {
+      console.error(`fetchImageForDisplay: Error generating URL for key ${record.imageKey}:`, urlError);
+      return null;
     }
 
     const result = {
       url: url,
       carVin: vin,
-      imageKey: imageRecord.imageKey,
-      imageType: imageRecord.imageType,
-      priority: imageRecord.priority,
+      imageKey: record.imageKey,
+      imageType: record.imageType,
+      priority: record.priority,
     };
 
     console.log(`fetchImageForDisplay: Successfully prepared result for VIN ${vin}`);
@@ -386,7 +409,7 @@ export async function fetchImagesForDisplay(
       .select()
       .from(images)
       .where(eq(images.carVin, vin))
-      .orderBy(desc(images.priority));
+      .orderBy(desc(images.priority), desc(images.id));
 
     if (imageRecords.length === 0) {
       console.log(`No images found for VIN: ${vin}`);
@@ -401,7 +424,13 @@ export async function fetchImagesForDisplay(
         }
 
         try {
-          const url = await getSignedUrlForKey(record.imageKey);
+          let url: string;
+          if (process.env.NEXT_PUBLIC_BUCKET_URL) {
+            url = await getPublicUrlForKey(record.imageKey);
+          } else {
+            url = await getSignedUrlForKey(record.imageKey);
+          }
+          
           return {
             url: url,
             carVin: vin,

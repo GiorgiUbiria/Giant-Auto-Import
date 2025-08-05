@@ -8,12 +8,30 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTranslations } from "next-intl";
+import { useAtom, useAtomValue } from 'jotai';
+import { useEffect } from 'react';
+import {
+  adminUserAtom,
+  adminLoadingAtom,
+  adminErrorAtom,
+  resetAdminFormAtom,
+  addNotificationAtom,
+  addActivityLogAtom,
+} from '@/lib/admin-atoms';
 
 export const Client = ({ id }: { id: string }) => {
 	const t = useTranslations("AdminPanel");
 
+	// Jotai atoms
+	const [adminUser, setAdminUser] = useAtom(adminUserAtom);
+	const [loading, setLoading] = useAtom(adminLoadingAtom);
+	const [error, setError] = useAtom(adminErrorAtom);
+	const [, resetForm] = useAtom(resetAdminFormAtom);
+	const [, addNotification] = useAtom(addNotificationAtom);
+	const [, addActivity] = useAtom(addActivityLogAtom);
+
 	// Optimized React Query configuration to prevent excessive calls
-	const { isLoading, data, error } = useServerActionQuery(getUserAction, {
+	const { isLoading, data, error: queryError } = useServerActionQuery(getUserAction, {
 		input: {
 			id: id,
 		},
@@ -25,7 +43,42 @@ export const Client = ({ id }: { id: string }) => {
 		refetchOnWindowFocus: false,
 		refetchOnMount: false,
 		refetchOnReconnect: false,
-	})
+	});
+
+	// Sync React Query state with Jotai atoms
+	useEffect(() => {
+		setLoading(isLoading);
+		
+		if (queryError) {
+			setError(queryError.message || t("error"));
+			addNotification({
+				type: 'error',
+				message: queryError.message || t("error"),
+			});
+		} else if (data) {
+			setError(null);
+			
+			// Safe data validation with better type checking
+			const isValidData = data && typeof data === 'object' && 'success' in data;
+			const hasValidUser = isValidData && data.success && data.user && typeof data.user === 'object' && 'id' in data.user;
+			
+			if (hasValidUser && data.user) {
+				setAdminUser(data.user);
+				resetForm(data.user);
+				addActivity({
+					action: 'Admin panel accessed',
+					details: `Admin user ${data.user.fullName} accessed the admin panel`,
+					userId: data.user.id,
+				});
+			} else {
+				setError(data?.message || t("error"));
+				addNotification({
+					type: 'error',
+					message: data?.message || t("error"),
+				});
+			}
+		}
+	}, [isLoading, data, queryError, setLoading, setError, setAdminUser, resetForm, addNotification, addActivity, t]);
 
 	// Validate input
 	if (!id || typeof id !== 'string') {
@@ -48,7 +101,7 @@ export const Client = ({ id }: { id: string }) => {
 
 	const ErrorState = () => {
 		// Safe error message extraction
-		const errorMessage = data?.message || error?.message || t("error");
+		const errorMessage = error || t("error");
 		return (
 			<Alert variant="destructive">
 				<AlertDescription>
@@ -73,10 +126,6 @@ export const Client = ({ id }: { id: string }) => {
 			</Card>
 		</Link>
 	);
-
-	// Safe data validation with better type checking
-	const isValidData = data && typeof data === 'object' && 'success' in data;
-	const hasValidUser = isValidData && data.success && data.user && typeof data.user === 'object' && 'id' in data.user;
 
 	return (
 		<div className="space-y-8">
@@ -119,22 +168,20 @@ export const Client = ({ id }: { id: string }) => {
 				/>
 			</div>
 
-			{isLoading ? (
+			{loading ? (
 				<LoadingState />
-			) : error || !isValidData || !data.success ? (
+			) : error || !adminUser ? (
 				<ErrorState />
-			) : hasValidUser && data.user ? (
+			) : (
 				<Card className="border-t">
 					<CardHeader>
 						<CardTitle className="text-xl leading-tight">{t("adminProfile.title")}</CardTitle>
 						<CardDescription className="leading-relaxed">{t("adminProfile.description")}</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<UpdateAdminForm user={data.user} />
+						<UpdateAdminForm user={adminUser} />
 					</CardContent>
 				</Card>
-			) : (
-				<ErrorState />
 			)}
 		</div>
 	)

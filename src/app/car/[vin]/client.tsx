@@ -6,8 +6,9 @@ import { Loader2 } from "lucide-react";
 import CarInfo from "./car-info";
 import { FallbackImageGallery } from "./fallback-image-gallery";
 import StatusLine from "./status-line";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useCarStateAndActions } from "./use-car-state";
 
 const LoadingState = () => (
 	<div className="w-full h-[50vh] grid place-items-center">
@@ -49,6 +50,26 @@ export const Client = ({ vin }: { vin: string }) => {
 		refetchOnReconnect: false,
 		retry: 1, // Only retry once
 	});
+
+	const { setCarData, setCarLoading, setCarError, resetCarState } = useCarStateAndActions();
+
+	// Sync server query state with Jotai atoms
+	useEffect(() => {
+		setCarLoading(isLoading);
+		
+		if (error) {
+			setCarError(error.message || 'Failed to load car data');
+		} else if (data) {
+			setCarData(data);
+		}
+	}, [isLoading, data, error, setCarData, setCarLoading, setCarError]);
+
+	// Reset state when component unmounts
+	useEffect(() => {
+		return () => {
+			resetCarState();
+		};
+	}, [resetCarState]);
 
 	return (
 		<TooltipProvider>

@@ -1,16 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from 'next-intl';
+import { useAtom, useAtomValue } from 'jotai';
 import { DefaultPricingForm } from "./default-pricing-form";
 import { UserPricingList } from "./user-pricing-list";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Users, TrendingUp } from "lucide-react";
+import { activeTabAtom, setActiveTabAtom } from '@/lib/pricing-atoms';
 
 export const PricingManagementClient = () => {
   const t = useTranslations('PricingManagement');
-  const [activeTab, setActiveTab] = useState("default");
+
+  // Jotai atoms
+  const activeTab = useAtomValue(activeTabAtom);
+  const [, setActiveTab] = useAtom(setActiveTabAtom);
 
   return (
     <div className="space-y-6">
@@ -27,7 +31,7 @@ export const PricingManagementClient = () => {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t("userPricing")}</CardTitle>
@@ -40,7 +44,7 @@ export const PricingManagementClient = () => {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">CSV Data</CardTitle>

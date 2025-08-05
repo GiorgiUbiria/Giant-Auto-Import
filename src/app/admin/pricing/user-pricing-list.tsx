@@ -1,33 +1,49 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import { useTranslations } from 'next-intl';
 import { useServerAction } from "zsa-react";
+import { useAtom, useAtomValue } from 'jotai';
 import { getUsersAction } from "@/lib/actions/userActions";
 import { getUserPricingAction } from "@/lib/actions/pricingActions";
+import {
+  usersAtom,
+  userPricingAtom,
+  userSearchTermAtom,
+  userLoadingAtom,
+  filteredUsersAtom,
+  pricingStatusAtom,
+  formatOceanRatesAtom,
+  getOceanRatesTooltipAtom,
+  setUsersAtom,
+  setUserPricingAtom,
+  setUserSearchTermAtom,
+  setUserLoadingAtom,
+  OceanRate,
+} from '@/lib/pricing-atoms';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
-import { 
-  Loader2, 
-  Search, 
-  Settings, 
-  User, 
+import {
+  Loader2,
+  Search,
+  Settings,
+  User,
   DollarSign,
   Users,
   MapPin
@@ -35,25 +51,31 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 
-interface OceanRate {
-  state: string;
-  shorthand: string;
-  rate: number;
-}
-
 export const UserPricingList = () => {
   const t = useTranslations('PricingManagement');
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [userPricing, setUserPricing] = useState<Record<string, any>>({});
+
+  // Jotai atoms
+  const users = useAtomValue(usersAtom);
+  const userPricing = useAtomValue(userPricingAtom);
+  const searchTerm = useAtomValue(userSearchTermAtom);
+  const loading = useAtomValue(userLoadingAtom);
+  const filteredUsers = useAtomValue(filteredUsersAtom);
+  const getPricingStatus = useAtomValue(pricingStatusAtom);
+  const formatOceanRates = useAtomValue(formatOceanRatesAtom);
+  const getOceanRatesTooltip = useAtomValue(getOceanRatesTooltipAtom);
+
+  // Action atoms
+  const [, setUsers] = useAtom(setUsersAtom);
+  const [, setUserPricing] = useAtom(setUserPricingAtom);
+  const [, setSearchTerm] = useAtom(setUserSearchTermAtom);
+  const [, setLoading] = useAtom(setUserLoadingAtom);
 
   const { execute: getUsers } = useServerAction(getUsersAction);
   const { execute: getUserPricing } = useServerAction(getUserPricingAction);
 
   const loadUserPricing = useCallback(async (userList: any[]) => {
     const pricingData: Record<string, any> = {};
-    
+
     for (const user of userList) {
       try {
         const [result, error] = await getUserPricing({ userId: user.id });
@@ -68,9 +90,9 @@ export const UserPricingList = () => {
         console.error(`Failed to load pricing for user ${user.id}:`, error);
       }
     }
-    
+
     setUserPricing(pricingData);
-  }, [getUserPricing]);
+  }, [getUserPricing, setUserPricing]);
 
   const loadUsers = useCallback(async () => {
     try {
@@ -88,24 +110,11 @@ export const UserPricingList = () => {
     } finally {
       setLoading(false);
     }
-  }, [getUsers, loadUserPricing]);
+  }, [getUsers, setUsers, loadUserPricing, setLoading]);
 
   useEffect(() => {
     loadUsers();
   }, [loadUsers]);
-
-  const filteredUsers = users.filter(user => 
-    user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.role.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const getPricingStatus = (userId: string) => {
-    const pricing = userPricing[userId];
-    if (!pricing) return "default";
-    if (!pricing.isActive) return "inactive";
-    return "custom";
-  };
 
   const getPricingStatusBadge = (status: string) => {
     switch (status) {
@@ -116,26 +125,6 @@ export const UserPricingList = () => {
       default:
         return <Badge variant="outline">Default</Badge>;
     }
-  };
-
-  const formatOceanRates = (oceanRates: OceanRate[] | null | undefined) => {
-    if (!oceanRates || oceanRates.length === 0) {
-      return "Default";
-    }
-    
-    if (oceanRates.length === 1) {
-      return `${oceanRates[0].shorthand}: $${oceanRates[0].rate}`;
-    }
-    
-    return `${oceanRates.length} rates configured`;
-  };
-
-  const getOceanRatesTooltip = (oceanRates: OceanRate[] | null | undefined) => {
-    if (!oceanRates || oceanRates.length === 0) {
-      return "Using system default ocean rates";
-    }
-    
-    return oceanRates.map(rate => `${rate.state}: $${rate.rate}`).join('\n');
   };
 
   if (loading) {
@@ -193,7 +182,7 @@ export const UserPricingList = () => {
               {filteredUsers.map((user) => {
                 const pricing = userPricing[user.id];
                 const status = getPricingStatus(user.id);
-                
+
                 return (
                   <TableRow key={user.id}>
                     <TableCell>

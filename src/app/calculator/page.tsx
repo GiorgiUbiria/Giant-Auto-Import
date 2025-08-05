@@ -1,5 +1,6 @@
 import { getAuth } from "@/lib/auth";
 import dynamicImport from "next/dynamic";
+import { Provider } from 'jotai';
 
 // Force dynamic rendering for authenticated routes
 export const dynamic = 'force-dynamic';
@@ -16,15 +17,28 @@ const ShippingCalculator = dynamicImport(() => import("./shipping-calculator").t
   )
 });
 
+const CalculationHistory = dynamicImport(() => import("./calculation-history").then(mod => ({ default: mod.CalculationHistory })), {
+  ssr: false,
+});
+
 export default async function Page() {
   const { user } = await getAuth();
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-8 px-4">
-      <ShippingCalculator 
-        style={user?.role === "CUSTOMER_DEALER" ? "c" : "a"} 
-        userId={user?.id}
-      />
-    </div>
+    <Provider>
+      <div className="min-h-screen py-8 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
+          <div className="flex-1">
+            <ShippingCalculator
+              style={user?.role === "CUSTOMER_DEALER" ? "c" : "a"}
+              userId={user?.id}
+            />
+          </div>
+          <div className="lg:w-80">
+            <CalculationHistory />
+          </div>
+        </div>
+      </div>
+    </Provider>
   );
 }

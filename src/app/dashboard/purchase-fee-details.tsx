@@ -15,11 +15,6 @@ type Props = {
   titleFee: number;
   environmentalFee: number;
   virtualBidFee: number;
-  shippingFee: number;
-  groundFee: number;
-  oceanFee: number;
-  totalFee: number;
-  insurance?: "YES" | "NO";
 };
 
 type FeeItemProps = {
@@ -35,25 +30,20 @@ const FeeItem = ({ label, amount, className }: FeeItemProps) => (
   </div>
 );
 
-export const TotalFeeDetails = ({
+export const PurchaseFeeDetails = ({
   purchaseFee,
   auctionFee,
   gateFee,
   titleFee,
   environmentalFee,
   virtualBidFee,
-  shippingFee,
-  groundFee,
-  oceanFee,
-  totalFee,
-  insurance,
 }: Props) => {
-  const totalPurchaseFee =
-    purchaseFee +
-    auctionFee +
-    gateFee +
-    titleFee +
-    environmentalFee +
+  const totalPurchaseFee = 
+    purchaseFee + 
+    auctionFee + 
+    gateFee + 
+    titleFee + 
+    environmentalFee + 
     virtualBidFee;
 
   return (
@@ -61,13 +51,13 @@ export const TotalFeeDetails = ({
       <HoverCard>
         <HoverCardTrigger asChild>
           <button className="font-medium hover:text-primary/80 transition-colors">
-            ${totalFee.toLocaleString()}
+            ${totalPurchaseFee.toLocaleString()}
           </button>
         </HoverCardTrigger>
         <HoverCardContent className="w-80 p-4" align="end">
           <div className="space-y-4">
             <div>
-              <h3 className="font-semibold text-lg mb-2">Purchase Details</h3>
+              <h3 className="font-semibold text-lg mb-2">Purchase Fee Breakdown</h3>
               <div className="space-y-1">
                 <FeeItem label="Base Purchase Fee" amount={purchaseFee} />
                 <FeeItem label="Auction Fee" amount={auctionFee} />
@@ -76,49 +66,16 @@ export const TotalFeeDetails = ({
                 <FeeItem label="Environmental Fee" amount={environmentalFee} />
                 <FeeItem label="Virtual Bid Fee" amount={virtualBidFee} />
                 <Separator className="my-2" />
-                <FeeItem
-                  label="Total Purchase Fee"
+                <FeeItem 
+                  label="Total Purchase Fee" 
                   amount={totalPurchaseFee}
                   className="font-semibold text-primary"
                 />
               </div>
             </div>
-
-            <div>
-              <h3 className="font-semibold text-lg mb-2">Shipping Details</h3>
-              <div className="space-y-1">
-                <FeeItem label="Ground Fee" amount={groundFee} />
-                <FeeItem label="Ocean Fee" amount={oceanFee} />
-                <Separator className="my-2" />
-                <FeeItem
-                  label="Total Shipping Fee"
-                  amount={shippingFee}
-                  className="font-semibold text-primary"
-                />
-              </div>
-            </div>
-
-            <Separator />
-
-            {insurance === "YES" && (
-              <div className="space-y-1">
-                <FeeItem
-                  label="Insurance Fee (1.5%)"
-                  amount={Math.round((totalPurchaseFee + shippingFee) * 0.015)}
-                  className="font-semibold text-primary"
-                />
-                <Separator className="my-2" />
-              </div>
-            )}
-
-            <FeeItem
-              label="Total Fee"
-              amount={totalFee}
-              className="text-lg font-bold text-primary"
-            />
           </div>
         </HoverCardContent>
       </HoverCard>
     </div>
   );
-};
+}; 

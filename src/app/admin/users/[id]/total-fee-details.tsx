@@ -18,33 +18,90 @@ type Props = {
   groundFee: number;
   oceanFee: number;
   totalFee: number;
+  insurance?: "YES" | "NO";
 }
 
-export const TotalFeeDetails = ({ purchaseFee, auctionFee, gateFee, titleFee, environmentalFee, virtualBidFee, shippingFee, groundFee, oceanFee, totalFee }: Props) => {
+export const TotalFeeDetails = ({ purchaseFee, auctionFee, gateFee, titleFee, environmentalFee, virtualBidFee, shippingFee, groundFee, oceanFee, totalFee, insurance }: Props) => {
   return (
     <div>
       <HoverCard>
-        <HoverCardTrigger>
-          <p className="hover:text-primary/50 transition-all">{totalFee}</p>
+        <HoverCardTrigger asChild>
+          <button className="font-medium hover:text-primary/80 transition-colors">
+            ${totalFee.toLocaleString()}
+          </button>
         </HoverCardTrigger>
-        <HoverCardContent>
-          <div>
-            <h3 className="font-bold mb-2">Total Purchase Fee: {purchaseFee + auctionFee + gateFee + titleFee + environmentalFee + virtualBidFee}$</h3>
-            <ul className="list-none pl-4 mb-4">
-              <li>Base Purchase Fee: {purchaseFee }$</li>
-              <li>+ Auction Fee: {auctionFee}$</li>
-              <li>+ Gate Fee: {gateFee}$</li>
-              <li>+ Title Fee: {titleFee}$</li>
-              <li>+ Environmental Fee: {environmentalFee}$</li>
-              <li>+ Virtual Bid Fee: {virtualBidFee}$</li>
-            </ul>
-            <p className="font-semibold text-sm pl-4">= Total Purchase Fee: {purchaseFee + auctionFee + gateFee + titleFee + environmentalFee + virtualBidFee}$</p>
-            <Separator className="my-2" />
-            <h3 className="font-bold mb-2">Shipping Fee: {shippingFee}$</h3>
-            <ul className="list-none pl-4">
-              <li>Ground Fee: {groundFee}$</li>
-              <li>Ocean Fee: {oceanFee}$</li>
-            </ul>
+        <HoverCardContent className="w-80 p-4" align="end">
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-semibold text-lg mb-2">Purchase Details</h3>
+              <div className="space-y-1">
+                <div className="flex justify-between items-center py-0.5">
+                  <span className="text-muted-foreground">Base Purchase Fee:</span>
+                  <span className="font-medium">${purchaseFee.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center py-0.5">
+                  <span className="text-muted-foreground">Auction Fee:</span>
+                  <span className="font-medium">${auctionFee.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center py-0.5">
+                  <span className="text-muted-foreground">Gate Fee:</span>
+                  <span className="font-medium">${gateFee.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center py-0.5">
+                  <span className="text-muted-foreground">Title Fee:</span>
+                  <span className="font-medium">${titleFee.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center py-0.5">
+                  <span className="text-muted-foreground">Environmental Fee:</span>
+                  <span className="font-medium">${environmentalFee.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center py-0.5">
+                  <span className="text-muted-foreground">Virtual Bid Fee:</span>
+                  <span className="font-medium">${virtualBidFee.toLocaleString()}</span>
+                </div>
+                <Separator className="my-2" />
+                <div className="flex justify-between items-center py-0.5 font-semibold text-primary">
+                  <span className="text-muted-foreground">Total Purchase Fee:</span>
+                  <span className="font-medium">${(purchaseFee + auctionFee + gateFee + titleFee + environmentalFee + virtualBidFee).toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-lg mb-2">Shipping Details</h3>
+              <div className="space-y-1">
+                <div className="flex justify-between items-center py-0.5">
+                  <span className="text-muted-foreground">Ground Fee:</span>
+                  <span className="font-medium">${groundFee.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center py-0.5">
+                  <span className="text-muted-foreground">Ocean Fee:</span>
+                  <span className="font-medium">${oceanFee.toLocaleString()}</span>
+                </div>
+                <Separator className="my-2" />
+                <div className="flex justify-between items-center py-0.5 font-semibold text-primary">
+                  <span className="text-muted-foreground">Total Shipping Fee:</span>
+                  <span className="font-medium">${shippingFee.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {insurance === "YES" && (
+              <div className="space-y-1">
+                <div className="flex justify-between items-center py-0.5 font-semibold text-primary">
+                  <span className="text-muted-foreground">Insurance Fee (1.5%):</span>
+                  <span className="font-medium">${Math.round((purchaseFee + auctionFee + gateFee + titleFee + environmentalFee + virtualBidFee + shippingFee) * 0.015).toLocaleString()}</span>
+                </div>
+                <Separator className="my-2" />
+              </div>
+            )}
+
+            <div className="flex justify-between items-center py-0.5 text-lg font-bold text-primary">
+              <span className="text-muted-foreground">Total Fee:</span>
+              <span className="font-medium">${totalFee.toLocaleString()}</span>
+            </div>
           </div>
         </HoverCardContent>
       </HoverCard>

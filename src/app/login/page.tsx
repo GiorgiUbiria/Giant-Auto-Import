@@ -2,7 +2,7 @@ import LoginForm from "@/components/login-form";
 import { getAuth } from "@/lib/auth";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import Logo from "../../../public/logo.png";
+import Logo from "../../../public/giant_logo_dark.png";
 import { getTranslations } from 'next-intl/server';
 
 // Force dynamic rendering for authenticated routes

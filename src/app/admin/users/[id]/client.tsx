@@ -8,6 +8,7 @@ import { Loader2, Pencil } from "lucide-react";
 import { columns } from "./columns";
 import { UpdateProfileForm } from "./edit-profile-form";
 import { UserPricingForm } from "./pricing-form";
+import { AdminCustomerNotes } from "@/components/admin-customer-notes";
 import {
 	Dialog,
 	DialogContent,
@@ -131,10 +132,18 @@ export const Client = ({ id }: { id: string }) => {
 					</Dialog>
 				</Suspense>
 			</h1>
-			
-			{/* User Pricing Configuration */}
+
+						{/* User Pricing Configuration */}
 			<div className="border rounded-lg p-6">
 				<UserPricingForm userId={data.user.id} userName={data.user.fullName} />
+			</div>
+			
+			{/* Customer Notes */}
+			<div className="border rounded-lg p-6">
+				<AdminCustomerNotes 
+					customerId={data.user.id} 
+					customerName={data.user.fullName} 
+				/>
 			</div>
 			
 			{/* User's Cars */}

@@ -9,6 +9,8 @@ import { Suspense } from "react";
 import { SortingState, ColumnFiltersState, VisibilityState } from "@tanstack/react-table";
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
+import { CustomerNotes } from "@/components/customer-notes";
+import { PaymentHistory } from "@/components/payment-history";
 
 // Add type for API response
 interface CarsApiResponse {
@@ -111,6 +113,17 @@ export const Client = ({ userId }: { userId: string }) => {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
+  // Fetch user data for balance
+  const { data: userData } = useQuery({
+    queryKey: ["getUser", userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/users/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch user data');
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const handlePaginationChange = React.useCallback(({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
     setPageIndex(pageIndex);
     setPageSize(pageSize);
@@ -159,24 +172,40 @@ export const Client = ({ userId }: { userId: string }) => {
 
   return (
     <Suspense fallback={<LoadingState />}>
-      <div className="w-full px-4 md:px-6">
-        <DataTable
-          columns={columns}
-          data={tableData}
-          filterKey="vinDetails"
-          pageIndex={pageIndex}
-          pageSize={pageSize}
-          onPaginationChange={handlePaginationChange}
-          sorting={sorting}
-          onSortingChange={handleSortingChange}
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          rowCount={totalCount}
-          columnVisibility={columnVisibility}
-          onColumnVisibilityChange={handleColumnVisibilityChange}
-          rowSelection={rowSelection}
-          onRowSelectionChange={handleRowSelectionChange}
-        />
+      <div className="w-full px-4 md:px-6 space-y-6">
+        {/* Payment History Section */}
+        <div className="max-w-4xl">
+          <PaymentHistory 
+            userId={userId} 
+            balance={userData?.user?.balance || 0} 
+          />
+        </div>
+        
+        {/* Customer Notes Section */}
+        <div className="max-w-4xl">
+          <CustomerNotes userId={userId} />
+        </div>
+        
+        {/* Cars Data Table */}
+        <div>
+          <DataTable
+            columns={columns}
+            data={tableData}
+            filterKey="vinDetails"
+            pageIndex={pageIndex}
+            pageSize={pageSize}
+            onPaginationChange={handlePaginationChange}
+            sorting={sorting}
+            onSortingChange={handleSortingChange}
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            rowCount={totalCount}
+            columnVisibility={columnVisibility}
+            onColumnVisibilityChange={handleColumnVisibilityChange}
+            rowSelection={rowSelection}
+            onRowSelectionChange={handleRowSelectionChange}
+          />
+        </div>
       </div>
     </Suspense>
   );

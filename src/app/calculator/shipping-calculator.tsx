@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from 'next-intl';
 import { useAtom, useAtomValue } from 'jotai';
 import {
@@ -38,7 +38,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function ShippingCalculator({
@@ -49,6 +49,7 @@ export function ShippingCalculator({
   userId?: string;
 }) {
   const t = useTranslations('ShippingCalculator');
+  const [isCalculating, setIsCalculating] = useState(false);
 
   // Initialize user ID atom
   const [, setUserId] = useAtom(userIdAtom);
@@ -121,20 +122,25 @@ export function ShippingCalculator({
       return;
     }
 
-    const totalPurchaseFee = await calculateTotalPurchaseFee(purchaseFee, styleData, virtualBidData, insurance, userId);
-    const shippingFee = await calculateShippingFee(
-      auctionLocation,
-      auction,
-      port,
-      additionalFees,
-      userId
-    );
-    const totalFee = totalPurchaseFee + shippingFee;
+    setIsCalculating(true);
+    try {
+      const totalPurchaseFee = await calculateTotalPurchaseFee(purchaseFee, styleData, virtualBidData, insurance, userId);
+      const shippingFee = await calculateShippingFee(
+        auctionLocation,
+        auction,
+        port,
+        additionalFees,
+        userId
+      );
+      const totalFee = totalPurchaseFee + shippingFee;
 
-    setEstimatedFee(totalFee);
+      setEstimatedFee(totalFee);
 
-    // Save calculation to history
-    saveCalculation();
+      // Save calculation to history
+      saveCalculation();
+    } finally {
+      setIsCalculating(false);
+    }
   };
 
   const handleAuctionLocationChange = (location: string) => {
@@ -148,8 +154,9 @@ export function ShippingCalculator({
   if (loading) {
     return (
       <Card className="w-full max-w-4xl shadow-lg transition-all duration-300 hover:shadow-xl border-black dark:border-border/20">
-        <CardContent className="flex items-center justify-center p-8">
-          <p>Loading auction data...</p>
+        <CardContent className="flex flex-col items-center justify-center gap-3 p-8">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">{t('loading')}</p>
         </CardContent>
       </Card>
     );
@@ -299,10 +306,11 @@ export function ShippingCalculator({
                 </p>
                 <Button
                   type="submit"
-                  disabled={!isFormValid}
+                  disabled={!isFormValid || isCalculating}
                   className="w-full transition-all duration-200 hover:scale-[1.02] bg-primary hover:bg-primary/90 dark:bg-primary/90 dark:hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {t('calculate')}
+                  {isCalculating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isCalculating ? t('calculating') : t('calculate')}
                 </Button>
               </div>
             </div>

@@ -14,7 +14,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useCallback } from "react";
 import CopartLogo from "../../public/copart-logo.png";
 import IAAILogo from "../../public/iaai-logo.png";
-import NavbarLogo from "../../public/logo.png";
+import NavbarLogo from "../../public/giant_logo_dark.png";
 import LocaleSwitcher from "./LocaleSwitcher";
 import Avatar from "./avatar";
 import NavigationLinks from "./navigation-links";

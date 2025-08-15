@@ -210,6 +210,41 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     },
   },
   {
+    accessorKey: "dueDate",
+    header: "Due Date",
+    cell: ({ row }) => {
+      const dueDate = row.original.dueDate as SelectSchemaType["dueDate"];
+      const paymentDue = row.original.paymentDue as SelectSchemaType["paymentDue"];
+
+      if (!dueDate) {
+        return <div className="text-center text-muted-foreground">-</div>;
+      }
+
+      const dateObj = new Date(dueDate);
+      const formattedDate = dateObj.toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+      });
+
+      const isOverdue = new Date() > dateObj;
+      const isDueSoon = new Date() > new Date(dateObj.getTime() - 7 * 24 * 60 * 60 * 1000); // 7 days before
+
+      return (
+        <div className="text-center space-y-1">
+          <div className={`font-medium ${isOverdue ? 'text-red-600' : isDueSoon ? 'text-yellow-600' : 'text-green-600'}`}>
+            {formattedDate}
+          </div>
+          {paymentDue && paymentDue > 0 && (
+            <div className="text-xs text-muted-foreground">
+              Due: ${paymentDue.toLocaleString()}
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "purchaseFee",
     header: "Purchase Due",
     cell: ({ row }) => {

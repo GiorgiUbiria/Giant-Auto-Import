@@ -45,6 +45,9 @@ export const usersRelations = relations(users, ({ many }) => ({
   ownedCars: many(cars),
   userPricingConfig: many(userPricingConfig),
   csvUploads: many(csvDataVersions),
+  customerNotes: many(customerNotes, { relationName: "customer_note" }),
+  adminNotes: many(customerNotes, { relationName: "admin_note" }),
+  payments: many(payments, { relationName: "customer_payment" }),
 }));
 
 export const insertUserSchema = createInsertSchema(users, {
@@ -116,11 +119,14 @@ export const cars = sqliteTable("cars", {
   fuelType: text("fuel_type", {
     enum: ["GASOLINE", "HYBRID_ELECTRIC"],
   }).notNull(),
+  dueDate: integer("due_date", { mode: "timestamp" }),
+  paymentDue: integer("payment_due").default(0),
 }, (table) => {
   return {
     vinIdx: uniqueIndex("vin_idx").on(table.vin),
     ownerIdx: index("owner_idx").on(table.ownerId),
     purchaseDateIdx: index("purchase_date_idx").on(table.purchaseDate),
+    dueDateIdx: index("cars_due_date_idx").on(table.dueDate),
   }
 });
 
@@ -135,6 +141,8 @@ export const insertCarSchema = createInsertSchema(cars, {
   departureDate: z.date().optional(),
   arrivalDate: z.date().optional(),
   purchaseDate: z.date(),
+  dueDate: z.date().optional(),
+  paymentDue: (schema) => schema.paymentDue.gte(0),
   ownerId: (schema) => schema.ownerId
     .optional()
     .nullable()
@@ -152,32 +160,51 @@ export const payments = sqliteTable("payments", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
   customerId: text("customer_id").notNull().references(() => users.id),
   paymentDate: integer("payment_date", { mode: "timestamp" }).notNull().default(sql`(CURRENT_DATE)`),
-  memo: text("memo").notNull(),
-  payee: text("payee").notNull(),
-  receivedAmount: integer("received_amount").notNull(),
-  usedAmount: integer("used_amount").notNull().default(0),
-  paymentBalance: integer("payment_balance").notNull().default(0),
+  description: text("description").notNull(), // Changed from memo to description
+  note: text("note"), // Additional note field
+  amount: integer("amount").notNull(), // Changed from receivedAmount to amount
+  checkNumber: text("check_number"), // New field for check number
   paymentType: text("payment_type", {
-    enum: ["WIRE", "CASH"],
+    enum: ["WIRE", "CASH", "CHECK"],
   }).notNull(),
   paymentStatus: text("payment_status", {
     enum: ["COMPLETE", "ACTIVE", "CLOSED"],
   }).notNull(),
+  invoiceGenerated: integer("invoice_generated", { mode: "boolean" }).notNull().default(false),
+  invoiceType: text("invoice_type", {
+    enum: ["SHIPPING", "PURCHASE", "TOTAL"],
+  }),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+}, (table) => {
+  return {
+    customerIdIdx: index("payments_customer_id_idx").on(table.customerId),
+    paymentDateIdx: index("payments_payment_date_idx").on(table.paymentDate),
+    paymentStatusIdx: index("payments_payment_status_idx").on(table.paymentStatus),
+  }
 });
 
-export const paymentsRelations = relations(payments, ({ one }) => ({
+export const paymentsRelations = relations(payments, ({ one, many }) => ({
   customer: one(users, { fields: [payments.customerId], references: [users.id], relationName: "customer_payment" }),
+  paymentCars: many(paymentCars),
 }));
 
-export const insertPaymentSchema = createInsertSchema(payments);
+export const insertPaymentSchema = createInsertSchema(payments, {
+  paymentDate: z.date(),
+  amount: (schema) => schema.amount.gte(0),
+});
 export const selectPaymentSchema = createSelectSchema(payments);
 
 export const paymentCars = sqliteTable("payment_cars", {
-  paymentId: integer("payment_id").notNull().references(() => payments.id),
-  carId: integer("car_id").notNull().references(() => cars.id),
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  paymentId: integer("payment_id").notNull().references(() => payments.id, { onDelete: "cascade" }),
+  carId: integer("car_id").notNull().references(() => cars.id, { onDelete: "cascade" }),
+  amount: integer("amount").notNull(), // Amount allocated to this specific car
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
 }, (table) => {
   return {
-    pk: primaryKey({ columns: [table.paymentId, table.carId] }),
+    paymentIdIdx: index("payment_cars_payment_id_idx").on(table.paymentId),
+    carIdIdx: index("payment_cars_car_id_idx").on(table.carId),
   }
 });
 
@@ -186,7 +213,9 @@ export const paymentCarsRelations = relations(paymentCars, ({ one }) => ({
   car: one(cars, { fields: [paymentCars.carId], references: [cars.id], relationName: "car_of_payment" }),
 }));
 
-export const insertPaymentCarSchema = createInsertSchema(paymentCars);
+export const insertPaymentCarSchema = createInsertSchema(paymentCars, {
+  amount: (schema) => schema.amount.gte(0),
+});
 export const selectPaymentCarSchema = createSelectSchema(paymentCars);
 
 export const images = sqliteTable("images", {
@@ -222,6 +251,40 @@ export const logs = sqliteTable("logs", {
 
 export const insertLogSchema = createInsertSchema(logs);
 export const selectLogSchema = createSelectSchema(logs);
+
+// Customer notes table for admin notes about customers
+export const customerNotes = sqliteTable("customer_notes", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  customerId: text("customer_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  adminId: text("admin_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  note: text("note").notNull(),
+  isImportant: integer("is_important", { mode: "boolean" }).notNull().default(false),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+}, (table) => {
+  return {
+    customerIdIdx: index("customer_notes_customer_id_idx").on(table.customerId),
+    adminIdIdx: index("customer_notes_admin_id_idx").on(table.adminId),
+    createdAtIdx: index("customer_notes_created_at_idx").on(table.createdAt),
+    isImportantIdx: index("customer_notes_is_important_idx").on(table.isImportant),
+  }
+});
+
+export const customerNotesRelations = relations(customerNotes, ({ one }) => ({
+  customer: one(users, {
+    fields: [customerNotes.customerId],
+    references: [users.id],
+    relationName: "customer_note",
+  }),
+  admin: one(users, {
+    fields: [customerNotes.adminId],
+    references: [users.id],
+    relationName: "admin_note",
+  }),
+}));
+
+export const insertCustomerNoteSchema = createInsertSchema(customerNotes);
+export const selectCustomerNoteSchema = createSelectSchema(customerNotes);
 
 // New tables for user-based pricing system
 export const userPricingConfig = sqliteTable("user_pricing_config", {

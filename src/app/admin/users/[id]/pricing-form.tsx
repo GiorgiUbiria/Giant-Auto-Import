@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from 'next-intl';
 import { useServerAction } from "zsa-react";
-import { getUserPricingAction, updateUserPricingAction, getDefaultPricingAction } from "@/lib/actions/pricingActions";
+import { getUserPricingAction, updateUserPricingAction, getDefaultPricingAction, getOceanShippingRatesAction } from "@/lib/actions/pricingActions";
 import { recalculateUserCarFeesAction } from "@/lib/actions/pricingActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,29 +27,31 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
   const [saving, setSaving] = useState(false);
   const [useCustomPricing, setUseCustomPricing] = useState(false);
   const [pricing, setPricing] = useState({
-    oceanRates: [] as Array<{state: string, shorthand: string, rate: number}>,
+    oceanRates: [] as Array<{ state: string, shorthand: string, rate: number }>,
     groundFeeAdjustment: 0,
     pickupSurcharge: 300,
     serviceFee: 100,
     hybridSurcharge: 150,
   });
   const [defaultPricing, setDefaultPricing] = useState({
-    oceanRates: [] as Array<{state: string, shorthand: string, rate: number}>,
+    oceanRates: [] as Array<{ state: string, shorthand: string, rate: number }>,
     groundFeeAdjustment: 0,
     pickupSurcharge: 300,
     serviceFee: 100,
     hybridSurcharge: 150,
   });
+  const [baseOceanRates, setBaseOceanRates] = useState<Array<{ state: string, shorthand: string, rate: number }>>([]);
 
   const { execute: getUserPricing } = useServerAction(getUserPricingAction);
   const { execute: updateUserPricing } = useServerAction(updateUserPricingAction);
   const { execute: getDefaultPricing } = useServerAction(getDefaultPricingAction);
   const { execute: recalculateUserFees } = useServerAction(recalculateUserCarFeesAction);
+  const { execute: getOceanShippingRates } = useServerAction(getOceanShippingRatesAction);
 
   const loadPricingData = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Load default pricing
       const [defaultResult, defaultError] = await getDefaultPricing();
       if (defaultError) {
@@ -58,13 +60,29 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
       }
       if (defaultResult.success && defaultResult.data) {
         const newDefaultPricing = {
-          oceanRates: Array.isArray(defaultResult.data.oceanRates) ? (defaultResult.data.oceanRates as unknown as Array<{state: string, shorthand: string, rate: number}>) : [],
+          oceanRates: Array.isArray(defaultResult.data.oceanRates) ? (defaultResult.data.oceanRates as unknown as Array<{ state: string, shorthand: string, rate: number }>) : [],
           groundFeeAdjustment: defaultResult.data.groundFeeAdjustment,
           pickupSurcharge: defaultResult.data.pickupSurcharge,
           serviceFee: defaultResult.data.serviceFee,
           hybridSurcharge: defaultResult.data.hybridSurcharge,
         };
         setDefaultPricing(newDefaultPricing);
+
+        // Load active ocean shipping rates to derive base port list
+        const [ratesResult, ratesError] = await getOceanShippingRates();
+        if (ratesError) {
+          toast.error("Failed to load ocean shipping rates");
+          return;
+        }
+        if (ratesResult.success) {
+          const activeRates = (ratesResult.data || []) as Array<{ id?: number; state: string; shorthand: string; rate: number }>;
+          const baseList = activeRates.map(r => ({ state: r.state, shorthand: (r.shorthand || '').toString().trim().toUpperCase(), rate: r.rate }));
+          // Prefer default pricing oceanRates if present, else use DB-backed list
+          const base = (newDefaultPricing.oceanRates && newDefaultPricing.oceanRates.length > 0)
+            ? newDefaultPricing.oceanRates.map(r => ({ ...r, shorthand: (r.shorthand || '').toString().trim().toUpperCase() }))
+            : baseList;
+          setBaseOceanRates(base);
+        }
 
         // Load user pricing
         const [userResult, userError] = await getUserPricing({ userId });
@@ -73,8 +91,11 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
           return;
         }
         if (userResult.success && userResult.data) {
+          const userRates = Array.isArray(userResult.data.oceanRates) ? (userResult.data.oceanRates as unknown as Array<{ state: string, shorthand: string, rate: number }>) : [];
+          // Ensure user pricing contains at least the same set of ports as base
+          const mergedOceanRates = mergeOceanRates((baseOceanRates.length ? baseOceanRates : newDefaultPricing.oceanRates), userRates);
           setPricing({
-            oceanRates: Array.isArray(userResult.data.oceanRates) ? (userResult.data.oceanRates as unknown as Array<{state: string, shorthand: string, rate: number}>) : [],
+            oceanRates: mergedOceanRates,
             groundFeeAdjustment: userResult.data.groundFeeAdjustment,
             pickupSurcharge: userResult.data.pickupSurcharge,
             serviceFee: userResult.data.serviceFee,
@@ -83,7 +104,10 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
           setUseCustomPricing(userResult.data.isActive);
         } else {
           // No custom pricing, use defaults
-          setPricing(newDefaultPricing);
+          setPricing({
+            ...newDefaultPricing,
+            oceanRates: (baseOceanRates.length ? baseOceanRates : newDefaultPricing.oceanRates),
+          });
           setUseCustomPricing(false);
         }
       }
@@ -92,7 +116,7 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
     } finally {
       setLoading(false);
     }
-  }, [userId, getUserPricing, getDefaultPricing]);
+  }, [userId, getUserPricing, getDefaultPricing, getOceanShippingRates, baseOceanRates.length]);
 
   useEffect(() => {
     loadPricingData();
@@ -100,25 +124,26 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Only submit if custom pricing is enabled
     if (!useCustomPricing) {
       toast.error("Please enable custom pricing to save changes");
       return;
     }
-    
+
     try {
       setSaving(true);
       const [result, error] = await updateUserPricing({
         userId,
         ...pricing,
+        isActive: useCustomPricing,
       });
-      
+
       if (error) {
         toast.error("Failed to update user pricing");
         return;
       }
-      
+
       if (result.success) {
         toast.success("User pricing updated successfully");
         await loadPricingData(); // Reload to get updated data
@@ -130,6 +155,36 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Merge helper: ensure each default shorthand exists in userRates; keep user override when present
+  const mergeOceanRates = (
+    defaultRates: Array<{ state: string, shorthand: string, rate: number }>,
+    userRates: Array<{ state: string, shorthand: string, rate: number }>
+  ): Array<{ state: string, shorthand: string, rate: number }> => {
+    const byShort: Record<string, { state: string, shorthand: string, rate: number }> = {};
+    userRates.forEach(r => {
+      const key = (r.shorthand || '').toString().trim().toUpperCase();
+      byShort[key] = { ...r, shorthand: key };
+    });
+    const result: Array<{ state: string, shorthand: string, rate: number }> = [];
+    defaultRates.forEach(d => {
+      const key = (d.shorthand || '').toString().trim().toUpperCase();
+      if (byShort[key]) {
+        // preserve user override but normalize shorthand casing
+        result.push({ ...byShort[key], shorthand: key, state: byShort[key].state || d.state });
+      } else {
+        result.push({ state: d.state, shorthand: key, rate: d.rate });
+      }
+    });
+    // include any extra user-defined ports that are not in defaults
+    userRates.forEach(u => {
+      const key = (u.shorthand || '').toString().trim().toUpperCase();
+      if (!result.find(r => r.shorthand === key)) {
+        result.push({ state: u.state, shorthand: key, rate: u.rate });
+      }
+    });
+    return result;
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -146,7 +201,10 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
   };
 
   const handleResetToDefaults = () => {
-    setPricing(defaultPricing);
+    setPricing({
+      ...defaultPricing,
+      oceanRates: (baseOceanRates.length ? baseOceanRates : defaultPricing.oceanRates),
+    });
   };
 
   const handleRecalculateUserFees = async () => {
@@ -231,51 +289,68 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
             </AlertDescription>
           </Alert>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Ocean Fee */}
+          <div className="grid grid-cols-1 gap-6">
+            {/* Ocean Fees (per port) */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <DollarSign className="h-4 w-4" />
-                  Ocean Fee
+                  Ocean Fees (per port)
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <Label htmlFor="oceanFee">Savannah → Poti</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                      $
-                    </span>
-                    <Input
-                      id="oceanFee"
-                      type="number"
-                      value={pricing.oceanRates[0]?.rate || 0}
-                      onChange={(e) => {
-                        const newRate = parseInt(e.target.value) || 0;
-                        const newRates = [...pricing.oceanRates];
-                        if (newRates.length > 0) {
-                          newRates[0] = { ...newRates[0], rate: newRate };
-                        } else {
-                          newRates.push({ state: "Savannah, GA", shorthand: "GA", rate: newRate });
-                        }
-                        setPricing(prev => ({ ...prev, oceanRates: newRates }));
-                      }}
-                      className="pl-8"
-                      min="0"
-                      disabled={!useCustomPricing}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="text-muted-foreground">Default:</span>
-                    <span className="font-mono">${defaultPricing.oceanRates[0]?.rate || 0}</span>
-                    {pricing.oceanRates[0]?.rate !== defaultPricing.oceanRates[0]?.rate && (
-                      <Badge variant={pricing.oceanRates[0]?.rate > defaultPricing.oceanRates[0]?.rate ? "default" : "secondary"}>
-                        {pricing.oceanRates[0]?.rate > defaultPricing.oceanRates[0]?.rate ? "+" : ""}
-                        {pricing.oceanRates[0]?.rate - defaultPricing.oceanRates[0]?.rate}
-                      </Badge>
-                    )}
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {(baseOceanRates.length ? baseOceanRates : defaultPricing.oceanRates).map((defRate, idx) => {
+                    const shorthand = (defRate.shorthand || '').toString().trim().toUpperCase();
+                    const userRate = pricing.oceanRates.find(r => (r.shorthand || '').toString().trim().toUpperCase() === shorthand);
+                    const current = userRate?.rate ?? defRate.rate;
+                    return (
+                      <div key={`${shorthand}-${idx}`} className="space-y-2 border rounded-md p-3">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor={`ocean-${shorthand}`}>{defRate.state}</Label>
+                          <Badge variant="outline">{shorthand}</Badge>
+                        </div>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                            $
+                          </span>
+                          <Input
+                            id={`ocean-${shorthand}`}
+                            type="number"
+                            value={current}
+                            onChange={(e) => {
+                              const newRateVal = parseInt(e.target.value) || 0;
+                              setPricing(prev => {
+                                const nextRates = mergeOceanRates((baseOceanRates.length ? baseOceanRates : defaultPricing.oceanRates), prev.oceanRates);
+                                const idxToUpdate = nextRates.findIndex(r => (r.shorthand || '').toString().trim().toUpperCase() === shorthand);
+                                if (idxToUpdate >= 0) {
+                                  nextRates[idxToUpdate] = { ...nextRates[idxToUpdate], rate: newRateVal };
+                                } else {
+                                  nextRates.push({ state: defRate.state, shorthand, rate: newRateVal });
+                                }
+                                return { ...prev, oceanRates: nextRates };
+                              });
+                            }}
+                            className="pl-8"
+                            min="0"
+                            disabled={!useCustomPricing}
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-muted-foreground">Default:</span>
+                          <span className="font-mono">${defRate.rate}</span>
+                          {current !== defRate.rate && (
+                            <Badge variant={current > defRate.rate ? "default" : "secondary"}>
+                              {current > defRate.rate ? "+" : ""}{current - defRate.rate}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {(baseOceanRates.length ? baseOceanRates : defaultPricing.oceanRates).length === 0 && (
+                    <div className="text-sm text-muted-foreground">No default ocean rates configured.</div>
+                  )}
                 </div>
               </CardContent>
             </Card>

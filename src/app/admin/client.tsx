@@ -11,12 +11,12 @@ import { useTranslations } from "next-intl";
 import { useAtom, useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import {
-  adminUserAtom,
-  adminLoadingAtom,
-  adminErrorAtom,
-  resetAdminFormAtom,
-  addNotificationAtom,
-  addActivityLogAtom,
+	adminUserAtom,
+	adminLoadingAtom,
+	adminErrorAtom,
+	resetAdminFormAtom,
+	addNotificationAtom,
+	addActivityLogAtom,
 } from '@/lib/admin-atoms';
 
 export const Client = ({ id }: { id: string }) => {
@@ -48,7 +48,7 @@ export const Client = ({ id }: { id: string }) => {
 	// Sync React Query state with Jotai atoms
 	useEffect(() => {
 		setLoading(isLoading);
-		
+
 		if (queryError) {
 			setError(queryError.message || t("error"));
 			addNotification({
@@ -57,11 +57,11 @@ export const Client = ({ id }: { id: string }) => {
 			});
 		} else if (data) {
 			setError(null);
-			
+
 			// Safe data validation with better type checking
 			const isValidData = data && typeof data === 'object' && 'success' in data;
 			const hasValidUser = isValidData && data.success && data.user && typeof data.user === 'object' && 'id' in data.user;
-			
+
 			if (hasValidUser && data.user) {
 				setAdminUser(data.user);
 				resetForm(data.user);
@@ -165,6 +165,12 @@ export const Client = ({ id }: { id: string }) => {
 					description={t("quickAccess.csvManagement.description")}
 					icon={FileText}
 					href="/admin/csv-management"
+				/>
+				<QuickAccessCard
+					title="Payment Management"
+					description="Manage customer payments and generate invoices"
+					icon={DollarSign}
+					href="/admin/payments"
 				/>
 			</div>
 

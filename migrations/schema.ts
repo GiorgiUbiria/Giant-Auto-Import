@@ -46,19 +46,6 @@ export const cars = sqliteTable("cars", {
 	}
 });
 
-export const images = sqliteTable("images", {
-	id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
-	car_vin: text("car_vin").notNull().references(() => cars.vin, { onDelete: "cascade" } ),
-	image_type: text("image_type").notNull(),
-	image_key: text("image_key").notNull(),
-	priority: integer("priority"),
-},
-(table) => {
-	return {
-		image_key_idx: uniqueIndex("image_key_idx").on(table.image_key),
-	}
-});
-
 export const logs = sqliteTable("logs", {
 	id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
 	user_id: text("user_id").notNull().references(() => users.id),
@@ -178,5 +165,36 @@ export const ocean_shipping_rates = sqliteTable("ocean_shipping_rates", {
 		is_active_idx: index("ocean_shipping_rates_is_active_idx").on(table.is_active),
 		shorthand_idx: index("ocean_shipping_rates_shorthand_idx").on(table.shorthand),
 		state_idx: index("ocean_shipping_rates_state_idx").on(table.state),
+	}
+});
+
+export const customer_notes = sqliteTable("customer_notes", {
+	id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+	customer_id: text("customer_id").notNull().references(() => users.id, { onDelete: "cascade" } ),
+	admin_id: text("admin_id").notNull().references(() => users.id, { onDelete: "cascade" } ),
+	note: text("note").notNull(),
+	is_important: integer("is_important").default(false).notNull(),
+	created_at: integer("created_at").default(sql`(unixepoch())`).notNull(),
+	updated_at: integer("updated_at").default(sql`(unixepoch())`).notNull(),
+},
+(table) => {
+	return {
+		is_important_idx: index("customer_notes_is_important_idx").on(table.is_important),
+		created_at_idx: index("customer_notes_created_at_idx").on(table.created_at),
+		admin_id_idx: index("customer_notes_admin_id_idx").on(table.admin_id),
+		customer_id_idx: index("customer_notes_customer_id_idx").on(table.customer_id),
+	}
+});
+
+export const images = sqliteTable("images", {
+	id: integer("id").primaryKey({ autoIncrement: true }).notNull(),
+	car_vin: text("car_vin").notNull().references(() => cars.vin, { onDelete: "cascade" } ),
+	image_type: text("image_type").notNull(),
+	image_key: text("image_key").notNull(),
+	priority: integer("priority"),
+},
+(table) => {
+	return {
+		image_key_idx: uniqueIndex("image_key_idx").on(table.image_key),
 	}
 });

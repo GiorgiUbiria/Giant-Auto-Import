@@ -39,6 +39,8 @@ const UpdateUserPricingSchema = z.object({
   pickupSurcharge: z.number().min(0),
   serviceFee: z.number().min(0),
   hybridSurcharge: z.number().min(0),
+  // Allow toggling whether custom pricing is active for this user
+  isActive: z.boolean().optional(),
 });
 
 // Schema for updating default pricing
@@ -278,6 +280,7 @@ export const updateUserPricingAction = isAdminProcedure
             pickupSurcharge: input.pickupSurcharge,
             serviceFee: input.serviceFee,
             hybridSurcharge: input.hybridSurcharge,
+            ...(typeof input.isActive === 'boolean' ? { isActive: input.isActive } : {}),
             updatedAt: new Date(),
           })
           .where(eq(userPricingConfig.id, existingConfig.id));
@@ -290,6 +293,7 @@ export const updateUserPricingAction = isAdminProcedure
           pickupSurcharge: input.pickupSurcharge,
           serviceFee: input.serviceFee,
           hybridSurcharge: input.hybridSurcharge,
+          ...(typeof input.isActive === 'boolean' ? { isActive: input.isActive } : {}),
         });
       }
 
@@ -448,12 +452,12 @@ export const uploadCsvAction = isAdminProcedure
         description: input.description,
       });
 
-                    revalidatePath("/admin/csv-management");
+      revalidatePath("/admin/csv-management");
 
-              return {
-                success: true,
-                message: "CSV data uploaded and activated successfully. Note: You may need to recalculate fees for existing cars manually.",
-              };
+      return {
+        success: true,
+        message: "CSV data uploaded and activated successfully. Note: You may need to recalculate fees for existing cars manually.",
+      };
     } catch (error) {
       console.error("Error uploading CSV:", error);
       return {

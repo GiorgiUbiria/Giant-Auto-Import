@@ -1,5 +1,5 @@
 import Image from "next/image";
-import CompanyLogo from "../../public/logo.png";
+import CompanyLogo from "../../public/giant_logo_dark.png";
 import Link from "next/link";
 import FacebookIcon from "../../public/icons8-facebook.svg";
 import InstagramIcon from "../../public/icons8-instagram.svg";

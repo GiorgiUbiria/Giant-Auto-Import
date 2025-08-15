@@ -34,6 +34,8 @@
     "insurance": "Insurance (1.5%)",
     "estimatedTotalFee": "Estimated Total Fee:",
     "calculate": "Calculate",
+    "calculating": "Calculating...",
+    "loading": "Loading calculator...",
     "noAuctionLocationFound": "No auction location found.",
     "searchAuctionLocation": "Search auction location...",
     "description": "Calculate your total shipping and purchase costs easily using our calculator."

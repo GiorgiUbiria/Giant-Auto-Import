@@ -75,14 +75,7 @@ export const DynamicImageGallery = dynamic(
   }
 );
 
-// PDF Components - Very heavy
-export const DynamicPdfSelect = dynamic(
-  () => import('./pdf-select').then(mod => ({ default: mod.default })),
-  {
-    loading: LoadingSpinner,
-    ssr: false, // PDF libraries are very heavy
-  }
-);
+
 
 // Virtualized Grid Component - Heavy virtualization
 export const DynamicVirtualizedGrid = dynamic(

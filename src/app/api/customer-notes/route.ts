@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const customerId = searchParams.get("customerId");
+        const importantOnly = searchParams.get("importantOnly") === "true";
 
         if (!customerId) {
             return NextResponse.json(
@@ -29,7 +30,11 @@ export async function GET(request: NextRequest) {
             })
             .from(customerNotes)
             .innerJoin(users, eq(customerNotes.adminId, users.id))
-            .where(eq(customerNotes.customerId, customerId))
+            .where(
+                importantOnly
+                    ? and(eq(customerNotes.customerId, customerId), eq(customerNotes.isImportant, true))
+                    : eq(customerNotes.customerId, customerId)
+            )
             .orderBy(desc(customerNotes.createdAt));
 
         return NextResponse.json({ notes });

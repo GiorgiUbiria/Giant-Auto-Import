@@ -15,7 +15,6 @@ import {
 	adminLoadingAtom,
 	adminErrorAtom,
 	resetAdminFormAtom,
-	addNotificationAtom,
 	addActivityLogAtom,
 } from '@/lib/admin-atoms';
 
@@ -27,7 +26,6 @@ export const Client = ({ id }: { id: string }) => {
 	const [loading, setLoading] = useAtom(adminLoadingAtom);
 	const [error, setError] = useAtom(adminErrorAtom);
 	const [, resetForm] = useAtom(resetAdminFormAtom);
-	const [, addNotification] = useAtom(addNotificationAtom);
 	const [, addActivity] = useAtom(addActivityLogAtom);
 
 	// Optimized React Query configuration to prevent excessive calls
@@ -51,10 +49,6 @@ export const Client = ({ id }: { id: string }) => {
 
 		if (queryError) {
 			setError(queryError.message || t("error"));
-			addNotification({
-				type: 'error',
-				message: queryError.message || t("error"),
-			});
 		} else if (data) {
 			setError(null);
 
@@ -72,13 +66,9 @@ export const Client = ({ id }: { id: string }) => {
 				});
 			} else {
 				setError(data?.message || t("error"));
-				addNotification({
-					type: 'error',
-					message: data?.message || t("error"),
-				});
 			}
 		}
-	}, [isLoading, data, queryError, setLoading, setError, setAdminUser, resetForm, addNotification, addActivity, t]);
+	}, [isLoading, data, queryError, setLoading, setError, setAdminUser, resetForm, addActivity, t]);
 
 	// Validate input
 	if (!id || typeof id !== 'string') {

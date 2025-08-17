@@ -14,7 +14,8 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useCallback } from "react";
 import CopartLogo from "../../public/copart-logo.png";
 import IAAILogo from "../../public/iaai-logo.png";
-import NavbarLogo from "../../public/giant_logo_dark.png";
+import NavbarLogoDark from "../../public/giant_logo_dark.png";
+import NavbarLogoWhite from "../../public/giant_logo_white.png";
 import LocaleSwitcher from "./LocaleSwitcher";
 import Avatar from "./avatar";
 import NavigationLinks from "./navigation-links";
@@ -37,12 +38,22 @@ const MobileMenu = ({ links }: { links: Array<{ href: string; label: string }> }
       <SheetContent side="left" className="bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 w-72">
         <div className="flex flex-col gap-6 pt-6">
           <Link href="/" className="flex justify-center mb-4">
-            <Image
-              src={NavbarLogo}
-              alt="Company logo"
-              className="size-16 dark:invert"
-              priority
-            />
+            <div className="relative w-16 h-16">
+              <Image
+                src={NavbarLogoDark}
+                alt="Company logo"
+                fill
+                className="object-contain dark:hidden"
+                priority
+              />
+              <Image
+                src={NavbarLogoWhite}
+                alt="Company logo"
+                fill
+                className="object-contain hidden dark:block"
+                priority
+              />
+            </div>
           </Link>
           <nav className="flex flex-col space-y-1">
             {links.map((link) => (
@@ -167,12 +178,22 @@ const Navbar = ({ user, translations }: NavbarProps) => {
               <div className="flex items-center gap-4">
                 <MobileMenu links={navigationLinks} />
                 <Link href="/" className="flex items-center" prefetch>
-                  <Image
-                    src={NavbarLogo}
-                    alt="Company logo"
-                    className="size-12 sm:size-14 lg:size-16 dark:invert"
-                    priority
-                  />
+                  <div className="relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16">
+                    <Image
+                      src={NavbarLogoDark}
+                      alt="Company logo"
+                      fill
+                      className="object-contain dark:hidden"
+                      priority
+                    />
+                    <Image
+                      src={NavbarLogoWhite}
+                      alt="Company logo"
+                      fill
+                      className="object-contain hidden dark:block"
+                      priority
+                    />
+                  </div>
                   <span className="ml-2 text-lg font-semibold text-gray-900 dark:text-white hidden sm:block">
                     Giant Auto Import
                   </span>

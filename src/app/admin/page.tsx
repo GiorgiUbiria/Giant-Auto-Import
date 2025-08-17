@@ -4,14 +4,11 @@ import { Client } from "./client";
 import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import ErrorBoundary from "@/components/ui/error-boundary";
-import dynamicImport from "next/dynamic";
 
 // Force dynamic rendering for authenticated routes
 export const dynamic = 'force-dynamic';
 
-const AdminNotifications = dynamicImport(() => import("./admin-notifications").then(mod => ({ default: mod.AdminNotifications })), {
-  ssr: false,
-});
+
 
 export const metadata: Metadata = {
   title: "Admin Panel | Giant Auto Import",
@@ -49,9 +46,6 @@ export default async function Page() {
             <div className="flex flex-col lg:flex-row gap-8">
               <div className="flex-1">
                 <Client id={user.id} />
-              </div>
-              <div className="lg:w-80 space-y-6">
-                <AdminNotifications />
               </div>
             </div>
           </div>

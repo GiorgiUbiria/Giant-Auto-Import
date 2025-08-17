@@ -1,5 +1,6 @@
 import Image from "next/image";
-import CompanyLogo from "../../public/giant_logo_dark.png";
+import CompanyLogoDark from "../../public/giant_logo_dark.png";
+import CompanyLogoWhite from "../../public/giant_logo_white.png";
 import Link from "next/link";
 import FacebookIcon from "../../public/icons8-facebook.svg";
 import InstagramIcon from "../../public/icons8-instagram.svg";
@@ -21,11 +22,20 @@ export default async function Footer() {
           {/* Company Info Section */}
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <Image
-                src={CompanyLogo}
-                alt="Company Logo"
-                className="h-16 w-16 dark:invert"
-              />
+              <div className="relative w-16 h-16">
+                <Image
+                  src={CompanyLogoDark}
+                  alt="Company Logo"
+                  fill
+                  className="object-contain dark:hidden"
+                />
+                <Image
+                  src={CompanyLogoWhite}
+                  alt="Company Logo"
+                  fill
+                  className="object-contain hidden dark:block"
+                />
+              </div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                 {t("companyName")}
               </h2>
@@ -50,7 +60,7 @@ export default async function Footer() {
                       alt={social.alt}
                       width={32}
                       height={32}
-                      className="dark:invert hover:opacity-80 transition-opacity"
+                      className="hover:opacity-80 transition-opacity"
                     />
                   </Link>
                 ))}
@@ -91,7 +101,7 @@ export default async function Footer() {
                     alt={item.alt}
                     width={24}
                     height={24}
-                    className="dark:invert"
+                    className="dark:brightness-0 dark:invert"
                   />
                 </div>
                 <div>

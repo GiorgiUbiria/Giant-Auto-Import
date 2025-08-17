@@ -26,6 +26,7 @@ interface AdminCustomerNotesProps {
 }
 
 export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNotesProps) {
+    // Admin component: Only shows important notes for quick reference
     const [notes, setNotes] = useState<CustomerNote[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -39,7 +40,7 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
     const fetchNotes = React.useCallback(async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/customer-notes?customerId=${customerId}`);
+            const response = await fetch(`/api/customer-notes?customerId=${customerId}&importantOnly=true`);
 
             if (!response.ok) {
                 throw new Error('Failed to fetch notes');
@@ -173,16 +174,16 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5" />
-                    Customer Notes ({notes.length})
+                    Important Notes ({notes.length})
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                    Notes for {customerName}
+                    Important notes for {customerName}
                 </p>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
                     <p className="text-sm text-muted-foreground">
-                        {notes.length} note{notes.length !== 1 ? 's' : ''}
+                        {notes.length} important note{notes.length !== 1 ? 's' : ''}
                     </p>
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
@@ -239,7 +240,7 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
 
                 {notes.length === 0 ? (
                     <p className="text-muted-foreground text-center py-4">
-                        No notes for this customer yet
+                        No important notes for this customer yet
                     </p>
                 ) : (
                     <div className="space-y-3">

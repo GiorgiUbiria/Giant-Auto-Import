@@ -20,6 +20,7 @@ interface CustomerNotesProps {
 }
 
 export function CustomerNotes({ userId }: CustomerNotesProps) {
+    // User component: Shows all notes (both important and regular)
     const [notes, setNotes] = useState<CustomerNote[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -28,6 +29,7 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
         const fetchNotes = async () => {
             try {
                 setLoading(true);
+                // Users see all their notes (no filtering by importance)
                 const response = await fetch(`/api/customer-notes?customerId=${userId}`);
 
                 if (!response.ok) {
@@ -52,7 +54,7 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <AlertCircle className="h-5 w-5" />
-                        Admin Notes
+                        All Admin Notes
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -70,7 +72,7 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <AlertCircle className="h-5 w-5" />
-                        Admin Notes
+                        All Admin Notes
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -91,12 +93,12 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <AlertCircle className="h-5 w-5" />
-                        Admin Notes
+                        All Admin Notes
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <p className="text-muted-foreground text-center py-4">
-                        No admin notes available
+                        No admin notes available yet
                     </p>
                 </CardContent>
             </Card>
@@ -108,7 +110,7 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <AlertCircle className="h-5 w-5" />
-                    Admin Notes ({notes.length})
+                    All Admin Notes ({notes.length})
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -116,8 +118,8 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
                     <div
                         key={note.id}
                         className={`p-4 rounded-lg border ${note.isImportant
-                                ? 'border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/20'
-                                : 'border-border bg-background'
+                            ? 'border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/20'
+                            : 'border-border bg-background'
                             }`}
                     >
                         <div className="flex items-start justify-between gap-2 mb-2">

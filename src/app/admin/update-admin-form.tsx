@@ -29,7 +29,6 @@ import {
 	isFormPendingAtom,
 	updateFormFieldAtom,
 	togglePasswordVisibilityAtom,
-	addNotificationAtom,
 	addActivityLogAtom,
 } from '@/lib/admin-atoms';
 
@@ -46,7 +45,6 @@ export function UpdateAdminForm({ user }: Props) {
 	const isPending = useAtomValue(isFormPendingAtom);
 	const [, updateFormField] = useAtom(updateFormFieldAtom);
 	const [, togglePasswordVisibility] = useAtom(togglePasswordVisibilityAtom);
-	const [, addNotification] = useAtom(addNotificationAtom);
 	const [, addActivity] = useAtom(addActivityLogAtom);
 
 	const FormSchema = z.object({
@@ -87,18 +85,10 @@ export function UpdateAdminForm({ user }: Props) {
 			if (error || data?.success === false) {
 				const errorMessage = data?.message || t("updateFailed");
 				toast.error(errorMessage);
-				addNotification({
-					type: 'error',
-					message: errorMessage,
-				});
 				console.error(error);
 			} else {
 				const successMessage = data?.message || t("profileUpdated");
 				toast.success(successMessage);
-				addNotification({
-					type: 'success',
-					message: successMessage,
-				});
 				addActivity({
 					action: 'Admin profile updated',
 					details: `Admin user ${values.fullName} updated their profile`,
@@ -108,10 +98,6 @@ export function UpdateAdminForm({ user }: Props) {
 		} catch (error) {
 			const errorMessage = t("unexpectedError");
 			toast.error(errorMessage);
-			addNotification({
-				type: 'error',
-				message: errorMessage,
-			});
 			console.error(error);
 		}
 	}

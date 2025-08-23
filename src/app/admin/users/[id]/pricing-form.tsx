@@ -359,8 +359,6 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                             className="pl-8"
                             min="0"
                             disabled={!useCustomPricing}
-                            onFocus={handleNumericInputFocus}
-                            onChange={(e) => handleNumericInputChange(e, (val) => setPricing(prev => ({ ...prev, oceanRates: prev.oceanRates.map(r => r.shorthand === shorthand ? { ...r, rate: val } : r) })))}
                           />
                         </div>
                         <div className="flex items-center gap-2 text-xs">
@@ -401,7 +399,6 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                       id="groundFeeAdjustment"
                       type="number"
                       value={pricing.groundFeeAdjustment}
-                      onChange={(e) => handleInputChange("groundFeeAdjustment", e.target.value)}
                       className="pl-8"
                       disabled={!useCustomPricing}
                       onFocus={handleNumericInputFocus}
@@ -443,7 +440,6 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                       id="pickupSurcharge"
                       type="number"
                       value={pricing.pickupSurcharge}
-                      onChange={(e) => handleInputChange("pickupSurcharge", e.target.value)}
                       className="pl-8"
                       min="0"
                       disabled={!useCustomPricing}
@@ -484,7 +480,6 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                       id="serviceFee"
                       type="number"
                       value={pricing.serviceFee}
-                      onChange={(e) => handleInputChange("serviceFee", e.target.value)}
                       className="pl-8"
                       min="0"
                       disabled={!useCustomPricing}
@@ -525,7 +520,6 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                       id="hybridSurcharge"
                       type="number"
                       value={pricing.hybridSurcharge}
-                      onChange={(e) => handleInputChange("hybridSurcharge", e.target.value)}
                       className="pl-8"
                       min="0"
                       disabled={!useCustomPricing}

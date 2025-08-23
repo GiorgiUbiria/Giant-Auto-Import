@@ -4,7 +4,7 @@ import { useAtomValue } from 'jotai';
 import { adminUserDataAtom, adminUserCarsAtom } from '@/lib/admin-user-atoms';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { User, Car, Calendar, Mail, Phone, DollarSign } from 'lucide-react';
+import { User, Car, Calendar, Mail, Phone, DollarSign, Shield } from 'lucide-react';
 
 export function UserOverviewTab() {
   const user = useAtomValue(adminUserDataAtom);
@@ -83,20 +83,14 @@ export function UserOverviewTab() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Account Status</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Balance:</span>
-                <span className="text-sm text-muted-foreground">
-                  ${user.balance ? user.balance.toFixed(2) : '0.00'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Status:</span>
-                <Badge variant={user.balance && user.balance > 0 ? 'destructive' : 'default'}>
-                  {user.balance && user.balance > 0 ? 'Outstanding Balance' : 'Good Standing'}
+                <Badge variant="default">
+                  Active
                 </Badge>
               </div>
             </div>

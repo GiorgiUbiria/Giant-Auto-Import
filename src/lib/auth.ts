@@ -67,8 +67,6 @@ export function getLucia(): Lucia<typeof AuthSchema> {
             email: attributes.email || "",
             role: attributes.role || "CUSTOMER_SINGULAR",
             phone: attributes.phone || "",
-            deposit: attributes.deposit || 0,
-            balance: attributes.balance || 0,
             priceList: attributes.priceList || "[]",
           };
         },

@@ -25,10 +25,6 @@ interface ClientProps {
       keys: string;
       usPort: string;
       destinationPort: string;
-      purchaseDue: string;
-      shippingDue: string;
-      totalDue: string;
-      paidAmount: string;
       actions: string;
     };
     actions: {

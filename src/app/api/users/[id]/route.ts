@@ -27,8 +27,6 @@ export async function GET(
         fullName: users.fullName,
         email: users.email,
         phone: users.phone,
-        deposit: users.deposit,
-        balance: users.balance,
         role: users.role,
       })
       .from(users)
@@ -44,62 +42,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching user:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const authResult = await getAuth();
-    if (!authResult?.user || authResult.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const userId = params.id;
-    const body = await request.json();
-    const { balance, deposit } = body;
-
-    const updateData: any = {};
-    if (balance !== undefined) updateData.balance = balance;
-    if (deposit !== undefined) updateData.deposit = deposit;
-
-    if (Object.keys(updateData).length === 0) {
-      return NextResponse.json(
-        { error: "No fields to update" },
-        { status: 400 }
-      );
-    }
-
-    const [updatedUser] = await db
-      .update(users)
-      .set(updateData)
-      .where(eq(users.id, userId))
-      .returning({
-        id: users.id,
-        fullName: users.fullName,
-        email: users.email,
-        phone: users.phone,
-        deposit: users.deposit,
-        balance: users.balance,
-        role: users.role,
-      });
-
-    if (!updatedUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({
-      user: updatedUser,
-      message: "User updated successfully",
-    });
-  } catch (error) {
-    console.error("Error updating user:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

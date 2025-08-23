@@ -11,6 +11,7 @@ import {
   parseVirtualBidData,
   calculateTotalPurchaseFee,
   calculateShippingFee,
+  calculateFee,
 } from "@/lib/calculator-utils";
 import {
   purchaseFeeAtom,
@@ -28,7 +29,6 @@ import {
   setAuctionLocationAtom,
   setAuctionAtom,
   toggleAdditionalFeeAtom,
-  saveCalculationAtom,
 } from "@/lib/calculator-atoms";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,6 +50,23 @@ export function ShippingCalculator({
 }) {
   const t = useTranslations('ShippingCalculator');
   const [isCalculating, setIsCalculating] = useState(false);
+  const [calculationResult, setCalculationResult] = useState<{
+    totalPurchaseFee: number;
+    shippingFee: number;
+    totalFee: number;
+    breakdown: {
+      basePurchaseFee: number;
+      auctionFee: number;
+      gateFee: number;
+      titleFee: number;
+      environmentalFee: number;
+      virtualBidFee: number;
+      groundFee: number;
+      oceanFee: number;
+      additionalFees: string[];
+      insurance: boolean;
+    };
+  } | null>(null);
 
   // Initialize user ID atom
   const [, setUserId] = useAtom(userIdAtom);
@@ -84,7 +101,6 @@ export function ShippingCalculator({
   const [, setAuctionLocationAction] = useAtom(setAuctionLocationAtom);
   const [, setAuctionAction] = useAtom(setAuctionAtom);
   const [, toggleAdditionalFee] = useAtom(toggleAdditionalFeeAtom);
-  const [, saveCalculation] = useAtom(saveCalculationAtom);
 
   const styleData = styleToJson(style);
   const virtualBidData = parseVirtualBidData();
@@ -109,9 +125,9 @@ export function ShippingCalculator({
   const handleCalculate = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate required fields
-    if (!purchaseFee || purchaseFee <= 0) {
-      alert("Please enter a valid purchase fee");
+    // Validate required fields (allow 0$ purchase fee)
+    if (purchaseFee < 0) {
+      alert("Purchase fee cannot be negative");
       return;
     }
 
@@ -132,7 +148,15 @@ export function ShippingCalculator({
 
     setIsCalculating(true);
     try {
-      const totalPurchaseFee = await calculateTotalPurchaseFee(purchaseFee, styleData, virtualBidData, insurance, userId);
+      // Calculate individual fee components
+      const auctionFee = calculateFee(styleData, purchaseFee);
+      const virtualBidFee = calculateFee(virtualBidData, purchaseFee);
+      const gateFee = 79;
+      const titleFee = 20;
+      const environmentalFee = 10;
+      
+      const totalPurchaseFee = purchaseFee + auctionFee + gateFee + titleFee + environmentalFee + virtualBidFee;
+      
       const shippingFee = await calculateShippingFee(
         auctionLocation,
         auction,
@@ -142,10 +166,76 @@ export function ShippingCalculator({
       );
       const totalFee = totalPurchaseFee + shippingFee;
 
+      // Calculate ground and ocean fees separately for breakdown
+      const csvData = await getAuctionData();
+      const baseGroundFee = csvData.find(
+        (data) => data.auction === auction && data.auctionLocation === auctionLocation
+      )?.rate || 0;
+
+      // Get user or default pricing for adjustments
+      let groundFeeAdjustment = 0;
+      let oceanFee = 0;
+      
+      if (userId) {
+        try {
+          const { getUserPricingConfig, getDefaultPricingConfig } = await import("@/lib/calculator-utils");
+          const userPricing = await getUserPricingConfig(userId);
+          const defaultPricing = await getDefaultPricingConfig();
+          const pricing = (userPricing && userPricing.isActive) ? userPricing : defaultPricing;
+          
+          groundFeeAdjustment = pricing?.groundFeeAdjustment || 0;
+          
+          // Calculate ocean fee
+          const normalizedPort = port.toString().trim().toUpperCase();
+          if (pricing?.oceanRates && pricing.oceanRates.length > 0) {
+            const matched = pricing.oceanRates.find((rate: any) =>
+              (rate.shorthand || '').toString().trim().toUpperCase() === normalizedPort
+            );
+            if (matched) oceanFee = matched.rate;
+          }
+          
+          if (oceanFee === 0) {
+            const { getActiveOceanRates } = await import("@/lib/calculator-utils");
+            const activeOceanRates = await getActiveOceanRates();
+            const matchedDb = activeOceanRates.find((rate) =>
+              (rate.shorthand || '').toString().trim().toUpperCase() === normalizedPort
+            );
+            if (matchedDb) oceanFee = matchedDb.rate;
+          }
+          
+          if (oceanFee === 0) {
+            const matchedHardcoded = oceanShippingRates.find((rate) =>
+              (rate.shorthand || '').toString().trim().toUpperCase() === normalizedPort
+            );
+            oceanFee = matchedHardcoded?.rate || 0;
+          }
+        } catch (error) {
+          console.error("Error getting user pricing:", error);
+        }
+      }
+
+      const adjustedGroundFee = baseGroundFee + groundFeeAdjustment;
+
       setEstimatedFee(totalFee);
 
-      // Save calculation to history
-      saveCalculation();
+      // Store detailed calculation breakdown
+      setCalculationResult({
+        totalPurchaseFee,
+        shippingFee,
+        totalFee,
+        breakdown: {
+          basePurchaseFee: purchaseFee,
+          auctionFee,
+          gateFee,
+          titleFee,
+          environmentalFee,
+          virtualBidFee,
+          groundFee: adjustedGroundFee,
+          oceanFee,
+          additionalFees: additionalFees,
+          insurance,
+        },
+      });
     } finally {
       setIsCalculating(false);
     }
@@ -314,16 +404,102 @@ export function ShippingCalculator({
                 </div>
               </div>
               <div className="mt-6 p-6 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20">
-                <p className="text-lg font-semibold mb-4">
-                  {t('estimatedTotalFee')}{" "}
-                  <span className="text-2xl font-bold text-primary dark:text-primary/90">
-                    ${estimatedFee.toFixed(2)}
-                  </span>
-                </p>
+                {calculationResult ? (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-center mb-4">Calculation Results</h3>
+                    
+                    {/* Purchase Fee Breakdown */}
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm text-muted-foreground">Purchase Costs</h4>
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span>Base Purchase Fee:</span>
+                          <span className="font-mono">${calculationResult.breakdown.basePurchaseFee.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Auction Fee:</span>
+                          <span className="font-mono">${calculationResult.breakdown.auctionFee.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Gate Fee:</span>
+                          <span className="font-mono">${calculationResult.breakdown.gateFee.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Title Fee:</span>
+                          <span className="font-mono">${calculationResult.breakdown.titleFee.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Environmental Fee:</span>
+                          <span className="font-mono">${calculationResult.breakdown.environmentalFee.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Virtual Bid Fee:</span>
+                          <span className="font-mono">${calculationResult.breakdown.virtualBidFee.toFixed(2)}</span>
+                        </div>
+                        <div className="border-t pt-1">
+                          <div className="flex justify-between font-medium">
+                            <span>Total Purchase Fee:</span>
+                            <span className="font-mono">${calculationResult.totalPurchaseFee.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Shipping Fee Breakdown */}
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm text-muted-foreground">Shipping Costs</h4>
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span>Ground Fee:</span>
+                          <span className="font-mono">${calculationResult.breakdown.groundFee.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Ocean Fee:</span>
+                          <span className="font-mono">${calculationResult.breakdown.oceanFee.toFixed(2)}</span>
+                        </div>
+                        {calculationResult.breakdown.additionalFees.length > 0 && (
+                          <div className="flex justify-between">
+                            <span>Additional Fees:</span>
+                            <span className="text-xs text-muted-foreground">
+                              {calculationResult.breakdown.additionalFees.join(', ')}
+                            </span>
+                          </div>
+                        )}
+                        {calculationResult.breakdown.insurance && (
+                          <div className="flex justify-between">
+                            <span>Insurance:</span>
+                            <span className="text-primary font-medium">Included</span>
+                          </div>
+                        )}
+                        <div className="border-t pt-1">
+                          <div className="flex justify-between font-medium">
+                            <span>Total Shipping Fee:</span>
+                            <span className="font-mono">${calculationResult.shippingFee.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Total */}
+                    <div className="border-t pt-3">
+                      <div className="flex justify-between text-lg font-semibold">
+                        <span>Total Estimated Fee:</span>
+                        <span className="text-2xl font-bold text-primary dark:text-primary/90">
+                          ${calculationResult.totalFee.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-lg font-semibold mb-4 text-center text-muted-foreground">
+                    {t('estimatedTotalFee')}: $0.00
+                  </p>
+                )}
+                
                 <Button
                   type="submit"
                   disabled={!isFormValid || isCalculating}
-                  className="w-full transition-all duration-200 hover:scale-[1.02] bg-primary hover:bg-primary/90 dark:bg-primary/90 dark:hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full mt-4 transition-all duration-200 hover:scale-[1.02] bg-primary hover:bg-primary/90 dark:bg-primary/90 dark:hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isCalculating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {isCalculating ? t('calculating') : t('calculate')}

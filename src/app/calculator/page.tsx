@@ -17,26 +17,17 @@ const ShippingCalculator = dynamicImport(() => import("./shipping-calculator").t
   )
 });
 
-const CalculationHistory = dynamicImport(() => import("./calculation-history").then(mod => ({ default: mod.CalculationHistory })), {
-  ssr: false,
-});
-
 export default async function Page() {
   const { user } = await getAuth();
 
   return (
     <Provider>
       <div className="min-h-screen py-8 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
-          <div className="flex-1">
-            <ShippingCalculator
-              style={user?.role === "CUSTOMER_DEALER" ? "c" : "a"}
-              userId={user?.id}
-            />
-          </div>
-          <div className="lg:w-80">
-            <CalculationHistory />
-          </div>
+        <div className="max-w-4xl mx-auto">
+          <ShippingCalculator
+            style={user?.role === "CUSTOMER_DEALER" ? "c" : "a"}
+            userId={user?.id}
+          />
         </div>
       </div>
     </Provider>

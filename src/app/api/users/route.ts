@@ -17,8 +17,6 @@ export async function GET(request: NextRequest) {
         fullName: users.fullName,
         email: users.email,
         phone: users.phone,
-        deposit: users.deposit,
-        balance: users.balance,
         role: users.role,
       })
       .from(users)

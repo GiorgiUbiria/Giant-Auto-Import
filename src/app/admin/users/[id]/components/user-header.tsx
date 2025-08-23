@@ -67,7 +67,7 @@ export function UserHeader() {
               <div>
                 <p className="text-sm font-medium">Account Status</p>
                 <p className="text-sm text-muted-foreground">
-                  {user.balance && user.balance > 0 ? 'Outstanding Balance' : 'Good Standing'}
+                  Active
                 </p>
               </div>
             </div>

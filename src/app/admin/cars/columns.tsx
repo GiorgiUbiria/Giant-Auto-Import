@@ -17,9 +17,6 @@ import { Actions } from "./actions";
 import { Owner } from "./owner";
 import { TableImage } from "./table-image";
 import { AdminReciever } from "./admin-reciever";
-import { TotalFeeDetails } from "./total-fee-details";
-import { PurchaseFeeDetails } from "../../dashboard/purchase-fee-details";
-import { ShippingFeeDetails } from "../../dashboard/shipping-fee-details";
 
 const SelectSchema = selectCarSchema;
 type SelectSchemaType = z.infer<typeof SelectSchema>;
@@ -37,10 +34,6 @@ interface ColumnsTranslations {
     keys: string;
     usPort: string;
     destinationPort: string;
-    purchaseDue: string;
-    shippingDue: string;
-    totalDue: string;
-    paidAmount: string;
     actions: string;
   };
   actions: {
@@ -283,109 +276,13 @@ export const columns = (translations: ColumnsTranslations): ColumnDef<SelectSche
       return <div className="font-medium">{displayPort}</div>;
     },
   },
-  {
-    accessorKey: "purchaseFee",
-    header: translations.columns.purchaseDue,
-    cell: ({ row }) => {
-      const purchaseFee = row.original.purchaseFee as SelectSchemaType["purchaseFee"];
-      const auctionFee = row.original.auctionFee as SelectSchemaType["auctionFee"];
-      const gateFee = row.original.gateFee as SelectSchemaType["gateFee"];
-      const titleFee = row.original.titleFee as SelectSchemaType["titleFee"];
-      const environmentalFee = row.original.environmentalFee as SelectSchemaType["environmentalFee"];
-      const virtualBidFee = row.original.virtualBidFee as SelectSchemaType["virtualBidFee"];
 
-      return (
-        <div className="space-y-2">
-          <PurchaseFeeDetails
-            purchaseFee={purchaseFee || 0}
-            auctionFee={auctionFee || 0}
-            gateFee={gateFee || 0}
-            titleFee={titleFee || 0}
-            environmentalFee={environmentalFee || 0}
-            virtualBidFee={virtualBidFee || 0}
-          />
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "shippingFee",
-    header: translations.columns.shippingDue,
-    cell: ({ row }) => {
-      const shippingFee = row.original.shippingFee as SelectSchemaType["shippingFee"];
-      const groundFee = row.original.groundFee as SelectSchemaType["groundFee"];
-      const oceanFee = row.original.oceanFee as SelectSchemaType["oceanFee"];
-
-      return (
-        <div className="space-y-2">
-          <ShippingFeeDetails
-            shippingFee={shippingFee || 0}
-            groundFee={groundFee || 0}
-            oceanFee={oceanFee || 0}
-          />
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "totalFee",
-    header: translations.columns.totalDue,
-    cell: ({ row }) => {
-      const purchaseFee = row.original
-        .purchaseFee as SelectSchemaType["purchaseFee"];
-      const auctionFee = row.original
-        .auctionFee as SelectSchemaType["auctionFee"];
-      const gateFee = row.original.gateFee as SelectSchemaType["gateFee"];
-      const titleFee = row.original.titleFee as SelectSchemaType["titleFee"];
-      const environmentalFee = row.original
-        .environmentalFee as SelectSchemaType["environmentalFee"];
-      const virtualBidFee = row.original
-        .virtualBidFee as SelectSchemaType["virtualBidFee"];
-      const shippingFee = row.original
-        .shippingFee as SelectSchemaType["shippingFee"];
-      const groundFee = row.original.groundFee as SelectSchemaType["groundFee"];
-      const oceanFee = row.original.oceanFee as SelectSchemaType["oceanFee"];
-      const totalFee = row.original.totalFee as SelectSchemaType["totalFee"];
-      const insurance = row.original.insurance as SelectSchemaType["insurance"];
-
-      return (
-        <div className="space-y-2">
-          <TotalFeeDetails
-            purchaseFee={purchaseFee}
-            auctionFee={auctionFee || 0}
-            gateFee={gateFee || 0}
-            titleFee={titleFee || 0}
-            environmentalFee={environmentalFee || 0}
-            virtualBidFee={virtualBidFee || 0}
-            shippingFee={shippingFee || 0}
-            groundFee={groundFee || 0}
-            oceanFee={oceanFee || 0}
-            totalFee={Math.round(totalFee || 0)}
-            insurance={insurance}
-            translations={translations.totalFee}
-          />
-        </div>
-      );
-    },
-  },
-  {
-    id: "paidAmount",
-    header: translations.columns.paidAmount,
-    cell: ({ row }) => {
-      // Currently empty/disabled as requested
-      return (
-        <div className="text-center text-muted-foreground">
-          <span className="italic">{translations.buttons.comingSoon}</span>
-        </div>
-      );
-    },
-    enableColumnFilter: false,
-  },
   {
     id: "actions",
     header: translations.columns.actions,
     cell: ({ row }) => {
       return <Actions vin={row.original.vin as string} translations={translations.actions} />;
     },
+    enableColumnFilter: false,
   },
 ];

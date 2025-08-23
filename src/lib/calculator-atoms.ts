@@ -58,19 +58,6 @@ export const calculatorStyleAtom = atomWithStorage<'a' | 'c'>('calculator-style'
 // User ID atom
 export const userIdAtom = atom<string | undefined>(undefined);
 
-// Calculation history atom (persisted in localStorage)
-export const calculationHistoryAtom = atomWithStorage<Array<{
-    id: string;
-    timestamp: number;
-    purchaseFee: number;
-    auction: string;
-    auctionLocation: string;
-    port: string;
-    additionalFees: string[];
-    insurance: boolean;
-    estimatedFee: number;
-}>>('calculation-history', []);
-
 // Current calculation details atom
 export const currentCalculationAtom = atom((get) => {
     const purchaseFee = get(purchaseFeeAtom);
@@ -143,53 +130,5 @@ export const toggleAdditionalFeeAtom = atom(
         } else {
             set(additionalFeesAtom, [...currentFees, feeType]);
         }
-    }
-);
-
-// Save current calculation to history
-export const saveCalculationAtom = atom(
-    null,
-    (get, set) => {
-        const currentCalculation = get(currentCalculationAtom);
-        const history = get(calculationHistoryAtom);
-
-        if (currentCalculation.estimatedFee > 0) {
-            const newEntry = {
-                id: Date.now().toString(),
-                timestamp: Date.now(),
-                ...currentCalculation,
-            };
-
-            // Keep only last 10 calculations
-            const updatedHistory = [newEntry, ...history.slice(0, 9)];
-            set(calculationHistoryAtom, updatedHistory);
-        }
-    }
-);
-
-// Load calculation from history
-export const loadCalculationAtom = atom(
-    null,
-    (get, set, calculationId: string) => {
-        const history = get(calculationHistoryAtom);
-        const calculation = history.find(calc => calc.id === calculationId);
-
-        if (calculation) {
-            set(purchaseFeeAtom, calculation.purchaseFee);
-            set(auctionAtom, calculation.auction);
-            set(auctionLocationAtom, calculation.auctionLocation);
-            set(portAtom, calculation.port);
-            set(additionalFeesAtom, calculation.additionalFees);
-            set(insuranceAtom, calculation.insurance);
-            set(estimatedFeeAtom, calculation.estimatedFee);
-        }
-    }
-);
-
-// Clear calculation history
-export const clearHistoryAtom = atom(
-    null,
-    (get, set) => {
-        set(calculationHistoryAtom, []);
     }
 ); 

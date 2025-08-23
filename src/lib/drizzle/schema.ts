@@ -27,8 +27,6 @@ export const users = sqliteTable("users", {
   phone: text("phone").notNull().unique(),
   password: text("password").notNull(),
   passwordText: text("password_text"),
-  deposit: integer("deposit").default(0),
-  balance: integer("balance").default(0),
   priceList: text("price_list", { mode: "json" }).$type<PriceList[]>(),
   role: text("role", {
     enum: ["CUSTOMER_SINGULAR", "CUSTOMER_DEALER", "MODERATOR", "ACCOUNTANT", "ADMIN"],
@@ -47,7 +45,6 @@ export const usersRelations = relations(users, ({ many }) => ({
   csvUploads: many(csvDataVersions),
   customerNotes: many(customerNotes, { relationName: "customer_note" }),
   adminNotes: many(customerNotes, { relationName: "admin_note" }),
-  payments: many(payments, { relationName: "customer_payment" }),
 }));
 
 export const insertUserSchema = createInsertSchema(users, {
@@ -57,8 +54,6 @@ export const insertUserSchema = createInsertSchema(users, {
       "\\+(9[976]\\d|8[987530]\\d|6[987]\\d|5[90]\\d|42\\d|3[875]\\d|2[98654321]\\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)(\\W*\\d){9,10}$"
     )
   ),
-  deposit: (schema) => schema.deposit.gte(0),
-  balance: (schema) => schema.balance.gte(0),
 });
 export const selectUserSchema = createSelectSchema(users);
 
@@ -120,7 +115,6 @@ export const cars = sqliteTable("cars", {
     enum: ["GASOLINE", "HYBRID_ELECTRIC"],
   }).notNull(),
   dueDate: integer("due_date", { mode: "timestamp" }),
-  paymentDue: integer("payment_due").default(0),
 }, (table) => {
   return {
     vinIdx: uniqueIndex("vin_idx").on(table.vin),
@@ -142,7 +136,6 @@ export const insertCarSchema = createInsertSchema(cars, {
   arrivalDate: z.date().optional(),
   purchaseDate: z.date(),
   dueDate: z.date().optional(),
-  paymentDue: (schema) => schema.paymentDue.gte(0),
   ownerId: (schema) => schema.ownerId
     .optional()
     .nullable()
@@ -155,68 +148,6 @@ export const insertCarSchema = createInsertSchema(cars, {
     }),
 });
 export const selectCarSchema = createSelectSchema(cars);
-
-export const payments = sqliteTable("payments", {
-  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-  customerId: text("customer_id").notNull().references(() => users.id),
-  paymentDate: integer("payment_date", { mode: "timestamp" }).notNull().default(sql`(CURRENT_DATE)`),
-  description: text("description").notNull(), // Changed from memo to description
-  note: text("note"), // Additional note field
-  amount: integer("amount").notNull(), // Changed from receivedAmount to amount
-  checkNumber: text("check_number"), // New field for check number
-  paymentType: text("payment_type", {
-    enum: ["WIRE", "CASH", "CHECK"],
-  }).notNull(),
-  paymentStatus: text("payment_status", {
-    enum: ["COMPLETE", "ACTIVE", "CLOSED"],
-  }).notNull(),
-  invoiceGenerated: integer("invoice_generated", { mode: "boolean" }).notNull().default(false),
-  invoiceType: text("invoice_type", {
-    enum: ["SHIPPING", "PURCHASE", "TOTAL"],
-  }),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-}, (table) => {
-  return {
-    customerIdIdx: index("payments_customer_id_idx").on(table.customerId),
-    paymentDateIdx: index("payments_payment_date_idx").on(table.paymentDate),
-    paymentStatusIdx: index("payments_payment_status_idx").on(table.paymentStatus),
-  }
-});
-
-export const paymentsRelations = relations(payments, ({ one, many }) => ({
-  customer: one(users, { fields: [payments.customerId], references: [users.id], relationName: "customer_payment" }),
-  paymentCars: many(paymentCars),
-}));
-
-export const insertPaymentSchema = createInsertSchema(payments, {
-  paymentDate: z.date(),
-  amount: (schema) => schema.amount.gte(0),
-});
-export const selectPaymentSchema = createSelectSchema(payments);
-
-export const paymentCars = sqliteTable("payment_cars", {
-  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-  paymentId: integer("payment_id").notNull().references(() => payments.id, { onDelete: "cascade" }),
-  carId: integer("car_id").notNull().references(() => cars.id, { onDelete: "cascade" }),
-  amount: integer("amount").notNull(), // Amount allocated to this specific car
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
-}, (table) => {
-  return {
-    paymentIdIdx: index("payment_cars_payment_id_idx").on(table.paymentId),
-    carIdIdx: index("payment_cars_car_id_idx").on(table.carId),
-  }
-});
-
-export const paymentCarsRelations = relations(paymentCars, ({ one }) => ({
-  payment: one(payments, { fields: [paymentCars.paymentId], references: [payments.id], relationName: "payment_for_car" }),
-  car: one(cars, { fields: [paymentCars.carId], references: [cars.id], relationName: "car_of_payment" }),
-}));
-
-export const insertPaymentCarSchema = createInsertSchema(paymentCars, {
-  amount: (schema) => schema.amount.gte(0),
-});
-export const selectPaymentCarSchema = createSelectSchema(paymentCars);
 
 export const images = sqliteTable("images", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),

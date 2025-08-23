@@ -63,7 +63,6 @@ interface ClientProps {
       oceanFee: string;
     };
     buttons: {
-      invoice: string;
       comingSoon: string;
     };
     status: {
@@ -122,7 +121,7 @@ const fetchCars = async ({ pageIndex, pageSize, sorting, filters }: {
       cache: 'no-store'
     });
     clearTimeout(timeoutId);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.details || 'Failed to fetch cars');
@@ -206,13 +205,13 @@ export const Client = ({ translations }: ClientProps) => {
     return <ErrorState />;
   }
 
-    return (
+  return (
     <div className="w-full px-4 md:px-6">
       <h1 className="text-3xl font-bold pb-8 leading-tight">{translations.title}</h1>
       <DataTable
-          columns={columns(translations)}
-          data={tableData}
-          filterKey="vinDetails"
+        columns={columns(translations)}
+        data={tableData}
+        filterKey="vinDetails"
         pageIndex={pageIndex}
         pageSize={pageSize}
         onPaginationChange={handlePaginationChange}

@@ -42,6 +42,24 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
   });
   const [baseOceanRates, setBaseOceanRates] = useState<Array<{ state: string, shorthand: string, rate: number }>>([]);
 
+  // Handle numeric input focus to clear the field when starting to type
+  const handleNumericInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    const input = e.target;
+    if (input.value === "0") {
+      input.value = "";
+    }
+  };
+
+  // Handle numeric input change to handle empty values properly
+  const handleNumericInputChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (value: number) => void) => {
+    const value = e.target.value;
+    if (value === "" || value === "0") {
+      setter(0);
+    } else {
+      setter(parseInt(value) || 0);
+    }
+  };
+
   const { execute: getUserPricing } = useServerAction(getUserPricingAction);
   const { execute: updateUserPricing } = useServerAction(updateUserPricingAction);
   const { execute: getDefaultPricing } = useServerAction(getDefaultPricingAction);
@@ -318,8 +336,15 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                             id={`ocean-${shorthand}`}
                             type="number"
                             value={current}
+                            onFocus={handleNumericInputFocus}
                             onChange={(e) => {
-                              const newRateVal = parseInt(e.target.value) || 0;
+                              const value = e.target.value;
+                              let newRateVal: number;
+                              if (value === "" || value === "0") {
+                                newRateVal = 0;
+                              } else {
+                                newRateVal = parseInt(value) || 0;
+                              }
                               setPricing(prev => {
                                 const nextRates = mergeOceanRates((baseOceanRates.length ? baseOceanRates : defaultPricing.oceanRates), prev.oceanRates);
                                 const idxToUpdate = nextRates.findIndex(r => (r.shorthand || '').toString().trim().toUpperCase() === shorthand);
@@ -334,6 +359,8 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                             className="pl-8"
                             min="0"
                             disabled={!useCustomPricing}
+                            onFocus={handleNumericInputFocus}
+                            onChange={(e) => handleNumericInputChange(e, (val) => setPricing(prev => ({ ...prev, oceanRates: prev.oceanRates.map(r => r.shorthand === shorthand ? { ...r, rate: val } : r) })))}
                           />
                         </div>
                         <div className="flex items-center gap-2 text-xs">
@@ -377,6 +404,8 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                       onChange={(e) => handleInputChange("groundFeeAdjustment", e.target.value)}
                       className="pl-8"
                       disabled={!useCustomPricing}
+                      onFocus={handleNumericInputFocus}
+                      onChange={(e) => handleNumericInputChange(e, (val) => setPricing(prev => ({ ...prev, groundFeeAdjustment: val })))}
                     />
                   </div>
                   <div className="flex items-center gap-2 text-xs">
@@ -418,6 +447,8 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                       className="pl-8"
                       min="0"
                       disabled={!useCustomPricing}
+                      onFocus={handleNumericInputFocus}
+                      onChange={(e) => handleNumericInputChange(e, (val) => setPricing(prev => ({ ...prev, pickupSurcharge: val })))}
                     />
                   </div>
                   <div className="flex items-center gap-2 text-xs">
@@ -457,6 +488,8 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                       className="pl-8"
                       min="0"
                       disabled={!useCustomPricing}
+                      onFocus={handleNumericInputFocus}
+                      onChange={(e) => handleNumericInputChange(e, (val) => setPricing(prev => ({ ...prev, serviceFee: val })))}
                     />
                   </div>
                   <div className="flex items-center gap-2 text-xs">
@@ -496,6 +529,8 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
                       className="pl-8"
                       min="0"
                       disabled={!useCustomPricing}
+                      onFocus={handleNumericInputFocus}
+                      onChange={(e) => handleNumericInputChange(e, (val) => setPricing(prev => ({ ...prev, hybridSurcharge: val })))}
                     />
                   </div>
                   <div className="flex items-center gap-2 text-xs">

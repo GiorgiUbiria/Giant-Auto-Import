@@ -10,7 +10,6 @@ import { SortingState, ColumnFiltersState, VisibilityState } from "@tanstack/rea
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CustomerNotes } from "@/components/customer-notes";
-import { PaymentHistory } from "@/components/payment-history";
 
 // Add type for API response
 interface CarsApiResponse {
@@ -18,12 +17,12 @@ interface CarsApiResponse {
   count: number;
 }
 
-const fetchUserCars = async ({ 
-  userId, 
-  pageIndex, 
-  pageSize, 
-  sorting, 
-  filters 
+const fetchUserCars = async ({
+  userId,
+  pageIndex,
+  pageSize,
+  sorting,
+  filters
 }: {
   userId: string;
   pageIndex: number;
@@ -39,12 +38,12 @@ const fetchUserCars = async ({
     params.set("page", (pageIndex + 1).toString());
     params.set("pageSize", pageSize.toString());
     params.set("ownerId", userId); // Filter by user ID
-    
+
     if (sorting.length > 0) {
       params.set("sortBy", sorting[0].id);
       params.set("sortOrder", sorting[0].desc ? "desc" : "asc");
     }
-    
+
     filters.forEach(f => {
       if (f.value) {
         // Map filter IDs to API parameters
@@ -61,12 +60,12 @@ const fetchUserCars = async ({
       cache: 'default'
     });
     clearTimeout(timeoutId);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.details || 'Failed to fetch cars');
     }
-    
+
     return response.json();
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
@@ -112,17 +111,6 @@ export const Client = ({ userId }: { userId: string }) => {
   const [filters, setFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-
-  // Fetch user data for balance
-  const { data: userData } = useQuery({
-    queryKey: ["getUser", userId],
-    queryFn: async () => {
-      const response = await fetch(`/api/users/${userId}`);
-      if (!response.ok) throw new Error('Failed to fetch user data');
-      return response.json();
-    },
-    staleTime: 5 * 60 * 1000,
-  });
 
   const handlePaginationChange = React.useCallback(({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
     setPageIndex(pageIndex);
@@ -173,19 +161,11 @@ export const Client = ({ userId }: { userId: string }) => {
   return (
     <Suspense fallback={<LoadingState />}>
       <div className="w-full px-4 md:px-6 space-y-6">
-        {/* Payment History Section */}
-        <div className="max-w-4xl">
-          <PaymentHistory 
-            userId={userId} 
-            balance={userData?.user?.balance || 0} 
-          />
-        </div>
-        
         {/* Customer Notes Section */}
         <div className="max-w-4xl">
           <CustomerNotes userId={userId} />
         </div>
-        
+
         {/* Cars Data Table */}
         <div>
           <DataTable

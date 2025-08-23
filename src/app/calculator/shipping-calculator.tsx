@@ -57,6 +57,14 @@ export function ShippingCalculator({
     setUserId(userId);
   }, [userId, setUserId]);
 
+  // Handle numeric input focus to clear the field when starting to type
+  const handleNumericInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    const input = e.target;
+    if (input.value === "0") {
+      input.value = "";
+    }
+  };
+
   // State atoms
   const [purchaseFee, setPurchaseFee] = useAtom(purchaseFeeAtom);
   const [auction, setAuction] = useAtom(auctionAtom);
@@ -179,7 +187,15 @@ export function ShippingCalculator({
                 <Input
                   id="bid"
                   value={purchaseFee}
-                  onChange={(e) => setPurchaseFee(parseFloat(e.target.value) || 0)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "" || value === "0") {
+                      setPurchaseFee(0);
+                    } else {
+                      setPurchaseFee(parseFloat(value) || 0);
+                    }
+                  }}
+                  onFocus={handleNumericInputFocus}
                   type="number"
                   className="transition-all duration-200 focus:ring-2 focus:ring-primary dark:focus:ring-primary/80 dark:bg-muted/50"
                   placeholder="0.00"

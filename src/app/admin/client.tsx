@@ -156,12 +156,6 @@ export const Client = ({ id }: { id: string }) => {
 					icon={FileText}
 					href="/admin/csv-management"
 				/>
-				<QuickAccessCard
-					title="Payment Management"
-					description="Manage customer payments and generate invoices"
-					icon={DollarSign}
-					href="/admin/payments"
-				/>
 			</div>
 
 			{loading ? (

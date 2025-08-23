@@ -23,6 +23,14 @@ interface BasicInfoSectionProps {
 }
 
 export function BasicInfoSection({ form }: BasicInfoSectionProps) {
+  // Handle numeric input focus to clear the field when starting to type
+  const handleNumericInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    const input = e.target;
+    if (input.value === "0") {
+      input.value = "";
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -55,7 +63,15 @@ export function BasicInfoSection({ form }: BasicInfoSectionProps) {
                     type="number"
                     placeholder="Year"
                     {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                    onFocus={handleNumericInputFocus}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === "" || value === "0") {
+                        field.onChange(0);
+                      } else {
+                        field.onChange(parseInt(value) || 0);
+                      }
+                    }}
                   />
                 </FormControl>
                 <FormMessage />

@@ -214,7 +214,6 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     header: "Due Date",
     cell: ({ row }) => {
       const dueDate = row.original.dueDate as SelectSchemaType["dueDate"];
-      const paymentDue = row.original.paymentDue as SelectSchemaType["paymentDue"];
 
       if (!dueDate) {
         return <div className="text-center text-muted-foreground">-</div>;
@@ -235,11 +234,6 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
           <div className={`font-medium ${isOverdue ? 'text-red-600' : isDueSoon ? 'text-yellow-600' : 'text-green-600'}`}>
             {formattedDate}
           </div>
-          {paymentDue && paymentDue > 0 && (
-            <div className="text-xs text-muted-foreground">
-              Due: ${paymentDue.toLocaleString()}
-            </div>
-          )}
         </div>
       );
     },
@@ -265,18 +259,6 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             environmentalFee={environmentalFee || 0}
             virtualBidFee={virtualBidFee || 0}
           />
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-6 px-2 text-xs"
-            onClick={() => {
-              // TODO: Implement download functionality
-              console.log("Download purchase invoice");
-            }}
-          >
-            <Download className="h-3 w-3 mr-1" />
-            Invoice
-          </Button>
         </div>
       );
     },
@@ -296,18 +278,6 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             groundFee={groundFee || 0}
             oceanFee={oceanFee || 0}
           />
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-6 px-2 text-xs"
-            onClick={() => {
-              // TODO: Implement download functionality
-              console.log("Download shipping invoice");
-            }}
-          >
-            <Download className="h-3 w-3 mr-1" />
-            Invoice
-          </Button>
         </div>
       );
     },
@@ -348,33 +318,8 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             totalFee={Math.round(totalFee || 0)}
             insurance={insurance}
           />
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-6 px-2 text-xs"
-            onClick={() => {
-              // TODO: Implement download functionality
-              console.log("Download total invoice");
-            }}
-          >
-            <Download className="h-3 w-3 mr-1" />
-            Invoice
-          </Button>
         </div>
       );
     },
-  },
-  {
-    id: "paidAmount",
-    header: "Paid Amount",
-    cell: ({ row }) => {
-      // Currently empty/disabled as requested
-      return (
-        <div className="text-center text-muted-foreground">
-          <span className="italic">Coming soon</span>
-        </div>
-      );
-    },
-    enableColumnFilter: false,
   },
 ];

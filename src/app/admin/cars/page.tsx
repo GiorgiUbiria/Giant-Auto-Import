@@ -34,10 +34,6 @@ export default async function Page() {
         keys: t("columns.keys"),
         usPort: t("columns.usPort"),
         destinationPort: t("columns.destinationPort"),
-        purchaseDue: t("columns.purchaseDue"),
-        shippingDue: t("columns.shippingDue"),
-        totalDue: t("columns.totalDue"),
-        paidAmount: t("columns.paidAmount"),
         actions: t("columns.actions")
       },
       actions: {
@@ -72,7 +68,6 @@ export default async function Page() {
         oceanFee: t("totalFee.oceanFee")
       },
       buttons: {
-        invoice: t("buttons.invoice"),
         comingSoon: t("buttons.comingSoon")
       },
       status: {

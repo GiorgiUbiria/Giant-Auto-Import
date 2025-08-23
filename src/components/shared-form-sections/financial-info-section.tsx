@@ -50,6 +50,14 @@ export function FinancialInfoSection({ form }: FinancialInfoSectionProps) {
     return users || [];
   }, [users]);
 
+  // Handle numeric input focus to clear the field when starting to type
+  const handleNumericInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    const input = e.target;
+    if (input.value === "0") {
+      input.value = "";
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -68,7 +76,15 @@ export function FinancialInfoSection({ form }: FinancialInfoSectionProps) {
                     type="number"
                     placeholder="Purchase fee"
                     {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    onFocus={handleNumericInputFocus}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === "" || value === "0") {
+                        field.onChange(0);
+                      } else {
+                        field.onChange(parseFloat(value) || 0);
+                      }
+                    }}
                   />
                 </FormControl>
                 <FormMessage />

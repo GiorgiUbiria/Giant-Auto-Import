@@ -20,7 +20,6 @@ export default async function Page() {
         <p>{t('informationWeCollectContent')}</p>
         <ul>
           <li>{t('personalInfo')}</li>
-          <li>{t('paymentInfo')}</li>
           <li>{t('vehicleInfo')}</li>
           <li>{t('usageData')}</li>
         </ul>

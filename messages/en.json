@@ -88,7 +88,6 @@
     "informationWeCollect": "Information We Collect",
     "informationWeCollectContent": "We may collect the following types of information:",
     "personalInfo": "Personal information (e.g., name, email address, phone number)",
-    "paymentInfo": "Payment information",
     "vehicleInfo": "Vehicle information",
     "usageData": "Usage data and analytics",
     "howWeUseInfo": "How We Use Your Information",
@@ -433,10 +432,6 @@
       "keys": "Keys",
       "usPort": "US Port",
       "destinationPort": "Destination Port",
-      "purchaseDue": "Purchase Due",
-      "shippingDue": "Shipping Due",
-      "totalDue": "Total Due",
-      "paidAmount": "Paid Amount",
       "actions": "Actions"
     },
     "actions": {
@@ -472,7 +467,6 @@
       "oceanFee": "Ocean Fee:"
     },
     "buttons": {
-      "invoice": "Invoice",
       "comingSoon": "Coming soon"
     },
     "status": {

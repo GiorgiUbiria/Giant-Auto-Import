@@ -75,7 +75,6 @@ interface ColumnsTranslations {
     oceanFee: string;
   };
   buttons: {
-    invoice: string;
     comingSoon: string;
   };
   status: {
@@ -305,18 +304,6 @@ export const columns = (translations: ColumnsTranslations): ColumnDef<SelectSche
             environmentalFee={environmentalFee || 0}
             virtualBidFee={virtualBidFee || 0}
           />
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-6 px-2 text-xs"
-            onClick={() => {
-              // TODO: Implement download functionality
-              console.log("Download purchase invoice");
-            }}
-          >
-            <Download className="h-3 w-3 mr-1" />
-            {translations.buttons.invoice}
-          </Button>
         </div>
       );
     },
@@ -336,18 +323,6 @@ export const columns = (translations: ColumnsTranslations): ColumnDef<SelectSche
             groundFee={groundFee || 0}
             oceanFee={oceanFee || 0}
           />
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-6 px-2 text-xs"
-            onClick={() => {
-              // TODO: Implement download functionality
-              console.log("Download shipping invoice");
-            }}
-          >
-            <Download className="h-3 w-3 mr-1" />
-            {translations.buttons.invoice}
-          </Button>
         </div>
       );
     },
@@ -389,18 +364,6 @@ export const columns = (translations: ColumnsTranslations): ColumnDef<SelectSche
             insurance={insurance}
             translations={translations.totalFee}
           />
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-6 px-2 text-xs"
-            onClick={() => {
-              // TODO: Implement download functionality
-              console.log("Download total invoice");
-            }}
-          >
-            <Download className="h-3 w-3 mr-1" />
-            {translations.buttons.invoice}
-          </Button>
         </div>
       );
     },

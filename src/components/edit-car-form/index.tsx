@@ -14,18 +14,18 @@ import { BasicInfoSection } from "../shared-form-sections/basic-info-section";
 import { AuctionInfoSection } from "../shared-form-sections/auction-info-section";
 import { FinancialInfoSection } from "../shared-form-sections/financial-info-section";
 
-const FormSchema = insertCarSchema.omit({ 
-  id: true, 
-  auctionFee: true, 
-  gateFee: true, 
-  titleFee: true, 
-  environmentalFee: true, 
-  virtualBidFee: true, 
-  groundFee: true, 
-  oceanFee: true, 
-  totalFee: true, 
-  shippingFee: true, 
-  destinationPort: true 
+const FormSchema = insertCarSchema.omit({
+  id: true,
+  auctionFee: true,
+  gateFee: true,
+  titleFee: true,
+  environmentalFee: true,
+  virtualBidFee: true,
+  groundFee: true,
+  oceanFee: true,
+  totalFee: true,
+  shippingFee: true,
+  destinationPort: true
 });
 const CarSchema = selectCarSchema.omit({ destinationPort: true });
 type Car = z.infer<typeof CarSchema>;
@@ -64,6 +64,14 @@ export function EditCarForm({ car }: EditCarFormProps) {
       insurance: car.insurance,
     },
   });
+
+  // Handle numeric input focus to clear the field when starting to type
+  const handleNumericInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    const input = e.target;
+    if (input.value === "0") {
+      input.value = "";
+    }
+  };
 
   const { isPending, mutate } = useServerActionMutation(updateCarAction, {
     onError: (error) => {
@@ -107,7 +115,7 @@ export function EditCarForm({ car }: EditCarFormProps) {
           <BasicInfoSection form={form} />
           <AuctionInfoSection form={form} />
           <FinancialInfoSection form={form} />
-          
+
           <div className="flex justify-end space-x-4">
             <Button
               type="button"

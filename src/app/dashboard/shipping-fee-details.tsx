@@ -6,7 +6,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 
 type Props = {
   shippingFee: number;
@@ -23,7 +23,7 @@ type FeeItemProps = {
 const FeeItem = ({ label, amount, className }: FeeItemProps) => (
   <div className={cn("flex justify-between items-center py-0.5", className)}>
     <span className="text-muted-foreground">{label}:</span>
-    <span className="font-medium">${amount.toLocaleString()}</span>
+    <span className="font-medium">{formatCurrency(amount)}</span>
   </div>
 );
 
@@ -37,7 +37,7 @@ export const ShippingFeeDetails = ({
       <HoverCard>
         <HoverCardTrigger asChild>
           <button className="font-medium hover:text-primary/80 transition-colors">
-            ${shippingFee.toLocaleString()}
+            {formatCurrency(shippingFee)}
           </button>
         </HoverCardTrigger>
         <HoverCardContent className="w-80 p-4" align="end">
@@ -48,8 +48,8 @@ export const ShippingFeeDetails = ({
                 <FeeItem label="Ground Fee" amount={groundFee} />
                 <FeeItem label="Ocean Fee" amount={oceanFee} />
                 <Separator className="my-2" />
-                <FeeItem 
-                  label="Total Shipping Fee" 
+                <FeeItem
+                  label="Total Shipping Fee"
                   amount={shippingFee}
                   className="font-semibold text-primary"
                 />

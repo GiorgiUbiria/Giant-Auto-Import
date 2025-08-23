@@ -20,7 +20,7 @@ const ShippingCalculator = dynamicImport(() => import("./shipping-calculator").t
 
 export default async function Page() {
   const { user } = await getAuth();
-  
+
   if (!user) {
     return redirect("/login");
   }

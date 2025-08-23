@@ -39,7 +39,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 
 export function ShippingCalculator({
   style,
@@ -414,32 +414,32 @@ export function ShippingCalculator({
                       <div className="space-y-1 text-sm">
                         <div className="flex justify-between">
                           <span>Base Purchase Fee:</span>
-                          <span className="font-mono">${calculationResult.breakdown.basePurchaseFee.toFixed(2)}</span>
+                          <span className="font-mono">{formatCurrency(calculationResult.breakdown.basePurchaseFee)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Auction Fee:</span>
-                          <span className="font-mono">${calculationResult.breakdown.auctionFee.toFixed(2)}</span>
+                          <span className="font-mono">{formatCurrency(calculationResult.breakdown.auctionFee)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Gate Fee:</span>
-                          <span className="font-mono">${calculationResult.breakdown.gateFee.toFixed(2)}</span>
+                          <span className="font-mono">{formatCurrency(calculationResult.breakdown.gateFee)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Title Fee:</span>
-                          <span className="font-mono">${calculationResult.breakdown.titleFee.toFixed(2)}</span>
+                          <span className="font-mono">{formatCurrency(calculationResult.breakdown.titleFee)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Environmental Fee:</span>
-                          <span className="font-mono">${calculationResult.breakdown.environmentalFee.toFixed(2)}</span>
+                          <span className="font-mono">{formatCurrency(calculationResult.breakdown.environmentalFee)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Virtual Bid Fee:</span>
-                          <span className="font-mono">${calculationResult.breakdown.virtualBidFee.toFixed(2)}</span>
+                          <span className="font-mono">{formatCurrency(calculationResult.breakdown.virtualBidFee)}</span>
                         </div>
                         <div className="border-t pt-1">
                           <div className="flex justify-between font-medium">
                             <span>Total Purchase Fee:</span>
-                            <span className="font-mono">${calculationResult.totalPurchaseFee.toFixed(2)}</span>
+                            <span className="font-mono">{formatCurrency(calculationResult.totalPurchaseFee)}</span>
                           </div>
                         </div>
                       </div>
@@ -451,11 +451,11 @@ export function ShippingCalculator({
                       <div className="space-y-1 text-sm">
                         <div className="flex justify-between">
                           <span>Ground Fee:</span>
-                          <span className="font-mono">${calculationResult.breakdown.groundFee.toFixed(2)}</span>
+                          <span className="font-mono">{formatCurrency(calculationResult.breakdown.groundFee)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Ocean Fee:</span>
-                          <span className="font-mono">${calculationResult.breakdown.oceanFee.toFixed(2)}</span>
+                          <span className="font-mono">{formatCurrency(calculationResult.breakdown.oceanFee)}</span>
                         </div>
                         {calculationResult.breakdown.additionalFees.length > 0 && (
                           <div className="flex justify-between">
@@ -474,7 +474,7 @@ export function ShippingCalculator({
                         <div className="border-t pt-1">
                           <div className="flex justify-between font-medium">
                             <span>Total Shipping Fee:</span>
-                            <span className="font-mono">${calculationResult.shippingFee.toFixed(2)}</span>
+                            <span className="font-mono">{formatCurrency(calculationResult.shippingFee)}</span>
                           </div>
                         </div>
                       </div>
@@ -485,14 +485,14 @@ export function ShippingCalculator({
                       <div className="flex justify-between text-lg font-semibold">
                         <span>Total Estimated Fee:</span>
                         <span className="text-2xl font-bold text-primary dark:text-primary/90">
-                          ${calculationResult.totalFee.toFixed(2)}
+                          {formatCurrency(calculationResult.totalFee)}
                         </span>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <p className="text-lg font-semibold mb-4 text-center text-muted-foreground">
-                    {t('estimatedTotalFee')}: $0.00
+                    {t('estimatedTotalFee')}: {formatCurrency(0)}
                   </p>
                 )}
                 

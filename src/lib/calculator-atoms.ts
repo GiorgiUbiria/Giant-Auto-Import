@@ -49,7 +49,7 @@ export const isFormValidAtom = atom((get) => {
     const auctionLocation = get(auctionLocationAtom);
     const port = get(portAtom);
 
-    return purchaseFee > 0 && auction && auctionLocation && port;
+    return purchaseFee >= 0 && auction && auctionLocation && port;
 });
 
 // Calculator style atom (persisted in localStorage)

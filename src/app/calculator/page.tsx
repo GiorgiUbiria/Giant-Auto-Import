@@ -1,4 +1,5 @@
 import { getAuth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import dynamicImport from "next/dynamic";
 import { Provider } from 'jotai';
 
@@ -19,6 +20,10 @@ const ShippingCalculator = dynamicImport(() => import("./shipping-calculator").t
 
 export default async function Page() {
   const { user } = await getAuth();
+  
+  if (!user) {
+    return redirect("/login");
+  }
 
   return (
     <Provider>

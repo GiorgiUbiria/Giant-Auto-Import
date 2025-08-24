@@ -380,7 +380,6 @@
     "error": "Error loading user data. Please try again later.",
     "noUsers": "No users found",
     "columns": {
-      "id": "ID",
       "fullName": "Full Name",
       "email": "Email",
       "phone": "Phone",

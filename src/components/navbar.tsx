@@ -38,7 +38,7 @@ const MobileMenu = ({ links }: { links: Array<{ href: string; label: string }> }
       <SheetContent side="left" className="bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 w-72">
         <div className="flex flex-col gap-6 pt-6">
           <Link href="/" className="flex justify-center mb-4">
-            <div className="relative w-16 h-16">
+            <div className="relative w-20 h-20">
               <Image
                 src={NavbarLogoDark}
                 alt="Company logo"
@@ -178,7 +178,7 @@ const Navbar = ({ user, translations }: NavbarProps) => {
               <div className="flex items-center gap-4">
                 <MobileMenu links={navigationLinks} />
                 <Link href="/" className="flex items-center" prefetch>
-                  <div className="relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16">
+                  <div className="relative w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24">
                     <Image
                       src={NavbarLogoDark}
                       alt="Company logo"
@@ -194,9 +194,7 @@ const Navbar = ({ user, translations }: NavbarProps) => {
                       priority
                     />
                   </div>
-                  <span className="ml-2 text-lg font-semibold text-gray-900 dark:text-white hidden sm:block">
-                    Giant Auto Import
-                  </span>
+
                 </Link>
               </div>
 

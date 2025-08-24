@@ -22,7 +22,7 @@ export default async function Footer() {
           {/* Company Info Section */}
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <div className="relative w-16 h-16">
+              <div className="relative w-20 h-20">
                 <Image
                   src={CompanyLogoDark}
                   alt="Company Logo"
@@ -36,9 +36,7 @@ export default async function Footer() {
                   className="object-contain hidden dark:block"
                 />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                {t("companyName")}
-              </h2>
+
             </div>
 
             {/* Social Links */}

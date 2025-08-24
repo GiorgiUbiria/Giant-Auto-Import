@@ -22,7 +22,7 @@ export default async function Footer() {
           {/* Company Info Section */}
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <div className="relative w-20 h-20">
+              <div className="relative w-28 h-28">
                 <Image
                   src={CompanyLogoDark}
                   alt="Company Logo"

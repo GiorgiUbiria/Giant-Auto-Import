@@ -16,8 +16,8 @@ const NavLink = memo(({ href, label, isActive }: LinkProp & { isActive: boolean 
     href={href}
     prefetch
     className={`flex items-center text-nowrap font-medium py-3 transition-colors
-      ${isActive 
-        ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400" 
+        ${isActive
+        ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
         : "text-black dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 border-b-2 border-transparent"}`}
   >
     <span>{label}</span>
@@ -33,14 +33,14 @@ const AdminDropdown = memo(({ links, isActive }: { links: LinkProp[], isActive: 
     <div className="relative" onMouseEnter={() => setIsOpen(true)} onMouseLeave={() => setIsOpen(false)}>
       <button
         className={`flex items-center gap-1 font-medium py-3 transition-colors
-          ${isActive 
-            ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400" 
+          ${isActive
+            ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
             : "text-black dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 border-b-2 border-transparent"}`}
       >
         <span>Admin</span>
         <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
-      
+
       {isOpen && (
         <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-900 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
           {links.map((link) => (
@@ -62,7 +62,7 @@ AdminDropdown.displayName = "AdminDropdown";
 
 function NavigationLinks({ links }: { links: LinkProp[] }) {
   const pathname = usePathname();
-  
+
   // Separate admin links from regular links
   const adminLinks = links.filter(link => link.isAdminLink);
   const regularLinks = links.filter(link => !link.isAdminLink);
@@ -78,8 +78,8 @@ function NavigationLinks({ links }: { links: LinkProp[] }) {
         />
       ))}
       {adminLinks.length > 0 && (
-        <AdminDropdown 
-          links={adminLinks} 
+        <AdminDropdown
+          links={adminLinks}
           isActive={adminLinks.some(link => pathname === link.href)}
         />
       )}

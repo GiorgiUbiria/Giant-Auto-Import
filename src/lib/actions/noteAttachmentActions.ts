@@ -82,7 +82,7 @@ export const uploadNoteAttachmentsAction = isAdminProcedure
       // Upload each file to R2
       for (const file of files) {
         const fileKey = `notes/${noteId}/${Date.now()}_${file.fileName}`;
-        
+
         try {
           await s3Client.send(
             new PutObjectCommand({

@@ -34,6 +34,7 @@ export default async function Page() {
           error: t("error"),
           noUsers: t("noUsers"),
           columns: {
+            id: t("columns.id"),
             fullName: t("columns.fullName"),
             email: t("columns.email"),
             phone: t("columns.phone"),

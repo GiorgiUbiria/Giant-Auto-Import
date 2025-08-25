@@ -15,6 +15,7 @@ interface ClientProps {
     error: string;
     noUsers: string;
     columns: {
+      id: string;
       fullName: string;
       email: string;
       phone: string;

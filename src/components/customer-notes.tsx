@@ -4,9 +4,60 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Clock, User, Paperclip, Eye } from "lucide-react";
+import { AlertCircle, Clock, User, Paperclip, Eye, ChevronDown, ChevronUp } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { NoteAttachmentsModal } from "./note-attachments-modal";
+
+// Collapsible Note Component
+interface CollapsibleNoteProps {
+    note: string;
+    maxLength?: number;
+}
+
+function CollapsibleNote({ note, maxLength = 200 }: CollapsibleNoteProps) {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const shouldTruncate = note.length > maxLength;
+
+    if (!shouldTruncate) {
+        return (
+            <div className="min-w-0">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words overflow-hidden">
+                    {note}
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-w-0 space-y-2">
+            <div className="overflow-hidden">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                    {isExpanded ? note : `${note.slice(0, maxLength)}...`}
+                </p>
+            </div>
+            <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="h-auto p-1 text-xs text-muted-foreground hover:text-foreground self-start transition-colors"
+                title={isExpanded ? "Show less of this note" : "Show more of this note"}
+            >
+                {isExpanded ? (
+                    <>
+                        <ChevronUp className="h-3 w-3 mr-1" />
+                        Show Less
+                    </>
+                ) : (
+                    <>
+                        <ChevronDown className="h-3 w-3 mr-1" />
+                        Show More
+                    </>
+                )}
+            </Button>
+        </div>
+    );
+}
 
 interface CustomerNote {
     id: number;
@@ -134,31 +185,34 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
                 {notes.map((note) => (
                     <div
                         key={note.id}
-                        className={`p-4 rounded-lg border ${note.isImportant
+                        className={`p-4 rounded-lg border overflow-hidden ${note.isImportant
                             ? 'border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/20'
                             : 'border-border bg-background'
                             }`}
                     >
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                            <div className="flex items-center gap-2">
-                                <User className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm font-medium">{note.adminName}</span>
-                                {note.isImportant && (
-                                    <Badge variant="destructive" className="text-xs">
-                                        Important
-                                    </Badge>
-                                )}
-                                {note.hasAttachments && (
-                                    <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                                        <Paperclip className="h-3 w-3" />
-                                        Has Attachments
-                                    </Badge>
-                                )}
+                        <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
+                            <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                                <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                <span className="text-sm font-medium truncate min-w-0">{note.adminName}</span>
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                    {note.isImportant && (
+                                        <Badge variant="destructive" className="text-xs">
+                                            Important
+                                        </Badge>
+                                    )}
+                                    {note.hasAttachments && (
+                                        <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                                            <Paperclip className="h-3 w-3" />
+                                            Has Attachments
+                                        </Badge>
+                                    )}
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                     <Clock className="h-3 w-3" />
-                                    {new Date(note.createdAt).toLocaleDateString()}
+                                    <span className="hidden sm:inline">{new Date(note.createdAt).toLocaleDateString()}</span>
+                                    <span className="sm:hidden">{new Date(note.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                                 </div>
                                 {note.hasAttachments && (
                                     <Button
@@ -172,9 +226,9 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
                                 )}
                             </div>
                         </div>
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                            {note.note}
-                        </p>
+                        <div className="min-w-0">
+                            <CollapsibleNote note={note.note} />
+                        </div>
                         {note.updatedAt !== note.createdAt && (
                             <p className="text-xs text-muted-foreground mt-2">
                                 Updated: {new Date(note.updatedAt).toLocaleDateString()}
@@ -191,6 +245,7 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
                     isOpen={attachmentsModalOpen}
                     onOpenChange={handleAttachmentsModalClose}
                     hasAttachments={notes.find(n => n.id === selectedNoteId)?.hasAttachments || false}
+                    isAdmin={false}
                 />
             )}
         </Card>

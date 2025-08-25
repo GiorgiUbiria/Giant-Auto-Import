@@ -229,9 +229,6 @@ export function PaymentInput({
                                                 <div className="flex items-center gap-2">
                                                     <Calendar className="h-3 w-3 text-muted-foreground" />
                                                     <span>{formatDate(payment.createdAt)}</span>
-                                                    <span className="text-muted-foreground">
-                                                        by {payment.admin.fullName}
-                                                    </span>
                                                 </div>
                                                 <div className="flex items-center gap-1">
                                                     <DollarSign className="h-3 w-3 text-red-500" />
@@ -261,8 +258,10 @@ export function PaymentInput({
                                     </Button>
                                 }
                                 onUploadSuccess={() => {
-                                    // Refresh invoice status
-                                    // executeCheckInvoice({ carVin, invoiceType: paymentType }); // This line is removed
+                                    // Update local invoice status
+                                    setHasInvoice(true);
+                                    // Trigger refresh to update parent component
+                                    onPaymentAdded();
                                 }}
                             />
                             {hasInvoice && (

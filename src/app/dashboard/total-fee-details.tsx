@@ -6,7 +6,12 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
+import { useServerAction } from "zsa-react";
+import { getInvoiceDownloadUrlAction } from "@/lib/actions/invoiceActions";
+import { toast } from "sonner";
 
 type Props = {
   purchaseFee: number;
@@ -22,6 +27,8 @@ type Props = {
   insurance?: "YES" | "NO";
   currentDue: number;
   paidAmount: number;
+  carVin: string;
+  hasInvoice?: boolean;
 };
 
 type FeeItemProps = {
@@ -51,6 +58,8 @@ export const TotalFeeDetails = ({
   insurance,
   currentDue,
   paidAmount,
+  carVin,
+  hasInvoice,
 }: Props) => {
   const totalPurchaseFee =
     purchaseFee +
@@ -62,6 +71,32 @@ export const TotalFeeDetails = ({
 
   const totalShippingFee = shippingFee + groundFee + oceanFee;
   const isFullyPaid = currentDue <= 0;
+
+  const { execute: executeDownloadInvoice } = useServerAction(getInvoiceDownloadUrlAction, {
+    onSuccess: (response) => {
+      // Create a temporary link to download the file
+      const link = document.createElement('a');
+      link.href = response.data.downloadUrl;
+      link.download = response.data.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Invoice download started");
+    },
+    onError: (error) => {
+      console.error("Download error:", error);
+      toast.error("Failed to download invoice");
+    },
+  });
+
+  const handleDownloadInvoice = async () => {
+    try {
+      await executeDownloadInvoice({ carVin, invoiceType: "TOTAL" });
+    } catch (error) {
+      console.error("Download error in handleDownloadInvoice:", error);
+      toast.error("Failed to download invoice");
+    }
+  };
 
   return (
     <div className="relative group">
@@ -148,9 +183,45 @@ export const TotalFeeDetails = ({
                 </div>
               </div>
             )}
+
+            {hasInvoice && (
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Invoice</h3>
+                <div className="space-y-1">
+                  <FeeItem
+                    label="Invoice Available"
+                    amount={0}
+                    className="font-medium"
+                  />
+                  <Button
+                    onClick={handleDownloadInvoice}
+                    className="flex items-center gap-2"
+                    disabled={false} // No loading state for this action
+                  >
+                    <Download size={16} />
+                    Download Invoice
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </HoverCardContent>
       </HoverCard>
+      
+      {/* Download button displayed under the price when invoice exists */}
+      {hasInvoice && (
+        <div className="flex justify-center">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleDownloadInvoice}
+            className="text-xs px-2 py-1 h-6"
+          >
+            <Download className="h-3 w-3 mr-1" />
+            Download Total Invoice
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

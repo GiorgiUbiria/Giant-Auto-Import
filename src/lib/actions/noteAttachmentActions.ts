@@ -11,10 +11,10 @@ import { getAuth } from "@/lib/auth";
 
 // S3/R2 client configuration
 const getS3Client = () => {
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+  const accessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.CLOUDFLARE_SECRET_ACCESS_KEY;
   const region = process.env.R2_REGION || "auto";
-  const endpoint = process.env.R2_ENDPOINT;
+  const endpoint = process.env.CLOUDFLARE_API_ENDPOINT;
 
   if (!accessKeyId || !secretAccessKey || !endpoint) {
     throw new Error("Missing R2 configuration");
@@ -32,7 +32,7 @@ const getS3Client = () => {
 };
 
 const getBucketName = () => {
-  const bucketName = process.env.R2_BUCKET_NAME;
+  const bucketName = process.env.CLOUDFLARE_BUCKET_NAME;
   if (!bucketName) {
     throw new Error("Missing R2 bucket name");
   }
@@ -70,9 +70,9 @@ export const uploadNoteAttachmentsAction = isAdminProcedure
         throw new Error("Note not found");
       }
 
-      // Check if user is admin or the note is about their own customer
-      if (ctx.user.role !== "ADMIN" && note.customerId !== ctx.user.id) {
-        throw new Error("Unauthorized to access this note");
+      // Check if user is admin (only admins can upload attachments)
+      if (ctx.user.role !== "ADMIN") {
+        throw new Error("Only admins can upload note attachments");
       }
 
       const s3Client = getS3Client();
@@ -200,9 +200,9 @@ export const deleteNoteAttachmentAction = isAdminProcedure
         throw new Error("Attachment not found");
       }
 
-      // Check if user is admin or the note is about their own customer
-      if (ctx.user.role !== "ADMIN" && attachment.note.customerId !== ctx.user.id) {
-        throw new Error("Unauthorized to delete this attachment");
+      // Check if user is admin (only admins can delete attachments)
+      if (ctx.user.role !== "ADMIN") {
+        throw new Error("Only admins can delete note attachments");
       }
 
       // Delete from R2

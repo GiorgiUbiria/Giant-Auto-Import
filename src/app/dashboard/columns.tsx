@@ -22,7 +22,16 @@ import { ShippingFeeDetails } from "./shipping-fee-details";
 const SelectSchema = selectCarSchema;
 type SelectSchemaType = z.infer<typeof SelectSchema>;
 
-export const columns: ColumnDef<SelectSchemaType>[] = [
+// Add type for car with invoice data
+type CarWithInvoiceData = SelectSchemaType & {
+  hasInvoice?: {
+    PURCHASE: boolean;
+    SHIPPING: boolean;
+    TOTAL: boolean;
+  };
+};
+
+export const columns: ColumnDef<CarWithInvoiceData>[] = [
   {
     accessorKey: "purchaseDate",
     header: () => <div className="text-center font-semibold">Purchase Date</div>,
@@ -260,6 +269,8 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             environmentalFee={environmentalFee || 0}
             virtualBidFee={virtualBidFee || 0}
             currentDue={purchaseDue || 0}
+            carVin={row.original.vin}
+            hasInvoice={row.original.hasInvoice?.PURCHASE}
           />
         </div>
       );
@@ -281,6 +292,8 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             groundFee={groundFee || 0}
             oceanFee={oceanFee || 0}
             currentDue={shippingDue || 0}
+            carVin={row.original.vin}
+            hasInvoice={row.original.hasInvoice?.SHIPPING}
           />
         </div>
       );
@@ -325,6 +338,8 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             insurance={insurance}
             currentDue={totalDue || 0}
             paidAmount={paidAmount || 0}
+            carVin={row.original.vin}
+            hasInvoice={row.original.hasInvoice?.TOTAL}
           />
         </div>
       );

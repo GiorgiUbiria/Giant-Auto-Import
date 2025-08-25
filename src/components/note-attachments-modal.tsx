@@ -26,6 +26,7 @@ interface NoteAttachmentsModalProps {
     onOpenChange: (open: boolean) => void;
     trigger?: React.ReactNode;
     hasAttachments: boolean;
+    isAdmin?: boolean; // New prop to control upload functionality
 }
 
 export function NoteAttachmentsModal({
@@ -34,6 +35,7 @@ export function NoteAttachmentsModal({
     onOpenChange,
     trigger,
     hasAttachments,
+    isAdmin = false, // Default to false (customer view)
 }: NoteAttachmentsModalProps) {
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [attachments, setAttachments] = useState<NoteAttachment[]>([]);
@@ -209,59 +211,61 @@ export function NoteAttachmentsModal({
                         </DialogDescription>
                     </DialogHeader>
 
-                    {/* Upload Section */}
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="attachment-files">Select Files</Label>
-                            <div className="flex items-center gap-2">
-                                <Input
-                                    id="attachment-files"
-                                    ref={fileInputRef}
-                                    type="file"
-                                    multiple
-                                    accept="*/*"
-                                    onChange={handleFileSelect}
-                                    className="flex-1"
-                                />
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    <Upload className="h-4 w-4 mr-2" />
-                                    Browse
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Selected Files */}
-                        {selectedFiles.length > 0 && (
+                    {/* Upload Section - Only show for admins */}
+                    {isAdmin && (
+                        <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label>Selected Files ({selectedFiles.length}/10)</Label>
-                                <div className="space-y-2 max-h-32 overflow-y-auto">
-                                    {selectedFiles.map((file, index) => (
-                                        <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                                            <FileText className="h-4 w-4 text-muted-foreground" />
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium truncate">{file.name}</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {formatFileSize(file.size)}
-                                                </p>
-                                            </div>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => handleRemoveFile(index)}
-                                                className="shrink-0"
-                                            >
-                                                <X className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    ))}
+                                <Label htmlFor="attachment-files">Select Files</Label>
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        id="attachment-files"
+                                        ref={fileInputRef}
+                                        type="file"
+                                        multiple
+                                        accept="*/*"
+                                        onChange={handleFileSelect}
+                                        className="flex-1"
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => fileInputRef.current?.click()}
+                                    >
+                                        <Upload className="h-4 w-4 mr-2" />
+                                        Browse
+                                    </Button>
                                 </div>
                             </div>
-                        )}
-                    </div>
+
+                            {/* Selected Files */}
+                            {selectedFiles.length > 0 && (
+                                <div className="space-y-2">
+                                    <Label>Selected Files ({selectedFiles.length}/10)</Label>
+                                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                                        {selectedFiles.map((file, index) => (
+                                            <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                                                <FileText className="h-4 w-4 text-muted-foreground" />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium truncate">{file.name}</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                                                    </p>
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handleRemoveFile(index)}
+                                                    className="shrink-0"
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Existing Attachments */}
                     {localHasAttachments && (
@@ -289,14 +293,16 @@ export function NoteAttachmentsModal({
                                                 <Download className="h-4 w-4 mr-1" />
                                                 Download
                                             </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => handleDelete(attachment.id)}
-                                                className="text-red-600 hover:text-red-700"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
+                                            {isAdmin && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => handleDelete(attachment.id)}
+                                                    className="text-red-600 hover:text-red-700"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -312,7 +318,7 @@ export function NoteAttachmentsModal({
                         >
                             Cancel
                         </Button>
-                        {selectedFiles.length > 0 && (
+                        {isAdmin && selectedFiles.length > 0 && (
                             <Button
                                 onClick={handleUpload}
                                 disabled={isUploading}

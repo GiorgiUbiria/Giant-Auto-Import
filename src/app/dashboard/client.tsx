@@ -13,7 +13,14 @@ import { CustomerNotes } from "@/components/customer-notes";
 
 // Add type for API response
 interface CarsApiResponse {
-  cars: any[];
+  cars: Array<{
+    hasInvoice?: {
+      PURCHASE: boolean;
+      SHIPPING: boolean;
+      TOTAL: boolean;
+    };
+    [key: string]: any;
+  }>;
   count: number;
 }
 
@@ -38,6 +45,7 @@ const fetchUserCars = async ({
     params.set("page", (pageIndex + 1).toString());
     params.set("pageSize", pageSize.toString());
     params.set("ownerId", userId); // Filter by user ID
+    params.set("includeDetails", "true"); // Include invoice and payment data
 
     if (sorting.length > 0) {
       params.set("sortBy", sorting[0].id);

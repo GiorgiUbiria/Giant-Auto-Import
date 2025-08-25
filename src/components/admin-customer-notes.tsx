@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,9 +8,61 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Clock, User, Plus, Edit, Trash2, MessageSquare, Paperclip, Eye } from "lucide-react";
+import { AlertCircle, Clock, User, Plus, Edit, Trash2, MessageSquare, Paperclip, Eye, Upload, X, FileText, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { NoteAttachmentsModal } from "./note-attachments-modal";
+import { uploadNoteAttachmentsAction } from "@/lib/actions/noteAttachmentActions";
+
+// Collapsible Note Component
+interface CollapsibleNoteProps {
+    note: string;
+    maxLength?: number;
+}
+
+function CollapsibleNote({ note, maxLength = 200 }: CollapsibleNoteProps) {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const shouldTruncate = note.length > maxLength;
+
+    if (!shouldTruncate) {
+        return (
+            <div className="min-w-0">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words overflow-hidden">
+                    {note}
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-w-0 space-y-2">
+            <div className="overflow-hidden">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                    {isExpanded ? note : `${note.slice(0, maxLength)}...`}
+                </p>
+            </div>
+            <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="h-auto p-1 text-xs text-muted-foreground hover:text-foreground self-start transition-colors"
+                title={isExpanded ? "Show less of this note" : "Show more of this note"}
+            >
+                {isExpanded ? (
+                    <>
+                        <ChevronUp className="h-3 w-3 mr-1" />
+                        Show Less
+                    </>
+                ) : (
+                    <>
+                        <ChevronDown className="h-3 w-3 mr-1" />
+                        Show More
+                    </>
+                )}
+            </Button>
+        </div>
+    );
+}
 
 interface CustomerNote {
     id: number;
@@ -28,7 +80,7 @@ interface AdminCustomerNotesProps {
 }
 
 export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNotesProps) {
-    // Admin component: Only shows important notes for quick reference
+    // Admin component: Shows all notes for comprehensive management
     const [notes, setNotes] = useState<CustomerNote[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -38,13 +90,16 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
         note: "",
         isImportant: false,
     });
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [isUploadingAttachments, setIsUploadingAttachments] = useState(false);
     const [attachmentsModalOpen, setAttachmentsModalOpen] = useState(false);
     const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const fetchNotes = React.useCallback(async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/customer-notes?customerId=${customerId}&importantOnly=true`);
+            const response = await fetch(`/api/customer-notes?customerId=${customerId}`);
 
             if (!response.ok) {
                 throw new Error('Failed to fetch notes');
@@ -88,10 +143,49 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                 throw new Error('Failed to save note');
             }
 
-            toast.success(editingNote ? 'Note updated successfully' : 'Note added successfully');
+            const result = await response.json();
+            const noteId = editingNote ? editingNote.id : result.note.id;
+
+            // Upload attachments if any files are selected
+            if (selectedFiles.length > 0) {
+                setIsUploadingAttachments(true);
+                try {
+                    const filesData = await Promise.all(
+                        selectedFiles.map(async (file) => ({
+                            fileName: file.name,
+                            buffer: Array.from(new Uint8Array(await file.arrayBuffer())),
+                            fileType: file.type,
+                            fileSize: file.size,
+                        }))
+                    );
+
+                    const [uploadResult, uploadError] = await uploadNoteAttachmentsAction({
+                        noteId,
+                        files: filesData,
+                    });
+
+                    if (uploadError) {
+                        throw uploadError;
+                    }
+
+                    toast.success(`Note ${editingNote ? 'updated' : 'added'} successfully with ${selectedFiles.length} attachment${selectedFiles.length !== 1 ? 's' : ''}`);
+                } catch (uploadErr) {
+                    console.error("Failed to upload attachments:", uploadErr);
+                    toast.error("Note saved but failed to upload attachments");
+                } finally {
+                    setIsUploadingAttachments(false);
+                }
+            } else {
+                toast.success(editingNote ? 'Note updated successfully' : 'Note added successfully');
+            }
+
             setIsDialogOpen(false);
             setEditingNote(null);
             setFormData({ note: "", isImportant: false });
+            setSelectedFiles([]);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
             fetchNotes();
         } catch (err) {
             toast.error(err instanceof Error ? err.message : 'Failed to save note');
@@ -125,12 +219,20 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
             note: note.note,
             isImportant: note.isImportant,
         });
+        setSelectedFiles([]);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
         setIsDialogOpen(true);
     };
 
     const handleAddNew = () => {
         setEditingNote(null);
         setFormData({ note: "", isImportant: false });
+        setSelectedFiles([]);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
         setIsDialogOpen(true);
     };
 
@@ -144,6 +246,38 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
         setSelectedNoteId(null);
         // Refresh notes to update attachment status
         fetchNotes();
+    };
+
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(event.target.files || []);
+
+        // Check file count limit
+        if (selectedFiles.length + files.length > 10) {
+            toast.error("Maximum 10 files allowed");
+            return;
+        }
+
+        // Check file size (10MB limit)
+        const validFiles = files.filter(file => {
+            if (file.size > 10 * 1024 * 1024) {
+                toast.error(`${file.name} is too large. Maximum size is 10MB.`);
+                return false;
+            }
+            return true;
+        });
+
+        setSelectedFiles(prev => [...prev, ...validFiles]);
+    };
+
+    const handleRemoveFile = (index: number) => {
+        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleRemoveAllFiles = () => {
+        setSelectedFiles([]);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     };
 
     if (loading) {
@@ -190,16 +324,16 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <MessageSquare className="h-5 w-5" />
-                    Important Notes ({notes.length})
+                    Customer Notes ({notes.length})
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                    Important notes for {customerName}
+                    All notes for {customerName}
                 </p>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
                     <p className="text-sm text-muted-foreground">
-                        {notes.length} important note{notes.length !== 1 ? 's' : ''}
+                        {notes.length} note{notes.length !== 1 ? 's' : ''}
                     </p>
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
@@ -237,16 +371,98 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                                         Mark as important
                                     </label>
                                 </div>
+
+                                {/* File Attachments Section */}
+                                <div className="space-y-3">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Attachments (Optional)</label>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file"
+                                                multiple
+                                                accept="*/*"
+                                                onChange={handleFileSelect}
+                                                className="flex-1 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => fileInputRef.current?.click()}
+                                            >
+                                                <Upload className="h-4 w-4 mr-2" />
+                                                Browse
+                                            </Button>
+                                            {selectedFiles.length > 0 && (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={handleRemoveAllFiles}
+                                                >
+                                                    <X className="h-4 w-4 mr-2" />
+                                                    Clear All
+                                                </Button>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">
+                                            Maximum 10 files, 10MB each. You can upload any file type.
+                                        </p>
+                                    </div>
+
+                                    {/* Selected Files Display */}
+                                    {selectedFiles.length > 0 && (
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium">
+                                                Selected Files ({selectedFiles.length}/10)
+                                            </label>
+                                            <div className="space-y-2 max-h-32 overflow-y-auto">
+                                                {selectedFiles.map((file, index) => (
+                                                    <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                                                        <FileText className="h-4 w-4 text-muted-foreground" />
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-medium truncate">{file.name}</p>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                {(file.size / 1024 / 1024).toFixed(2)} MB
+                                                            </p>
+                                                        </div>
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleRemoveFile(index)}
+                                                            className="shrink-0"
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="flex justify-end gap-2">
                                     <Button
                                         type="button"
                                         variant="outline"
                                         onClick={() => setIsDialogOpen(false)}
+                                        disabled={isUploadingAttachments}
                                     >
                                         Cancel
                                     </Button>
-                                    <Button type="submit">
-                                        {editingNote ? 'Update' : 'Add'} Note
+                                    <Button
+                                        type="submit"
+                                        disabled={isUploadingAttachments}
+                                    >
+                                        {isUploadingAttachments ? (
+                                            <>
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                {editingNote ? 'Updating...' : 'Adding...'}
+                                            </>
+                                        ) : (
+                                            editingNote ? 'Update' : 'Add'
+                                        )} Note
                                     </Button>
                                 </div>
                             </form>
@@ -256,38 +472,41 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
 
                 {notes.length === 0 ? (
                     <p className="text-muted-foreground text-center py-4">
-                        No important notes for this customer yet
+                        No notes for this customer yet
                     </p>
                 ) : (
                     <div className="space-y-3">
                         {notes.map((note) => (
                             <div
                                 key={note.id}
-                                className={`p-4 rounded-lg border ${note.isImportant
+                                className={`p-4 rounded-lg border overflow-hidden ${note.isImportant
                                     ? 'border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/20'
                                     : 'border-border bg-background'
                                     }`}
                             >
-                                <div className="flex items-start justify-between gap-2 mb-2">
-                                    <div className="flex items-center gap-2">
-                                        <User className="h-4 w-4 text-muted-foreground" />
-                                        <span className="text-sm font-medium">{note.adminName}</span>
-                                        {note.isImportant && (
-                                            <Badge variant="destructive" className="text-xs">
-                                                Important
-                                            </Badge>
-                                        )}
-                                        {note.hasAttachments && (
-                                            <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                                                <Paperclip className="h-3 w-3" />
-                                                Has Attachments
-                                            </Badge>
-                                        )}
+                                <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
+                                    <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                                        <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                        <span className="text-sm font-medium truncate min-w-0">{note.adminName}</span>
+                                        <div className="flex items-center gap-1 flex-shrink-0">
+                                            {note.isImportant && (
+                                                <Badge variant="destructive" className="text-xs">
+                                                    Important
+                                                </Badge>
+                                            )}
+                                            {note.hasAttachments && (
+                                                <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                                                    <Paperclip className="h-3 w-3" />
+                                                    Has Attachments
+                                                </Badge>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-1 flex-shrink-0 ml-2">
                                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                             <Clock className="h-3 w-3" />
-                                            {new Date(note.createdAt).toLocaleDateString()}
+                                            <span className="hidden sm:inline">{new Date(note.createdAt).toLocaleDateString()}</span>
+                                            <span className="sm:hidden">{new Date(note.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                                         </div>
                                         <div className="flex items-center gap-1 ml-2">
                                             {note.hasAttachments && (
@@ -317,9 +536,9 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                                         </div>
                                     </div>
                                 </div>
-                                <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                                    {note.note}
-                                </p>
+                                <div className="min-w-0">
+                                    <CollapsibleNote note={note.note} />
+                                </div>
                                 {note.updatedAt !== note.createdAt && (
                                     <p className="text-xs text-muted-foreground mt-2">
                                         Updated: {new Date(note.updatedAt).toLocaleDateString()}
@@ -338,6 +557,7 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                     isOpen={attachmentsModalOpen}
                     onOpenChange={handleAttachmentsModalClose}
                     hasAttachments={notes.find(n => n.id === selectedNoteId)?.hasAttachments || false}
+                    isAdmin={true}
                 />
             )}
         </Card>

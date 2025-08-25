@@ -210,6 +210,8 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
           environmentalFee={environmentalFee || 0}
           virtualBidFee={virtualBidFee || 0}
           currentDue={currentDue}
+          carVin={row.original.vin}
+          hasInvoice={false} // Default to false for admin users view
         />
       );
     },
@@ -232,6 +234,8 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
           groundFee={groundFee || 0}
           oceanFee={oceanFee || 0}
           currentDue={currentDue}
+          carVin={row.original.vin}
+          hasInvoice={false} // Default to false for admin users view
         />
       );
     },
@@ -256,20 +260,22 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       // Calculate current due amount, fallback to total fee if totalDue is not set
       const currentDue = totalDue || totalFee || 0;
 
-      return <TotalFeeDetails 
-        purchaseFee={purchaseFee || 0} 
-        auctionFee={auctionFee || 0} 
-        gateFee={gateFee || 0} 
-        titleFee={titleFee || 0} 
-        environmentalFee={environmentalFee || 0} 
-        virtualBidFee={virtualBidFee || 0} 
-        shippingFee={shippingFee || 0} 
-        groundFee={groundFee || 0} 
-        oceanFee={oceanFee || 0} 
-        totalFee={totalFee || 0} 
-        insurance={row.original.insurance as SelectSchemaType["insurance"]} 
+      return <TotalFeeDetails
+        purchaseFee={purchaseFee || 0}
+        auctionFee={auctionFee || 0}
+        gateFee={gateFee || 0}
+        titleFee={titleFee || 0}
+        environmentalFee={environmentalFee || 0}
+        virtualBidFee={virtualBidFee || 0}
+        shippingFee={shippingFee || 0}
+        groundFee={groundFee || 0}
+        oceanFee={oceanFee || 0}
+        totalFee={totalFee || 0}
+        insurance={row.original.insurance as SelectSchemaType["insurance"]}
         currentDue={currentDue}
         paidAmount={paidAmount || 0}
+        carVin={row.original.vin}
+        hasInvoice={false} // Default to false for admin users view
       />;
     },
   },

@@ -2,7 +2,7 @@
 
 import { DataTable } from "@/components/data-table";
 import { Loader2, AlertCircle } from "lucide-react";
-import { columns } from "./columns";
+import { columns, type CarWithInvoiceData, type SelectSchemaType } from "./columns";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
@@ -13,13 +13,12 @@ import { CustomerNotes } from "@/components/customer-notes";
 
 // Add type for API response
 interface CarsApiResponse {
-  cars: Array<{
+  cars: Array<SelectSchemaType & {
     hasInvoice?: {
       PURCHASE: boolean;
       SHIPPING: boolean;
       TOTAL: boolean;
     };
-    [key: string]: any;
   }>;
   count: number;
 }
@@ -151,7 +150,7 @@ export const Client = ({ userId }: { userId: string }) => {
   });
 
   // Provide default values
-  const tableData = data?.cars || [];
+  const tableData: CarWithInvoiceData[] = data?.cars || [];
   const totalCount = data?.count || 0;
 
   if (error) {

@@ -20,10 +20,10 @@ import { PurchaseFeeDetails } from "./purchase-fee-details";
 import { ShippingFeeDetails } from "./shipping-fee-details";
 
 const SelectSchema = selectCarSchema;
-type SelectSchemaType = z.infer<typeof SelectSchema>;
+export type SelectSchemaType = z.infer<typeof SelectSchema>;
 
 // Add type for car with invoice data
-type CarWithInvoiceData = SelectSchemaType & {
+export type CarWithInvoiceData = SelectSchemaType & {
   hasInvoice?: {
     PURCHASE: boolean;
     SHIPPING: boolean;

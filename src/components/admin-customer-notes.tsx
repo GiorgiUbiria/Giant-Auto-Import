@@ -8,13 +8,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Clock, User, Plus, Edit, Trash2, MessageSquare } from "lucide-react";
+import { AlertCircle, Clock, User, Plus, Edit, Trash2, MessageSquare, Paperclip, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { NoteAttachmentsModal } from "./note-attachments-modal";
 
 interface CustomerNote {
     id: number;
     note: string;
     isImportant: boolean;
+    hasAttachments: boolean;
     createdAt: string;
     updatedAt: string;
     adminName: string;
@@ -36,6 +38,8 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
         note: "",
         isImportant: false,
     });
+    const [attachmentsModalOpen, setAttachmentsModalOpen] = useState(false);
+    const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
 
     const fetchNotes = React.useCallback(async () => {
         try {
@@ -128,6 +132,18 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
         setEditingNote(null);
         setFormData({ note: "", isImportant: false });
         setIsDialogOpen(true);
+    };
+
+    const handleViewAttachments = (noteId: number) => {
+        setSelectedNoteId(noteId);
+        setAttachmentsModalOpen(true);
+    };
+
+    const handleAttachmentsModalClose = () => {
+        setAttachmentsModalOpen(false);
+        setSelectedNoteId(null);
+        // Refresh notes to update attachment status
+        fetchNotes();
     };
 
     if (loading) {
@@ -261,6 +277,12 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                                                 Important
                                             </Badge>
                                         )}
+                                        {note.hasAttachments && (
+                                            <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                                                <Paperclip className="h-3 w-3" />
+                                                Has Attachments
+                                            </Badge>
+                                        )}
                                     </div>
                                     <div className="flex items-center gap-1">
                                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -268,6 +290,16 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                                             {new Date(note.createdAt).toLocaleDateString()}
                                         </div>
                                         <div className="flex items-center gap-1 ml-2">
+                                            {note.hasAttachments && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => handleViewAttachments(note.id)}
+                                                    title="View Attachments"
+                                                >
+                                                    <Eye className="h-3 w-3" />
+                                                </Button>
+                                            )}
                                             <Button
                                                 size="sm"
                                                 variant="ghost"
@@ -298,6 +330,16 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                     </div>
                 )}
             </CardContent>
+
+            {/* Attachments Modal */}
+            {selectedNoteId && (
+                <NoteAttachmentsModal
+                    noteId={selectedNoteId}
+                    isOpen={attachmentsModalOpen}
+                    onOpenChange={handleAttachmentsModalClose}
+                    hasAttachments={notes.find(n => n.id === selectedNoteId)?.hasAttachments || false}
+                />
+            )}
         </Card>
     );
 } 

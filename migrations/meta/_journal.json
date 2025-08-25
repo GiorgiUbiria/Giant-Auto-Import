@@ -141,6 +141,13 @@
       "when": 1756071376690,
       "tag": "0019_needy_liz_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1756131946601,
+      "tag": "0020_fantastic_red_skull",
+      "breakpoints": true
     }
   ]
 }

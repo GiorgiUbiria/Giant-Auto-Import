@@ -3,13 +3,16 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Clock, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, Clock, User, Paperclip, Eye } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { NoteAttachmentsModal } from "./note-attachments-modal";
 
 interface CustomerNote {
     id: number;
     note: string;
     isImportant: boolean;
+    hasAttachments: boolean;
     createdAt: string;
     updatedAt: string;
     adminName: string;
@@ -24,6 +27,8 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
     const [notes, setNotes] = useState<CustomerNote[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [attachmentsModalOpen, setAttachmentsModalOpen] = useState(false);
+    const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
 
     useEffect(() => {
         const fetchNotes = async () => {
@@ -47,6 +52,18 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
 
         fetchNotes();
     }, [userId]);
+
+    const handleViewAttachments = (noteId: number) => {
+        setSelectedNoteId(noteId);
+        setAttachmentsModalOpen(true);
+    };
+
+    const handleAttachmentsModalClose = () => {
+        setAttachmentsModalOpen(false);
+        setSelectedNoteId(null);
+        // Refresh notes to update attachment status
+        window.location.reload();
+    };
 
     if (loading) {
         return (
@@ -131,10 +148,28 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
                                         Important
                                     </Badge>
                                 )}
+                                {note.hasAttachments && (
+                                    <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                                        <Paperclip className="h-3 w-3" />
+                                        Has Attachments
+                                    </Badge>
+                                )}
                             </div>
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <Clock className="h-3 w-3" />
-                                {new Date(note.createdAt).toLocaleDateString()}
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <Clock className="h-3 w-3" />
+                                    {new Date(note.createdAt).toLocaleDateString()}
+                                </div>
+                                {note.hasAttachments && (
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => handleViewAttachments(note.id)}
+                                        title="View Attachments"
+                                    >
+                                        <Eye className="h-3 w-3" />
+                                    </Button>
+                                )}
                             </div>
                         </div>
                         <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -148,6 +183,16 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
                     </div>
                 ))}
             </CardContent>
+
+            {/* Attachments Modal */}
+            {selectedNoteId && (
+                <NoteAttachmentsModal
+                    noteId={selectedNoteId}
+                    isOpen={attachmentsModalOpen}
+                    onOpenChange={handleAttachmentsModalClose}
+                    hasAttachments={notes.find(n => n.id === selectedNoteId)?.hasAttachments || false}
+                />
+            )}
         </Card>
     );
 } 

@@ -260,6 +260,7 @@ export const customerNotes = sqliteTable("customer_notes", {
   adminId: text("admin_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   note: text("note").notNull(),
   isImportant: integer("is_important", { mode: "boolean" }).notNull().default(false),
+  hasAttachments: integer("has_attachments", { mode: "boolean" }).notNull().default(false),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
 }, (table) => {
@@ -268,10 +269,30 @@ export const customerNotes = sqliteTable("customer_notes", {
     adminIdIdx: index("customer_notes_admin_id_idx").on(table.adminId),
     createdAtIdx: index("customer_notes_created_at_idx").on(table.createdAt),
     isImportantIdx: index("customer_notes_is_important_idx").on(table.isImportant),
+    hasAttachmentsIdx: index("customer_notes_has_attachments_idx").on(table.hasAttachments),
   }
 });
 
-export const customerNotesRelations = relations(customerNotes, ({ one }) => ({
+// Note attachments table for storing files related to notes
+export const noteAttachments = sqliteTable("note_attachments", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  noteId: integer("note_id").notNull().references(() => customerNotes.id, { onDelete: "cascade" }),
+  fileName: text("file_name").notNull(),
+  fileKey: text("file_key").notNull(),
+  fileSize: integer("file_size").notNull(),
+  fileType: text("file_type").notNull(), // MIME type
+  uploadedBy: text("uploaded_by").notNull().references(() => users.id, { onDelete: "cascade" }),
+  uploadedAt: integer("uploaded_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+}, (table) => {
+  return {
+    noteIdIdx: index("note_attachments_note_id_idx").on(table.noteId),
+    fileKeyIdx: uniqueIndex("note_attachments_file_key_idx").on(table.fileKey),
+    uploadedByIdx: index("note_attachments_uploaded_by_idx").on(table.uploadedBy),
+    uploadedAtIdx: index("note_attachments_uploaded_at_idx").on(table.uploadedAt),
+  }
+});
+
+export const customerNotesRelations = relations(customerNotes, ({ one, many }) => ({
   customer: one(users, {
     fields: [customerNotes.customerId],
     references: [users.id],
@@ -281,6 +302,18 @@ export const customerNotesRelations = relations(customerNotes, ({ one }) => ({
     fields: [customerNotes.adminId],
     references: [users.id],
     relationName: "admin_note",
+  }),
+  attachments: many(noteAttachments),
+}));
+
+export const noteAttachmentsRelations = relations(noteAttachments, ({ one }) => ({
+  note: one(customerNotes, {
+    fields: [noteAttachments.noteId],
+    references: [customerNotes.id],
+  }),
+  uploadedByUser: one(users, {
+    fields: [noteAttachments.uploadedBy],
+    references: [users.id],
   }),
 }));
 
@@ -386,3 +419,7 @@ export const selectPaymentSchema = createSelectSchema(payments);
 
 export const insertInvoiceSchema = createInsertSchema(invoices);
 export const selectInvoiceSchema = createSelectSchema(invoices);
+
+// Schemas for note attachments
+export const insertNoteAttachmentSchema = createInsertSchema(noteAttachments);
+export const selectNoteAttachmentSchema = createSelectSchema(noteAttachments);

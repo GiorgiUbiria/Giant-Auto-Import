@@ -14,7 +14,7 @@ import { z } from "zod";
 import { Actions } from "./actions";
 import { TableImage } from "./table-image";
 import { AdminReciever } from "./admin-reciever";
-import { TotalFeeDetails } from "./total-fee-details";
+import { TotalFeeDetails } from "../../../dashboard/total-fee-details";
 import { PurchaseFeeDetails } from "../../../dashboard/purchase-fee-details";
 import { ShippingFeeDetails } from "../../../dashboard/shipping-fee-details";
 
@@ -196,6 +196,10 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       const titleFee = row.original.titleFee as SelectSchemaType["titleFee"];
       const environmentalFee = row.original.environmentalFee as SelectSchemaType["environmentalFee"];
       const virtualBidFee = row.original.virtualBidFee as SelectSchemaType["virtualBidFee"];
+      const purchaseDue = row.original.purchaseDue as SelectSchemaType["purchaseDue"];
+
+      // Calculate current due amount, fallback to total fee if purchaseDue is not set
+      const currentDue = purchaseDue || (purchaseFee || 0) + (auctionFee || 0) + (gateFee || 0) + (titleFee || 0) + (environmentalFee || 0) + (virtualBidFee || 0);
 
       return (
         <PurchaseFeeDetails
@@ -205,6 +209,7 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
           titleFee={titleFee || 0}
           environmentalFee={environmentalFee || 0}
           virtualBidFee={virtualBidFee || 0}
+          currentDue={currentDue}
         />
       );
     },
@@ -216,12 +221,17 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       const shippingFee = row.original.shippingFee as SelectSchemaType["shippingFee"];
       const groundFee = row.original.groundFee as SelectSchemaType["groundFee"];
       const oceanFee = row.original.oceanFee as SelectSchemaType["oceanFee"];
+      const shippingDue = row.original.shippingDue as SelectSchemaType["shippingDue"];
+
+      // Calculate current due amount, fallback to total fee if shippingDue is not set
+      const currentDue = shippingDue || (shippingFee || 0) + (groundFee || 0) + (oceanFee || 0);
 
       return (
         <ShippingFeeDetails
           shippingFee={shippingFee || 0}
           groundFee={groundFee || 0}
           oceanFee={oceanFee || 0}
+          currentDue={currentDue}
         />
       );
     },
@@ -240,9 +250,27 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       const groundFee = row.original.groundFee as SelectSchemaType["groundFee"];
       const oceanFee = row.original.oceanFee as SelectSchemaType["oceanFee"];
       const totalFee = row.original.totalFee as SelectSchemaType["totalFee"];
+      const totalDue = row.original.totalDue as SelectSchemaType["totalDue"];
+      const paidAmount = row.original.paidAmount as SelectSchemaType["paidAmount"];
 
-      const insurance = row.original.insurance as SelectSchemaType["insurance"];
-      return <TotalFeeDetails purchaseFee={purchaseFee} auctionFee={auctionFee || 0} gateFee={gateFee || 0} titleFee={titleFee || 0} environmentalFee={environmentalFee || 0} virtualBidFee={virtualBidFee || 0} shippingFee={shippingFee || 0} groundFee={groundFee || 0} oceanFee={oceanFee || 0} totalFee={totalFee || 0} insurance={insurance} />;
+      // Calculate current due amount, fallback to total fee if totalDue is not set
+      const currentDue = totalDue || totalFee || 0;
+
+      return <TotalFeeDetails 
+        purchaseFee={purchaseFee || 0} 
+        auctionFee={auctionFee || 0} 
+        gateFee={gateFee || 0} 
+        titleFee={titleFee || 0} 
+        environmentalFee={environmentalFee || 0} 
+        virtualBidFee={virtualBidFee || 0} 
+        shippingFee={shippingFee || 0} 
+        groundFee={groundFee || 0} 
+        oceanFee={oceanFee || 0} 
+        totalFee={totalFee || 0} 
+        insurance={row.original.insurance as SelectSchemaType["insurance"]} 
+        currentDue={currentDue}
+        paidAmount={paidAmount || 0}
+      />;
     },
   },
   {

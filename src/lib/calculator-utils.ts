@@ -2034,3 +2034,134 @@ export const fallbackAuctionData: AuctionData[] = [
     zip: ""
   },
 ];
+
+// Calculate due amounts for a car based on fees and custom pricing
+export const calculateDueAmounts = (
+  baseFees: {
+    purchaseFee: number;
+    auctionFee?: number | null;
+    gateFee?: number | null;
+    titleFee?: number | null;
+    environmentalFee?: number | null;
+    virtualBidFee?: number | null;
+    shippingFee?: number | null;
+    groundFee?: number | null;
+    oceanFee?: number | null;
+    totalFee?: number | null;
+  },
+  customPricing?: {
+    groundFeeAdjustment: number;
+    pickupSurcharge: number;
+    serviceFee: number;
+    hybridSurcharge: number;
+  },
+  fuelType?: string
+) => {
+  // Calculate purchase due
+  const purchaseDue =
+    (baseFees.purchaseFee || 0) +
+    (baseFees.auctionFee || 0) +
+    (baseFees.gateFee || 0) +
+    (baseFees.titleFee || 0) +
+    (baseFees.environmentalFee || 0) +
+    (baseFees.virtualBidFee || 0);
+
+  // Calculate shipping due with custom pricing adjustments
+  let shippingDue = (baseFees.shippingFee || 0) + (baseFees.groundFee || 0) + (baseFees.oceanFee || 0);
+
+  if (customPricing) {
+    shippingDue += customPricing.groundFeeAdjustment;
+    shippingDue += customPricing.pickupSurcharge;
+    shippingDue += customPricing.serviceFee;
+
+    // Add hybrid surcharge if applicable
+    if (fuelType === "HYBRID_ELECTRIC") {
+      shippingDue += customPricing.hybridSurcharge;
+    }
+  }
+
+  // Calculate total due
+  const totalDue = purchaseDue + shippingDue;
+
+  return {
+    purchaseDue,
+    shippingDue,
+    totalDue,
+  };
+};
+
+// Update car due amounts when fees change
+export const updateCarDueAmounts = async (
+  carVin: string,
+  newFees: {
+    purchaseFee?: number;
+    auctionFee?: number | null;
+    gateFee?: number | null;
+    titleFee?: number | null;
+    environmentalFee?: number | null;
+    virtualBidFee?: number | null;
+    shippingFee?: number | null;
+    groundFee?: number | null;
+    oceanFee?: number | null;
+    totalFee?: number | null;
+  },
+  customPricing?: {
+    groundFeeAdjustment: number;
+    pickupSurcharge: number;
+    serviceFee: number;
+    hybridSurcharge: number;
+  },
+  fuelType?: string
+) => {
+  // Import here to avoid circular dependencies
+  const { db } = await import("./drizzle/db");
+  const { cars } = await import("./drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+
+  // Get current car data
+  const currentCar = await db.query.cars.findFirst({
+    where: eq(cars.vin, carVin),
+  });
+
+  if (!currentCar) {
+    throw new Error("Car not found");
+  }
+
+  // Merge existing fees with new fees
+  const mergedFees = {
+    purchaseFee: newFees.purchaseFee ?? currentCar.purchaseFee,
+    auctionFee: newFees.auctionFee ?? currentCar.auctionFee,
+    gateFee: newFees.gateFee ?? currentCar.gateFee,
+    titleFee: newFees.titleFee ?? currentCar.titleFee,
+    environmentalFee: newFees.environmentalFee ?? currentCar.environmentalFee,
+    virtualBidFee: newFees.virtualBidFee ?? currentCar.virtualBidFee,
+    shippingFee: newFees.shippingFee ?? currentCar.shippingFee,
+    groundFee: newFees.groundFee ?? currentCar.groundFee,
+    oceanFee: newFees.oceanFee ?? currentCar.oceanFee,
+    totalFee: newFees.totalFee ?? currentCar.totalFee,
+  };
+
+  // Calculate new due amounts
+  const { purchaseDue, shippingDue, totalDue } = calculateDueAmounts(
+    mergedFees,
+    customPricing,
+    fuelType || currentCar.fuelType
+  );
+
+  // Update the car with new due amounts
+  await db.update(cars)
+    .set({
+      purchaseDue,
+      shippingDue,
+      totalDue,
+      // Update the fee fields as well
+      ...newFees,
+    })
+    .where(eq(cars.vin, carVin));
+
+  return {
+    purchaseDue,
+    shippingDue,
+    totalDue,
+  };
+};

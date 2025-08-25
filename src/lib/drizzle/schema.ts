@@ -72,19 +72,24 @@ export const cars = sqliteTable("cars", {
   auctionLocation: text("auction_location"),
   trackingLink: text("tracking_link"),
   destinationPort: text("destination_port").default("Poti"),
-  // Purchase/Auction Fees
+  // Purchase/Auction Fees (Initial/Display values)
   purchaseFee: integer("purchase_fee").notNull(),
   auctionFee: integer("auction_fee"),
   gateFee: integer("gate_fee"),
   titleFee: integer("title_fee"),
   environmentalFee: integer("environmental_fee"),
   virtualBidFee: integer("virtual_bid_fee"),
-  // Shipping Fees
+  // Shipping Fees (Initial/Display values)
   shippingFee: integer("shipping_fee"),
   groundFee: integer("ground_fee"),
   oceanFee: integer("ocean_fee"),
-  // Total Fee
+  // Total Fee (Initial/Display value)
   totalFee: integer("total_fee"),
+  // Payment Due Fields (Calculated values for payments)
+  purchaseDue: integer("purchase_due"),
+  shippingDue: integer("shipping_due"),
+  totalDue: integer("total_due"),
+  paidAmount: integer("paid_amount").default(0),
   // Dates
   arrivalDate: integer("arrival_date", { mode: "timestamp" }),
   departureDate: integer("departure_date", { mode: "timestamp" }),
@@ -124,9 +129,74 @@ export const cars = sqliteTable("cars", {
   }
 });
 
-export const carsRelations = relations(cars, ({ one }) => ({
+export const carsRelations = relations(cars, ({ one, many }) => ({
   owner: one(users, {
     fields: [cars.ownerId],
+    references: [users.id],
+  }),
+  payments: many(payments),
+  invoices: many(invoices),
+}));
+
+// Payments table for tracking payment history
+export const payments = sqliteTable("payments", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  carVin: text("car_vin").notNull().references(() => cars.vin, { onDelete: "cascade" }),
+  adminId: text("admin_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  amount: integer("amount").notNull(),
+  paymentType: text("payment_type", {
+    enum: ["PURCHASE", "SHIPPING"],
+  }).notNull(),
+  description: text("description"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+}, (table) => {
+  return {
+    carVinIdx: index("payments_car_vin_idx").on(table.carVin),
+    adminIdIdx: index("payments_admin_id_idx").on(table.adminId),
+    createdAtIdx: index("payments_created_at_idx").on(table.createdAt),
+    paymentTypeIdx: index("payments_payment_type_idx").on(table.paymentType),
+  }
+});
+
+// Invoices table for storing invoice files
+export const invoices = sqliteTable("invoices", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  carVin: text("car_vin").notNull().references(() => cars.vin, { onDelete: "cascade" }),
+  invoiceType: text("invoice_type", {
+    enum: ["PURCHASE", "SHIPPING", "TOTAL"],
+  }).notNull(),
+  fileKey: text("file_key").notNull(),
+  fileName: text("file_name").notNull(),
+  fileSize: integer("file_size").notNull(),
+  uploadedBy: text("uploaded_by").notNull().references(() => users.id, { onDelete: "cascade" }),
+  uploadedAt: integer("uploaded_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+}, (table) => {
+  return {
+    carVinIdx: index("invoices_car_vin_idx").on(table.carVin),
+    invoiceTypeIdx: index("invoices_invoice_type_idx").on(table.invoiceType),
+    uploadedByIdx: index("invoices_uploaded_by_idx").on(table.uploadedBy),
+    uploadedAtIdx: index("invoices_uploaded_at_idx").on(table.uploadedAt),
+  }
+});
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  car: one(cars, {
+    fields: [payments.carVin],
+    references: [cars.vin],
+  }),
+  admin: one(users, {
+    fields: [payments.adminId],
+    references: [users.id],
+  }),
+}));
+
+export const invoicesRelations = relations(invoices, ({ one }) => ({
+  car: one(cars, {
+    fields: [invoices.carVin],
+    references: [cars.vin],
+  }),
+  uploadedByUser: one(users, {
+    fields: [invoices.uploadedBy],
     references: [users.id],
   }),
 }));
@@ -309,3 +379,10 @@ export const selectCsvDataVersionSchema = createSelectSchema(csvDataVersions);
 
 export const insertOceanShippingRatesSchema = createInsertSchema(oceanShippingRates);
 export const selectOceanShippingRatesSchema = createSelectSchema(oceanShippingRates);
+
+// Schemas for payments and invoices
+export const insertPaymentSchema = createInsertSchema(payments);
+export const selectPaymentSchema = createSelectSchema(payments);
+
+export const insertInvoiceSchema = createInsertSchema(invoices);
+export const selectInvoiceSchema = createSelectSchema(invoices);

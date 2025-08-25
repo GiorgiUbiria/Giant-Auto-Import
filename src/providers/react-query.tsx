@@ -7,20 +7,20 @@ function ReactQueryProvider({ children }: React.PropsWithChildren) {
   const [client] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        // Increase stale time to reduce hydration issues
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        gcTime: 10 * 60 * 1000, // 10 minutes
+        // Increase stale time to reduce hydration issues and excessive refetching
+        staleTime: 10 * 60 * 1000, // 10 minutes - increased from 5
+        gcTime: 15 * 60 * 1000, // 15 minutes - increased from 10
         retry: (failureCount, error) => {
           // Don't retry on 401/403 errors
           if (error && typeof error === 'object' && 'status' in error) {
             const status = (error as any).status;
             if (status === 401 || status === 403) return false;
           }
-          return failureCount < 2;
+          return failureCount < 1; // Reduced from 2 to 1
         },
         refetchOnWindowFocus: false,
-        refetchOnReconnect: true,
-        refetchOnMount: true,
+        refetchOnReconnect: false, // Changed from true to false
+        refetchOnMount: false, // Changed from true to false
         // Add network mode for better error handling
         networkMode: 'online',
         // Add suspense mode for better SSR

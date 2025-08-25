@@ -15,6 +15,7 @@ type Props = {
   titleFee: number;
   environmentalFee: number;
   virtualBidFee: number;
+  currentDue: number;
 };
 
 type FeeItemProps = {
@@ -37,21 +38,29 @@ export const PurchaseFeeDetails = ({
   titleFee,
   environmentalFee,
   virtualBidFee,
+  currentDue,
 }: Props) => {
-  const totalPurchaseFee = 
-    purchaseFee + 
-    auctionFee + 
-    gateFee + 
-    titleFee + 
-    environmentalFee + 
+  const totalPurchaseFee =
+    purchaseFee +
+    auctionFee +
+    auctionFee +
+    gateFee +
+    titleFee +
+    environmentalFee +
     virtualBidFee;
+
+  const totalPaid = totalPurchaseFee - currentDue;
+  const isFullyPaid = currentDue <= 0;
 
   return (
     <div className="relative group">
       <HoverCard>
         <HoverCardTrigger asChild>
-          <button className="font-medium hover:text-primary/80 transition-colors">
-            {formatCurrency(totalPurchaseFee)}
+          <button className={cn(
+            "font-medium hover:text-primary/80 transition-colors",
+            isFullyPaid ? "text-green-600" : "text-red-600"
+          )}>
+            {formatCurrency(currentDue)}
           </button>
         </HoverCardTrigger>
         <HoverCardContent className="w-80 p-4" align="end">
@@ -66,10 +75,29 @@ export const PurchaseFeeDetails = ({
                 <FeeItem label="Environmental Fee" amount={environmentalFee} />
                 <FeeItem label="Virtual Bid Fee" amount={virtualBidFee} />
                 <Separator className="my-2" />
-                <FeeItem 
-                  label="Total Purchase Fee" 
+                <FeeItem
+                  label="Total Purchase Fee"
                   amount={totalPurchaseFee}
                   className="font-semibold text-primary"
+                />
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-lg mb-2">Payment Status</h3>
+              <div className="space-y-1">
+                <FeeItem
+                  label="Total Paid"
+                  amount={totalPaid}
+                  className="text-green-600 font-medium"
+                />
+                <FeeItem
+                  label="Remaining Due"
+                  amount={currentDue}
+                  className={cn(
+                    "font-semibold",
+                    isFullyPaid ? "text-green-600" : "text-red-600"
+                  )}
                 />
               </div>
             </div>

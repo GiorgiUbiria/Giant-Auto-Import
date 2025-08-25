@@ -8,7 +8,13 @@
     "start": "next start",
     "lint": "next lint",
     "analyze": "ANALYZE=true npm run build",
-    "analyze:server": "ANALYZE=true npm run build && npm run start"
+    "analyze:server": "ANALYZE=true npm run build && npm run start",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "update-due-prices": "tsx scripts/update-car-due-prices.ts",
+    "update-due-prices:advanced": "tsx scripts/update-car-due-prices-advanced.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.592.0",

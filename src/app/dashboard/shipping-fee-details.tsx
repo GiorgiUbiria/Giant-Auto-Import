@@ -12,6 +12,7 @@ type Props = {
   shippingFee: number;
   groundFee: number;
   oceanFee: number;
+  currentDue: number;
 };
 
 type FeeItemProps = {
@@ -31,13 +32,21 @@ export const ShippingFeeDetails = ({
   shippingFee,
   groundFee,
   oceanFee,
+  currentDue,
 }: Props) => {
+  const totalShippingFee = shippingFee + groundFee + oceanFee;
+  const totalPaid = totalShippingFee - currentDue;
+  const isFullyPaid = currentDue <= 0;
+
   return (
     <div className="relative group">
       <HoverCard>
         <HoverCardTrigger asChild>
-          <button className="font-medium hover:text-primary/80 transition-colors">
-            {formatCurrency(shippingFee)}
+          <button className={cn(
+            "font-medium hover:text-primary/80 transition-colors",
+            isFullyPaid ? "text-green-600" : "text-red-600"
+          )}>
+            {formatCurrency(currentDue)}
           </button>
         </HoverCardTrigger>
         <HoverCardContent className="w-80 p-4" align="end">
@@ -50,8 +59,27 @@ export const ShippingFeeDetails = ({
                 <Separator className="my-2" />
                 <FeeItem
                   label="Total Shipping Fee"
-                  amount={shippingFee}
+                  amount={totalShippingFee}
                   className="font-semibold text-primary"
+                />
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-lg mb-2">Payment Status</h3>
+              <div className="space-y-1">
+                <FeeItem
+                  label="Total Paid"
+                  amount={totalPaid}
+                  className="text-green-600 font-medium"
+                />
+                <FeeItem
+                  label="Remaining Due"
+                  amount={currentDue}
+                  className={cn(
+                    "font-semibold",
+                    isFullyPaid ? "text-green-600" : "text-red-600"
+                  )}
                 />
               </div>
             </div>

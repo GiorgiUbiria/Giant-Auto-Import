@@ -20,6 +20,8 @@ type Props = {
   oceanFee: number;
   totalFee: number;
   insurance?: "YES" | "NO";
+  currentDue: number;
+  paidAmount: number;
 };
 
 type FeeItemProps = {
@@ -47,6 +49,8 @@ export const TotalFeeDetails = ({
   oceanFee,
   totalFee,
   insurance,
+  currentDue,
+  paidAmount,
 }: Props) => {
   const totalPurchaseFee =
     purchaseFee +
@@ -56,12 +60,18 @@ export const TotalFeeDetails = ({
     environmentalFee +
     virtualBidFee;
 
+  const totalShippingFee = shippingFee + groundFee + oceanFee;
+  const isFullyPaid = currentDue <= 0;
+
   return (
     <div className="relative group">
       <HoverCard>
         <HoverCardTrigger asChild>
-          <button className="font-medium hover:text-primary/80 transition-colors">
-            {formatCurrency(totalFee)}
+          <button className={cn(
+            "font-medium hover:text-primary/80 transition-colors",
+            isFullyPaid ? "text-green-600" : "text-red-600"
+          )}>
+            {formatCurrency(currentDue)}
           </button>
         </HoverCardTrigger>
         <HoverCardContent className="w-80 p-4" align="end">
@@ -92,30 +102,52 @@ export const TotalFeeDetails = ({
                 <Separator className="my-2" />
                 <FeeItem
                   label="Total Shipping Fee"
-                  amount={shippingFee}
+                  amount={totalShippingFee}
                   className="font-semibold text-primary"
                 />
               </div>
             </div>
 
-            <Separator />
-
-            {insurance === "YES" && (
+            <div>
+              <h3 className="font-semibold text-lg mb-2">Payment Summary</h3>
               <div className="space-y-1">
                 <FeeItem
-                  label="Insurance Fee (1.5%)"
-                  amount={Math.round((totalPurchaseFee + shippingFee) * 0.015)}
+                  label="Total Fee"
+                  amount={totalFee}
                   className="font-semibold text-primary"
                 />
+                <FeeItem
+                  label="Total Paid"
+                  amount={paidAmount}
+                  className="text-green-600 font-medium"
+                />
                 <Separator className="my-2" />
+                <FeeItem
+                  label="Remaining Due"
+                  amount={currentDue}
+                  className={cn(
+                    "font-semibold",
+                    isFullyPaid ? "text-green-600" : "text-red-600"
+                  )}
+                />
+              </div>
+            </div>
+
+            {insurance && (
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Insurance</h3>
+                <div className="space-y-1">
+                  <FeeItem
+                    label="Insurance Status"
+                    amount={0}
+                    className="font-medium"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {insurance === "YES" ? "Insurance Included" : "No Insurance"}
+                  </span>
+                </div>
               </div>
             )}
-
-            <FeeItem
-              label="Total Fee"
-              amount={totalFee}
-              className="text-lg font-bold text-primary"
-            />
           </div>
         </HoverCardContent>
       </HoverCard>

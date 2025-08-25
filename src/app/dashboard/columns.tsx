@@ -239,9 +239,10 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     },
   },
   {
-    accessorKey: "purchaseFee",
+    accessorKey: "purchaseDue",
     header: "Purchase Due",
     cell: ({ row }) => {
+      const purchaseDue = row.original.purchaseDue as SelectSchemaType["purchaseDue"];
       const purchaseFee = row.original.purchaseFee as SelectSchemaType["purchaseFee"];
       const auctionFee = row.original.auctionFee as SelectSchemaType["auctionFee"];
       const gateFee = row.original.gateFee as SelectSchemaType["gateFee"];
@@ -258,15 +259,17 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             titleFee={titleFee || 0}
             environmentalFee={environmentalFee || 0}
             virtualBidFee={virtualBidFee || 0}
+            currentDue={purchaseDue || 0}
           />
         </div>
       );
     },
   },
   {
-    accessorKey: "shippingFee",
+    accessorKey: "shippingDue",
     header: "Shipping Due",
     cell: ({ row }) => {
+      const shippingDue = row.original.shippingDue as SelectSchemaType["shippingDue"];
       const shippingFee = row.original.shippingFee as SelectSchemaType["shippingFee"];
       const groundFee = row.original.groundFee as SelectSchemaType["groundFee"];
       const oceanFee = row.original.oceanFee as SelectSchemaType["oceanFee"];
@@ -277,15 +280,18 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             shippingFee={shippingFee || 0}
             groundFee={groundFee || 0}
             oceanFee={oceanFee || 0}
+            currentDue={shippingDue || 0}
           />
         </div>
       );
     },
   },
   {
-    accessorKey: "totalFee",
+    accessorKey: "totalDue",
     header: "Total Due",
     cell: ({ row }) => {
+      const totalDue = row.original.totalDue as SelectSchemaType["totalDue"];
+      const paidAmount = row.original.paidAmount as SelectSchemaType["paidAmount"];
       const purchaseFee = row.original
         .purchaseFee as SelectSchemaType["purchaseFee"];
       const auctionFee = row.original
@@ -317,6 +323,8 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             oceanFee={oceanFee || 0}
             totalFee={Math.round(totalFee || 0)}
             insurance={insurance}
+            currentDue={totalDue || 0}
+            paidAmount={paidAmount || 0}
           />
         </div>
       );

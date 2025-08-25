@@ -154,9 +154,9 @@ export function ShippingCalculator({
       const gateFee = 79;
       const titleFee = 20;
       const environmentalFee = 10;
-      
+
       const totalPurchaseFee = purchaseFee + auctionFee + gateFee + titleFee + environmentalFee + virtualBidFee;
-      
+
       const shippingFee = await calculateShippingFee(
         auctionLocation,
         auction,
@@ -175,16 +175,16 @@ export function ShippingCalculator({
       // Get user or default pricing for adjustments
       let groundFeeAdjustment = 0;
       let oceanFee = 0;
-      
+
       if (userId) {
         try {
           const { getUserPricingConfig, getDefaultPricingConfig } = await import("@/lib/calculator-utils");
           const userPricing = await getUserPricingConfig(userId);
           const defaultPricing = await getDefaultPricingConfig();
           const pricing = (userPricing && userPricing.isActive) ? userPricing : defaultPricing;
-          
+
           groundFeeAdjustment = pricing?.groundFeeAdjustment || 0;
-          
+
           // Calculate ocean fee
           const normalizedPort = port.toString().trim().toUpperCase();
           if (pricing?.oceanRates && pricing.oceanRates.length > 0) {
@@ -193,7 +193,7 @@ export function ShippingCalculator({
             );
             if (matched) oceanFee = matched.rate;
           }
-          
+
           if (oceanFee === 0) {
             const { getActiveOceanRates } = await import("@/lib/calculator-utils");
             const activeOceanRates = await getActiveOceanRates();
@@ -202,7 +202,7 @@ export function ShippingCalculator({
             );
             if (matchedDb) oceanFee = matchedDb.rate;
           }
-          
+
           if (oceanFee === 0) {
             const matchedHardcoded = oceanShippingRates.find((rate) =>
               (rate.shorthand || '').toString().trim().toUpperCase() === normalizedPort
@@ -225,11 +225,11 @@ export function ShippingCalculator({
         totalFee,
         breakdown: {
           basePurchaseFee: purchaseFee,
-          auctionFee,
-          gateFee,
-          titleFee,
-          environmentalFee,
-          virtualBidFee,
+          auctionFee: auctionFee + gateFee + titleFee + environmentalFee + virtualBidFee, // Consolidated fee
+          gateFee: 0, // Hidden from display
+          titleFee: 0, // Hidden from display
+          environmentalFee: 0, // Hidden from display
+          virtualBidFee: 0, // Hidden from display
           groundFee: adjustedGroundFee,
           oceanFee,
           additionalFees: additionalFees,
@@ -407,7 +407,7 @@ export function ShippingCalculator({
                 {calculationResult ? (
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-center mb-4">Calculation Results</h3>
-                    
+
                     {/* Purchase Fee Breakdown */}
                     <div className="space-y-2">
                       <h4 className="font-medium text-sm text-muted-foreground">Purchase Costs</h4>
@@ -417,24 +417,8 @@ export function ShippingCalculator({
                           <span className="font-mono">{formatCurrency(calculationResult.breakdown.basePurchaseFee)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Auction Fee:</span>
+                          <span>Auction Fee (includes all fees):</span>
                           <span className="font-mono">{formatCurrency(calculationResult.breakdown.auctionFee)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Gate Fee:</span>
-                          <span className="font-mono">{formatCurrency(calculationResult.breakdown.gateFee)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Title Fee:</span>
-                          <span className="font-mono">{formatCurrency(calculationResult.breakdown.titleFee)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Environmental Fee:</span>
-                          <span className="font-mono">{formatCurrency(calculationResult.breakdown.environmentalFee)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Virtual Bid Fee:</span>
-                          <span className="font-mono">{formatCurrency(calculationResult.breakdown.virtualBidFee)}</span>
                         </div>
                         <div className="border-t pt-1">
                           <div className="flex justify-between font-medium">
@@ -495,7 +479,7 @@ export function ShippingCalculator({
                     {t('estimatedTotalFee')}: {formatCurrency(0)}
                   </p>
                 )}
-                
+
                 <Button
                   type="submit"
                   disabled={!isFormValid || isCalculating}

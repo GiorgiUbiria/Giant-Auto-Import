@@ -24,7 +24,7 @@ export default async function DashboardPage() {
         <header className="px-4 md:px-6 pt-6">
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
-            Manage and track your imported vehicles
+            Manage and track your imported vehicles, payments, and notes
           </p>
         </header>
         

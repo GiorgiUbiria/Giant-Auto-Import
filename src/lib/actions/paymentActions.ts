@@ -5,7 +5,7 @@ import { createServerAction } from "zsa";
 import { isAdminProcedure } from "./authProcedures";
 import { db } from "../drizzle/db";
 import { payments, cars, invoices, insertPaymentSchema, selectPaymentSchema } from "../drizzle/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 
 // Add a new payment
 export const addPaymentAction = isAdminProcedure
@@ -181,6 +181,56 @@ export const getAllPaymentsAction = isAdminProcedure
       return allPayments;
     } catch (error) {
       console.error("Error fetching all payments:", error);
+      throw error;
+    }
+  });
+
+// Get payment history for a specific user
+export const getUserPaymentHistoryAction = createServerAction()
+  .input(
+    z.object({
+      userId: z.string(),
+    })
+  )
+  .handler(async ({ input }) => {
+    const { userId } = input;
+
+    try {
+      // First get all cars owned by the user
+      const userCars = await db.query.cars.findMany({
+        where: eq(cars.ownerId, userId),
+        columns: {
+          vin: true,
+          year: true,
+          make: true,
+          model: true,
+        },
+      });
+
+      if (userCars.length === 0) {
+        return [];
+      }
+
+      // Get payments for all user's cars
+      const carVins = userCars.map(car => car.vin);
+      const userPayments = await db.query.payments.findMany({
+        where: inArray(payments.carVin, carVins),
+        orderBy: [desc(payments.createdAt)],
+        with: {
+          car: {
+            columns: {
+              vin: true,
+              year: true,
+              make: true,
+              model: true,
+            },
+          },
+        },
+      });
+
+      return userPayments;
+    } catch (error) {
+      console.error("Error fetching user payment history:", error);
       throw error;
     }
   });

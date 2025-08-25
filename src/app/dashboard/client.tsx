@@ -1,199 +1,298 @@
 "use client";
 
-import { DataTable } from "@/components/data-table";
-import { Loader2, AlertCircle } from "lucide-react";
-import { columns, type CarWithInvoiceData, type SelectSchemaType } from "./columns";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Suspense } from "react";
-import { SortingState, ColumnFiltersState, VisibilityState } from "@tanstack/react-table";
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { Car, CreditCard, FileText, RefreshCw } from "lucide-react";
+import { DataTable } from "@/components/data-table";
+import { columns } from "./columns";
+import { SelectSchemaType } from "./columns";
 import { CustomerNotes } from "@/components/customer-notes";
+import { getUserPaymentHistoryAction } from "@/lib/actions/paymentActions";
+import { toast } from "sonner";
 
-// Add type for API response
 interface CarsApiResponse {
-  cars: Array<SelectSchemaType & {
+  cars: SelectSchemaType[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
+interface PaymentHistoryItem {
+  id: number;
+  amount: number;
+  description: string | null;
+  createdAt: Date; // Changed from paymentDate to match server response
+  paymentType: string;
+  carVin: string;
+  car: {
+    make: string;
+    model: string;
+    year: number;
+  };
+}
+
+interface DashboardClientProps {
+  userId: string;
+}
+
+export function Client({ userId }: DashboardClientProps) {
+  const t = useTranslations("Dashboard");
+  const [cars, setCars] = useState<(SelectSchemaType & {
     hasInvoice?: {
       PURCHASE: boolean;
       SHIPPING: boolean;
       TOTAL: boolean;
     };
-  }>;
-  count: number;
-}
+  })[]>([]);
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("cars");
 
-const fetchUserCars = async ({
-  userId,
-  pageIndex,
-  pageSize,
-  sorting,
-  filters
-}: {
-  userId: string;
-  pageIndex: number;
-  pageSize: number;
-  sorting: SortingState;
-  filters: ColumnFiltersState;
-}) => {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // Reduced timeout to 15 seconds
-
-    const params = new URLSearchParams();
-    params.set("page", (pageIndex + 1).toString());
-    params.set("pageSize", pageSize.toString());
-    params.set("ownerId", userId); // Filter by user ID
-    params.set("includeDetails", "true"); // Include invoice and payment data
-
-    if (sorting.length > 0) {
-      params.set("sortBy", sorting[0].id);
-      params.set("sortOrder", sorting[0].desc ? "desc" : "asc");
-    }
-
-    filters.forEach(f => {
-      if (f.value) {
-        // Map filter IDs to API parameters
-        if (f.id === "vinDetails") {
-          params.set("vin", f.value as string);
-        } else {
-          params.set(f.id, f.value as string);
-        }
+  // Fetch user cars
+  const fetchUserCars = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/cars?ownerId=${userId}&includeDetails=true`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch cars");
       }
-    });
-
-    const response = await fetch(`/api/cars?${params.toString()}`, {
-      signal: controller.signal,
-      cache: 'default'
-    });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.details || 'Failed to fetch cars');
+      const data: CarsApiResponse = await response.json();
+      setCars(data.cars);
+    } catch (error) {
+      console.error("Error fetching cars:", error);
+      toast.error("Failed to load cars");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    return response.json();
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Request timed out after 15 seconds');
+  // Fetch payment history
+  const fetchPaymentHistory = async () => {
+    try {
+      const [result, error] = await getUserPaymentHistoryAction({ userId });
+      if (error) {
+        throw error;
+      }
+      setPaymentHistory(result);
+    } catch (error) {
+      console.error("Error fetching payment history:", error);
+      toast.error("Failed to load payment history");
     }
-    throw error;
-  }
-};
+  };
 
-const LoadingState = () => (
-  <div className="w-full h-[50vh] grid place-items-center">
-    <div className="flex flex-col items-center gap-2">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      <p className="text-muted-foreground">Loading your cars...</p>
-    </div>
-  </div>
-);
+  // Load data on component mount
+  useEffect(() => {
+    fetchUserCars();
+    fetchPaymentHistory();
+  }, [userId]);
 
-const ErrorState = ({ refetch }: { refetch: () => void }) => (
-  <div className="py-10 px-4 max-w-2xl mx-auto">
-    <Alert variant="destructive">
-      <AlertCircle className="h-4 w-4" />
-      <AlertTitle>Error</AlertTitle>
-      <AlertDescription className="flex flex-col gap-4">
-        <p>Failed to load your cars. Please try again.</p>
-        <Button
-          variant="outline"
-          onClick={() => refetch()}
-          className="w-fit"
-        >
-          Retry
-        </Button>
-      </AlertDescription>
-    </Alert>
-  </div>
-);
+  // Refresh data function
+  const handleRefresh = () => {
+    if (activeTab === "cars") {
+      fetchUserCars();
+    } else if (activeTab === "payments") {
+      fetchPaymentHistory();
+    }
+  };
 
-export const Client = ({ userId }: { userId: string }) => {
-  // Add state for table controls
-  const [pageIndex, setPageIndex] = React.useState(0);
-  const [pageSize, setPageSize] = React.useState(20);
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [filters, setFilters] = React.useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
+  const getTabIcon = (tab: string) => {
+    switch (tab) {
+      case "cars":
+        return <Car className="h-4 w-4" />;
+      case "payments":
+        return <CreditCard className="h-4 w-4" />;
+      case "notes":
+        return <FileText className="h-4 w-4" />;
+      default:
+        return null;
+    }
+  };
 
-  const handlePaginationChange = React.useCallback(({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
-    setPageIndex(pageIndex);
-    setPageSize(pageSize);
-  }, []);
+  const getTabContent = () => {
+    switch (activeTab) {
+      case "cars":
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Your Vehicles</h3>
+                <p className="text-sm text-muted-foreground">
+                  {cars.length} vehicle{cars.length !== 1 ? 's' : ''} in your account
+                </p>
+              </div>
+              <Button onClick={handleRefresh} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <div className="relative w-full overflow-auto">
+                  <table className="w-full caption-bottom text-sm">
+                    <thead className="[&_tr]:border-b">
+                      <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                          VIN
+                        </th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                          Vehicle
+                        </th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                          Status
+                        </th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="[&_tr:last-child]:border-0">
+                      {cars.map((car) => (
+                        <tr key={car.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                          <td className="p-4 align-middle font-mono text-sm">{car.vin}</td>
+                          <td className="p-4 align-middle">
+                            <div>
+                              <div className="font-medium">{car.year} {car.make} {car.model}</div>
+                              <div className="text-sm text-muted-foreground">{car.reciever}</div>
+                            </div>
+                          </td>
+                          <td className="p-4 align-middle">
+                            <div className="flex items-center gap-2">
+                              {car.hasInvoice?.PURCHASE && (
+                                <Badge variant="secondary" className="text-xs">Purchase Invoice</Badge>
+                              )}
+                              {car.hasInvoice?.SHIPPING && (
+                                <Badge variant="secondary" className="text-xs">Shipping Invoice</Badge>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4 align-middle">
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={`/car/${car.vin}`}>View Details</a>
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        );
 
-  const handleSortingChange = React.useCallback((updaterOrValue: SortingState | ((old: SortingState) => SortingState)) => {
-    setSorting(typeof updaterOrValue === "function" ? updaterOrValue(sorting) : updaterOrValue);
-  }, [sorting]);
+      case "payments":
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Payment History</h3>
+                <p className="text-sm text-muted-foreground">
+                  Track all your payments and transactions
+                </p>
+              </div>
+              <Button onClick={handleRefresh} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+            {paymentHistory.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-8">
+                  <CreditCard className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground text-center">
+                    No payment history found
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {paymentHistory.map((payment) => (
+                  <Card key={payment.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium">
+                              {payment.car.year} {payment.car.make} {payment.car.model}
+                            </h4>
+                            <Badge variant="secondary">{payment.carVin}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {payment.description || "Payment"}
+                          </p>
+                                                      <p className="text-xs text-muted-foreground">
+                              {new Date(payment.createdAt).toLocaleDateString()}
+                            </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-semibold text-green-600">
+                            ${payment.amount.toLocaleString()}
+                          </p>
+                          <Badge variant="outline">{payment.paymentType}</Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        );
 
-  const handleFiltersChange = React.useCallback((updaterOrValue: ColumnFiltersState | ((old: ColumnFiltersState) => ColumnFiltersState)) => {
-    setFilters(typeof updaterOrValue === "function" ? updaterOrValue(filters) : updaterOrValue);
-  }, [filters]);
+      case "notes":
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Notes & Attachments</h3>
+                <p className="text-sm text-muted-foreground">
+                  View important notes and files from our team
+                </p>
+              </div>
+              <Button onClick={handleRefresh} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+            <CustomerNotes userId={userId} />
+          </div>
+        );
 
-  const handleColumnVisibilityChange = React.useCallback((updaterOrValue: VisibilityState | ((old: VisibilityState) => VisibilityState)) => {
-    setColumnVisibility(typeof updaterOrValue === "function" ? updaterOrValue(columnVisibility) : updaterOrValue);
-  }, [columnVisibility]);
-
-  const handleRowSelectionChange = React.useCallback((updaterOrValue: any | ((old: any) => any)) => {
-    setRowSelection(typeof updaterOrValue === "function" ? updaterOrValue(rowSelection) : updaterOrValue);
-  }, [rowSelection]);
-
-  const { isLoading, data, error, refetch } = useQuery<CarsApiResponse>({
-    queryKey: ["getUserCars", userId, pageIndex, pageSize, sorting, filters],
-    queryFn: () => fetchUserCars({ userId, pageIndex, pageSize, sorting, filters }),
-    staleTime: 5 * 60 * 1000, // 5 minutes - increased for better caching
-    gcTime: 10 * 60 * 1000, // 10 minutes cache
-    retry: 1, // Reduce retries
-    refetchOnWindowFocus: false, // Prevent refetch on focus
-  });
-
-  // Provide default values
-  const tableData: CarWithInvoiceData[] = data?.cars || [];
-  const totalCount = data?.count || 0;
-
-  if (error) {
-    return <ErrorState refetch={refetch} />;
-  }
-
-  if (isLoading) {
-    return (
-      <Suspense fallback={<LoadingState />}>
-        <LoadingState />
-      </Suspense>
-    );
-  }
+      default:
+        return null;
+    }
+  };
 
   return (
-    <Suspense fallback={<LoadingState />}>
-      <div className="w-full px-4 md:px-6 space-y-6">
-        {/* Customer Notes Section */}
-        <div className="max-w-4xl">
-          <CustomerNotes userId={userId} />
-        </div>
+    <div className="px-4 md:px-6 pb-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="cars" className="flex items-center gap-2">
+            {getTabIcon("cars")}
+            Cars ({cars.length})
+          </TabsTrigger>
+          <TabsTrigger value="payments" className="flex items-center gap-2">
+            {getTabIcon("payments")}
+            Payment History ({paymentHistory.length})
+          </TabsTrigger>
+          <TabsTrigger value="notes" className="flex items-center gap-2">
+            {getTabIcon("notes")}
+            Notes
+          </TabsTrigger>
+        </TabsList>
 
-        {/* Cars Data Table */}
-        <div>
-          <DataTable
-            columns={columns}
-            data={tableData}
-            filterKey="vinDetails"
-            pageIndex={pageIndex}
-            pageSize={pageSize}
-            onPaginationChange={handlePaginationChange}
-            sorting={sorting}
-            onSortingChange={handleSortingChange}
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-            rowCount={totalCount}
-            columnVisibility={columnVisibility}
-            onColumnVisibilityChange={handleColumnVisibilityChange}
-            rowSelection={rowSelection}
-            onRowSelectionChange={handleRowSelectionChange}
-          />
-        </div>
-      </div>
-    </Suspense>
+        <TabsContent value={activeTab} className="space-y-4">
+          {getTabContent()}
+        </TabsContent>
+      </Tabs>
+    </div>
   );
-};
+}

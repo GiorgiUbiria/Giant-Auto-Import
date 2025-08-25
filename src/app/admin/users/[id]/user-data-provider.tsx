@@ -29,6 +29,7 @@ export function UserDataProvider({ userId, children }: UserDataProviderProps) {
     const [, setUserCars] = useAtom(setAdminUserCarsAtom);
     const [, setError] = useAtom(setAdminUserErrorAtom);
     const [, setLoading] = useAtom(setAdminUserLoadingAtom);
+    const [, setCarsLoading] = useAtom(setAdminUserCarsLoadingAtom);
 
     // Fetch user data
     const {
@@ -42,19 +43,19 @@ export function UserDataProvider({ userId, children }: UserDataProviderProps) {
         gcTime: 10 * 60 * 1000,
         retry: 1,
         refetchOnWindowFocus: false,
-        refetchOnMount: false,
+        refetchOnMount: true, // Changed to true to ensure data loads on mount
         refetchOnReconnect: false,
     });
 
     // Fetch user cars separately using useEffect and fetch
-    const [carsLoading, setCarsLoading] = useState(false);
+    const [carsLoading, setCarsLoadingLocal] = useState(false);
     const [carsData, setCarsData] = useState<any>(null);
     const [carsError, setCarsError] = useState<Error | null>(null);
 
     useEffect(() => {
         const fetchCars = async () => {
             try {
-                setCarsLoading(true);
+                setCarsLoadingLocal(true);
                 setCarsError(null);
                 const response = await fetch(`/api/cars?ownerId=${userId}&pageSize=1000`);
                 if (!response.ok) throw new Error('Failed to fetch cars');
@@ -63,7 +64,7 @@ export function UserDataProvider({ userId, children }: UserDataProviderProps) {
             } catch (err) {
                 setCarsError(err instanceof Error ? err : new Error('Failed to fetch cars'));
             } finally {
-                setCarsLoading(false);
+                setCarsLoadingLocal(false);
             }
         };
 
@@ -95,7 +96,10 @@ export function UserDataProvider({ userId, children }: UserDataProviderProps) {
     // Reset state when userId changes
     useEffect(() => {
         resetState();
-    }, [userId, resetState]);
+        // Set loading to true when userId changes to show loading state
+        setLoading(true);
+        setCarsLoading(true);
+    }, [userId, resetState, setLoading, setCarsLoading]);
 
     return <>{children}</>;
 }

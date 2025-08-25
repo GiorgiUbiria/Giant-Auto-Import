@@ -99,12 +99,49 @@ export function NoteAttachmentsModal({
         setIsUploading(true);
         try {
             const filesData = await Promise.all(
-                selectedFiles.map(async (file) => ({
-                    fileName: file.name,
-                    buffer: Array.from(new Uint8Array(await file.arrayBuffer())),
-                    fileType: file.type,
-                    fileSize: file.size,
-                }))
+                selectedFiles.map(async (file) => {
+                    // If file type is missing, try to infer from extension
+                    let fileType = file.type;
+                    if (!fileType || fileType === '') {
+                        const extension = file.name.split('.').pop()?.toLowerCase();
+                        if (extension) {
+                            // Map common extensions to MIME types
+                            const mimeTypes: { [key: string]: string } = {
+                                'pdf': 'application/pdf',
+                                'doc': 'application/msword',
+                                'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                'txt': 'text/plain',
+                                'rtf': 'application/rtf',
+                                'jpg': 'image/jpeg',
+                                'jpeg': 'image/jpeg',
+                                'png': 'image/png',
+                                'gif': 'image/gif',
+                                'webp': 'image/webp',
+                                'bmp': 'image/bmp',
+                                'svg': 'image/svg+xml',
+                                'xls': 'application/vnd.ms-excel',
+                                'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                'ppt': 'application/vnd.ms-powerpoint',
+                                'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                                'zip': 'application/zip',
+                                'rar': 'application/x-rar-compressed',
+                                '7z': 'application/x-7z-compressed',
+                                'tar': 'application/x-tar',
+                                'gz': 'application/gzip'
+                            };
+                            fileType = mimeTypes[extension] || `application/octet-stream`;
+                        } else {
+                            fileType = 'application/octet-stream';
+                        }
+                    }
+
+                    return {
+                        fileName: file.name,
+                        buffer: Array.from(new Uint8Array(await file.arrayBuffer())),
+                        fileType: fileType,
+                        fileSize: file.size,
+                    };
+                })
             );
 
             const [result, error] = await uploadNoteAttachmentsAction({
@@ -137,13 +174,8 @@ export function NoteAttachmentsModal({
                 throw error;
             }
 
-            // Create a temporary link and trigger download
-            const link = document.createElement('a');
-            link.href = result.downloadUrl;
-            link.download = result.fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // Open in new tab instead of downloading
+            window.open(result.downloadUrl, '_blank');
         } catch (error) {
             console.error("Download failed:", error);
             toast.error("Failed to download attachment");

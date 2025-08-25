@@ -91,9 +91,19 @@ export function InvoiceUploadModal({
 
     const handleDownload = async () => {
         try {
-            await executeDownload({ carVin, invoiceType });
+            const [result, error] = await getInvoiceDownloadUrlAction({
+                carVin,
+                invoiceType,
+            });
+
+            if (error) {
+                throw error;
+            }
+
+            // Open in new tab instead of downloading
+            window.open(result.downloadUrl, '_blank');
         } catch (error) {
-            console.error("Download error in handleDownload:", error);
+            console.error("Download failed:", error);
             toast.error("Failed to download invoice");
         }
     };

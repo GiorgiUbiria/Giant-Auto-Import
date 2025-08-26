@@ -88,9 +88,21 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
         },
         enabled: !!userId,
         staleTime: 30_000,
-        onSuccess: (data: CustomerNote[]) => setNotesAtom(data),
-        onError: (err: unknown) => setError(err instanceof Error ? err.message : 'Failed to fetch notes'),
     });
+
+    // Handle successful data fetch
+    useEffect(() => {
+        if (queryData) {
+            setNotesAtom(queryData);
+        }
+    }, [queryData, setNotesAtom]);
+
+    // Handle errors
+    useEffect(() => {
+        if (isError && queryError) {
+            setError(queryError instanceof Error ? queryError.message : 'Failed to fetch notes');
+        }
+    }, [isError, queryError]);
 
     const handleViewAttachments = (noteId: number) => {
         setSelectedNoteId(noteId);
@@ -172,7 +184,7 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-                {displayNotes.map((note) => (
+                {displayNotes.map((note: CustomerNote) => (
                     <div
                         key={note.id}
                         className={`p-4 rounded-lg border overflow-hidden ${note.isImportant
@@ -234,7 +246,7 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
                     noteId={selectedNoteId}
                     isOpen={attachmentsModalOpen}
                     onOpenChange={handleAttachmentsModalClose}
-                    hasAttachments={displayNotes.find(n => n.id === selectedNoteId)?.hasAttachments || false}
+                    hasAttachments={displayNotes.find((n: CustomerNote) => n.id === selectedNoteId)?.hasAttachments || false}
                     isAdmin={false}
                 />
             )}

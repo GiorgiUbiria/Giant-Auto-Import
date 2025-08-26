@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -92,7 +92,7 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const queryClient = useQueryClient();
-    const notesQueryKey = ["customer-notes", customerId];
+    const notesQueryKey = useMemo(() => ["customer-notes", customerId], [customerId]);
 
     const { data: queryData, isLoading: isNotesLoading, isError, error: queryError } = useQuery({
         queryKey: notesQueryKey,
@@ -161,7 +161,12 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
 
             return savedNote;
         },
-        onSuccess: async (savedNote) => {
+    });
+
+    // Handle mutation success
+    React.useEffect(() => {
+        if (saveNoteMutation.isSuccess && saveNoteMutation.data) {
+            const savedNote = saveNoteMutation.data;
             // Optimistically update atom
             if (editingNote) {
                 writeNotes({ type: 'update', note: savedNote });
@@ -169,7 +174,7 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                 writeNotes({ type: 'add', note: savedNote });
             }
             // Refetch from server to hydrate adminName and attachment flags
-            await queryClient.invalidateQueries({ queryKey: notesQueryKey });
+            queryClient.invalidateQueries({ queryKey: notesQueryKey });
 
             toast.success(editingNote ? 'Note updated successfully' : 'Note added successfully');
 
@@ -178,11 +183,15 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
             setFormData({ note: "", isImportant: false });
             setSelectedFiles([]);
             if (fileInputRef.current) fileInputRef.current.value = '';
-        },
-        onError: (err: unknown) => {
-            toast.error(err instanceof Error ? err.message : 'Failed to save note');
         }
-    });
+    }, [saveNoteMutation.isSuccess, saveNoteMutation.data, editingNote, writeNotes, queryClient, notesQueryKey]);
+
+    // Handle mutation error
+    React.useEffect(() => {
+        if (saveNoteMutation.isError && saveNoteMutation.error) {
+            toast.error(saveNoteMutation.error instanceof Error ? saveNoteMutation.error.message : 'Failed to save note');
+        }
+    }, [saveNoteMutation.isError, saveNoteMutation.error]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

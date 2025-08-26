@@ -25,7 +25,7 @@ export type CustomerNotesAction =
     | { type: 'setHasAttachments'; id: number; hasAttachments: boolean };
 
 export const customerNotesWriteAtomFamily = atomFamily((customerId: string) =>
-    atom<null, CustomerNotesAction>(null, (get, set, action) => {
+    atom<null, [CustomerNotesAction], void>(null, (get, set, action) => {
         const notesAtom = customerNotesAtomFamily(customerId);
         const current = get(notesAtom);
         switch (action.type) {

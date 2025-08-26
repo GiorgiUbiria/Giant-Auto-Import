@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,8 +62,8 @@ export function Client({ userId }: DashboardClientProps) {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  // Fetch user cars
-  const fetchUserCars = async () => {
+  const fetchUserCars = useCallback(async () => {
+    if (!userId) return;
     try {
       setLoading(true);
       const response = await fetch(`/api/cars?ownerId=${userId}&includeDetails=true`);
@@ -78,10 +78,10 @@ export function Client({ userId }: DashboardClientProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
-  // Fetch payment history
-  const fetchPaymentHistory = async () => {
+  const fetchPaymentHistory = useCallback(async () => {
+    if (!userId) return;
     try {
       const [result, error] = await getUserPaymentHistoryAction({ userId });
       if (error) {
@@ -92,13 +92,13 @@ export function Client({ userId }: DashboardClientProps) {
       console.error("Error fetching payment history:", error);
       toast.error("Failed to load payment history");
     }
-  };
+  }, [userId]);
 
   // Load data on component mount
   useEffect(() => {
     fetchUserCars();
     fetchPaymentHistory();
-  }, [userId]);
+  }, [userId, fetchUserCars, fetchPaymentHistory]);
 
   // Refresh data function
   const handleRefresh = () => {

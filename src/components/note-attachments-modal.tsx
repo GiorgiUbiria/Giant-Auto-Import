@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -37,25 +37,14 @@ export function NoteAttachmentsModal({
     hasAttachments,
     isAdmin = false, // Default to false (customer view)
 }: NoteAttachmentsModalProps) {
-    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [attachments, setAttachments] = useState<NoteAttachment[]>([]);
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [localHasAttachments, setLocalHasAttachments] = useState(hasAttachments);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Load attachments when modal opens
-    useEffect(() => {
-        if (isOpen && localHasAttachments) {
-            loadAttachments();
-        }
-    }, [isOpen, localHasAttachments]);
-
-    // Sync local state with prop
-    useEffect(() => {
-        setLocalHasAttachments(hasAttachments);
-    }, [hasAttachments]);
-
-    const loadAttachments = async () => {
+    const loadAttachments = useCallback(async () => {
         try {
             const [result, error] = await getNoteAttachmentsAction({ noteId });
             if (error) {
@@ -66,7 +55,19 @@ export function NoteAttachmentsModal({
             console.error("Failed to load attachments:", error);
             toast.error("Failed to load attachments");
         }
-    };
+    }, [noteId]);
+
+    // Load attachments when modal opens
+    useEffect(() => {
+        if (isOpen && localHasAttachments) {
+            loadAttachments();
+        }
+    }, [isOpen, localHasAttachments, loadAttachments]);
+
+    // Sync local state with prop
+    useEffect(() => {
+        setLocalHasAttachments(hasAttachments);
+    }, [hasAttachments]);
 
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(event.target.files || []);

@@ -67,74 +67,62 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
   const { execute: getOceanShippingRates } = useServerAction(getOceanShippingRatesAction);
 
   const loadPricingData = useCallback(async () => {
+    if (!userId) return;
+
     try {
       setLoading(true);
+      const [userPricingResult, userPricingError] = await getUserPricing({ userId });
+      const [defaultPricingResult, defaultPricingError] = await getDefaultPricing();
+      const [oceanRatesResult, oceanRatesError] = await getOceanShippingRates();
 
-      // Load default pricing
-      const [defaultResult, defaultError] = await getDefaultPricing();
-      if (defaultError) {
+      if (defaultPricingError) {
         toast.error("Failed to load default pricing");
         return;
       }
-      if (defaultResult.success && defaultResult.data) {
-        const newDefaultPricing = {
-          oceanRates: Array.isArray(defaultResult.data.oceanRates) ? (defaultResult.data.oceanRates as unknown as Array<{ state: string, shorthand: string, rate: number }>) : [],
-          groundFeeAdjustment: defaultResult.data.groundFeeAdjustment,
-          pickupSurcharge: defaultResult.data.pickupSurcharge,
-          serviceFee: defaultResult.data.serviceFee,
-          hybridSurcharge: defaultResult.data.hybridSurcharge,
-        };
-        setDefaultPricing(newDefaultPricing);
 
-        // Load active ocean shipping rates to derive base port list
-        const [ratesResult, ratesError] = await getOceanShippingRates();
-        if (ratesError) {
-          toast.error("Failed to load ocean shipping rates");
-          return;
-        }
-        if (ratesResult.success) {
-          const activeRates = (ratesResult.data || []) as Array<{ id?: number; state: string; shorthand: string; rate: number }>;
-          const baseList = activeRates.map(r => ({ state: r.state, shorthand: (r.shorthand || '').toString().trim().toUpperCase(), rate: r.rate }));
-          // Prefer default pricing oceanRates if present, else use DB-backed list
-          const base = (newDefaultPricing.oceanRates && newDefaultPricing.oceanRates.length > 0)
-            ? newDefaultPricing.oceanRates.map(r => ({ ...r, shorthand: (r.shorthand || '').toString().trim().toUpperCase() }))
-            : baseList;
-          setBaseOceanRates(base);
-        }
+      if (oceanRatesError) {
+        toast.error("Failed to load ocean shipping rates");
+        return;
+      }
 
-        // Load user pricing
-        const [userResult, userError] = await getUserPricing({ userId });
-        if (userError) {
-          toast.error("Failed to load user pricing");
-          return;
-        }
-        if (userResult.success && userResult.data) {
-          const userRates = Array.isArray(userResult.data.oceanRates) ? (userResult.data.oceanRates as unknown as Array<{ state: string, shorthand: string, rate: number }>) : [];
-          // Ensure user pricing contains at least the same set of ports as base
-          const mergedOceanRates = mergeOceanRates((baseOceanRates.length ? baseOceanRates : newDefaultPricing.oceanRates), userRates);
+      if (userPricingError) {
+        toast.error("Failed to load user pricing");
+        return;
+      }
+
+      if (userPricingResult.success && userPricingResult.data) {
+        const userData = userPricingResult.data;
+        setPricing({
+          oceanRates: Array.isArray(userData.oceanRates) ? userData.oceanRates as Array<{ state: string; shorthand: string; rate: number }> : [],
+          groundFeeAdjustment: userData.groundFeeAdjustment,
+          pickupSurcharge: userData.pickupSurcharge,
+          serviceFee: userData.serviceFee,
+          hybridSurcharge: userData.hybridSurcharge,
+        });
+        setUseCustomPricing(userData.isActive);
+      } else {
+        const defaultData = defaultPricingResult.data;
+        if (defaultData) {
           setPricing({
-            oceanRates: mergedOceanRates,
-            groundFeeAdjustment: userResult.data.groundFeeAdjustment,
-            pickupSurcharge: userResult.data.pickupSurcharge,
-            serviceFee: userResult.data.serviceFee,
-            hybridSurcharge: userResult.data.hybridSurcharge,
+            oceanRates: Array.isArray(defaultData.oceanRates) ? defaultData.oceanRates as Array<{ state: string; shorthand: string; rate: number }> : [],
+            groundFeeAdjustment: defaultData.groundFeeAdjustment,
+            pickupSurcharge: defaultData.pickupSurcharge,
+            serviceFee: defaultData.serviceFee,
+            hybridSurcharge: defaultData.hybridSurcharge,
           });
-          setUseCustomPricing(userResult.data.isActive);
-        } else {
-          // No custom pricing, use defaults
-          setPricing({
-            ...newDefaultPricing,
-            oceanRates: (baseOceanRates.length ? baseOceanRates : newDefaultPricing.oceanRates),
-          });
-          setUseCustomPricing(false);
         }
+        setUseCustomPricing(false);
+      }
+
+      if (oceanRatesResult.success && oceanRatesResult.data) {
+        setBaseOceanRates(oceanRatesResult.data);
       }
     } catch (error) {
       toast.error("Failed to load pricing data");
     } finally {
       setLoading(false);
     }
-  }, [userId, getUserPricing, getDefaultPricing, getOceanShippingRates, baseOceanRates.length]);
+  }, [userId, getUserPricing, getDefaultPricing, getOceanShippingRates]);
 
   useEffect(() => {
     loadPricingData();

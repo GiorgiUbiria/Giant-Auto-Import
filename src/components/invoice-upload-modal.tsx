@@ -13,10 +13,11 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { Upload, FileText, X, Download } from "lucide-react";
+import { Upload, FileText, X, Download, AlertCircle, CheckCircle, FileUp } from "lucide-react";
 import { useServerAction } from "zsa-react";
 import { uploadInvoiceAction, getInvoiceDownloadUrlAction } from "@/lib/actions/invoiceActions";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface InvoiceUploadModalProps {
     carVin: string;
@@ -37,6 +38,7 @@ export function InvoiceUploadModal({
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [localHasInvoice, setLocalHasInvoice] = useState(hasInvoice);
+    const [isDragOver, setIsDragOver] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Update local state when prop changes
@@ -111,28 +113,52 @@ export function InvoiceUploadModal({
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            // Validate file type
-            const allowedTypes = [
-                "application/pdf",
-                "application/msword",
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                "image/jpeg",
-                "image/png",
-                "image/webp",
-            ];
+            validateAndSetFile(file);
+        }
+    };
 
-            if (!allowedTypes.includes(file.type)) {
-                toast.error("Please select a valid file type (PDF, Word, or image)");
-                return;
-            }
+    const validateAndSetFile = (file: File) => {
+        // Validate file type
+        const allowedTypes = [
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+        ];
 
-            // Validate file size (max 10MB)
-            if (file.size > 10 * 1024 * 1024) {
-                toast.error("File size must be less than 10MB");
-                return;
-            }
+        if (!allowedTypes.includes(file.type)) {
+            toast.error("Please select a valid file type (PDF, Word, or image)");
+            return;
+        }
 
-            setSelectedFile(file);
+        // Validate file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error("File size must be less than 10MB");
+            return;
+        }
+
+        setSelectedFile(file);
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            validateAndSetFile(files[0]);
         }
     };
 
@@ -198,6 +224,21 @@ export function InvoiceUploadModal({
         }
     };
 
+    const getFileIcon = (fileType: string) => {
+        if (fileType.includes('pdf')) return '📄';
+        if (fileType.includes('word') || fileType.includes('document')) return '📝';
+        if (fileType.includes('image')) return '🖼️';
+        return '📎';
+    };
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
@@ -208,16 +249,21 @@ export function InvoiceUploadModal({
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="flex items-center justify-between">
-                        <span>Upload {getInvoiceTypeLabel()}</span>
+                        <div className="flex items-center gap-2">
+                            <div className="p-2 rounded-full bg-primary/10">
+                                <FileUp className="h-5 w-5 text-primary" />
+                            </div>
+                            <span>Upload {getInvoiceTypeLabel()}</span>
+                        </div>
                         {localHasInvoice && (
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={handleDownload}
-                                className="ml-2"
+                                className="ml-2 hover:bg-primary hover:text-primary-foreground transition-colors"
                             >
                                 <Download className="h-4 w-4 mr-2" />
                                 Download
@@ -231,44 +277,94 @@ export function InvoiceUploadModal({
                 </DialogHeader>
 
                 <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="invoice-file">Select File</Label>
-                        <div className="flex items-center gap-2">
-                            <Input
-                                id="invoice-file"
-                                ref={fileInputRef}
-                                type="file"
-                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
-                                onChange={handleFileSelect}
-                                className="flex-1"
-                            />
-                            {selectedFile && (
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleRemoveFile}
-                                    className="shrink-0"
-                                >
-                                    <X className="h-4 w-4" />
-                                </Button>
+                    {/* File Upload Area */}
+                    <div className="space-y-3">
+                        <Label htmlFor="invoice-file" className="text-sm font-medium">
+                            Select File
+                        </Label>
+
+                        {/* Drag & Drop Zone */}
+                        <div
+                            className={cn(
+                                "relative border-2 border-dashed rounded-lg p-6 text-center transition-all duration-200",
+                                isDragOver
+                                    ? "border-primary bg-primary/5"
+                                    : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50",
+                                selectedFile && "border-primary/50 bg-primary/5"
+                            )}
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop}
+                        >
+                            {!selectedFile ? (
+                                <div className="space-y-3">
+                                    <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                                        <Upload className="h-6 w-6 text-muted-foreground" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-foreground">
+                                            {isDragOver ? "Drop your file here" : "Drag & drop your file here"}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            or click to browse
+                                        </p>
+                                    </div>
+                                    <Input
+                                        id="invoice-file"
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
+                                        onChange={handleFileSelect}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                        <CheckCircle className="h-6 w-6 text-primary" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <p className="text-sm font-medium text-foreground">
+                                            File selected successfully
+                                        </p>
+                                        <div className="flex items-center justify-center gap-2">
+                                            <span className="text-2xl">{getFileIcon(selectedFile.type)}</span>
+                                            <div className="text-left">
+                                                <p className="text-sm font-medium text-foreground truncate max-w-[200px]">
+                                                    {selectedFile.name}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {formatFileSize(selectedFile.size)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleRemoveFile}
+                                        className="mx-auto"
+                                    >
+                                        <X className="h-4 w-4 mr-2" />
+                                        Remove File
+                                    </Button>
+                                </div>
                             )}
                         </div>
-                    </div>
 
-                    {selectedFile && (
-                        <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
-                            <FileText className="h-4 w-4 text-muted-foreground" />
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">{selectedFile.name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                                </p>
+                        {/* File Type Info */}
+                        <div className="flex items-center gap-2 p-3 bg-muted/30 rounded-md border border-border/50">
+                            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                            <div className="text-xs text-muted-foreground">
+                                <span className="font-medium">Supported formats:</span> PDF, Word (.doc, .docx), Images (.jpg, .png, .webp)
+                                <br />
+                                <span className="font-medium">Max size:</span> 10MB
                             </div>
                         </div>
-                    )}
+                    </div>
                 </div>
 
-                <DialogFooter>
+                <DialogFooter className="gap-2">
                     <Button
                         variant="outline"
                         onClick={() => setIsOpen(false)}
@@ -281,7 +377,7 @@ export function InvoiceUploadModal({
                             variant="outline"
                             onClick={handleDownload}
                             disabled={isUploading}
-                            className="mr-auto"
+                            className="mr-auto hover:bg-primary hover:text-primary-foreground transition-colors"
                         >
                             <Download className="h-4 w-4 mr-2" />
                             Download
@@ -290,8 +386,19 @@ export function InvoiceUploadModal({
                     <Button
                         onClick={handleUpload}
                         disabled={!selectedFile || isUploading}
+                        className="min-w-[120px]"
                     >
-                        {isUploading ? "Uploading..." : "Upload Invoice"}
+                        {isUploading ? (
+                            <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                Uploading...
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <Upload className="h-4 w-4" />
+                                Upload Invoice
+                            </div>
+                        )}
                     </Button>
                 </DialogFooter>
             </DialogContent>

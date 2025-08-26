@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,9 @@ import { AlertCircle, Clock, User, Plus, Edit, Trash2, MessageSquare, Paperclip,
 import { toast } from "sonner";
 import { NoteAttachmentsModal } from "./note-attachments-modal";
 import { uploadNoteAttachmentsAction } from "@/lib/actions/noteAttachmentActions";
+import { useAtom, useSetAtom } from "jotai";
+import { customerNotesAtomFamily, customerNotesWriteAtomFamily, type CustomerNoteAtom, type CustomerNotesAction } from "@/lib/customer-notes-atoms";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Collapsible Note Component
 interface CollapsibleNoteProps {
@@ -26,7 +29,7 @@ function CollapsibleNote({ note, maxLength = 200 }: CollapsibleNoteProps) {
     if (!shouldTruncate) {
         return (
             <div className="min-w-0">
-                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words overflow-hidden">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words overflow-hidden text-gray-800 dark:text-gray-200">
                     {note}
                 </p>
             </div>
@@ -36,7 +39,7 @@ function CollapsibleNote({ note, maxLength = 200 }: CollapsibleNoteProps) {
     return (
         <div className="min-w-0 space-y-2">
             <div className="overflow-hidden">
-                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words text-gray-800 dark:text-gray-200">
                     {isExpanded ? note : `${note.slice(0, maxLength)}...`}
                 </p>
             </div>
@@ -45,7 +48,7 @@ function CollapsibleNote({ note, maxLength = 200 }: CollapsibleNoteProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="h-auto p-1 text-xs text-muted-foreground hover:text-foreground self-start transition-colors"
+                className="h-auto p-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 self-start transition-colors"
                 title={isExpanded ? "Show less of this note" : "Show more of this note"}
             >
                 {isExpanded ? (
@@ -64,15 +67,7 @@ function CollapsibleNote({ note, maxLength = 200 }: CollapsibleNoteProps) {
     );
 }
 
-interface CustomerNote {
-    id: number;
-    note: string;
-    isImportant: boolean;
-    hasAttachments: boolean;
-    createdAt: string;
-    updatedAt: string;
-    adminName: string;
-}
+type CustomerNote = CustomerNoteAtom;
 
 interface AdminCustomerNotesProps {
     customerId: string;
@@ -81,8 +76,8 @@ interface AdminCustomerNotesProps {
 
 export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNotesProps) {
     // Admin component: Shows all notes for comprehensive management
-    const [notes, setNotes] = useState<CustomerNote[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [notes, setNotesAtom] = useAtom(customerNotesAtomFamily(customerId));
+    const writeNotes = useSetAtom(customerNotesWriteAtomFamily(customerId));
     const [error, setError] = useState<string | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingNote, setEditingNote] = useState<CustomerNote | null>(null);
@@ -96,36 +91,38 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
     const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const fetchNotes = React.useCallback(async () => {
-        try {
-            setLoading(true);
+    const queryClient = useQueryClient();
+    const notesQueryKey = ["customer-notes", customerId];
+
+    const { data: queryData, isLoading: isNotesLoading, isError, error: queryError } = useQuery({
+        queryKey: notesQueryKey,
+        queryFn: async () => {
             const response = await fetch(`/api/customer-notes?customerId=${customerId}`);
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch notes');
-            }
-
+            if (!response.ok) throw new Error('Failed to fetch notes');
             const data = await response.json();
-            setNotes(data.notes || []);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to fetch notes');
-        } finally {
-            setLoading(false);
+            return data.notes || [];
+        },
+        enabled: !!customerId,
+        staleTime: 30_000,
+    });
+
+    // Handle successful data fetch
+    React.useEffect(() => {
+        if (queryData) {
+            setNotesAtom(queryData);
         }
-    }, [customerId]);
+    }, [queryData, setNotesAtom]);
 
-    useEffect(() => {
-        fetchNotes();
-    }, [fetchNotes]);
+    // Handle errors
+    React.useEffect(() => {
+        if (isError && queryError) {
+            setError(queryError instanceof Error ? queryError.message : 'Failed to fetch notes');
+        }
+    }, [isError, queryError]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        try {
-            const url = editingNote
-                ? `/api/customer-notes`
-                : `/api/customer-notes`;
-
+    const saveNoteMutation = useMutation({
+        mutationFn: async () => {
+            const url = `/api/customer-notes`;
             const method = editingNote ? 'PUT' : 'POST';
             const body = editingNote
                 ? { id: editingNote.id, ...formData }
@@ -133,20 +130,14 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
 
             const response = await fetch(url, {
                 method,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
             });
-
-            if (!response.ok) {
-                throw new Error('Failed to save note');
-            }
-
+            if (!response.ok) throw new Error('Failed to save note');
             const result = await response.json();
-            const noteId = editingNote ? editingNote.id : result.note.id;
+            const savedNote: CustomerNote = result.note;
 
-            // Upload attachments if any files are selected
+            // If attachments are selected, upload and wait
             if (selectedFiles.length > 0) {
                 setIsUploadingAttachments(true);
                 try {
@@ -158,38 +149,44 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                             fileSize: file.size,
                         }))
                     );
-
                     const [uploadResult, uploadError] = await uploadNoteAttachmentsAction({
-                        noteId,
+                        noteId: savedNote.id,
                         files: filesData,
                     });
-
-                    if (uploadError) {
-                        throw uploadError;
-                    }
-
-                    toast.success(`Note ${editingNote ? 'updated' : 'added'} successfully with ${selectedFiles.length} attachment${selectedFiles.length !== 1 ? 's' : ''}`);
-                } catch (uploadErr) {
-                    console.error("Failed to upload attachments:", uploadErr);
-                    toast.error("Note saved but failed to upload attachments");
+                    if (uploadError) throw uploadError;
                 } finally {
                     setIsUploadingAttachments(false);
                 }
-            } else {
-                toast.success(editingNote ? 'Note updated successfully' : 'Note added successfully');
             }
+
+            return savedNote;
+        },
+        onSuccess: async (savedNote) => {
+            // Optimistically update atom
+            if (editingNote) {
+                writeNotes({ type: 'update', note: savedNote });
+            } else {
+                writeNotes({ type: 'add', note: savedNote });
+            }
+            // Refetch from server to hydrate adminName and attachment flags
+            await queryClient.invalidateQueries({ queryKey: notesQueryKey });
+
+            toast.success(editingNote ? 'Note updated successfully' : 'Note added successfully');
 
             setIsDialogOpen(false);
             setEditingNote(null);
             setFormData({ note: "", isImportant: false });
             setSelectedFiles([]);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-            fetchNotes();
-        } catch (err) {
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        },
+        onError: (err: unknown) => {
             toast.error(err instanceof Error ? err.message : 'Failed to save note');
         }
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        saveNoteMutation.mutate();
     };
 
     const handleDelete = async (noteId: number) => {
@@ -198,16 +195,12 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
         }
 
         try {
-            const response = await fetch(`/api/customer-notes?id=${noteId}`, {
-                method: 'DELETE',
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to delete note');
-            }
-
+            const response = await fetch(`/api/customer-notes?id=${noteId}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error('Failed to delete note');
+            // Remove from atom immediately and refetch to confirm
+            writeNotes({ type: 'delete', id: noteId });
+            await queryClient.invalidateQueries({ queryKey: notesQueryKey });
             toast.success('Note deleted successfully');
-            fetchNotes();
         } catch (err) {
             toast.error(err instanceof Error ? err.message : 'Failed to delete note');
         }
@@ -244,8 +237,8 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
     const handleAttachmentsModalClose = () => {
         setAttachmentsModalOpen(false);
         setSelectedNoteId(null);
-        // Refresh notes to update attachment status
-        fetchNotes();
+        // Invalidate to sync flags
+        queryClient.invalidateQueries({ queryKey: notesQueryKey });
     };
 
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -280,38 +273,41 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
         }
     };
 
-    if (loading) {
+    // Determine which notes to display
+    const displayNotes: CustomerNote[] = (notes && notes.length > 0) ? notes : (queryData || []);
+
+    if (isNotesLoading && notes.length === 0) {
         return (
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <MessageSquare className="h-5 w-5" />
+            <Card className="border-gray-200 dark:border-gray-700">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700">
+                    <CardTitle className="flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                        <MessageSquare className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                         Customer Notes
                     </CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <div className="flex items-center justify-center py-4">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                <CardContent className="bg-white dark:bg-gray-900">
+                    <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div>
                     </div>
                 </CardContent>
             </Card>
         );
     }
 
-    if (error) {
+    if (error || isError) {
         return (
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <MessageSquare className="h-5 w-5" />
+            <Card className="border-red-200 dark:border-red-800">
+                <CardHeader className="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20">
+                    <CardTitle className="flex items-center gap-2 text-red-800 dark:text-red-200">
+                        <MessageSquare className="h-5 w-5 text-red-600 dark:text-red-400" />
                         Customer Notes
                     </CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                            {error}
+                <CardContent className="bg-white dark:bg-gray-900">
+                    <Alert variant="destructive" className="border-red-300 bg-red-50 dark:bg-red-900/20">
+                        <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                        <AlertDescription className="text-red-800 dark:text-red-200">
+                            {error || (queryError instanceof Error ? queryError.message : 'Failed to fetch notes')}
                         </AlertDescription>
                     </Alert>
                 </CardContent>
@@ -320,43 +316,48 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
     }
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5" />
-                    Customer Notes ({notes.length})
+        <Card className="border-gray-200 dark:border-gray-700 shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <CardTitle className="flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                    <MessageSquare className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    Customer Notes ({displayNotes.length})
                 </CardTitle>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                     All notes for {customerName}
                 </p>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 bg-white dark:bg-gray-900 p-6">
                 <div className="flex justify-between items-center">
-                    <p className="text-sm text-muted-foreground">
-                        {notes.length} note{notes.length !== 1 ? 's' : ''}
+                    <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                        {displayNotes.length} note{displayNotes.length !== 1 ? 's' : ''}
                     </p>
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button size="sm" onClick={handleAddNew}>
+                            <Button
+                                size="sm"
+                                onClick={handleAddNew}
+                                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                            >
                                 <Plus className="h-4 w-4 mr-2" />
                                 Add Note
                             </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                             <DialogHeader>
-                                <DialogTitle>
+                                <DialogTitle className="text-gray-800 dark:text-gray-200">
                                     {editingNote ? 'Edit Note' : 'Add New Note'}
                                 </DialogTitle>
                             </DialogHeader>
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Note</label>
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Note</label>
                                     <Textarea
                                         value={formData.note}
                                         onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                                         placeholder="Enter note content..."
                                         rows={4}
                                         required
+                                        className="border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
                                     />
                                 </div>
                                 <div className="flex items-center space-x-2">
@@ -366,8 +367,9 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                                         onCheckedChange={(checked) =>
                                             setFormData({ ...formData, isImportant: checked as boolean })
                                         }
+                                        className="text-blue-600 border-gray-300 dark:border-gray-600"
                                     />
-                                    <label htmlFor="important" className="text-sm font-medium">
+                                    <label htmlFor="important" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                         Mark as important
                                     </label>
                                 </div>
@@ -375,7 +377,7 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                                 {/* File Attachments Section */}
                                 <div className="space-y-3">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">Attachments (Optional)</label>
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Attachments (Optional)</label>
                                         <div className="flex items-center gap-2">
                                             <input
                                                 ref={fileInputRef}
@@ -383,16 +385,17 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                                                 multiple
                                                 accept="*/*"
                                                 onChange={handleFileSelect}
-                                                className="flex-1 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                                                className="hidden"
                                             />
                                             <Button
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => fileInputRef.current?.click()}
+                                                className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex-1"
                                             >
                                                 <Upload className="h-4 w-4 mr-2" />
-                                                Browse
+                                                Browse Files
                                             </Button>
                                             {selectedFiles.length > 0 && (
                                                 <Button
@@ -400,13 +403,14 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={handleRemoveAllFiles}
+                                                    className="border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
                                                 >
                                                     <X className="h-4 w-4 mr-2" />
                                                     Clear All
                                                 </Button>
                                             )}
                                         </div>
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
                                             Maximum 10 files, 10MB each. You can upload any file type.
                                         </p>
                                     </div>
@@ -414,16 +418,16 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                                     {/* Selected Files Display */}
                                     {selectedFiles.length > 0 && (
                                         <div className="space-y-2">
-                                            <label className="text-sm font-medium">
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                                 Selected Files ({selectedFiles.length}/10)
                                             </label>
-                                            <div className="space-y-2 max-h-32 overflow-y-auto">
+                                            <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-md p-3 bg-gray-50 dark:bg-gray-800">
                                                 {selectedFiles.map((file, index) => (
-                                                    <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                                                        <FileText className="h-4 w-4 text-muted-foreground" />
+                                                    <div key={index} className="flex items-center gap-2 p-2 bg-white dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600">
+                                                        <FileText className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                                                         <div className="flex-1 min-w-0">
-                                                            <p className="text-sm font-medium truncate">{file.name}</p>
-                                                            <p className="text-xs text-muted-foreground">
+                                                            <p className="text-sm font-medium truncate text-gray-800 dark:text-gray-200">{file.name}</p>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400">
                                                                 {(file.size / 1024 / 1024).toFixed(2)} MB
                                                             </p>
                                                         </div>
@@ -432,7 +436,7 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                                                             variant="outline"
                                                             size="sm"
                                                             onClick={() => handleRemoveFile(index)}
-                                                            className="shrink-0"
+                                                            className="shrink-0 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
                                                         >
                                                             <X className="h-4 w-4" />
                                                         </Button>
@@ -442,18 +446,20 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                                         </div>
                                     )}
                                 </div>
-                                <div className="flex justify-end gap-2">
+                                <div className="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-gray-600">
                                     <Button
                                         type="button"
                                         variant="outline"
                                         onClick={() => setIsDialogOpen(false)}
                                         disabled={isUploadingAttachments}
+                                        className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                                     >
                                         Cancel
                                     </Button>
                                     <Button
                                         type="submit"
                                         disabled={isUploadingAttachments}
+                                        className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
                                     >
                                         {isUploadingAttachments ? (
                                             <>
@@ -470,32 +476,40 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                     </Dialog>
                 </div>
 
-                {notes.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-4">
-                        No notes for this customer yet
-                    </p>
+                {displayNotes.length === 0 ? (
+                    <div className="text-center py-12">
+                        <MessageSquare className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                        <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">
+                            No notes for this customer yet
+                        </p>
+                        <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
+                            Start by adding the first note above
+                        </p>
+                    </div>
                 ) : (
-                    <div className="space-y-3">
-                        {notes.map((note) => (
+                    <div className="space-y-4">
+                        {displayNotes.map((note) => (
                             <div
                                 key={note.id}
-                                className={`p-4 rounded-lg border overflow-hidden ${note.isImportant
-                                    ? 'border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/20'
-                                    : 'border-border bg-background'
+                                className={`p-5 rounded-lg border overflow-hidden transition-all duration-200 hover:shadow-md ${note.isImportant
+                                    ? 'border-orange-300 bg-gradient-to-r from-orange-50 to-amber-50 dark:border-orange-700 dark:from-orange-950/30 dark:to-amber-950/30'
+                                    : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-500'
                                     }`}
                             >
-                                <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
+                                <div className="flex items-start justify-between gap-3 mb-3 min-w-0">
                                     <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
-                                        <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                        <span className="text-sm font-medium truncate min-w-0">{note.adminName}</span>
+                                        <User className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                                        <span className="text-sm font-medium truncate min-w-0 text-gray-800 dark:text-gray-200">
+                                            {note.adminName || 'Unknown Admin'}
+                                        </span>
                                         <div className="flex items-center gap-1 flex-shrink-0">
                                             {note.isImportant && (
-                                                <Badge variant="destructive" className="text-xs">
+                                                <Badge variant="destructive" className="text-xs bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200 border-red-200 dark:border-red-700">
                                                     Important
                                                 </Badge>
                                             )}
                                             {note.hasAttachments && (
-                                                <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                                                <Badge variant="secondary" className="text-xs flex items-center gap-1 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 border-blue-200 dark:border-blue-700">
                                                     <Paperclip className="h-3 w-3" />
                                                     Has Attachments
                                                 </Badge>
@@ -503,18 +517,19 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                                             <Clock className="h-3 w-3" />
                                             <span className="hidden sm:inline">{new Date(note.createdAt).toLocaleDateString()}</span>
                                             <span className="sm:hidden">{new Date(note.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                                         </div>
-                                        <div className="flex items-center gap-1 ml-2">
+                                        <div className="flex items-center gap-1 ml-3">
                                             {note.hasAttachments && (
                                                 <Button
                                                     size="sm"
                                                     variant="ghost"
                                                     onClick={() => handleViewAttachments(note.id)}
                                                     title="View Attachments"
+                                                    className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20"
                                                 >
                                                     <Eye className="h-3 w-3" />
                                                 </Button>
@@ -523,6 +538,7 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                                                 size="sm"
                                                 variant="ghost"
                                                 onClick={() => handleEdit(note)}
+                                                className="text-gray-600 hover:text-gray-800 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-800"
                                             >
                                                 <Edit className="h-3 w-3" />
                                             </Button>
@@ -530,6 +546,7 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                                                 size="sm"
                                                 variant="ghost"
                                                 onClick={() => handleDelete(note.id)}
+                                                className="text-red-600 hover:text-red-800 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
                                             >
                                                 <Trash2 className="h-3 w-3" />
                                             </Button>
@@ -540,7 +557,7 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                                     <CollapsibleNote note={note.note} />
                                 </div>
                                 {note.updatedAt !== note.createdAt && (
-                                    <p className="text-xs text-muted-foreground mt-2">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
                                         Updated: {new Date(note.updatedAt).toLocaleDateString()}
                                     </p>
                                 )}
@@ -556,7 +573,7 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                     noteId={selectedNoteId}
                     isOpen={attachmentsModalOpen}
                     onOpenChange={handleAttachmentsModalClose}
-                    hasAttachments={notes.find(n => n.id === selectedNoteId)?.hasAttachments || false}
+                    hasAttachments={displayNotes.find(n => n.id === selectedNoteId)?.hasAttachments || false}
                     isAdmin={true}
                 />
             )}

@@ -13,22 +13,22 @@ export default async function Page() {
 
         <div className="space-y-8 sm:space-y-12">
           {/* Step 1: Chrome Extension Download */}
-          <div className="step-container bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm hover:shadow-xl 
-            dark:shadow-gray-900/50 transition-all duration-300 ease-in-out transform hover:scale-[1.01]
-            border border-gray-100 dark:border-gray-700">
+          <div className="step-container bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg hover:shadow-2xl 
+            dark:shadow-black/40 transition-all duration-300 ease-in-out transform hover:scale-[1.01]
+            border-2 border-gray-200 dark:border-gray-600">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-500 
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 
                 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl 
-                shadow-md dark:shadow-gray-900/50">
+                shadow-lg dark:shadow-blue-500/30">
                 1
               </div>
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {t('step1')}
               </h2>
             </div>
 
             <div className="space-y-4 ml-0 sm:ml-16">
-              <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300">
+              <p className="text-base sm:text-lg text-gray-800 dark:text-gray-100 font-medium leading-relaxed">
                 {t('step1Description')}
               </p>
 
@@ -37,7 +37,7 @@ export default async function Page() {
                   href="https://chromewebstore.google.com/detail/auctiongate/ehpiejnmbdjkaplmbafaejdhodalfbie?hl=en&pli=1"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200 shadow-md hover:shadow-lg"
+                  className="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
@@ -45,9 +45,9 @@ export default async function Page() {
                   {t('step1DownloadButton')}
                 </a>
 
-                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">{t('step1FeaturesTitle')}</h4>
-                  <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
+                <div className="mt-4 p-4 bg-blue-100 dark:bg-blue-900/40 rounded-lg border-2 border-blue-300 dark:border-blue-700">
+                  <h4 className="font-bold text-blue-900 dark:text-blue-200 mb-2">{t('step1FeaturesTitle')}</h4>
+                  <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1 font-medium">
                     <li>• {t('step1Features.priceCalculations')}</li>
                     <li>• {t('step1Features.vinChecking')}</li>
                     <li>• {t('step1Features.invoiceGeneration')}</li>
@@ -63,30 +63,30 @@ export default async function Page() {
           {[2, 3, 4, 5].map((step) => (
             <div
               key={step}
-              className="step-container bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm hover:shadow-xl 
-                dark:shadow-gray-900/50 transition-all duration-300 ease-in-out transform hover:scale-[1.01]
-                border border-gray-100 dark:border-gray-700"
+              className="step-container bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-lg hover:shadow-2xl 
+                dark:shadow-black/40 transition-all duration-300 ease-in-out transform hover:scale-[1.01]
+                border-2 border-gray-200 dark:border-gray-600"
             >
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-500 
+                <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 
                   text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl 
-                  shadow-md dark:shadow-gray-900/50">
+                  shadow-lg dark:shadow-blue-500/30">
                   {step}
                 </div>
-                <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                   {t(`step${step}`)}
                 </h2>
               </div>
 
               <div className="space-y-4 ml-0 sm:ml-16">
-                <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300">
+                <p className="text-base sm:text-lg text-gray-800 dark:text-gray-100 font-medium leading-relaxed">
                   {t(`step${step}Description`)}
                 </p>
 
                 {(step === 3 || step === 5) && (
                   <div className="mt-6">
                     <div className="relative aspect-video w-full overflow-hidden rounded-xl 
-                      ring-1 ring-gray-200 dark:ring-gray-700">
+                      ring-2 ring-gray-300 dark:ring-gray-600 shadow-lg">
                       <Image
                         src={`/extension${step === 3 ? '1' : '2'}.webp`}
                         alt={t(`imageAlt${step === 3 ? '1' : '2'}`)}
@@ -102,9 +102,9 @@ export default async function Page() {
             </div>
           ))}
 
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 
-            p-6 sm:p-8 rounded-2xl border border-blue-200 dark:border-blue-800 shadow-sm mt-12">
-            <p className="font-semibold text-blue-800 dark:text-blue-300 text-center sm:text-left">
+          <div className="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-800/40 dark:to-blue-900/40 
+            p-6 sm:p-8 rounded-2xl border-2 border-blue-300 dark:border-blue-700 shadow-lg mt-12">
+            <p className="font-bold text-blue-900 dark:text-blue-200 text-center sm:text-left text-lg">
               {t('note')}
             </p>
           </div>

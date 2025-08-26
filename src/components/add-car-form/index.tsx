@@ -323,7 +323,7 @@ export function AddCarForm() {
   if (!isMounted) {
     return (
       <div className="w-full flex justify-center">
-        <div className="w-full md:w-2/3 space-y-8 my-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+        <div className="w-full md:w-2/3 space-y-8 my-8 bg-gray-50 dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             <span className="ml-2 text-muted-foreground">Loading form...</span>
@@ -336,7 +336,7 @@ export function AddCarForm() {
   return (
     <div className="w-full flex justify-center">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full md:w-2/3 space-y-8 my-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg transition-all">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full md:w-2/3 space-y-8 my-8 bg-gray-50 dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all">
           <BasicInfoSection form={form} />
           <AuctionInfoSection form={form} />
           <FinancialInfoSection form={form} />

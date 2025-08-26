@@ -85,9 +85,18 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       const auction = row.original.auction as SelectSchemaType["auction"];
 
       return (
-        <div className="flex items-center justify-between w-[84px]">
-          <p className="text-left"> {year + " " + make + " " + model} </p>
-          {auction !== "Copart" ? <Image src={IAAILogo} alt="IAAI" className="size-8" /> : <Image src={CopartLogo} alt="IAAI" className="size-8" />}
+        <div className="flex flex-col items-center space-y-2 min-w-[80px]">
+          <p className="font-medium">{year}</p>
+          <p className="font-medium">
+            {make} {model}
+          </p>
+          <div className="shrink-0">
+            {auction !== "Copart" ? (
+              <Image src={IAAILogo} alt="IAAI" className="size-8 rounded-sm" />
+            ) : (
+              <Image src={CopartLogo} alt="Copart" className="size-8 rounded-sm" />
+            )}
+          </div>
         </div>
       )
     },

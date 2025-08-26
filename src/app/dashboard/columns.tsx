@@ -78,9 +78,10 @@ export const columns: ColumnDef<CarWithInvoiceData>[] = [
       const auction = row.original.auction as SelectSchemaType["auction"];
 
       return (
-        <div className="flex items-center justify-between min-w-[120px]">
+        <div className="flex flex-col items-center space-y-2 min-w-[80px]">
+          <p className="font-medium">{year}</p>
           <p className="font-medium">
-            {year} {make} {model}
+            {make} {model}
           </p>
           <div className="shrink-0">
             {auction !== "Copart" ? (
@@ -144,7 +145,59 @@ export const columns: ColumnDef<CarWithInvoiceData>[] = [
     header: () => <div className="text-center font-semibold">Fuel</div>,
     cell: ({ row }) => {
       const fuelType = row.getValue("fuelType") as string;
-      return <div className="text-center font-medium">{fuelType || "-"}</div>;
+
+      if (!fuelType) return <div className="text-center text-muted-foreground">-</div>;
+
+      const getFuelIcon = (type: string) => {
+        switch (type.toUpperCase()) {
+          case 'GASOLINE':
+            return (
+              <svg className="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 24 24" aria-labelledby="gasolineTitle">
+                <title id="gasolineTitle">Gasoline</title>
+                <path d="M18 10h-1V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v6H6c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-6c0-1.1-.9-2-2-2zM9 4h6v6H9V4z" />
+              </svg>
+            );
+          case 'HYBRID_ELECTRIC':
+            return (
+              <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24" aria-labelledby="hybridElectricTitle">
+                <title id="hybridElectricTitle">Hybrid Electric</title>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17V7h2v7.17l3.59-3.58L17 10l-5 5z" />
+                <path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" />
+              </svg>
+            );
+          case 'DIESEL':
+            return (
+              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24" aria-labelledby="dieselTitle">
+                <title id="dieselTitle">Diesel</title>
+                <path d="M18 10h-1V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v6H6c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-6c0-1.1-.9-2-2-2zM9 4h6v6H9V4z" />
+                <text x="12" y="16" textAnchor="middle" className="text-xs font-bold fill-current">D</text>
+              </svg>
+            );
+          case 'ELECTRIC':
+            return (
+              <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24" aria-labelledby="electricTitle">
+                <title id="electricTitle">Electric</title>
+                <path d="M7 2v11h3v9l7-12h-4l4-8z" />
+              </svg>
+            );
+          case 'HYDROGEN':
+            return (
+              <svg className="w-5 h-5 text-cyan-500" fill="currentColor" viewBox="0 0 24 24" aria-labelledby="hydrogenTitle">
+                <title id="hydrogenTitle">Hydrogen</title>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+                <text x="12" y="16" textAnchor="middle" className="text-xs font-bold fill-current">H₂</text>
+              </svg>
+            );
+          default:
+            return <span className="text-sm text-muted-foreground">{fuelType}</span>;
+        }
+      };
+
+      return (
+        <div className="text-center flex items-center justify-center">
+          {getFuelIcon(fuelType)}
+        </div>
+      );
     }
   },
   {
@@ -158,15 +211,9 @@ export const columns: ColumnDef<CarWithInvoiceData>[] = [
       return (
         <div className="text-center flex items-center justify-center">
           {hasTitle ? (
-            <div className="flex items-center gap-1 bg-green-600 text-white px-2 py-1 rounded-md">
-              <Check className="h-4 w-4" />
-              <span className="font-medium">Yes</span>
-            </div>
+            <span className="text-green-600 text-xl font-bold">✓</span>
           ) : noTitle ? (
-            <div className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-md">
-              <X className="h-4 w-4" />
-              <span className="font-medium">No</span>
-            </div>
+            <span className="text-red-600 text-xl font-bold">✗</span>
           ) : (
             <span className="text-muted-foreground font-medium">{title || "-"}</span>
           )}
@@ -185,15 +232,9 @@ export const columns: ColumnDef<CarWithInvoiceData>[] = [
       return (
         <div className="text-center flex items-center justify-center">
           {hasKeys ? (
-            <div className="flex items-center gap-1 bg-green-600 text-white px-2 py-1 rounded-md">
-              <Check className="h-4 w-4" />
-              <span className="font-medium">Yes</span>
-            </div>
+            <span className="text-green-600 text-xl font-bold">✓</span>
           ) : noKeys ? (
-            <div className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-md">
-              <X className="h-4 w-4" />
-              <span className="font-medium">No</span>
-            </div>
+            <span className="text-red-600 text-xl font-bold">✗</span>
           ) : (
             <span className="text-muted-foreground font-medium">{keys || "-"}</span>
           )}

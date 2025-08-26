@@ -111,7 +111,7 @@ export function EditCarForm({ car }: EditCarFormProps) {
   return (
     <div className="w-full flex justify-center">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full md:w-2/3 space-y-8 my-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg transition-all">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full md:w-2/3 space-y-8 my-8 bg-gray-50 dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all">
           <BasicInfoSection form={form} />
           <AuctionInfoSection form={form} />
           <FinancialInfoSection form={form} />

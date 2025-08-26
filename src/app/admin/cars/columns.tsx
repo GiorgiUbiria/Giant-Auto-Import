@@ -153,9 +153,10 @@ export const columns = (
         const auction = row.original.auction as SelectSchemaType["auction"];
 
         return (
-          <div className="flex items-center justify-between min-w-[120px]">
+          <div className="flex flex-col items-center space-y-2 min-w-[80px]">
+            <p className="font-medium">{year}</p>
             <p className="font-medium">
-              {year} {make} {model}
+              {make} {model}
             </p>
             <div className="shrink-0">
               {auction !== "Copart" ? (

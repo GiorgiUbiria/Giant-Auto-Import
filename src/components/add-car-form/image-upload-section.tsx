@@ -62,13 +62,13 @@ export function ImageUploadSection({ form }: ImageUploadSectionProps) {
       description: "Images from the auction"
     },
     {
-      name: "pick_up_images", 
+      name: "pick_up_images",
       label: "Pick-up Images",
       description: "Images from pick-up"
     },
     {
       name: "warehouse_images",
-      label: "Warehouse Images", 
+      label: "Warehouse Images",
       description: "Images from warehouse"
     },
     {
@@ -79,11 +79,11 @@ export function ImageUploadSection({ form }: ImageUploadSectionProps) {
   ], []);
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow-md">
+      <CardHeader className="bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
         <CardTitle>Images</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="bg-white dark:bg-gray-800 p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {imageTypes.map((imageType) => (
             <FormField
@@ -92,7 +92,7 @@ export function ImageUploadSection({ form }: ImageUploadSectionProps) {
               name={imageType.name}
               render={({ field: { onChange, value, ...field } }) => (
                 <FormItem>
-                  <FormLabel>{imageType.label}</FormLabel>
+                  <FormLabel className="text-gray-900 dark:text-gray-100 font-semibold">{imageType.label}</FormLabel>
                   <FormControl>
                     <Input
                       type="file"
@@ -102,11 +102,12 @@ export function ImageUploadSection({ form }: ImageUploadSectionProps) {
                         const files = e.target.files;
                         onChange(files);
                       }}
+                      className="border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       {...field}
                     />
                   </FormControl>
                   <FormMessage />
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
                     {imageType.description}. Max size: {MAX_IMAGE_SIZE}MB per file.
                   </p>
                 </FormItem>

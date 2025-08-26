@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Bg from "../../public/bg.avif";
+import Bg from "../../public/new_bg.png";
 
 export default function HeroImageComponent() {
   return (
@@ -19,8 +19,6 @@ export default function HeroImageComponent() {
           loading="eager"
         />
       </div>
-      
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
     </div>
   );
 }

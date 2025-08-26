@@ -13,6 +13,8 @@ import { SelectSchemaType } from "./columns";
 import { CustomerNotes } from "@/components/customer-notes";
 import { getUserPaymentHistoryAction } from "@/lib/actions/paymentActions";
 import { toast } from "sonner";
+import * as React from "react";
+import { SortingState, ColumnFiltersState, VisibilityState } from "@tanstack/react-table";
 
 interface CarsApiResponse {
   cars: SelectSchemaType[];
@@ -51,6 +53,14 @@ export function Client({ userId }: DashboardClientProps) {
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("cars");
+
+  // DataTable state
+  const [pageIndex, setPageIndex] = React.useState(0);
+  const [pageSize, setPageSize] = React.useState(20);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [filters, setFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = React.useState({});
 
   // Fetch user cars
   const fetchUserCars = async () => {
@@ -99,6 +109,28 @@ export function Client({ userId }: DashboardClientProps) {
     }
   };
 
+  // DataTable handlers
+  const handlePaginationChange = React.useCallback(({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
+    setPageIndex(pageIndex);
+    setPageSize(pageSize);
+  }, []);
+
+  const handleSortingChange = React.useCallback((updaterOrValue: SortingState | ((old: SortingState) => SortingState)) => {
+    setSorting(typeof updaterOrValue === "function" ? updaterOrValue(sorting) : updaterOrValue);
+  }, [sorting]);
+
+  const handleFiltersChange = React.useCallback((updaterOrValue: ColumnFiltersState | ((old: ColumnFiltersState) => ColumnFiltersState)) => {
+    setFilters(typeof updaterOrValue === "function" ? updaterOrValue(filters) : updaterOrValue);
+  }, [filters]);
+
+  const handleColumnVisibilityChange = React.useCallback((updaterOrValue: VisibilityState | ((old: VisibilityState) => VisibilityState)) => {
+    setColumnVisibility(typeof updaterOrValue === "function" ? updaterOrValue(columnVisibility) : updaterOrValue);
+  }, [columnVisibility]);
+
+  const handleRowSelectionChange = React.useCallback((updaterOrValue: any | ((old: any) => any)) => {
+    setRowSelection(typeof updaterOrValue === "function" ? updaterOrValue(rowSelection) : updaterOrValue);
+  }, [rowSelection]);
+
   const getTabIcon = (tab: string) => {
     switch (tab) {
       case "cars":
@@ -135,54 +167,39 @@ export function Client({ userId }: DashboardClientProps) {
               </div>
             ) : (
               <div className="rounded-md border">
-                <div className="relative w-full overflow-auto">
-                  <table className="w-full caption-bottom text-sm">
-                    <thead className="[&_tr]:border-b">
-                      <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                          VIN
-                        </th>
-                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                          Vehicle
-                        </th>
-                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                          Status
-                        </th>
-                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="[&_tr:last-child]:border-0">
-                      {cars.map((car) => (
-                        <tr key={car.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                          <td className="p-4 align-middle font-mono text-sm">{car.vin}</td>
-                          <td className="p-4 align-middle">
-                            <div>
-                              <div className="font-medium">{car.year} {car.make} {car.model}</div>
-                              <div className="text-sm text-muted-foreground">{car.reciever}</div>
-                            </div>
-                          </td>
-                          <td className="p-4 align-middle">
-                            <div className="flex items-center gap-2">
-                              {car.hasInvoice?.PURCHASE && (
-                                <Badge variant="secondary" className="text-xs">Purchase Invoice</Badge>
-                              )}
-                              {car.hasInvoice?.SHIPPING && (
-                                <Badge variant="secondary" className="text-xs">Shipping Invoice</Badge>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-4 align-middle">
-                            <Button variant="outline" size="sm" asChild>
-                              <a href={`/car/${car.vin}`}>View Details</a>
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <DataTable
+                  columns={columns}
+                  data={cars}
+                  filterKey="vinDetails"
+                  pageIndex={pageIndex}
+                  pageSize={pageSize}
+                  onPaginationChange={handlePaginationChange}
+                  sorting={sorting}
+                  onSortingChange={handleSortingChange}
+                  filters={filters}
+                  onFiltersChange={handleFiltersChange}
+                  rowCount={cars.length}
+                  columnVisibility={columnVisibility}
+                  onColumnVisibilityChange={handleColumnVisibilityChange}
+                  rowSelection={rowSelection}
+                  onRowSelectionChange={handleRowSelectionChange}
+                  translations={{
+                    searchPlaceholder: "Search by VIN or Lot Number...",
+                    columns: "Columns",
+                    noResults: "No results found",
+                    noData: "No cars found",
+                    clearFilter: "Clear filters",
+                    pagination: {
+                      showing: "Showing",
+                      rowsPerPage: "Rows per page",
+                      page: "Page",
+                      goToFirst: "Go to first page",
+                      goToPrevious: "Go to previous page",
+                      goToNext: "Go to next page",
+                      goToLast: "Go to last page",
+                    }
+                  }}
+                />
               </div>
             )}
           </div>
@@ -228,9 +245,9 @@ export function Client({ userId }: DashboardClientProps) {
                           <p className="text-sm text-muted-foreground">
                             {payment.description || "Payment"}
                           </p>
-                                                      <p className="text-xs text-muted-foreground">
-                              {new Date(payment.createdAt).toLocaleDateString()}
-                            </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(payment.createdAt).toLocaleDateString()}
+                          </p>
                         </div>
                         <div className="text-right">
                           <p className="text-lg font-semibold text-green-600">

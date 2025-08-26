@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, Clock, User, Paperclip, Eye, ChevronDown, ChevronUp } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { NoteAttachmentsModal } from "./note-attachments-modal";
+import { useAtom, useSetAtom } from "jotai";
+import { customerNotesAtomFamily, customerNotesWriteAtomFamily, type CustomerNoteAtom } from "@/lib/customer-notes-atoms";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Collapsible Note Component
 interface CollapsibleNoteProps {
@@ -59,15 +62,7 @@ function CollapsibleNote({ note, maxLength = 200 }: CollapsibleNoteProps) {
     );
 }
 
-interface CustomerNote {
-    id: number;
-    note: string;
-    isImportant: boolean;
-    hasAttachments: boolean;
-    createdAt: string;
-    updatedAt: string;
-    adminName: string;
-}
+type CustomerNote = CustomerNoteAtom;
 
 interface CustomerNotesProps {
     userId: string;
@@ -75,34 +70,27 @@ interface CustomerNotesProps {
 
 export function CustomerNotes({ userId }: CustomerNotesProps) {
     // User component: Shows all notes (both important and regular)
-    const [notes, setNotes] = useState<CustomerNote[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [notes, setNotesAtom] = useAtom(customerNotesAtomFamily(userId));
+    const writeNotes = useSetAtom(customerNotesWriteAtomFamily(userId));
     const [error, setError] = useState<string | null>(null);
     const [attachmentsModalOpen, setAttachmentsModalOpen] = useState(false);
     const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
+    const queryClient = useQueryClient();
+    const notesQueryKey = ["customer-notes", userId];
 
-    useEffect(() => {
-        const fetchNotes = async () => {
-            try {
-                setLoading(true);
-                // Users see all their notes (no filtering by importance)
-                const response = await fetch(`/api/customer-notes?customerId=${userId}`);
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch notes');
-                }
-
-                const data = await response.json();
-                setNotes(data.notes || []);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to fetch notes');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchNotes();
-    }, [userId]);
+    const { data: queryData, isLoading: loading, isError, error: queryError } = useQuery({
+        queryKey: notesQueryKey,
+        queryFn: async () => {
+            const response = await fetch(`/api/customer-notes?customerId=${userId}`);
+            if (!response.ok) throw new Error('Failed to fetch notes');
+            const data = await response.json();
+            return data.notes || [];
+        },
+        enabled: !!userId,
+        staleTime: 30_000,
+        onSuccess: (data: CustomerNote[]) => setNotesAtom(data),
+        onError: (err: unknown) => setError(err instanceof Error ? err.message : 'Failed to fetch notes'),
+    });
 
     const handleViewAttachments = (noteId: number) => {
         setSelectedNoteId(noteId);
@@ -112,11 +100,11 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
     const handleAttachmentsModalClose = () => {
         setAttachmentsModalOpen(false);
         setSelectedNoteId(null);
-        // Refresh notes to update attachment status
-        window.location.reload();
+        // Invalidate to sync attachment flags
+        queryClient.invalidateQueries({ queryKey: notesQueryKey });
     };
 
-    if (loading) {
+    if (loading && notes.length === 0) {
         return (
             <Card>
                 <CardHeader>
@@ -134,7 +122,7 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
         );
     }
 
-    if (error) {
+    if (error || isError) {
         return (
             <Card>
                 <CardHeader>
@@ -147,7 +135,7 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
                     <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription>
-                            {error}
+                            {error || (queryError instanceof Error ? queryError.message : 'Failed to fetch notes')}
                         </AlertDescription>
                     </Alert>
                 </CardContent>
@@ -155,7 +143,9 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
         );
     }
 
-    if (notes.length === 0) {
+    const displayNotes = (notes && notes.length > 0) ? notes : (queryData || []);
+
+    if (displayNotes.length === 0) {
         return (
             <Card>
                 <CardHeader>
@@ -178,11 +168,11 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <AlertCircle className="h-5 w-5" />
-                    All Admin Notes ({notes.length})
+                    All Admin Notes ({displayNotes.length})
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-                {notes.map((note) => (
+                {displayNotes.map((note) => (
                     <div
                         key={note.id}
                         className={`p-4 rounded-lg border overflow-hidden ${note.isImportant
@@ -244,7 +234,7 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
                     noteId={selectedNoteId}
                     isOpen={attachmentsModalOpen}
                     onOpenChange={handleAttachmentsModalClose}
-                    hasAttachments={notes.find(n => n.id === selectedNoteId)?.hasAttachments || false}
+                    hasAttachments={displayNotes.find(n => n.id === selectedNoteId)?.hasAttachments || false}
                     isAdmin={false}
                 />
             )}

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { Upload, Download, DollarSign, Calendar } from "lucide-react";
+import { Upload, Download, DollarSign, Calendar, Edit3, Check, X, FileText } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useServerAction } from "zsa-react";
 import { addPaymentAction, getPaymentHistoryAction } from "@/lib/actions/paymentActions";
@@ -12,6 +12,7 @@ import { checkInvoiceExistsAction, getInvoiceDownloadUrlAction } from "@/lib/act
 import { InvoiceUploadModal } from "./invoice-upload-modal";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 
 interface PaymentInputProps {
     carVin: string;
@@ -161,37 +162,74 @@ export function PaymentInput({
         });
     };
 
+    const getPaymentTypeBg = (type: "PURCHASE" | "SHIPPING") => {
+        if (type === "PURCHASE") return "bg-blue-100";
+        if (type === "SHIPPING") return "bg-purple-100";
+        return "bg-gray-100";
+    };
+
+    const getPaymentTypeColor = (type: "PURCHASE" | "SHIPPING") => {
+        if (type === "PURCHASE") return "text-blue-600";
+        if (type === "SHIPPING") return "text-purple-600";
+        return "text-gray-600";
+    };
+
     if (isEditing) {
         return (
-            <div className="space-y-2">
-                <Input
-                    ref={inputRef}
-                    type="number"
-                    value={paymentAmount}
-                    onChange={(e) => setPaymentAmount(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Enter payment amount"
-                    className="w-24"
-                    min="0"
-                    max={currentAmount}
-                    step="0.01"
-                />
+            <div className="space-y-2 p-2 bg-background border border-border rounded-md shadow-sm">
+                <div className="flex items-center gap-2 mb-1">
+                    <Edit3 className="h-3 w-3 text-foreground" />
+                    <span className="text-xs font-medium text-foreground">
+                        Enter {paymentType.toLowerCase()} payment
+                    </span>
+                </div>
+
+                <div className="relative">
+                    <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                    <Input
+                        ref={inputRef}
+                        type="number"
+                        value={paymentAmount}
+                        onChange={(e) => setPaymentAmount(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="0.00"
+                        className="pl-7 pr-2 h-8 text-sm font-medium"
+                        min="0"
+                        max={currentAmount}
+                        step="0.01"
+                    />
+                </div>
+
+                <div className="text-xs text-muted-foreground text-center">
+                    Max: {formatCurrency(currentAmount)}
+                </div>
+
                 <div className="flex gap-1">
                     <Button
                         size="sm"
                         onClick={handleSubmit}
                         disabled={isSubmitting}
-                        className="h-6 px-2 text-xs"
+                        className="flex-1 h-7 bg-primary hover:bg-primary/90 text-primary-foreground text-xs"
                     >
-                        {isSubmitting ? "..." : "Save"}
+                        {isSubmitting ? (
+                            <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                Processing...
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-1">
+                                <Check className="h-3 w-3" />
+                                Confirm
+                            </div>
+                        )}
                     </Button>
                     <Button
                         size="sm"
                         variant="outline"
                         onClick={handleCancel}
-                        className="h-6 px-2 text-xs"
+                        className="h-7 px-2 text-xs"
                     >
-                        Cancel
+                        <X className="h-3 w-3" />
                     </Button>
                 </div>
             </div>
@@ -199,40 +237,119 @@ export function PaymentInput({
     }
 
     return (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
             <HoverCard>
                 <HoverCardTrigger asChild>
                     <div
-                        className="cursor-pointer hover:text-primary/80 transition-colors font-medium"
+                        className={cn(
+                            "group relative cursor-pointer transition-all duration-200",
+                            "p-2 rounded-md border border-border bg-background",
+                            "hover:border-primary/50 hover:shadow-sm"
+                        )}
                         onDoubleClick={handleDoubleClick}
                     >
-                        {formatCurrency(currentAmount)}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className={cn(
+                                    "p-1.5 rounded-full",
+                                    getPaymentTypeBg(paymentType)
+                                )}>
+                                    <DollarSign className={cn(
+                                        "h-3 w-3",
+                                        getPaymentTypeColor(paymentType)
+                                    )} />
+                                </div>
+                                <div>
+                                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                        {paymentType}
+                                    </div>
+                                    <div className="text-base font-bold text-foreground">
+                                        {formatCurrency(currentAmount)}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {currentAmount > 0 && (
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setIsEditing(true)}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 h-6 w-6 hover:bg-primary/10"
+                                    title="Edit payment"
+                                >
+                                    <Edit3 className="h-3 w-3 text-primary" />
+                                </Button>
+                            )}
+                        </div>
+
+                        {currentAmount > 0 && (
+                            <div className="mt-1 text-xs text-muted-foreground text-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                Click edit button or double-click to add payment
+                            </div>
+                        )}
                     </div>
                 </HoverCardTrigger>
-                <HoverCardContent className="w-80 p-4" align="end">
-                    <div className="space-y-4">
-                        <div>
-                            <h3 className="font-semibold text-lg mb-2">Initial {paymentType} Fee</h3>
-                            <div className="text-primary font-medium">
-                                {formatCurrency(initialAmount)}
+
+                <HoverCardContent className="w-72 p-3" align="end" side="bottom">
+                    <div className="space-y-3">
+                        {/* Header */}
+                        <div className="text-center pb-2 border-b border-border">
+                            <h3 className="font-semibold text-sm text-foreground">
+                                {paymentType} Details
+                            </h3>
+                        </div>
+
+                        {/* Initial Fee Section */}
+                        <div className="bg-muted/50 p-2 rounded-md border border-border/50">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wide">
+                                        Initial {paymentType} Fee
+                                    </h4>
+                                    <div className="text-base font-bold text-foreground">
+                                        {formatCurrency(initialAmount)}
+                                    </div>
+                                </div>
+                                <div className={cn(
+                                    "p-1.5 rounded-full",
+                                    getPaymentTypeBg(paymentType)
+                                )}>
+                                    <DollarSign className={cn(
+                                        "h-3 w-3",
+                                        getPaymentTypeColor(paymentType)
+                                    )} />
+                                </div>
                             </div>
                         </div>
 
+                        {/* Payment History Section */}
                         {paymentHistory.length > 0 && (
-                            <div>
-                                <h3 className="font-semibold text-lg mb-2">Payment History</h3>
-                                <div className="space-y-2">
+                            <div className="space-y-1.5">
+                                <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wide">
+                                    Payment History
+                                </h4>
+                                <div className="space-y-1 max-h-20 overflow-y-auto">
                                     {paymentHistory
                                         .filter(payment => payment.paymentType === paymentType)
                                         .map((payment) => (
-                                            <div key={payment.id} className="flex justify-between items-center text-sm">
-                                                <div className="flex items-center gap-2">
-                                                    <Calendar className="h-3 w-3 text-muted-foreground" />
-                                                    <span>{formatDate(payment.createdAt)}</span>
+                                            <div
+                                                key={payment.id}
+                                                className="flex justify-between items-center p-1.5 bg-muted/30 rounded-md border border-border/50"
+                                            >
+                                                <div className="flex items-center gap-1.5">
+                                                    <Calendar className="h-2.5 w-2.5 text-muted-foreground" />
+                                                    <div>
+                                                        <div className="text-xs font-medium text-foreground">
+                                                            {formatDate(payment.createdAt)}
+                                                        </div>
+                                                        <div className="text-xs text-muted-foreground">
+                                                            by {payment.admin.fullName}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 <div className="flex items-center gap-1">
-                                                    <DollarSign className="h-3 w-3 text-red-500" />
-                                                    <span className="text-red-500 font-medium">
+                                                    <DollarSign className="h-2.5 w-2.5 text-destructive" />
+                                                    <span className="text-destructive font-semibold text-xs">
                                                         -{formatCurrency(payment.amount)}
                                                     </span>
                                                 </div>
@@ -242,44 +359,56 @@ export function PaymentInput({
                             </div>
                         )}
 
-                        <div className="flex gap-2">
-                            <InvoiceUploadModal
-                                carVin={carVin}
-                                invoiceType={paymentType}
-                                hasInvoice={hasInvoice}
-                                trigger={
+                        {/* Action Buttons */}
+                        <div className="space-y-1.5">
+                            <div className="flex gap-1.5">
+                                <InvoiceUploadModal
+                                    carVin={carVin}
+                                    invoiceType={paymentType}
+                                    hasInvoice={hasInvoice}
+                                    trigger={
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="flex-1 h-7 border-border hover:border-primary text-xs"
+                                        >
+                                            <Upload className="h-3 w-3 mr-1" />
+                                            {hasInvoice ? "Change" : "Upload"}
+                                        </Button>
+                                    }
+                                    onUploadSuccess={() => {
+                                        // Update local invoice status
+                                        setHasInvoice(true);
+                                        // Trigger refresh to update parent component
+                                        onPaymentAdded();
+                                    }}
+                                />
+                                {hasInvoice && (
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        className="flex-1"
+                                        onClick={() => executeDownloadInvoice({ carVin, invoiceType: paymentType })}
+                                        className="flex-1 h-7 border-border hover:border-primary text-xs"
                                     >
-                                        <Upload className="h-3 w-3 mr-1" />
-                                        Upload Invoice
+                                        <Download className="h-3 w-3 mr-1" />
+                                        Download
                                     </Button>
-                                }
-                                onUploadSuccess={() => {
-                                    // Update local invoice status
-                                    setHasInvoice(true);
-                                    // Trigger refresh to update parent component
-                                    onPaymentAdded();
-                                }}
-                            />
+                                )}
+                            </div>
+
                             {hasInvoice && (
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => executeDownloadInvoice({ carVin, invoiceType: paymentType })}
-                                    className="flex-1"
-                                >
-                                    <Download className="h-3 w-3 mr-1" />
-                                    Download
-                                </Button>
+                                <div className="flex items-center gap-1.5 p-1.5 bg-primary/5 border border-primary/20 rounded-md">
+                                    <FileText className="h-2.5 w-2.5 text-primary" />
+                                    <span className="text-xs text-primary font-medium">
+                                        Invoice available
+                                    </span>
+                                </div>
                             )}
                         </div>
                     </div>
                 </HoverCardContent>
             </HoverCard>
-            
+
             {/* Download button displayed under the price when invoice exists */}
             {hasInvoice && (
                 <div className="flex justify-center">
@@ -287,7 +416,7 @@ export function PaymentInput({
                         size="sm"
                         variant="outline"
                         onClick={() => executeDownloadInvoice({ carVin, invoiceType: paymentType })}
-                        className="text-xs px-2 py-1 h-6"
+                        className="text-xs px-2 py-1 h-6 border-border hover:border-primary"
                     >
                         <Download className="h-3 w-3 mr-1" />
                         Download Invoice

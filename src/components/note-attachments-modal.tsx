@@ -232,22 +232,24 @@ export function NoteAttachmentsModal({
             )}
 
             <Dialog open={isOpen} onOpenChange={onOpenChange}>
-                <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Paperclip className="h-5 w-5" />
+                <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+                    <DialogHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 -m-6 mb-6 p-6 border-b border-gray-200 dark:border-gray-600">
+                        <DialogTitle className="flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                            <Paperclip className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                             Note Attachments
                         </DialogTitle>
-                        <DialogDescription>
+                        <DialogDescription className="text-gray-600 dark:text-gray-400">
                             Manage attachments for this note. You can upload up to 10 files (max 10MB each).
                         </DialogDescription>
                     </DialogHeader>
 
                     {/* Upload Section - Only show for admins */}
                     {isAdmin && (
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="attachment-files">Select Files</Label>
+                        <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
+                            <div className="space-y-3">
+                                <Label htmlFor="attachment-files" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Select Files
+                                </Label>
                                 <div className="flex items-center gap-2">
                                     <Input
                                         id="attachment-files"
@@ -256,30 +258,33 @@ export function NoteAttachmentsModal({
                                         multiple
                                         accept="*/*"
                                         onChange={handleFileSelect}
-                                        className="flex-1"
+                                        className="hidden"
                                     />
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={() => fileInputRef.current?.click()}
+                                        className="flex-1 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800"
                                     >
                                         <Upload className="h-4 w-4 mr-2" />
-                                        Browse
+                                        Browse Files
                                     </Button>
                                 </div>
                             </div>
 
                             {/* Selected Files */}
                             {selectedFiles.length > 0 && (
-                                <div className="space-y-2">
-                                    <Label>Selected Files ({selectedFiles.length}/10)</Label>
-                                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                                <div className="space-y-3">
+                                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Selected Files ({selectedFiles.length}/10)
+                                    </Label>
+                                    <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-md p-3 bg-white dark:bg-gray-700">
                                         {selectedFiles.map((file, index) => (
-                                            <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                                                <FileText className="h-4 w-4 text-muted-foreground" />
+                                            <div key={index} className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-600 rounded-md border border-gray-200 dark:border-gray-500">
+                                                <FileText className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium truncate">{file.name}</p>
-                                                    <p className="text-xs text-muted-foreground">
+                                                    <p className="text-sm font-medium truncate text-gray-800 dark:text-gray-200">{file.name}</p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
                                                         {(file.size / 1024 / 1024).toFixed(2)} MB
                                                     </p>
                                                 </div>
@@ -287,7 +292,7 @@ export function NoteAttachmentsModal({
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => handleRemoveFile(index)}
-                                                    className="shrink-0"
+                                                    className="shrink-0 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
                                                 >
                                                     <X className="h-4 w-4" />
                                                 </Button>
@@ -302,18 +307,28 @@ export function NoteAttachmentsModal({
                     {/* Existing Attachments */}
                     {localHasAttachments && (
                         <div className="space-y-4">
-                            <Label>Existing Attachments ({attachments.length})</Label>
-                            <div className="space-y-2 max-h-48 overflow-y-auto">
+                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Existing Attachments ({attachments.length})
+                            </Label>
+                            <div className="space-y-3 max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-800">
                                 {attachments.map((attachment) => (
-                                    <div key={attachment.id} className="flex items-center gap-3 p-3 bg-muted rounded-md">
-                                        <FileText className="h-5 w-5 text-muted-foreground" />
+                                    <div key={attachment.id} className="flex items-center gap-3 p-4 bg-white dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
+                                        <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium truncate">{attachment.fileName}</p>
-                                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                                <span>{formatFileSize(attachment.fileSize)}</span>
-                                                <span>{attachment.fileType}</span>
-                                                <span>by {attachment.uploadedByUser.fullName}</span>
-                                                <span>{formatDate(attachment.uploadedAt)}</span>
+                                            <p className="text-sm font-medium truncate text-gray-800 dark:text-gray-200">{attachment.fileName}</p>
+                                            <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+                                                    {formatFileSize(attachment.fileSize)}
+                                                </span>
+                                                <span className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">
+                                                    {attachment.fileType}
+                                                </span>
+                                                <span className="text-gray-600 dark:text-gray-400">
+                                                    by {attachment.uploadedByUser.fullName}
+                                                </span>
+                                                <span className="text-gray-500 dark:text-gray-500">
+                                                    {formatDate(attachment.uploadedAt)}
+                                                </span>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
@@ -321,6 +336,7 @@ export function NoteAttachmentsModal({
                                                 size="sm"
                                                 variant="outline"
                                                 onClick={() => handleDownload(attachment.id)}
+                                                className="border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                                             >
                                                 <Download className="h-4 w-4 mr-1" />
                                                 Download
@@ -330,7 +346,7 @@ export function NoteAttachmentsModal({
                                                     size="sm"
                                                     variant="outline"
                                                     onClick={() => handleDelete(attachment.id)}
-                                                    className="text-red-600 hover:text-red-700"
+                                                    className="border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
@@ -342,11 +358,12 @@ export function NoteAttachmentsModal({
                         </div>
                     )}
 
-                    <DialogFooter>
+                    <DialogFooter className="pt-6 border-t border-gray-200 dark:border-gray-600 -m-6 mt-6 p-6 bg-gray-50 dark:bg-gray-800">
                         <Button
                             variant="outline"
                             onClick={() => onOpenChange(false)}
                             disabled={isUploading}
+                            className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
                             Cancel
                         </Button>
@@ -354,8 +371,16 @@ export function NoteAttachmentsModal({
                             <Button
                                 onClick={handleUpload}
                                 disabled={isUploading}
+                                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
                             >
-                                {isUploading ? "Uploading..." : `Upload ${selectedFiles.length} File${selectedFiles.length > 1 ? 's' : ''}`}
+                                {isUploading ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                        Uploading...
+                                    </>
+                                ) : (
+                                    `Upload ${selectedFiles.length} File${selectedFiles.length > 1 ? 's' : ''}`
+                                )}
                             </Button>
                         )}
                     </DialogFooter>

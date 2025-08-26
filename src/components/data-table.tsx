@@ -124,14 +124,14 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="w-full min-w-full">
-      <Card className="border-0 shadow-none md:border md:shadow-sm w-full min-w-full">
-        <CardHeader className="px-3 py-4 md:px-6 w-full">
+      <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm w-full min-w-full overflow-hidden">
+        <CardHeader className="px-6 py-6 w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between w-full">
             {/* Search and Filter Section */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               {filterKey && (
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
                   <Input
                     placeholder={translations?.searchPlaceholder?.replace('{filterKey}', filterKey) || `Search by ${filterKey}...`}
                     value={
@@ -145,7 +145,7 @@ export function DataTable<TData, TValue>({
                       }
                       onFiltersChange(newFilters);
                     }}
-                    className="pl-9 w-full sm:w-[250px] md:w-[300px]"
+                    className="pl-9 w-full sm:w-[250px] md:w-[300px] h-10 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 dark:focus:border-blue-400 focus:bg-white dark:focus:bg-gray-700 transition-all"
                   />
                 </div>
               )}
@@ -155,12 +155,12 @@ export function DataTable<TData, TValue>({
             <div className="flex items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-9">
+                  <Button variant="outline" size="sm" className="h-10 px-4 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500 transition-all">
                     <Settings2 className="mr-2 h-4 w-4" />
-                    <span className="hidden sm:inline">{translations?.columns || "Columns"}</span>
+                    <span className="hidden sm:inline font-medium">{translations?.columns || "Columns"}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[200px]">
+                <DropdownMenuContent align="end" className="w-[200px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg">
                   {table
                     .getAllColumns()
                     .filter((column) => column.getCanHide())
@@ -168,7 +168,7 @@ export function DataTable<TData, TValue>({
                       return (
                         <DropdownMenuCheckboxItem
                           key={`column-${column.id}`}
-                          className="capitalize"
+                          className="capitalize text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                           checked={column.getIsVisible()}
                           onCheckedChange={(value) => {
                             column.toggleVisibility(!!value);
@@ -182,23 +182,21 @@ export function DataTable<TData, TValue>({
               </DropdownMenu>
             </div>
           </div>
-
-
         </CardHeader>
 
-        <CardContent className="px-0 md:px-6 w-full">
+        <CardContent className="px-0 w-full bg-white dark:bg-gray-900">
           {/* Table Container with Horizontal Scroll */}
           <div className="relative w-full min-w-full">
-            <div className="overflow-x-auto rounded-md border w-full min-w-full">
+            <div className="overflow-x-auto w-full min-w-full">
               <UITable className="w-full min-w-full">
                 <TableHeader>
                   {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
+                    <TableRow key={headerGroup.id} className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                       {headerGroup.headers.map((header) => {
                         return (
                           <TableHead
                             key={header.id}
-                            className="whitespace-nowrap px-3 py-3 text-xs font-medium md:px-4 md:text-sm"
+                            className="whitespace-nowrap px-4 py-4 text-sm font-semibold text-gray-900 dark:text-gray-100"
                           >
                             {header.isPlaceholder
                               ? null
@@ -218,14 +216,17 @@ export function DataTable<TData, TValue>({
                       <TableRow
                         key={row.id}
                         data-state={row.getIsSelected() && "selected"}
-                        className="hover:bg-muted/50"
+                        className={`hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${index % 2 === 0
+                          ? 'bg-white dark:bg-gray-900'
+                          : 'bg-gray-50 dark:bg-gray-800'
+                          }`}
                       >
                         {row.getVisibleCells().map((cell) => (
                           <TableCell
                             key={cell.id}
                             className={
                               (cell.column.columnDef.meta?.cellClassName ? cell.column.columnDef.meta.cellClassName + " " : "") +
-                              "whitespace-nowrap px-3 py-3 text-xs md:px-4 md:py-4 md:text-sm"
+                              "whitespace-nowrap px-4 py-4 text-sm text-gray-700 dark:text-gray-300"
                             }
                           >
                             {flexRender(
@@ -240,18 +241,18 @@ export function DataTable<TData, TValue>({
                     <TableRow>
                       <TableCell
                         colSpan={columns.length}
-                        className="h-32 text-center text-muted-foreground"
+                        className="h-32 text-center text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800"
                       >
                         <div className="flex flex-col items-center justify-center gap-2">
                           <div className="text-4xl">📭</div>
-                          <div className="text-sm font-medium">
-                            {filterKey && filters.find(f => f.id === filterKey)?.value 
+                          <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {filterKey && filters.find(f => f.id === filterKey)?.value
                               ? (translations?.noResults || "No results match your search")
                               : (translations?.noData || "No data found")
                             }
                           </div>
                           {Boolean(filterKey && filters.find(f => f.id === filterKey)?.value) && (
-                            <div className="text-xs text-muted-foreground">
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
                               {translations?.clearFilter || "Try adjusting your search criteria or clear the filter"}
                             </div>
                           )}
@@ -265,7 +266,7 @@ export function DataTable<TData, TValue>({
           </div>
 
           {/* Bottom Pagination */}
-          <div className="pt-4">
+          <div className="pt-6 px-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
             <DataTablePagination
               pageIndex={pageIndex}
               pageSize={pageSize}

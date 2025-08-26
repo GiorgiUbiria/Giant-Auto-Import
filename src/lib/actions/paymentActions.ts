@@ -55,7 +55,7 @@ export const addPaymentAction = isAdminProcedure
 
       // Update the car's due amounts
       const updates: any = {};
-      
+
       if (paymentType === "PURCHASE") {
         updates.purchaseDue = (car.purchaseDue || 0) - amount;
       } else {

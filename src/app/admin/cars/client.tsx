@@ -225,7 +225,7 @@ export const Client = ({ translations }: ClientProps) => {
   }
 
   return (
-    <div className="w-full px-4 md:px-6">
+    <div className="w-full px-4 md:px-6 py-8">
       <h1 className="text-3xl font-bold pb-8 leading-tight">{translations.title}</h1>
       <DataTable
         columns={columns(translations, handleManualRefresh)}

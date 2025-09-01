@@ -12,6 +12,8 @@ import { checkInvoiceExistsAction, getInvoiceDownloadUrlAction } from "@/lib/act
 import { InvoiceUploadModal } from "./invoice-upload-modal";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { useCacheInvalidation } from "@/lib/services/cache-invalidation-service";
+import { ButtonWithLoading, InlineLoading } from "@/components/ui/loading-components";
 import { cn } from "@/lib/utils";
 
 interface PaymentInputProps {
@@ -47,28 +49,44 @@ export function PaymentInput({
 }: PaymentInputProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [paymentAmount, setPaymentAmount] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>(initialPaymentHistory);
     const [hasInvoice, setHasInvoice] = useState(initialHasInvoice);
     const inputRef = useRef<HTMLInputElement>(null);
     const queryClient = useQueryClient();
+    const { invalidateOnPaymentChange } = useCacheInvalidation();
 
     // Remove the useEffect that was making API calls on every render
     // The data now comes from props
 
-    const { execute: executeAddPayment } = useServerAction(addPaymentAction, {
-        onSuccess: () => {
+    const { execute: executeAddPayment, isPending } = useServerAction(addPaymentAction, {
+        onSuccess: async (response) => {
+            console.log("Payment success response:", response);
             toast.success("Payment added successfully");
             setIsEditing(false);
             setPaymentAmount("");
 
-            // Invalidate payment history and invoice status queries
-            queryClient.invalidateQueries({ queryKey: ["paymentHistory", carVin] });
-            queryClient.invalidateQueries({ queryKey: ["invoiceStatus", carVin] });
+            // Use smart cache invalidation for payment changes
+            console.log("Starting cache invalidation...");
+            await invalidateOnPaymentChange({
+                carVin: carVin,
+                paymentType: paymentType,
+                changeType: 'create'
+            }, { refetch: true, activeOnly: true });
 
+            // Also invalidate the specific cars query that the admin page uses
+            console.log("Invalidating getCars query...");
+            await queryClient.invalidateQueries({
+                queryKey: ['getCars'],
+                exact: false,
+                refetchType: 'active',
+            });
+
+            console.log("Cache invalidation completed, calling onPaymentAdded...");
+            // Call the parent callback to refresh data
             onPaymentAdded();
         },
         onError: (error) => {
+            console.error("Payment error:", error);
             toast.error("Failed to add payment");
         },
     });
@@ -81,20 +99,24 @@ export function PaymentInput({
     //     onSuccess: (response) => { setHasInvoice(response.data.exists); },
     // });
 
-    const { execute: executeDownloadInvoice } = useServerAction(getInvoiceDownloadUrlAction, {
-        onSuccess: (response) => {
-            // Create a temporary link to download the file
-            const link = document.createElement('a');
-            link.href = response.data.downloadUrl;
-            link.download = response.data.fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        },
-        onError: (error) => {
+    const handleDownloadInvoice = async () => {
+        try {
+            const [result, error] = await getInvoiceDownloadUrlAction({
+                carVin,
+                invoiceType: paymentType,
+            });
+
+            if (error) {
+                throw error;
+            }
+
+            // Open in new tab instead of downloading
+            window.open(result.downloadUrl, '_blank');
+        } catch (error) {
+            console.error("Download failed:", error);
             toast.error("Failed to download invoice");
-        },
-    });
+        }
+    };
 
     useEffect(() => {
         if (isEditing && inputRef.current) {
@@ -112,6 +134,11 @@ export function PaymentInput({
     };
 
     const handleSubmit = async () => {
+        if (isPending) {
+            console.log("Payment already in progress, skipping");
+            return;
+        }
+
         const amount = parseFloat(paymentAmount);
         if (isNaN(amount) || amount <= 0) {
             toast.error("Please enter a valid amount");
@@ -123,16 +150,18 @@ export function PaymentInput({
             return;
         }
 
-        setIsSubmitting(true);
+        console.log("Submitting payment:", { carVin, amount, paymentType });
+
         try {
-            await executeAddPayment({
+            const result = await executeAddPayment({
                 carVin,
                 amount,
                 paymentType,
                 description: `${paymentType} payment`,
             });
-        } finally {
-            setIsSubmitting(false);
+            console.log("Payment submission result:", result);
+        } catch (error) {
+            console.error("Payment submission error:", error);
         }
     };
 
@@ -208,20 +237,19 @@ export function PaymentInput({
                     <Button
                         size="sm"
                         onClick={handleSubmit}
-                        disabled={isSubmitting}
+                        disabled={isPending}
                         className="flex-1 h-7 bg-primary hover:bg-primary/90 text-primary-foreground text-xs"
                     >
-                        {isSubmitting ? (
-                            <div className="flex items-center gap-1">
-                                <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                Processing...
-                            </div>
-                        ) : (
+                        <ButtonWithLoading
+                            loading={isPending}
+                            loadingText="Processing..."
+                            size="sm"
+                        >
                             <div className="flex items-center gap-1">
                                 <Check className="h-3 w-3" />
                                 Confirm
                             </div>
-                        )}
+                        </ButtonWithLoading>
                     </Button>
                     <Button
                         size="sm"
@@ -387,7 +415,7 @@ export function PaymentInput({
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        onClick={() => executeDownloadInvoice({ carVin, invoiceType: paymentType })}
+                                        onClick={handleDownloadInvoice}
                                         className="flex-1 h-7 border-border hover:border-primary text-xs"
                                     >
                                         <Download className="h-3 w-3 mr-1" />
@@ -415,7 +443,7 @@ export function PaymentInput({
                     <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => executeDownloadInvoice({ carVin, invoiceType: paymentType })}
+                        onClick={handleDownloadInvoice}
                         className="text-xs px-2 py-1 h-6 border-border hover:border-primary"
                     >
                         <Download className="h-3 w-3 mr-1" />

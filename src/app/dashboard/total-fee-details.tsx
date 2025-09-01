@@ -72,31 +72,26 @@ export const TotalFeeDetails = ({
   const totalShippingFee = shippingFee + groundFee + oceanFee;
   const isFullyPaid = currentDue <= 0;
 
-  const { execute: executeDownloadInvoice } = useServerAction(getInvoiceDownloadUrlAction, {
-    onSuccess: (response) => {
-      // Create a temporary link to download the file
-      const link = document.createElement('a');
-      link.href = response.data.downloadUrl;
-      link.download = response.data.fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success("Invoice download started");
-    },
-    onError: (error) => {
-      console.error("Download error:", error);
-      toast.error("Failed to download invoice");
-    },
-  });
-
   const handleDownloadInvoice = async () => {
     try {
-      await executeDownloadInvoice({ carVin, invoiceType: "TOTAL" });
+      const [result, error] = await getInvoiceDownloadUrlAction({
+        carVin,
+        invoiceType: "TOTAL",
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Open in new tab instead of downloading
+      window.open(result.downloadUrl, '_blank');
     } catch (error) {
-      console.error("Download error in handleDownloadInvoice:", error);
+      console.error("Download failed:", error);
       toast.error("Failed to download invoice");
     }
   };
+
+
 
   return (
     <div className="relative group">
@@ -207,7 +202,7 @@ export const TotalFeeDetails = ({
           </div>
         </HoverCardContent>
       </HoverCard>
-      
+
       {/* Download button displayed under the price when invoice exists */}
       {hasInvoice && (
         <div className="flex justify-center">

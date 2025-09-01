@@ -220,7 +220,31 @@ export const columns = (
       header: () => <div className="text-center font-semibold">{translations.columns.fuel}</div>,
       cell: ({ row }) => {
         const fuelType = row.getValue("fuelType") as string;
-        return <div className="text-center font-medium">{fuelType || "-"}</div>;
+
+        if (!fuelType) return <div className="text-center text-muted-foreground">-</div>;
+
+        const getFuelInitials = (type: string) => {
+          switch (type.toUpperCase()) {
+            case 'GASOLINE':
+              return 'GAS';
+            case 'HYBRID_ELECTRIC':
+              return 'HYB';
+            case 'DIESEL':
+              return 'DIE';
+            case 'ELECTRIC':
+              return 'ELE';
+            case 'HYDROGEN':
+              return 'HYD';
+            default:
+              return type.substring(0, 3).toUpperCase();
+          }
+        };
+
+        return (
+          <div className="text-center flex items-center justify-center">
+            <span className="text-sm font-medium">{getFuelInitials(fuelType)}</span>
+          </div>
+        );
       }
     },
     {
@@ -234,15 +258,9 @@ export const columns = (
         return (
           <div className="text-center flex items-center justify-center">
             {hasTitle ? (
-              <div className="flex items-center gap-1 bg-green-600 text-white px-2 py-1 rounded-md">
-                <Check className="h-4 w-4" />
-                <span className="font-medium">{translations.status.yes}</span>
-              </div>
+              <span className="text-green-600 text-xl font-bold">✓</span>
             ) : noTitle ? (
-              <div className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-md">
-                <X className="h-4 w-4" />
-                <span className="font-medium">{translations.status.no}</span>
-              </div>
+              <span className="text-red-600 text-xl font-bold">✗</span>
             ) : (
               <span className="text-muted-foreground font-medium">{title || "-"}</span>
             )}
@@ -261,15 +279,9 @@ export const columns = (
         return (
           <div className="text-center flex items-center justify-center">
             {hasKeys ? (
-              <div className="flex items-center gap-1 bg-green-600 text-white px-2 py-1 rounded-md">
-                <Check className="h-4 w-4" />
-                <span className="font-medium">{translations.status.yes}</span>
-              </div>
+              <span className="text-green-600 text-xl font-bold">✓</span>
             ) : noKeys ? (
-              <div className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-md">
-                <X className="h-4 w-4" />
-                <span className="font-medium">{translations.status.no}</span>
-              </div>
+              <span className="text-red-600 text-xl font-bold">✗</span>
             ) : (
               <span className="text-muted-foreground font-medium">{keys || "-"}</span>
             )}

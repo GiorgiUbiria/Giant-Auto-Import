@@ -16,7 +16,7 @@ export default async function Footer() {
   const t = await getTranslations("Footer");
 
   return (
-    <footer className="bg-white dark:bg-gradient-to-r dark:from-slate-950 dark:to-blue-950 shadow-lg shadow-md shadow-black/30 border-t border-gray-200 dark:border-gray-800">
+    <footer className="bg-white dark:bg-gradient-to-r dark:from-slate-950 dark:to-blue-800 shadow-lg shadow-black/30 border-t border-gray-200 dark:border-gray-800">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 xl:px-8">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
           {/* Company Info Section */}

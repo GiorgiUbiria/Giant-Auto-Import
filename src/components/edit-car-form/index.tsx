@@ -13,6 +13,9 @@ import { toast } from "sonner";
 import { BasicInfoSection } from "../shared-form-sections/basic-info-section";
 import { AuctionInfoSection } from "../shared-form-sections/auction-info-section";
 import { FinancialInfoSection } from "../shared-form-sections/financial-info-section";
+import { useCacheInvalidation } from "@/lib/services/cache-invalidation-service";
+
+import { ButtonWithLoading } from "@/components/ui/loading-components";
 
 const FormSchema = insertCarSchema.omit({
   id: true,
@@ -36,6 +39,10 @@ interface EditCarFormProps {
 
 export function EditCarForm({ car }: EditCarFormProps) {
   const queryClient = useQueryClient();
+  const { invalidateOnCarChange } = useCacheInvalidation();
+
+  // Note: Using isPending from useServerActionMutation directly
+  // instead of useServerActionLoading to avoid coordination issues
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -82,25 +89,12 @@ export function EditCarForm({ car }: EditCarFormProps) {
       const successMessage = data?.message || "Car updated successfully!";
       toast.success(successMessage);
 
-      // Invalidate both the specific car and the cars list
-      await queryClient.invalidateQueries({
-        queryKey: ["getCar", car.vin],
-        refetchType: "active",
-      });
-
-      // Also invalidate the cars list to ensure table updates
-      await queryClient.invalidateQueries({
-        queryKey: ["getCars"],
-        exact: false,
-        refetchType: "active",
-      });
-
-      // Force refetch to ensure immediate UI update
-      await queryClient.refetchQueries({
-        queryKey: ["getCars"],
-        exact: false,
-        type: "active",
-      });
+      // Use smart cache invalidation based on car changes
+      await invalidateOnCarChange({
+        vin: car.vin,
+        ownerId: car.ownerId,
+        changeType: 'update'
+      }, { refetch: true, activeOnly: true });
     },
   });
 
@@ -126,7 +120,13 @@ export function EditCarForm({ car }: EditCarFormProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Updating Car..." : "Update Car"}
+              <ButtonWithLoading
+                loading={isPending}
+                loadingText="Updating Car..."
+                size="md"
+              >
+                Update Car
+              </ButtonWithLoading>
             </Button>
           </div>
         </form>

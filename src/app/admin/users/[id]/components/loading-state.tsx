@@ -2,6 +2,7 @@
 
 import { Loader2, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FullPageLoading, InlineLoading } from '@/components/ui/loading-components';
 
 export function LoadingState() {
   return (
@@ -74,15 +75,10 @@ export function TabLoadingState() {
         <div className="h-8 w-48 bg-muted animate-pulse rounded"></div>
         <div className="h-6 w-20 bg-muted animate-pulse rounded"></div>
       </div>
-      
+
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-center justify-center py-12">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-muted-foreground">Loading tab content...</p>
-            </div>
-          </div>
+          <InlineLoading message="Loading tab content..." size="md" />
         </CardContent>
       </Card>
     </div>

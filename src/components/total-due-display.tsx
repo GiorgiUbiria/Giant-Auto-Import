@@ -48,20 +48,24 @@ export function TotalDueDisplay({
     // Remove the useEffect that was making API calls on every render
     // The data now comes from props
 
-    const { execute: executeDownloadInvoice } = useServerAction(getInvoiceDownloadUrlAction, {
-        onSuccess: (response) => {
-            // Create a temporary link to download the file
-            const link = document.createElement('a');
-            link.href = response.data.downloadUrl;
-            link.download = response.data.fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        },
-        onError: (error) => {
+    const handleDownloadInvoice = async () => {
+        try {
+            const [result, error] = await getInvoiceDownloadUrlAction({
+                carVin,
+                invoiceType: "TOTAL",
+            });
+
+            if (error) {
+                throw error;
+            }
+
+            // Open in new tab instead of downloading
+            window.open(result.downloadUrl, '_blank');
+        } catch (error) {
+            console.error("Download failed:", error);
             toast.error("Failed to download invoice");
-        },
-    });
+        }
+    };
 
     const formatDate = (date: Date) => {
         return new Date(date).toLocaleDateString("en-US", {
@@ -155,7 +159,7 @@ export function TotalDueDisplay({
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => executeDownloadInvoice({ carVin, invoiceType: "TOTAL" })}
+                                    onClick={handleDownloadInvoice}
                                     className="flex-1"
                                 >
                                     <Download className="h-3 w-3 mr-1" />

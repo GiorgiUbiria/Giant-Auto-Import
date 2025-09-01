@@ -4,12 +4,15 @@ import { useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
 import { getUserAction } from '@/lib/actions/userActions';
 import { useServerActionQuery } from '@/lib/hooks/server-action-hooks';
+import { useQueryLoading } from '@/lib/services/loading-state-service';
+import { UserDataLoading, CarDataLoading } from '@/components/ui/loading-components';
 import {
     adminUserDataAtom,
     adminUserCarsAtom,
     adminUserLoadingAtom,
     adminUserCarsLoadingAtom,
     adminUserErrorAtom,
+    adminUserRefetchTriggerAtom,
     setAdminUserDataAtom,
     setAdminUserCarsAtom,
     setAdminUserErrorAtom,
@@ -30,6 +33,7 @@ export function UserDataProvider({ userId, children }: UserDataProviderProps) {
     const [, setError] = useAtom(setAdminUserErrorAtom);
     const [, setLoading] = useAtom(setAdminUserLoadingAtom);
     const [, setCarsLoading] = useAtom(setAdminUserCarsLoadingAtom);
+    const [refetchTrigger] = useAtom(adminUserRefetchTriggerAtom);
 
     // Fetch user data
     const {
@@ -47,29 +51,51 @@ export function UserDataProvider({ userId, children }: UserDataProviderProps) {
         refetchOnReconnect: false,
     });
 
+    // Unified loading state management for user data
+    useQueryLoading(
+        ["getUser", userId],
+        userLoading,
+        userError,
+        { minLoadingTime: 500 }
+    );
+
     // Fetch user cars separately using useEffect and fetch
     const [carsLoading, setCarsLoadingLocal] = useState(false);
     const [carsData, setCarsData] = useState<any>(null);
     const [carsError, setCarsError] = useState<Error | null>(null);
 
-    useEffect(() => {
-        const fetchCars = async () => {
-            try {
-                setCarsLoadingLocal(true);
-                setCarsError(null);
-                const response = await fetch(`/api/cars?ownerId=${userId}&pageSize=1000`);
-                if (!response.ok) throw new Error('Failed to fetch cars');
-                const data = await response.json();
-                setCarsData(data);
-            } catch (err) {
-                setCarsError(err instanceof Error ? err : new Error('Failed to fetch cars'));
-            } finally {
-                setCarsLoadingLocal(false);
-            }
-        };
+    const fetchCars = async () => {
+        try {
+            setCarsLoadingLocal(true);
+            setCarsError(null);
 
+            // Add timeout to prevent infinite loading
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+            const response = await fetch(`/api/cars?ownerId=${userId}&pageSize=1000`, {
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) throw new Error('Failed to fetch cars');
+            const data = await response.json();
+            setCarsData(data);
+        } catch (err) {
+            if (err instanceof Error && err.name === 'AbortError') {
+                setCarsError(new Error('Request timed out after 15 seconds'));
+            } else {
+                setCarsError(err instanceof Error ? err : new Error('Failed to fetch cars'));
+            }
+        } finally {
+            setCarsLoadingLocal(false);
+        }
+    };
+
+    useEffect(() => {
         fetchCars();
-    }, [userId]);
+    }, [userId, refetchTrigger]);
 
     // Sync user data with Jotai state
     useEffect(() => {

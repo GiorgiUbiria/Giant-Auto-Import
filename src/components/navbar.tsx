@@ -143,15 +143,11 @@ const Navbar = ({ user, translations }: NavbarProps) => {
     { href: "/contact", label: t("contact"), icon: ICON_MAP.contact },
     { href: "/about", label: t("about"), icon: ICON_MAP.about },
     { href: "/calculator", label: t("calculator"), icon: ICON_MAP.calculator },
-    { href: "/how-to", label: tHowTo("navbar"), icon: ICON_MAP.about },
+    { href: "/how-to", label: tHowTo("navbar"), icon: ICON_MAP.extension },
   ];
 
   const adminLinks: NavigationLink[] = user?.role === "ADMIN" ? [
-    { href: "/admin", label: t("admin_panel"), icon: ICON_MAP.admin },
-    { href: "/admin/cars", label: t("cars"), icon: ICON_MAP.cars, isAdminLink: true },
-    { href: "/admin/add_car", label: t("add_car"), icon: ICON_MAP.addCar, isAdminLink: true },
-    { href: "/admin/users", label: t("users"), icon: ICON_MAP.users, isAdminLink: true },
-    { href: "/admin/signup", label: t("register"), icon: ICON_MAP.users, isAdminLink: true }
+    { href: "/admin", label: t("admin_panel"), icon: ICON_MAP.admin }
   ] : [];
 
   const customerLinks: NavigationLink[] = user?.role?.includes("CUSTOMER") ? [
@@ -169,7 +165,7 @@ const Navbar = ({ user, translations }: NavbarProps) => {
         onMouseLeave={handleMouseLeave}
         className={headerClassName}
       >
-        <div className="w-full bg-white dark:bg-gradient-to-r dark:from-slate-950 dark:to-blue-950 shadow-md transition-colors duration-300">
+        <div className="w-full bg-white dark:bg-gradient-to-r dark:from-slate-950 dark:to-blue-800 shadow-md transition-colors duration-300">
           {/* Upper Navbar */}
           <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16 sm:h-20">
@@ -206,7 +202,7 @@ const Navbar = ({ user, translations }: NavbarProps) => {
                   <Image
                     src={CopartLogo}
                     alt="Copart logo"
-                    className="size-12 sm:size-16 dark:brightness-95"
+                    className="size-16 sm:size-20 lg:size-24 dark:brightness-95"
                     priority
                   />
                 </Link>
@@ -219,7 +215,7 @@ const Navbar = ({ user, translations }: NavbarProps) => {
                   <Image
                     src={IAAILogo}
                     alt="IAAI logo"
-                    className="size-12 sm:size-16 dark:brightness-95"
+                    className="size-16 sm:size-20 lg:size-24 dark:brightness-95"
                     priority
                   />
                 </Link>
@@ -233,7 +229,7 @@ const Navbar = ({ user, translations }: NavbarProps) => {
           </div>
 
           {/* Navigation Links */}
-          <div className="hidden md:block border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-slate-950">
+          <div className="hidden md:block border-t border-gray-200 dark:border-gray-800 bg-gray-200 dark:bg-slate-950">
             <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
               <NavigationLinks links={navigationLinks} />
             </div>

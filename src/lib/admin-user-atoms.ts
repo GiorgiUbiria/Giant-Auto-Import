@@ -119,6 +119,18 @@ export const setAdminUserCarsLoadingAtom = atom(
   }
 );
 
+// Refetch trigger atom
+export const adminUserRefetchTriggerAtom = atom(0);
+
+// Refetch trigger setter
+export const triggerAdminUserRefetchAtom = atom(
+  null,
+  (get, set) => {
+    const current = get(adminUserRefetchTriggerAtom);
+    set(adminUserRefetchTriggerAtom, current + 1);
+  }
+);
+
 // Reset all state atom
 export const resetAdminUserStateAtom = atom(
   null,

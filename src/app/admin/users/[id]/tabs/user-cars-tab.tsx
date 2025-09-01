@@ -3,7 +3,7 @@
 import { useAtomValue, useAtom } from 'jotai';
 import { DataTable } from '@/components/data-table';
 import { columns } from '../columns';
-import { adminUserDataAtom, adminUserCarsAtom, adminUserTableStateAtom } from '@/lib/admin-user-atoms';
+import { adminUserDataAtom, adminUserCarsAtom, adminUserTableStateAtom, triggerAdminUserRefetchAtom } from '@/lib/admin-user-atoms';
 import { setAdminUserTablePageAtom, setAdminUserTableSortingAtom, setAdminUserTableFiltersAtom, setAdminUserTableColumnVisibilityAtom, setAdminUserTableRowSelectionAtom } from '@/lib/admin-user-atoms';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Car } from 'lucide-react';
@@ -19,6 +19,13 @@ export function UserCarsTab() {
   const [, setFilters] = useAtom(setAdminUserTableFiltersAtom);
   const [, setColumnVisibility] = useAtom(setAdminUserTableColumnVisibilityAtom);
   const [, setRowSelection] = useAtom(setAdminUserTableRowSelectionAtom);
+  const [, triggerRefetch] = useAtom(triggerAdminUserRefetchAtom);
+
+  // Refresh function to reload data after payments
+  const handleRefresh = () => {
+    // Trigger a refetch of the cars data
+    triggerRefetch();
+  };
 
   if (!user) {
     return (
@@ -112,7 +119,7 @@ export function UserCarsTab() {
         <Card>
           <CardContent className="p-6">
             <DataTable
-              columns={columns}
+              columns={columns(handleRefresh)}
               data={paginatedData}
               filterKey="vin"
               pageIndex={tableState.pageIndex}

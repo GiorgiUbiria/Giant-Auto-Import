@@ -491,6 +491,14 @@ export const assignOwnerAction = isAdminProcedure
     }
 
     try {
+      // Log current image priorities before ownership change for debugging
+      const currentImages = await db
+        .select({ imageKey: images.imageKey, priority: images.priority })
+        .from(images)
+        .where(eq(images.carVin, vin));
+      
+      console.log("Image priorities before ownership change:", { vin, currentImages });
+
       const whereClause = [];
       if (carId !== undefined) {
         whereClause.push(eq(cars.id, carId));
@@ -527,7 +535,35 @@ export const assignOwnerAction = isAdminProcedure
         };
       }
 
+      // Log image priorities after ownership change to detect any changes
+      const updatedImages = await db
+        .select({ imageKey: images.imageKey, priority: images.priority })
+        .from(images)
+        .where(eq(images.carVin, vin));
+      
+      console.log("Image priorities after ownership change:", { vin, updatedImages });
+
+      // Check if any image priorities changed unexpectedly
+      const priorityChanged = currentImages.some((img, index) => 
+        img.priority !== updatedImages[index]?.priority
+      );
+      
+      if (priorityChanged) {
+        console.warn("WARNING: Image priorities changed during ownership assignment!", {
+          vin,
+          before: currentImages,
+          after: updatedImages
+        });
+      }
+
+      // Comprehensive revalidation to ensure all views update
+      // Note: The main cars table uses React Query with keys like ["getCars", pageIndex, pageSize, sorting, filters]
+      // The revalidatePath calls will trigger server-side revalidation, but React Query cache invalidation
+      // should also be handled in the components that call this action
       revalidatePath(`/admin/users/${ownerId}`);
+      revalidatePath(`/admin/cars`);
+      revalidatePath(`/dashboard`);
+      revalidatePath(`/car/${vin}`);
 
       return {
         success: true,
@@ -629,6 +665,8 @@ export const assignRecieverAction = authedProcedure
       }
 
       revalidatePath(`/admin/cars`);
+      revalidatePath(`/dashboard`);
+      revalidatePath(`/car/${vin}`);
 
       return {
         success: true,
@@ -689,6 +727,14 @@ export const updateCarAction = isAdminProcedure
           success: false,
           message: "Car update failed",
         };
+      }
+
+      // Add comprehensive revalidation to ensure all views update
+      revalidatePath(`/admin/cars`);
+      revalidatePath(`/dashboard`);
+      revalidatePath(`/car/${input.vin}`);
+      if (input.ownerId) {
+        revalidatePath(`/admin/users/${input.ownerId}`);
       }
 
       return {

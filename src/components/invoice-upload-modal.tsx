@@ -16,6 +16,9 @@ import {
 import { Upload, FileText, X, Download, AlertCircle, CheckCircle, FileUp } from "lucide-react";
 import { useServerAction } from "zsa-react";
 import { uploadInvoiceAction, getInvoiceDownloadUrlAction } from "@/lib/actions/invoiceActions";
+import { useCacheInvalidation } from "@/lib/services/cache-invalidation-service";
+
+import { ButtonWithLoading, UploadLoading, DownloadLoading } from "@/components/ui/loading-components";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +43,10 @@ export function InvoiceUploadModal({
     const [localHasInvoice, setLocalHasInvoice] = useState(hasInvoice);
     const [isDragOver, setIsDragOver] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { invalidateOnInvoiceChange } = useCacheInvalidation();
+
+    // Note: Using local isUploading state instead of useServerActionLoading
+    // to avoid circular dependency issues
 
     // Update local state when prop changes
     useEffect(() => {
@@ -47,7 +54,7 @@ export function InvoiceUploadModal({
     }, [hasInvoice]);
 
     const { execute: executeUpload } = useServerAction(uploadInvoiceAction, {
-        onSuccess: (response) => {
+        onSuccess: async (response) => {
             console.log("Upload success response:", response);
             if (response.data.replaced) {
                 toast.success("Invoice updated successfully");
@@ -58,6 +65,14 @@ export function InvoiceUploadModal({
             setLocalHasInvoice(true);
             setIsOpen(false);
             setSelectedFile(null);
+
+            // Use smart cache invalidation for invoice changes
+            await invalidateOnInvoiceChange({
+                carVin: carVin,
+                invoiceType: invoiceType,
+                changeType: 'create'
+            }, { refetch: true, activeOnly: true });
+
             onUploadSuccess?.();
         },
         onError: (error) => {
@@ -73,23 +88,7 @@ export function InvoiceUploadModal({
         },
     });
 
-    const { execute: executeDownload } = useServerAction(getInvoiceDownloadUrlAction, {
-        onSuccess: (response) => {
-            console.log("Download success response:", response);
-            // Create a temporary link to download the file
-            const link = document.createElement('a');
-            link.href = response.data.downloadUrl;
-            link.download = response.data.fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            toast.success("Invoice download started");
-        },
-        onError: (error) => {
-            console.error("Download error:", error);
-            toast.error("Failed to download invoice");
-        },
-    });
+
 
     const handleDownload = async () => {
         try {

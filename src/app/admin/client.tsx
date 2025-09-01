@@ -11,12 +11,11 @@ import { useTranslations } from "next-intl";
 import { useAtom, useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import {
-  adminUserAtom,
-  adminLoadingAtom,
-  adminErrorAtom,
-  resetAdminFormAtom,
-  addNotificationAtom,
-  addActivityLogAtom,
+	adminUserAtom,
+	adminLoadingAtom,
+	adminErrorAtom,
+	resetAdminFormAtom,
+	addActivityLogAtom,
 } from '@/lib/admin-atoms';
 
 export const Client = ({ id }: { id: string }) => {
@@ -27,7 +26,6 @@ export const Client = ({ id }: { id: string }) => {
 	const [loading, setLoading] = useAtom(adminLoadingAtom);
 	const [error, setError] = useAtom(adminErrorAtom);
 	const [, resetForm] = useAtom(resetAdminFormAtom);
-	const [, addNotification] = useAtom(addNotificationAtom);
 	const [, addActivity] = useAtom(addActivityLogAtom);
 
 	// Optimized React Query configuration to prevent excessive calls
@@ -48,20 +46,16 @@ export const Client = ({ id }: { id: string }) => {
 	// Sync React Query state with Jotai atoms
 	useEffect(() => {
 		setLoading(isLoading);
-		
+
 		if (queryError) {
 			setError(queryError.message || t("error"));
-			addNotification({
-				type: 'error',
-				message: queryError.message || t("error"),
-			});
 		} else if (data) {
 			setError(null);
-			
+
 			// Safe data validation with better type checking
 			const isValidData = data && typeof data === 'object' && 'success' in data;
 			const hasValidUser = isValidData && data.success && data.user && typeof data.user === 'object' && 'id' in data.user;
-			
+
 			if (hasValidUser && data.user) {
 				setAdminUser(data.user);
 				resetForm(data.user);
@@ -72,13 +66,9 @@ export const Client = ({ id }: { id: string }) => {
 				});
 			} else {
 				setError(data?.message || t("error"));
-				addNotification({
-					type: 'error',
-					message: data?.message || t("error"),
-				});
 			}
 		}
-	}, [isLoading, data, queryError, setLoading, setError, setAdminUser, resetForm, addNotification, addActivity, t]);
+	}, [isLoading, data, queryError, setLoading, setError, setAdminUser, resetForm, addActivity, t]);
 
 	// Validate input
 	if (!id || typeof id !== 'string') {
@@ -113,15 +103,19 @@ export const Client = ({ id }: { id: string }) => {
 
 	const QuickAccessCard = ({ title, description, icon: Icon, href }: { title: string; description: string; icon: any; href: string }) => (
 		<Link href={href}>
-			<Card className="hover:bg-accent/50 transition-all duration-200 cursor-pointer group h-full">
+			<Card className="hover:bg-accent/80 dark:hover:bg-accent/60 transition-all duration-200 cursor-pointer group h-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 hover:border-primary/50 shadow-lg hover:shadow-xl">
 				<CardHeader className="space-y-2 h-full flex flex-col">
 					<div className="flex items-center gap-3">
-						<div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors flex-shrink-0">
+						<div className="p-2 bg-primary/20 dark:bg-primary/30 rounded-lg group-hover:bg-primary/30 dark:group-hover:bg-primary/40 transition-colors flex-shrink-0">
 							<Icon className="h-5 w-5 text-primary" />
 						</div>
-						<CardTitle className="text-lg leading-tight min-h-[1.5rem] flex items-center">{title}</CardTitle>
+						<CardTitle className="text-lg leading-tight min-h-[1.5rem] flex items-center text-gray-900 dark:text-white font-bold">
+							{title}
+						</CardTitle>
 					</div>
-					<CardDescription className="text-sm leading-relaxed flex-grow">{description}</CardDescription>
+					<CardDescription className="text-sm leading-relaxed flex-grow text-gray-700 dark:text-gray-300 font-medium">
+						{description}
+					</CardDescription>
 				</CardHeader>
 			</Card>
 		</Link>
@@ -173,10 +167,14 @@ export const Client = ({ id }: { id: string }) => {
 			) : error || !adminUser ? (
 				<ErrorState />
 			) : (
-				<Card className="border-t">
+				<Card className="border-t-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 shadow-lg">
 					<CardHeader>
-						<CardTitle className="text-xl leading-tight">{t("adminProfile.title")}</CardTitle>
-						<CardDescription className="leading-relaxed">{t("adminProfile.description")}</CardDescription>
+						<CardTitle className="text-xl leading-tight text-gray-900 dark:text-white font-bold">
+							{t("adminProfile.title")}
+						</CardTitle>
+						<CardDescription className="leading-relaxed text-gray-700 dark:text-gray-200 font-medium">
+							{t("adminProfile.description")}
+						</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<UpdateAdminForm user={adminUser} />

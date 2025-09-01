@@ -2,89 +2,157 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { memo, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { memo, useMemo } from "react";
+import {
+  HomeIcon,
+  EnvelopeClosedIcon,
+  InfoCircledIcon,
+  GearIcon,
+  GridIcon,
+  Component1Icon
+} from "@radix-ui/react-icons";
 
-interface LinkProp {
+// Enhanced types for better type safety
+interface NavigationLink {
   href: string;
   label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  description?: string;
   isAdminLink?: boolean;
+  isExternal?: boolean;
+  badge?: string;
+  disabled?: boolean;
 }
 
-const NavLink = memo(({ href, label, isActive }: LinkProp & { isActive: boolean }) => (
-  <Link
-    href={href}
-    prefetch
-    className={`flex items-center text-nowrap font-medium py-3 transition-colors
-      ${isActive 
-        ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400" 
-        : "text-black dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 border-b-2 border-transparent"}`}
-  >
-    <span>{label}</span>
-  </Link>
-));
+// Icon mapping for consistent icon usage
+const ICON_MAP = {
+  home: HomeIcon,
+  contact: EnvelopeClosedIcon,
+  about: InfoCircledIcon,
+  calculator: GridIcon, // Grid icon for calculator functionality
+  extension: Component1Icon, // Component icon for how-to/extension links
+  dashboard: HomeIcon, // Using HomeIcon as a placeholder for dashboard
+  admin: GearIcon,
+} as const;
 
-NavLink.displayName = "NavLink";
-
-const AdminDropdown = memo(({ links, isActive }: { links: LinkProp[], isActive: boolean }) => {
-  const [isOpen, setIsOpen] = useState(false);
+// Enhanced NavLink component with better accessibility and animations
+const NavLink = memo(({
+  link,
+  isActive,
+  isExpanded
+}: {
+  link: NavigationLink;
+  isActive: boolean;
+  isExpanded?: boolean;
+}) => {
+  const IconComponent = link.icon;
 
   return (
-    <div className="relative" onMouseEnter={() => setIsOpen(true)} onMouseLeave={() => setIsOpen(false)}>
-      <button
-        className={`flex items-center gap-1 font-medium py-3 transition-colors
-          ${isActive 
-            ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400" 
-            : "text-black dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 border-b-2 border-transparent"}`}
-      >
-        <span>Admin</span>
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-      
-      {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-900 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </div>
+    <Link
+      href={link.href}
+      prefetch={!link.isExternal}
+      className={`
+        group relative flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200
+        ${isActive
+          ? "bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100"
+        }
+        ${link.disabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}
+        ${isExpanded ? "min-w-fit" : "w-10 justify-center"}
+      `}
+      aria-current={isActive ? "page" : undefined}
+      title={!isExpanded ? link.label : undefined}
+    >
+      <IconComponent
+        className={`
+          h-4 w-4 flex-shrink-0 transition-transform duration-200
+          ${isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}
+          ${isExpanded ? "group-hover:scale-110" : ""}
+        `}
+      />
+
+      {isExpanded && (
+        <span className="font-medium text-sm whitespace-nowrap">{link.label}</span>
       )}
-    </div>
+
+      {/* Active indicator */}
+      {isActive && (
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-blue-600 dark:bg-blue-400 rounded-full" />
+      )}
+    </Link>
   );
 });
 
-AdminDropdown.displayName = "AdminDropdown";
+NavLink.displayName = "NavLink";
 
-function NavigationLinks({ links }: { links: LinkProp[] }) {
+
+
+// Enhanced path matching with better edge case handling
+const isPathActive = (currentPath: string, linkPath: string): boolean => {
+  // Normalize paths by removing trailing slashes and converting to lowercase
+  const normalizedCurrentPath = currentPath.replace(/\/$/, '').toLowerCase();
+  const normalizedLinkPath = linkPath.replace(/\/$/, '').toLowerCase();
+
+  // Exact match
+  if (normalizedCurrentPath === normalizedLinkPath) {
+    return true;
+  }
+
+  // Handle root path specially
+  if (linkPath === '/' && (normalizedCurrentPath === '' || normalizedCurrentPath === '/')) {
+    return true;
+  }
+
+  // Handle nested routes (e.g., /admin/users should be active when on /admin)
+  if (linkPath !== '/' && normalizedCurrentPath.startsWith(normalizedLinkPath + '/')) {
+    return true;
+  }
+
+  // Handle query parameters
+  if (normalizedCurrentPath.split('?')[0] === normalizedLinkPath) {
+    return true;
+  }
+
+  return false;
+};
+
+// Main NavigationLinks component with better performance and UX
+function NavigationLinks({
+  links,
+  isExpanded = true,
+  className = ""
+}: {
+  links: NavigationLink[];
+  isExpanded?: boolean;
+  className?: string;
+}) {
   const pathname = usePathname();
-  
-  // Separate admin links from regular links
-  const adminLinks = links.filter(link => link.isAdminLink);
-  const regularLinks = links.filter(link => !link.isAdminLink);
+
+  // Memoize active states to prevent unnecessary re-renders
+  const activeStates = useMemo(() =>
+    links.map(link => isPathActive(pathname, link.href)),
+    [pathname, links]
+  );
 
   return (
-    <div className="flex items-center gap-8">
-      {regularLinks.map((link) => (
-        <NavLink
-          key={link.href}
-          href={link.href}
-          label={link.label}
-          isActive={pathname === link.href}
-        />
-      ))}
-      {adminLinks.length > 0 && (
-        <AdminDropdown 
-          links={adminLinks} 
-          isActive={adminLinks.some(link => pathname === link.href)}
-        />
-      )}
-    </div>
+    <nav className={`flex items-center justify-start gap-1 ${className}`}>
+      {/* All navigation links */}
+      <div className="flex items-center gap-1">
+        {links.map((link, index) => (
+          <NavLink
+            key={link.href}
+            link={link}
+            isActive={activeStates[index]}
+            isExpanded={isExpanded}
+          />
+        ))}
+      </div>
+    </nav>
   );
 }
 
 export default memo(NavigationLinks);
+
+// Export types for external use
+export type { NavigationLink };
+export { ICON_MAP };

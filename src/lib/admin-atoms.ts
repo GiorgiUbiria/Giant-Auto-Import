@@ -46,15 +46,6 @@ export const quickStatsAtom = atom({
   recentActivity: 0,
 });
 
-// Admin notifications atom
-export const adminNotificationsAtom = atom<Array<{
-  id: string;
-  type: 'info' | 'warning' | 'error' | 'success';
-  message: string;
-  timestamp: number;
-  read: boolean;
-}>>([]);
-
 // Admin activity log atom
 export const adminActivityLogAtom = atom<Array<{
   id: string;
@@ -100,48 +91,7 @@ export const togglePasswordVisibilityAtom = atom(
   }
 );
 
-// Add notification atom
-export const addNotificationAtom = atom(
-  null,
-  (get, set, notification: {
-    type: 'info' | 'warning' | 'error' | 'success';
-    message: string;
-  }) => {
-    const notifications = get(adminNotificationsAtom);
-    const newNotification = {
-      id: Date.now().toString(),
-      timestamp: Date.now(),
-      read: false,
-      ...notification,
-    };
-    
-    // Keep only last 50 notifications
-    const updatedNotifications = [newNotification, ...notifications.slice(0, 49)];
-    set(adminNotificationsAtom, updatedNotifications);
-  }
-);
 
-// Mark notification as read atom
-export const markNotificationReadAtom = atom(
-  null,
-  (get, set, notificationId: string) => {
-    const notifications = get(adminNotificationsAtom);
-    const updatedNotifications = notifications.map(notification =>
-      notification.id === notificationId
-        ? { ...notification, read: true }
-        : notification
-    );
-    set(adminNotificationsAtom, updatedNotifications);
-  }
-);
-
-// Clear all notifications atom
-export const clearNotificationsAtom = atom(
-  null,
-  (get, set) => {
-    set(adminNotificationsAtom, []);
-  }
-);
 
 // Add activity log entry atom
 export const addActivityLogAtom = atom(

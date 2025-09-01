@@ -141,40 +141,44 @@ export const Client = ({ translations }: ClientProps) => {
   );
 
   return (
-    <div className="container mx-auto py-10 text-primary">
-      <h1 className="text-3xl font-bold pb-8 leading-tight">{translations.title}</h1>
-      {isLoading ? (
-        <LoadingState />
-      ) : error ? (
-        <ErrorState />
-      ) : rowCount > 0 ? (
-        <DataTable
-          columns={columns({
-            ...translations.columns,
-            actionsTranslations: translations.actions
-          })}
-          data={paginatedData}
-          filterKey="fullName"
-          pageIndex={pageIndex}
-          pageSize={pageSize}
-          onPaginationChange={handlePaginationChange}
-          sorting={sorting}
-          onSortingChange={handleSortingChange}
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          rowCount={rowCount}
-          columnVisibility={columnVisibility}
-          onColumnVisibilityChange={handleColumnVisibilityChange}
-          rowSelection={rowSelection}
-          onRowSelectionChange={handleRowSelectionChange}
-          translations={{
-            ...translations.dataTable,
-            pagination: translations.pagination
-          }}
-        />
-      ) : (
-        <div className="leading-relaxed">{translations.noUsers}</div>
-      )}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="container mx-auto py-10 px-4">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h1 className="text-3xl font-bold pb-8 leading-tight text-gray-900 dark:text-gray-100">{translations.title}</h1>
+          {isLoading ? (
+            <LoadingState />
+          ) : error ? (
+            <ErrorState />
+          ) : rowCount > 0 ? (
+            <DataTable
+              columns={columns({
+                ...translations.columns,
+                actionsTranslations: translations.actions
+              })}
+              data={paginatedData}
+              filterKey="fullName"
+              pageIndex={pageIndex}
+              pageSize={pageSize}
+              onPaginationChange={handlePaginationChange}
+              sorting={sorting}
+              onSortingChange={handleSortingChange}
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+              rowCount={rowCount}
+              columnVisibility={columnVisibility}
+              onColumnVisibilityChange={handleColumnVisibilityChange}
+              rowSelection={rowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
+              translations={{
+                ...translations.dataTable,
+                pagination: translations.pagination
+              }}
+            />
+          ) : (
+            <div className="leading-relaxed text-gray-700 dark:text-gray-300">{translations.noUsers}</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

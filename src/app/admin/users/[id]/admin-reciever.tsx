@@ -3,13 +3,13 @@
 import { Input } from "@/components/ui/input";
 import { assignRecieverAction } from "@/lib/actions/carActions";
 import { useServerActionMutation } from "@/lib/hooks/server-action-hooks";
-import { useQueryClient } from "@tanstack/react-query";
+import { useCacheInvalidation } from "@/lib/services/cache-invalidation-service";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export const AdminReciever = ({ reciever, vin }: { reciever: string | null, vin: string }) => {
-	const queryClient = useQueryClient();
+	const { invalidateOnCarChange } = useCacheInvalidation();
 
 	const [isEditing, setIsEditing] = useState(false);
 	const [newReciever, setNewReciever] = useState(reciever || "");
@@ -23,10 +23,11 @@ export const AdminReciever = ({ reciever, vin }: { reciever: string | null, vin:
 			const successMessage = data?.message || "Receiver assigned successfully!";
 			toast.success(successMessage);
 
-			await queryClient.invalidateQueries({
-				queryKey: ["getCars"],
-				refetchType: "active",
-			});
+			// Use smart cache invalidation for receiver changes
+			await invalidateOnCarChange({
+				vin: vin,
+				changeType: 'update'
+			}, { refetch: true, activeOnly: true });
 
 			setIsEditing(false);
 		},

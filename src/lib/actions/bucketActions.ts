@@ -430,7 +430,7 @@ export async function fetchImagesForDisplay(
           } else {
             url = await getSignedUrlForKey(record.imageKey);
           }
-          
+
           return {
             url: url,
             carVin: vin,
@@ -455,7 +455,7 @@ export async function fetchImagesForDisplay(
 
 export async function cleanUpBucketForVin(vin: string): Promise<void> {
   try {
-    console.log(`cleanUpBucketForVin: Starting cleanup for VIN ${vin}`);
+    console.log("cleanUpBucketForVin: Starting cleanup for VIN ${vin}");
     const S3Client = getS3Client();
     const bucketName = getBucketName();
 
@@ -492,6 +492,16 @@ export async function cleanUpBucketForVin(vin: string): Promise<void> {
     } while (continuationToken);
 
     console.log(`cleanUpBucketForVin: Cleanup completed for VIN ${vin}. Total objects deleted: ${totalDeleted}`);
+
+    // Also clean up invoice files from database
+    try {
+      const { cleanUpInvoicesForVin } = await import("./invoiceActions");
+      await cleanUpInvoicesForVin(vin);
+      console.log(`cleanUpBucketForVin: Invoice cleanup completed for VIN ${vin}`);
+    } catch (invoiceError) {
+      console.warn(`cleanUpBucketForVin: Invoice cleanup failed for VIN ${vin}:`, invoiceError);
+      // Continue even if invoice cleanup fails
+    }
   } catch (error) {
     console.error(`cleanUpBucketForVin: Error cleaning up the bucket for VIN ${vin}:`, {
       error: error instanceof Error ? error.message : String(error),

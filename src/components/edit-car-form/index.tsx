@@ -13,19 +13,22 @@ import { toast } from "sonner";
 import { BasicInfoSection } from "../shared-form-sections/basic-info-section";
 import { AuctionInfoSection } from "../shared-form-sections/auction-info-section";
 import { FinancialInfoSection } from "../shared-form-sections/financial-info-section";
+import { useCacheInvalidation } from "@/lib/services/cache-invalidation-service";
 
-const FormSchema = insertCarSchema.omit({ 
-  id: true, 
-  auctionFee: true, 
-  gateFee: true, 
-  titleFee: true, 
-  environmentalFee: true, 
-  virtualBidFee: true, 
-  groundFee: true, 
-  oceanFee: true, 
-  totalFee: true, 
-  shippingFee: true, 
-  destinationPort: true 
+import { ButtonWithLoading } from "@/components/ui/loading-components";
+
+const FormSchema = insertCarSchema.omit({
+  id: true,
+  auctionFee: true,
+  gateFee: true,
+  titleFee: true,
+  environmentalFee: true,
+  virtualBidFee: true,
+  groundFee: true,
+  oceanFee: true,
+  totalFee: true,
+  shippingFee: true,
+  destinationPort: true
 });
 const CarSchema = selectCarSchema.omit({ destinationPort: true });
 type Car = z.infer<typeof CarSchema>;
@@ -36,6 +39,10 @@ interface EditCarFormProps {
 
 export function EditCarForm({ car }: EditCarFormProps) {
   const queryClient = useQueryClient();
+  const { invalidateOnCarChange } = useCacheInvalidation();
+
+  // Note: Using isPending from useServerActionMutation directly
+  // instead of useServerActionLoading to avoid coordination issues
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -65,6 +72,14 @@ export function EditCarForm({ car }: EditCarFormProps) {
     },
   });
 
+  // Handle numeric input focus to clear the field when starting to type
+  const handleNumericInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    const input = e.target;
+    if (input.value === "0") {
+      input.value = "";
+    }
+  };
+
   const { isPending, mutate } = useServerActionMutation(updateCarAction, {
     onError: (error) => {
       const errorMessage = error?.data || "Failed to update the car";
@@ -74,25 +89,12 @@ export function EditCarForm({ car }: EditCarFormProps) {
       const successMessage = data?.message || "Car updated successfully!";
       toast.success(successMessage);
 
-      // Invalidate both the specific car and the cars list
-      await queryClient.invalidateQueries({
-        queryKey: ["getCar", car.vin],
-        refetchType: "active",
-      });
-
-      // Also invalidate the cars list to ensure table updates
-      await queryClient.invalidateQueries({
-        queryKey: ["getCars"],
-        exact: false,
-        refetchType: "active",
-      });
-
-      // Force refetch to ensure immediate UI update
-      await queryClient.refetchQueries({
-        queryKey: ["getCars"],
-        exact: false,
-        type: "active",
-      });
+      // Use smart cache invalidation based on car changes
+      await invalidateOnCarChange({
+        vin: car.vin,
+        ownerId: car.ownerId,
+        changeType: 'update'
+      }, { refetch: true, activeOnly: true });
     },
   });
 
@@ -103,11 +105,11 @@ export function EditCarForm({ car }: EditCarFormProps) {
   return (
     <div className="w-full flex justify-center">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full md:w-2/3 space-y-8 my-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg transition-all">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full md:w-2/3 space-y-8 my-8 bg-gray-50 dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all">
           <BasicInfoSection form={form} />
           <AuctionInfoSection form={form} />
           <FinancialInfoSection form={form} />
-          
+
           <div className="flex justify-end space-x-4">
             <Button
               type="button"
@@ -118,7 +120,13 @@ export function EditCarForm({ car }: EditCarFormProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Updating Car..." : "Update Car"}
+              <ButtonWithLoading
+                loading={isPending}
+                loadingText="Updating Car..."
+                size="md"
+              >
+                Update Car
+              </ButtonWithLoading>
             </Button>
           </div>
         </form>

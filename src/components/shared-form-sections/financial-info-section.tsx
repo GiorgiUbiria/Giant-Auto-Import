@@ -50,25 +50,42 @@ export function FinancialInfoSection({ form }: FinancialInfoSectionProps) {
     return users || [];
   }, [users]);
 
+  // Handle numeric input focus to clear the field when starting to type
+  const handleNumericInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    const input = e.target;
+    if (input.value === "0") {
+      input.value = "";
+    }
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Financial Information</CardTitle>
+    <Card className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow-md">
+      <CardHeader className="bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+        <CardTitle className="text-gray-900 dark:text-gray-100">Financial Information</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="bg-white dark:bg-gray-800 p-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <FormField
             control={form.control}
             name="purchaseFee"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Purchase Fee</FormLabel>
+                <FormLabel className="text-gray-900 dark:text-gray-100 font-semibold">Purchase Fee</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
                     placeholder="Purchase fee"
+                    className="border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    onFocus={handleNumericInputFocus}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === "" || value === "0") {
+                        field.onChange(0);
+                      } else {
+                        field.onChange(parseFloat(value) || 0);
+                      }
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -81,10 +98,10 @@ export function FinancialInfoSection({ form }: FinancialInfoSectionProps) {
             name="ownerId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Owner</FormLabel>
+                <FormLabel className="text-gray-900 dark:text-gray-100 font-semibold">Owner</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                       <SelectValue placeholder={isLoading ? "Loading users..." : "Select owner"} />
                     </SelectTrigger>
                   </FormControl>
@@ -108,15 +125,15 @@ export function FinancialInfoSection({ form }: FinancialInfoSectionProps) {
             name="purchaseDate"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Purchase Date</FormLabel>
+                <FormLabel className="text-gray-900 dark:text-gray-100 font-semibold">Purchase Date</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "w-full pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
+                          "w-full pl-3 text-left font-normal border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100",
+                          !field.value && "text-gray-500 dark:text-gray-400"
                         )}
                       >
                         {field.value ? (
@@ -150,15 +167,15 @@ export function FinancialInfoSection({ form }: FinancialInfoSectionProps) {
             name="departureDate"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Departure Date</FormLabel>
+                <FormLabel className="text-gray-900 dark:text-gray-100 font-semibold">Departure Date</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "w-full pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
+                          "w-full pl-3 text-left font-normal border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100",
+                          !field.value && "text-gray-500 dark:text-gray-400"
                         )}
                       >
                         {field.value ? (
@@ -192,15 +209,15 @@ export function FinancialInfoSection({ form }: FinancialInfoSectionProps) {
             name="arrivalDate"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Arrival Date</FormLabel>
+                <FormLabel className="text-gray-900 dark:text-gray-100 font-semibold">Arrival Date</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "w-full pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
+                          "w-full pl-3 text-left font-normal border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100",
+                          !field.value && "text-gray-500 dark:text-gray-400"
                         )}
                       >
                         {field.value ? (
@@ -234,10 +251,10 @@ export function FinancialInfoSection({ form }: FinancialInfoSectionProps) {
             name="insurance"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Insurance</FormLabel>
+                <FormLabel className="text-gray-900 dark:text-gray-100 font-semibold">Insurance</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                       <SelectValue placeholder="Select insurance status" />
                     </SelectTrigger>
                   </FormControl>

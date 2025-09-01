@@ -95,7 +95,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
 
                 <main
                   id="main-content"
-                  className="flex flex-1 flex-col gap-4 md:gap-8 w-full py-8 pt-24 md:pt-8"
+                  className="flex flex-1 flex-col gap-4 md:gap-8 w-full"
                 >
                   <div className="w-full">
                     <Suspense fallback={<LoadingSpinner />}>

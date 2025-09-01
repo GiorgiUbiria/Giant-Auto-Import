@@ -1,109 +1,60 @@
 "use client";
 
-import { DataTable } from "@/components/data-table";
-import { Loader2, AlertCircle } from "lucide-react";
-import { columns } from "./columns";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Suspense } from "react";
+import { Car, CreditCard, FileText, RefreshCw, Star } from "lucide-react";
+import { DataTable } from "@/components/data-table";
+import { columns } from "./columns";
+import { SelectSchemaType } from "./columns";
+import { CustomerNotes } from "@/components/customer-notes";
+import { getUserPaymentHistoryAction } from "@/lib/actions/paymentActions";
+import { toast } from "sonner";
+import * as React from "react";
 import { SortingState, ColumnFiltersState, VisibilityState } from "@tanstack/react-table";
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
 
-// Add type for API response
 interface CarsApiResponse {
-  cars: any[];
-  count: number;
+  cars: SelectSchemaType[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
 }
 
-const fetchUserCars = async ({ 
-  userId, 
-  pageIndex, 
-  pageSize, 
-  sorting, 
-  filters 
-}: {
+interface PaymentHistoryItem {
+  id: number;
+  amount: number;
+  description: string | null;
+  createdAt: Date; // Changed from paymentDate to match server response
+  paymentType: string;
+  carVin: string;
+  car: {
+    make: string;
+    model: string;
+    year: number;
+  };
+}
+
+interface DashboardClientProps {
   userId: string;
-  pageIndex: number;
-  pageSize: number;
-  sorting: SortingState;
-  filters: ColumnFiltersState;
-}) => {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // Reduced timeout to 15 seconds
+}
 
-    const params = new URLSearchParams();
-    params.set("page", (pageIndex + 1).toString());
-    params.set("pageSize", pageSize.toString());
-    params.set("ownerId", userId); // Filter by user ID
-    
-    if (sorting.length > 0) {
-      params.set("sortBy", sorting[0].id);
-      params.set("sortOrder", sorting[0].desc ? "desc" : "asc");
-    }
-    
-    filters.forEach(f => {
-      if (f.value) {
-        // Map filter IDs to API parameters
-        if (f.id === "vinDetails") {
-          params.set("vin", f.value as string);
-        } else {
-          params.set(f.id, f.value as string);
-        }
-      }
-    });
+export function Client({ userId }: DashboardClientProps) {
+  const t = useTranslations("Dashboard");
+  const [cars, setCars] = useState<(SelectSchemaType & {
+    hasInvoice?: {
+      PURCHASE: boolean;
+      SHIPPING: boolean;
+      TOTAL: boolean;
+    };
+  })[]>([]);
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("cars");
 
-    const response = await fetch(`/api/cars?${params.toString()}`, {
-      signal: controller.signal,
-      cache: 'default'
-    });
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.details || 'Failed to fetch cars');
-    }
-    
-    return response.json();
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Request timed out after 15 seconds');
-    }
-    throw error;
-  }
-};
-
-const LoadingState = () => (
-  <div className="w-full h-[50vh] grid place-items-center">
-    <div className="flex flex-col items-center gap-2">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      <p className="text-muted-foreground">Loading your cars...</p>
-    </div>
-  </div>
-);
-
-const ErrorState = ({ refetch }: { refetch: () => void }) => (
-  <div className="py-10 px-4 max-w-2xl mx-auto">
-    <Alert variant="destructive">
-      <AlertCircle className="h-4 w-4" />
-      <AlertTitle>Error</AlertTitle>
-      <AlertDescription className="flex flex-col gap-4">
-        <p>Failed to load your cars. Please try again.</p>
-        <Button
-          variant="outline"
-          onClick={() => refetch()}
-          className="w-fit"
-        >
-          Retry
-        </Button>
-      </AlertDescription>
-    </Alert>
-  </div>
-);
-
-export const Client = ({ userId }: { userId: string }) => {
-  // Add state for table controls
+  // DataTable state
   const [pageIndex, setPageIndex] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(20);
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -111,6 +62,54 @@ export const Client = ({ userId }: { userId: string }) => {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
+  const fetchUserCars = useCallback(async () => {
+    if (!userId) return;
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/cars?ownerId=${userId}&includeDetails=true`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch cars");
+      }
+      const data: CarsApiResponse = await response.json();
+      setCars(data.cars);
+    } catch (error) {
+      console.error("Error fetching cars:", error);
+      toast.error("Failed to load cars");
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  const fetchPaymentHistory = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const [result, error] = await getUserPaymentHistoryAction({ userId });
+      if (error) {
+        throw error;
+      }
+      setPaymentHistory(result);
+    } catch (error) {
+      console.error("Error fetching payment history:", error);
+      toast.error("Failed to load payment history");
+    }
+  }, [userId]);
+
+  // Load data on component mount
+  useEffect(() => {
+    fetchUserCars();
+    fetchPaymentHistory();
+  }, [userId, fetchUserCars, fetchPaymentHistory]);
+
+  // Refresh data function
+  const handleRefresh = () => {
+    if (activeTab === "cars") {
+      fetchUserCars();
+    } else if (activeTab === "payments") {
+      fetchPaymentHistory();
+    }
+  };
+
+  // DataTable handlers
   const handlePaginationChange = React.useCallback(({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
     setPageIndex(pageIndex);
     setPageSize(pageSize);
@@ -132,52 +131,210 @@ export const Client = ({ userId }: { userId: string }) => {
     setRowSelection(typeof updaterOrValue === "function" ? updaterOrValue(rowSelection) : updaterOrValue);
   }, [rowSelection]);
 
-  const { isLoading, data, error, refetch } = useQuery<CarsApiResponse>({
-    queryKey: ["getUserCars", userId, pageIndex, pageSize, sorting, filters],
-    queryFn: () => fetchUserCars({ userId, pageIndex, pageSize, sorting, filters }),
-    staleTime: 5 * 60 * 1000, // 5 minutes - increased for better caching
-    gcTime: 10 * 60 * 1000, // 10 minutes cache
-    retry: 1, // Reduce retries
-    refetchOnWindowFocus: false, // Prevent refetch on focus
-  });
+  const getTabIcon = (tab: string) => {
+    switch (tab) {
+      case "cars":
+        return <Car className="h-4 w-4" />;
+      case "payments":
+        return <CreditCard className="h-4 w-4" />;
+      case "payment-notes":
+        return <Star className="h-4 w-4" />;
+      case "notes":
+        return <FileText className="h-4 w-4" />;
+      default:
+        return null;
+    }
+  };
 
-  // Provide default values
-  const tableData = data?.cars || [];
-  const totalCount = data?.count || 0;
+  const getTabContent = () => {
+    switch (activeTab) {
+      case "cars":
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Your Vehicles</h3>
+                <p className="text-sm text-muted-foreground">
+                  {cars.length} vehicle{cars.length !== 1 ? 's' : ''} in your account
+                </p>
+              </div>
+              <Button onClick={handleRefresh} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <DataTable
+                  columns={columns}
+                  data={cars}
+                  filterKey="vinDetails"
+                  pageIndex={pageIndex}
+                  pageSize={pageSize}
+                  onPaginationChange={handlePaginationChange}
+                  sorting={sorting}
+                  onSortingChange={handleSortingChange}
+                  filters={filters}
+                  onFiltersChange={handleFiltersChange}
+                  rowCount={cars.length}
+                  columnVisibility={columnVisibility}
+                  onColumnVisibilityChange={handleColumnVisibilityChange}
+                  rowSelection={rowSelection}
+                  onRowSelectionChange={handleRowSelectionChange}
+                  translations={{
+                    searchPlaceholder: "Search by VIN or Lot Number...",
+                    columns: "Columns",
+                    noResults: "No results found",
+                    noData: "No cars found",
+                    clearFilter: "Clear filters",
+                    pagination: {
+                      showing: "Showing",
+                      rowsPerPage: "Rows per page",
+                      page: "Page",
+                      goToFirst: "Go to first page",
+                      goToPrevious: "Go to previous page",
+                      goToNext: "Go to next page",
+                      goToLast: "Go to last page",
+                    }
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        );
 
-  if (error) {
-    return <ErrorState refetch={refetch} />;
-  }
+      case "payments":
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Payment History</h3>
+                <p className="text-sm text-muted-foreground">
+                  Track all your payments and transactions
+                </p>
+              </div>
+              <Button onClick={handleRefresh} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+            {paymentHistory.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-8">
+                  <CreditCard className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground text-center">
+                    No payment history found
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {paymentHistory.map((payment) => (
+                  <Card key={payment.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium">
+                              {payment.car.year} {payment.car.make} {payment.car.model}
+                            </h4>
+                            <Badge variant="secondary">{payment.carVin}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {payment.description || "Payment"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(payment.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-semibold text-green-600">
+                            ${payment.amount.toLocaleString()}
+                          </p>
+                          <Badge variant="outline">{payment.paymentType}</Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        );
 
-  if (isLoading) {
-    return (
-      <Suspense fallback={<LoadingState />}>
-        <LoadingState />
-      </Suspense>
-    );
-  }
+      case "payment-notes":
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Payment Notes</h3>
+                <p className="text-sm text-muted-foreground">
+                  View important payment-related notes from our team
+                </p>
+              </div>
+              <Button onClick={handleRefresh} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+            <CustomerNotes userId={userId} filterImportant={true} />
+          </div>
+        );
+
+      case "notes":
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">General Notes</h3>
+                <p className="text-sm text-muted-foreground">
+                  View general notes and files from our team
+                </p>
+              </div>
+              <Button onClick={handleRefresh} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+            <CustomerNotes userId={userId} filterImportant={false} />
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
-    <Suspense fallback={<LoadingState />}>
-      <div className="w-full px-4 md:px-6">
-        <DataTable
-          columns={columns}
-          data={tableData}
-          filterKey="vinDetails"
-          pageIndex={pageIndex}
-          pageSize={pageSize}
-          onPaginationChange={handlePaginationChange}
-          sorting={sorting}
-          onSortingChange={handleSortingChange}
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          rowCount={totalCount}
-          columnVisibility={columnVisibility}
-          onColumnVisibilityChange={handleColumnVisibilityChange}
-          rowSelection={rowSelection}
-          onRowSelectionChange={handleRowSelectionChange}
-        />
-      </div>
-    </Suspense>
+    <div className="px-4 md:px-6 pb-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="cars" className="flex items-center gap-2">
+            {getTabIcon("cars")}
+            Cars ({cars.length})
+          </TabsTrigger>
+          <TabsTrigger value="payments" className="flex items-center gap-2">
+            {getTabIcon("payments")}
+            Payment History ({paymentHistory.length})
+          </TabsTrigger>
+          <TabsTrigger value="payment-notes" className="flex items-center gap-2">
+            {getTabIcon("payment-notes")}
+            Payment Notes
+          </TabsTrigger>
+          <TabsTrigger value="notes" className="flex items-center gap-2">
+            {getTabIcon("notes")}
+            Notes
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={activeTab} className="space-y-4">
+          {getTabContent()}
+        </TabsContent>
+      </Tabs>
+    </div>
   );
-};
+}

@@ -6,6 +6,8 @@ import { columns } from "./columns";
 import { useQuery } from "@tanstack/react-query";
 import * as React from "react";
 import { SortingState, ColumnFiltersState, VisibilityState } from "@tanstack/react-table";
+import { selectCarSchema } from "@/lib/drizzle/schema";
+import { z } from "zod";
 
 interface ClientProps {
   translations: {
@@ -25,10 +27,6 @@ interface ClientProps {
       keys: string;
       usPort: string;
       destinationPort: string;
-      purchaseDue: string;
-      shippingDue: string;
-      totalDue: string;
-      paidAmount: string;
       actions: string;
     };
     actions: {
@@ -63,7 +61,6 @@ interface ClientProps {
       oceanFee: string;
     };
     buttons: {
-      invoice: string;
       comingSoon: string;
     };
     status: {
@@ -91,9 +88,23 @@ interface ClientProps {
 
 // Add type for API response
 interface CarsApiResponse {
-  cars: any[];
+  cars: CarWithDetails[];
   count: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
+
+// Add type for car with payment and invoice data
+type CarWithDetails = z.infer<typeof selectCarSchema> & {
+  // Add payment and invoice data (computed fields from API)
+  paymentHistory?: any[];
+  hasInvoice?: {
+    PURCHASE: boolean;
+    SHIPPING: boolean;
+    TOTAL: boolean;
+  };
+};
 
 const fetchCars = async ({ pageIndex, pageSize, sorting, filters }: {
   pageIndex: number;
@@ -108,6 +119,7 @@ const fetchCars = async ({ pageIndex, pageSize, sorting, filters }: {
     const params = new URLSearchParams();
     params.set("page", (pageIndex + 1).toString());
     params.set("pageSize", pageSize.toString());
+    params.set("includeDetails", "true"); // Add flag to include payment and invoice data
     if (sorting.length > 0) {
       params.set("sortBy", sorting[0].id);
       params.set("sortOrder", sorting[0].desc ? "desc" : "asc");
@@ -122,7 +134,7 @@ const fetchCars = async ({ pageIndex, pageSize, sorting, filters }: {
       cache: 'no-store'
     });
     clearTimeout(timeoutId);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.details || 'Failed to fetch cars');
@@ -144,16 +156,22 @@ export const Client = ({ translations }: ClientProps) => {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const { isLoading, data, error } = useQuery<CarsApiResponse>({
+  const { isLoading, data, error, refetch } = useQuery<CarsApiResponse>({
     queryKey: ["getCars", pageIndex, pageSize, sorting, filters],
     queryFn: () => fetchCars({ pageIndex, pageSize, sorting, filters }),
-    staleTime: 2 * 60 * 1000, // 2 minutes - reduced for better real-time updates
-    gcTime: 10 * 60 * 1000, // 10 minutes cache
+    staleTime: 10 * 60 * 1000, // 10 minutes - increased to reduce unnecessary calls
+    gcTime: 20 * 60 * 1000, // 20 minutes cache
     retry: 1, // Reduce retries
     refetchOnWindowFocus: false, // Prevent refetch on focus
-    refetchOnMount: true, // Ensure fresh data on mount
-    refetchOnReconnect: true, // Refetch on reconnect
+    refetchOnMount: false, // Prevent refetch on mount if data exists
+    refetchOnReconnect: false, // Prevent refetch on reconnect
+    refetchInterval: false, // Disable automatic refetching
   });
+
+  // Manual refresh function for payment updates
+  const handleManualRefresh = React.useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   // Provide default values
   const tableData = data?.cars || [];
@@ -206,13 +224,13 @@ export const Client = ({ translations }: ClientProps) => {
     return <ErrorState />;
   }
 
-    return (
-    <div className="w-full px-4 md:px-6">
+  return (
+    <div className="w-full px-4 md:px-6 py-8">
       <h1 className="text-3xl font-bold pb-8 leading-tight">{translations.title}</h1>
       <DataTable
-          columns={columns(translations)}
-          data={tableData}
-          filterKey="vinDetails"
+        columns={columns(translations, handleManualRefresh)}
+        data={tableData}
+        filterKey="vinDetails"
         pageIndex={pageIndex}
         pageSize={pageSize}
         onPaginationChange={handlePaginationChange}

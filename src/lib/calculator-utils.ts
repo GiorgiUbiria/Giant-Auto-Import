@@ -60,7 +60,24 @@ export const getUserPricingConfig = async (userId: string): Promise<UserPricingC
       return await response.json();
     }
   } catch (error) {
-    console.error("Error fetching user pricing config:", error);
+    // Fallback to direct DB query when on the server
+    if (typeof window === 'undefined') {
+      try {
+        const { db } = await import('./drizzle/db');
+        const { userPricingConfig } = await import('./drizzle/schema');
+        const { and, eq } = await import('drizzle-orm');
+        const rows = await db
+          .select()
+          .from(userPricingConfig)
+          .where(and(eq(userPricingConfig.userId, userId), eq(userPricingConfig.isActive, true)))
+          .limit(1);
+        return (rows?.[0] as unknown as UserPricingConfig) || null;
+      } catch (dbErr) {
+        console.error("DB fallback failed for user pricing config:", dbErr);
+      }
+    } else {
+      console.error("Error fetching user pricing config:", error);
+    }
   }
   return null;
 };
@@ -75,9 +92,44 @@ export const getDefaultPricingConfig = async (): Promise<DefaultPricingConfig | 
       return await response.json();
     }
   } catch (error) {
-    console.error("Error fetching default pricing config:", error);
+    // Fallback to direct DB query when on the server
+    if (typeof window === 'undefined') {
+      try {
+        const { db } = await import('./drizzle/db');
+        const { defaultPricingConfig } = await import('./drizzle/schema');
+        const { eq } = await import('drizzle-orm');
+        const rows = await db
+          .select()
+          .from(defaultPricingConfig)
+          .where(eq(defaultPricingConfig.isActive, true))
+          .limit(1);
+        return (rows?.[0] as unknown as DefaultPricingConfig) || null;
+      } catch (dbErr) {
+        console.error("DB fallback failed for default pricing config:", dbErr);
+      }
+    } else {
+      console.error("Error fetching default pricing config:", error);
+    }
   }
   return null;
+};
+
+/**
+ * Fetch active ocean rates from API (DB-backed)
+ */
+export const getActiveOceanRates = async (): Promise<OceanFee[]> => {
+  try {
+    const response = await fetch('/api/pricing/ocean-rates');
+    if (response.ok) {
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        return data as OceanFee[];
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching active ocean rates:", error);
+  }
+  return [];
 };
 
 /**
@@ -86,13 +138,13 @@ export const getDefaultPricingConfig = async (): Promise<DefaultPricingConfig | 
 export const debugPricingConfig = async (userId?: string) => {
   const userPricing = userId ? await getUserPricingConfig(userId) : null;
   const defaultPricing = await getDefaultPricingConfig();
-  
+
   console.log("Debug Pricing Config:", {
     userId,
     userPricing,
     defaultPricing
   });
-  
+
   return { userPricing, defaultPricing };
 };
 
@@ -110,27 +162,27 @@ export const getAuctionData = async (): Promise<AuctionData[]> => {
   try {
     // Use the proper async function to get active CSV data
     const data = await getActiveCsvData();
-    
+
     // Ensure we return a valid array
     if (!Array.isArray(data)) {
       console.error("getAuctionData: getActiveCsvData did not return an array");
       return [];
     }
-    
+
     // Filter out invalid entries
-    const validData = data.filter(item => 
-      item && 
-      typeof item === 'object' && 
-      item.auctionLocation && 
+    const validData = data.filter(item =>
+      item &&
+      typeof item === 'object' &&
+      item.auctionLocation &&
       item.auction &&
       item.port
     );
-    
+
     if (validData.length === 0) {
       console.warn("getAuctionData: No valid auction data found, returning empty array");
       return [];
     }
-    
+
     return validData;
   } catch (error) {
     console.error("Error getting auction data:", error);
@@ -159,16 +211,16 @@ export const calculateFee = (feeData: any[], value: number): number => {
  * Calculate total purchase fee with user-based pricing support
  */
 export const calculateTotalPurchaseFee = async (
-  purchasePrice: number, 
-  styleData: any[], 
-  virtualBidData: any[], 
+  purchasePrice: number,
+  styleData: any[],
+  virtualBidData: any[],
   insurance: boolean,
   userId?: string
 ): Promise<number> => {
   const auctionFee = calculateFee(styleData, purchasePrice);
   const virtualBidFee = calculateFee(virtualBidData, purchasePrice);
   const fixedFees = 79 + 20 + 10;
-  
+
   if (insurance) {
     return purchasePrice * 1.015 + auctionFee + virtualBidFee + fixedFees;
   } else {
@@ -189,18 +241,18 @@ export const calculateShippingFee = async (
   // Get user or default pricing configuration
   const userPricing = userId ? await getUserPricingConfig(userId) : null;
   const defaultPricing = await getDefaultPricingConfig();
-  
-  // Use user pricing if available, otherwise use default pricing
-  const pricing = userPricing || defaultPricing;
+
+  // Use user pricing only if active, otherwise fall back to default
+  const pricing = (userPricing && (userPricing as any).isActive) ? userPricing : defaultPricing;
 
   // Get active CSV data
   const csvData = await getActiveCsvData();
-  
+
   // Calculate ground fee with user adjustment
   const baseGroundFee = csvData.find(
     (data) => data.auction === auctionName && data.auctionLocation === auctionLoc
   )?.rate || 0;
-  
+
   const groundFeeAdjustment = pricing?.groundFeeAdjustment || 0;
   const adjustedGroundFee = baseGroundFee + groundFeeAdjustment;
 
@@ -213,25 +265,40 @@ export const calculateShippingFee = async (
     adjustedGroundFee
   });
 
-  // Calculate ocean fee with user adjustment
-  // First try to find rate in user/default pricing ocean rates
+  // Calculate ocean fee with user/default adjustment
+  // Normalize the port shorthand for matching
+  const normalizedPort = (portName || '').toString().trim().toUpperCase();
   let oceanFee = 0;
+
+  // First try to find rate in user/default pricing ocean rates
   if (pricing?.oceanRates && pricing.oceanRates.length > 0) {
-    const userRate = pricing.oceanRates.find((rate: any) => rate.shorthand === portName);
-    if (userRate) {
-      oceanFee = userRate.rate;
-    }
+    const matched = pricing.oceanRates.find((rate: any) =>
+      (rate.shorthand || '').toString().trim().toUpperCase() === normalizedPort
+    );
+    if (matched) oceanFee = matched.rate;
   }
-  
-  // Fallback to hardcoded rates if no user/default rates found
+
+  // Fallback to DB-backed ocean rates
   if (oceanFee === 0) {
-    oceanFee = oceanShippingRates.find((rate) => rate.shorthand === portName)?.rate || 0;
+    const activeOceanRates = await getActiveOceanRates();
+    const matchedDb = activeOceanRates.find((rate) =>
+      (rate.shorthand || '').toString().trim().toUpperCase() === normalizedPort
+    );
+    if (matchedDb) oceanFee = matchedDb.rate;
+  }
+
+  // Final fallback to hardcoded constants
+  if (oceanFee === 0) {
+    const matchedHardcoded = oceanShippingRates.find((rate) =>
+      (rate.shorthand || '').toString().trim().toUpperCase() === normalizedPort
+    );
+    oceanFee = matchedHardcoded?.rate || 0;
   }
 
   // Calculate extra fees with user adjustments
   const extraFeesTotal = additionalFeeTypes.reduce((total, feeType) => {
     let feeRate = 0;
-    
+
     switch (feeType) {
       case "EV/Hybrid":
         feeRate = pricing?.hybridSurcharge || extraFees.find(f => f.type === "EV/Hybrid")?.rate || 0;
@@ -245,7 +312,7 @@ export const calculateShippingFee = async (
       default:
         feeRate = extraFees.find(f => f.type === feeType)?.rate || 0;
     }
-    
+
     return total + feeRate;
   }, 0);
 
@@ -267,13 +334,13 @@ export const calculateCarFeesWithUserPricing = async (
 ) => {
   const styleData = styleToJson("a");
   const virtualBidData = parseVirtualBidData();
-  
+
   // Get user or default pricing configuration
   const userPricing = userId ? await getUserPricingConfig(userId) : null;
   const defaultPricing = await getDefaultPricingConfig();
-  
-  // Use user pricing if available, otherwise use default pricing
-  const pricing = userPricing || defaultPricing;
+
+  // Use user pricing only if active, otherwise fall back to default
+  const pricing = (userPricing && (userPricing as any).isActive) ? userPricing : defaultPricing;
 
   // Calculate purchase fees
   const auctionFee = calculateFee(styleData, purchaseFee);
@@ -308,23 +375,34 @@ export const calculateCarFeesWithUserPricing = async (
   const baseGroundFee = csvData.find(
     (data) => data.auction === auction && data.auctionLocation === auctionLocation
   )?.rate || 0;
-  
+
   const groundFeeAdjustment = pricing?.groundFeeAdjustment || 0;
   const adjustedGroundFee = baseGroundFee + groundFeeAdjustment;
-  
-  // Calculate ocean fee with user adjustment
-  // First try to find rate in user/default pricing ocean rates
+
+  // Calculate ocean fee with user/default adjustment
+  const normalizedPort = (port || '').toString().trim().toUpperCase();
   let oceanFee = 0;
+
   if (pricing?.oceanRates && pricing.oceanRates.length > 0) {
-    const userRate = pricing.oceanRates.find((rate: any) => rate.shorthand === port);
-    if (userRate) {
-      oceanFee = userRate.rate;
-    }
+    const matched = pricing.oceanRates.find((rate: any) =>
+      (rate.shorthand || '').toString().trim().toUpperCase() === normalizedPort
+    );
+    if (matched) oceanFee = matched.rate;
   }
 
-  // Fallback to hardcoded rates if no user/default rates found
   if (oceanFee === 0) {
-    oceanFee = oceanShippingRates.find((rate) => rate.shorthand === port)?.rate || 0;
+    const activeOceanRates = await getActiveOceanRates();
+    const matchedDb = activeOceanRates.find((rate) =>
+      (rate.shorthand || '').toString().trim().toUpperCase() === normalizedPort
+    );
+    if (matchedDb) oceanFee = matchedDb.rate;
+  }
+
+  if (oceanFee === 0) {
+    const matchedHardcoded = oceanShippingRates.find((rate) =>
+      (rate.shorthand || '').toString().trim().toUpperCase() === normalizedPort
+    );
+    oceanFee = matchedHardcoded?.rate || 0;
   }
 
   return {
@@ -341,7 +419,7 @@ export const calculateCarFeesWithUserPricing = async (
     baseGroundFee: baseGroundFee,
     baseOceanFee: oceanFee,
   };
-}; 
+};
 
 const a_styleData = [
   { range: "$0-$99.99", fee: 1 },
@@ -1956,3 +2034,134 @@ export const fallbackAuctionData: AuctionData[] = [
     zip: ""
   },
 ];
+
+// Calculate due amounts for a car based on fees and custom pricing
+export const calculateDueAmounts = (
+  baseFees: {
+    purchaseFee: number;
+    auctionFee?: number | null;
+    gateFee?: number | null;
+    titleFee?: number | null;
+    environmentalFee?: number | null;
+    virtualBidFee?: number | null;
+    shippingFee?: number | null;
+    groundFee?: number | null;
+    oceanFee?: number | null;
+    totalFee?: number | null;
+  },
+  customPricing?: {
+    groundFeeAdjustment: number;
+    pickupSurcharge: number;
+    serviceFee: number;
+    hybridSurcharge: number;
+  },
+  fuelType?: string
+) => {
+  // Calculate purchase due
+  const purchaseDue =
+    (baseFees.purchaseFee || 0) +
+    (baseFees.auctionFee || 0) +
+    (baseFees.gateFee || 0) +
+    (baseFees.titleFee || 0) +
+    (baseFees.environmentalFee || 0) +
+    (baseFees.virtualBidFee || 0);
+
+  // Calculate shipping due with custom pricing adjustments
+  let shippingDue = (baseFees.shippingFee || 0) + (baseFees.groundFee || 0) + (baseFees.oceanFee || 0);
+
+  if (customPricing) {
+    shippingDue += customPricing.groundFeeAdjustment;
+    shippingDue += customPricing.pickupSurcharge;
+    shippingDue += customPricing.serviceFee;
+
+    // Add hybrid surcharge if applicable
+    if (fuelType === "HYBRID_ELECTRIC") {
+      shippingDue += customPricing.hybridSurcharge;
+    }
+  }
+
+  // Calculate total due
+  const totalDue = purchaseDue + shippingDue;
+
+  return {
+    purchaseDue,
+    shippingDue,
+    totalDue,
+  };
+};
+
+// Update car due amounts when fees change
+export const updateCarDueAmounts = async (
+  carVin: string,
+  newFees: {
+    purchaseFee?: number;
+    auctionFee?: number | null;
+    gateFee?: number | null;
+    titleFee?: number | null;
+    environmentalFee?: number | null;
+    virtualBidFee?: number | null;
+    shippingFee?: number | null;
+    groundFee?: number | null;
+    oceanFee?: number | null;
+    totalFee?: number | null;
+  },
+  customPricing?: {
+    groundFeeAdjustment: number;
+    pickupSurcharge: number;
+    serviceFee: number;
+    hybridSurcharge: number;
+  },
+  fuelType?: string
+) => {
+  // Import here to avoid circular dependencies
+  const { db } = await import("./drizzle/db");
+  const { cars } = await import("./drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+
+  // Get current car data
+  const currentCar = await db.query.cars.findFirst({
+    where: eq(cars.vin, carVin),
+  });
+
+  if (!currentCar) {
+    throw new Error("Car not found");
+  }
+
+  // Merge existing fees with new fees
+  const mergedFees = {
+    purchaseFee: newFees.purchaseFee ?? currentCar.purchaseFee,
+    auctionFee: newFees.auctionFee ?? currentCar.auctionFee,
+    gateFee: newFees.gateFee ?? currentCar.gateFee,
+    titleFee: newFees.titleFee ?? currentCar.titleFee,
+    environmentalFee: newFees.environmentalFee ?? currentCar.environmentalFee,
+    virtualBidFee: newFees.virtualBidFee ?? currentCar.virtualBidFee,
+    shippingFee: newFees.shippingFee ?? currentCar.shippingFee,
+    groundFee: newFees.groundFee ?? currentCar.groundFee,
+    oceanFee: newFees.oceanFee ?? currentCar.oceanFee,
+    totalFee: newFees.totalFee ?? currentCar.totalFee,
+  };
+
+  // Calculate new due amounts
+  const { purchaseDue, shippingDue, totalDue } = calculateDueAmounts(
+    mergedFees,
+    customPricing,
+    fuelType || currentCar.fuelType
+  );
+
+  // Update the car with new due amounts
+  await db.update(cars)
+    .set({
+      purchaseDue,
+      shippingDue,
+      totalDue,
+      // Update the fee fields as well
+      ...newFees,
+    })
+    .where(eq(cars.vin, carVin));
+
+  return {
+    purchaseDue,
+    shippingDue,
+    totalDue,
+  };
+};

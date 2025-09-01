@@ -61,7 +61,7 @@ export default async function HomePage() {
   };
 
   return (
-    <div className="flex flex-col gap-8 scroll-smooth overflow-x-hidden">
+    <div className="flex flex-col scroll-smooth overflow-x-hidden">
       <section aria-label="Hero Section" className="w-full relative">
         <Suspense fallback={<LoadingSpinner height="h-96" variant="gradient" size="lg" />}>
           <DynamicHero translations={heroTranslations} />

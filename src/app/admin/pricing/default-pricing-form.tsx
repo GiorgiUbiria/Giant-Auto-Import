@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useTranslations } from 'next-intl';
 import { useServerAction } from "zsa-react";
 import { useAtom, useAtomValue } from 'jotai';
@@ -62,8 +62,26 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-export const DefaultPricingForm = () => {
+export function DefaultPricingForm() {
   const t = useTranslations('PricingManagement');
+
+  // Handle numeric input focus to clear the field when starting to type
+  const handleNumericInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    const input = e.target;
+    if (input.value === "0") {
+      input.value = "";
+    }
+  };
+
+  // Handle numeric input change to handle empty values properly
+  const handleNumericInputChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (value: number) => void) => {
+    const value = e.target.value;
+    if (value === "" || value === "0") {
+      setter(0);
+    } else {
+      setter(parseInt(value) || 0);
+    }
+  };
 
   // Jotai atoms
   const pricing = useAtomValue(defaultPricingAtom);
@@ -163,8 +181,12 @@ export const DefaultPricingForm = () => {
   };
 
   const handleInputChange = (field: 'groundFeeAdjustment' | 'pickupSurcharge' | 'serviceFee' | 'hybridSurcharge', value: string) => {
-    const numValue = parseInt(value) || 0;
-    updatePricingField(field, numValue);
+    if (value === "" || value === "0") {
+      updatePricingField(field, 0);
+    } else {
+      const numValue = parseInt(value) || 0;
+      updatePricingField(field, numValue);
+    }
   };
 
   const handleAddOceanRate = async () => {
@@ -301,7 +323,8 @@ export const DefaultPricingForm = () => {
                 type="number"
                 placeholder="1025"
                 value={newRate.rate}
-                onChange={(e) => updateNewRateField('rate', parseInt(e.target.value) || 0)}
+                onFocus={handleNumericInputFocus}
+                onChange={(e) => handleNumericInputChange(e, (value) => updateNewRateField('rate', value))}
                 min="0"
               />
             </div>
@@ -356,7 +379,8 @@ export const DefaultPricingForm = () => {
                         <Input
                           type="number"
                           value={editingRate?.rate || 0}
-                          onChange={(e) => setEditing(editingRate ? { ...editingRate, rate: parseInt(e.target.value) || 0 } : null)}
+                          onFocus={handleNumericInputFocus}
+                          onChange={(e) => handleNumericInputChange(e, (value) => setEditing(editingRate ? { ...editingRate, rate: value } : null))}
                           min="0"
                         />
                       ) : (
@@ -452,6 +476,7 @@ export const DefaultPricingForm = () => {
                   id="groundFeeAdjustment"
                   type="number"
                   value={pricing.groundFeeAdjustment}
+                  onFocus={handleNumericInputFocus}
                   onChange={(e) => handleInputChange("groundFeeAdjustment", e.target.value)}
                   className="pl-8"
                 />
@@ -484,10 +509,11 @@ export const DefaultPricingForm = () => {
                   $
                 </span>
                 <Input
-                  id="pickupSurcharge"
+                  id="hybridSurcharge"
                   type="number"
-                  value={pricing.pickupSurcharge}
-                  onChange={(e) => handleInputChange("pickupSurcharge", e.target.value)}
+                  value={pricing.hybridSurcharge}
+                  onFocus={handleNumericInputFocus}
+                  onChange={(e) => handleInputChange("hybridSurcharge", e.target.value)}
                   className="pl-8"
                   min="0"
                 />
@@ -518,6 +544,7 @@ export const DefaultPricingForm = () => {
                   id="serviceFee"
                   type="number"
                   value={pricing.serviceFee}
+                  onFocus={handleNumericInputFocus}
                   onChange={(e) => handleInputChange("serviceFee", e.target.value)}
                   className="pl-8"
                   min="0"
@@ -546,10 +573,11 @@ export const DefaultPricingForm = () => {
                   $
                 </span>
                 <Input
-                  id="hybridSurcharge"
+                  id="pickupSurcharge"
                   type="number"
-                  value={pricing.hybridSurcharge}
-                  onChange={(e) => handleInputChange("hybridSurcharge", e.target.value)}
+                  value={pricing.pickupSurcharge}
+                  onFocus={handleNumericInputFocus}
+                  onChange={(e) => handleInputChange("pickupSurcharge", e.target.value)}
                   className="pl-8"
                   min="0"
                 />

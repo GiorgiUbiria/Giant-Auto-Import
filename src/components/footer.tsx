@@ -1,5 +1,6 @@
 import Image from "next/image";
-import CompanyLogo from "../../public/logo.png";
+import CompanyLogoDark from "../../public/giant_logo_dark.png";
+import CompanyLogoWhite from "../../public/giant_logo_white.png";
 import Link from "next/link";
 import FacebookIcon from "../../public/icons8-facebook.svg";
 import InstagramIcon from "../../public/icons8-instagram.svg";
@@ -15,20 +16,27 @@ export default async function Footer() {
   const t = await getTranslations("Footer");
 
   return (
-    <footer className="bg-white dark:bg-gray-900 shadow-lg shadow-md shadow-black/30 border-t border-gray-200 dark:border-gray-800">
+    <footer className="bg-white dark:bg-gradient-to-r dark:from-slate-950 dark:to-blue-800 shadow-lg shadow-black/30 border-t border-gray-200 dark:border-gray-800">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 xl:px-8">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
           {/* Company Info Section */}
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <Image
-                src={CompanyLogo}
-                alt="Company Logo"
-                className="h-16 w-16 dark:invert"
-              />
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                {t("companyName")}
-              </h2>
+              <div className="relative w-48 h-48">
+                <Image
+                  src={CompanyLogoDark}
+                  alt="Company Logo"
+                  fill
+                  className="object-contain dark:hidden"
+                />
+                <Image
+                  src={CompanyLogoWhite}
+                  alt="Company Logo"
+                  fill
+                  className="object-contain hidden dark:block"
+                />
+              </div>
+
             </div>
 
             {/* Social Links */}
@@ -50,7 +58,7 @@ export default async function Footer() {
                       alt={social.alt}
                       width={32}
                       height={32}
-                      className="dark:invert hover:opacity-80 transition-opacity"
+                      className="hover:opacity-80 transition-opacity"
                     />
                   </Link>
                 ))}
@@ -91,7 +99,7 @@ export default async function Footer() {
                     alt={item.alt}
                     width={24}
                     height={24}
-                    className="dark:invert"
+                    className="dark:brightness-0 dark:invert"
                   />
                 </div>
                 <div>

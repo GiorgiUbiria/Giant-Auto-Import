@@ -14,13 +14,14 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useCallback } from "react";
 import CopartLogo from "../../public/copart-logo.png";
 import IAAILogo from "../../public/iaai-logo.png";
-import NavbarLogo from "../../public/logo.png";
+import NavbarLogoDark from "../../public/giant_logo_dark.png";
+import NavbarLogoWhite from "../../public/giant_logo_white.png";
 import LocaleSwitcher from "./LocaleSwitcher";
 import Avatar from "./avatar";
-import NavigationLinks from "./navigation-links";
+import NavigationLinks, { ICON_MAP, NavigationLink } from "./navigation-links";
 
 // Client component for mobile menu
-const MobileMenu = ({ links }: { links: Array<{ href: string; label: string }> }) => {
+const MobileMenu = ({ links }: { links: NavigationLink[] }) => {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -37,26 +38,40 @@ const MobileMenu = ({ links }: { links: Array<{ href: string; label: string }> }
       <SheetContent side="left" className="bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 w-72">
         <div className="flex flex-col gap-6 pt-6">
           <Link href="/" className="flex justify-center mb-4">
-            <Image
-              src={NavbarLogo}
-              alt="Company logo"
-              className="size-16 dark:invert"
-              priority
-            />
+            <div className="relative w-20 h-20">
+              <Image
+                src={NavbarLogoDark}
+                alt="Company logo"
+                fill
+                className="object-contain dark:hidden"
+                priority
+              />
+              <Image
+                src={NavbarLogoWhite}
+                alt="Company logo"
+                fill
+                className="object-contain hidden dark:block"
+                priority
+              />
+            </div>
           </Link>
           <nav className="flex flex-col space-y-1">
-            {links.map((link) => (
-              <SheetClose asChild key={link.href}>
-                <Link
-                  href={link.href}
-                  className="flex items-center text-gray-800 dark:text-gray-200 font-medium 
-                    text-base py-3 px-4 rounded-md transition-colors hover:bg-gray-100 
-                    dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"
-                >
-                  <span>{link.label}</span>
-                </Link>
-              </SheetClose>
-            ))}
+            {links.map((link) => {
+              const IconComponent = link.icon;
+              return (
+                <SheetClose asChild key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="flex items-center gap-3 text-gray-800 dark:text-gray-200 font-medium 
+                      text-base py-3 px-4 rounded-md transition-colors hover:bg-gray-100 
+                      dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"
+                  >
+                    <IconComponent className="h-5 w-5" />
+                    <span>{link.label}</span>
+                  </Link>
+                </SheetClose>
+              );
+            })}
           </nav>
           <div className="mt-auto pt-6 border-t border-gray-200 dark:border-gray-800">
             <div className="flex justify-center">
@@ -75,12 +90,6 @@ interface NavbarProps {
     navbar: Record<string, string>;
     howTo: Record<string, string>;
   };
-}
-
-interface NavigationLink {
-  href: string;
-  label: string;
-  isAdminLink?: boolean;
 }
 
 // Client Component
@@ -130,23 +139,19 @@ const Navbar = ({ user, translations }: NavbarProps) => {
   }, [resetVisibilityTimeout]);
 
   const baseLinks: NavigationLink[] = [
-    { href: "/", label: t("home") },
-    { href: "/contact", label: t("contact") },
-    { href: "/about", label: t("about") },
-    { href: "/calculator", label: t("calculator") },
-    { href: "/how-to", label: tHowTo("navbar") },
+    { href: "/", label: t("home"), icon: ICON_MAP.home },
+    { href: "/contact", label: t("contact"), icon: ICON_MAP.contact },
+    { href: "/about", label: t("about"), icon: ICON_MAP.about },
+    { href: "/calculator", label: t("calculator"), icon: ICON_MAP.calculator },
+    { href: "/how-to", label: tHowTo("navbar"), icon: ICON_MAP.extension },
   ];
 
   const adminLinks: NavigationLink[] = user?.role === "ADMIN" ? [
-    { href: "/admin", label: t("admin_panel") },
-    { href: "/admin/cars", label: t("cars"), isAdminLink: true },
-    { href: "/admin/add_car", label: t("add_car"), isAdminLink: true },
-    { href: "/admin/users", label: t("users"), isAdminLink: true },
-    { href: "/admin/signup", label: t("register"), isAdminLink: true }
+    { href: "/admin", label: t("admin_panel"), icon: ICON_MAP.admin }
   ] : [];
 
   const customerLinks: NavigationLink[] = user?.role?.includes("CUSTOMER") ? [
-    { href: "/dashboard", label: t("dashboard") }
+    { href: "/dashboard", label: t("dashboard"), icon: ICON_MAP.dashboard }
   ] : [];
 
   const navigationLinks = [...baseLinks, ...adminLinks, ...customerLinks];
@@ -160,22 +165,30 @@ const Navbar = ({ user, translations }: NavbarProps) => {
         onMouseLeave={handleMouseLeave}
         className={headerClassName}
       >
-        <div className="w-full bg-white dark:bg-gray-900 shadow-md transition-colors duration-300">
+        <div className="w-full bg-white dark:bg-gradient-to-r dark:from-slate-950 dark:to-blue-800 shadow-md transition-colors duration-300">
           {/* Upper Navbar */}
           <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16 sm:h-20">
               <div className="flex items-center gap-4">
                 <MobileMenu links={navigationLinks} />
                 <Link href="/" className="flex items-center" prefetch>
-                  <Image
-                    src={NavbarLogo}
-                    alt="Company logo"
-                    className="size-12 sm:size-14 lg:size-16 dark:invert"
-                    priority
-                  />
-                  <span className="ml-2 text-lg font-semibold text-gray-900 dark:text-white hidden sm:block">
-                    Giant Auto Import
-                  </span>
+                  <div className="relative w-24 h-24 sm:w-24 sm:h-24 lg:w-40 lg:h-40">
+                    <Image
+                      src={NavbarLogoDark}
+                      alt="Company logo"
+                      fill
+                      className="object-contain dark:hidden"
+                      priority
+                    />
+                    <Image
+                      src={NavbarLogoWhite}
+                      alt="Company logo"
+                      fill
+                      className="object-contain hidden dark:block"
+                      priority
+                    />
+                  </div>
+
                 </Link>
               </div>
 
@@ -189,7 +202,7 @@ const Navbar = ({ user, translations }: NavbarProps) => {
                   <Image
                     src={CopartLogo}
                     alt="Copart logo"
-                    className="size-10 sm:size-12 dark:brightness-95"
+                    className="size-16 sm:size-20 lg:size-24 dark:brightness-95"
                     priority
                   />
                 </Link>
@@ -202,7 +215,7 @@ const Navbar = ({ user, translations }: NavbarProps) => {
                   <Image
                     src={IAAILogo}
                     alt="IAAI logo"
-                    className="size-10 sm:size-12 dark:brightness-95"
+                    className="size-16 sm:size-20 lg:size-24 dark:brightness-95"
                     priority
                   />
                 </Link>
@@ -216,7 +229,7 @@ const Navbar = ({ user, translations }: NavbarProps) => {
           </div>
 
           {/* Navigation Links */}
-          <div className="hidden md:block border-t border-gray-200 dark:border-gray-800">
+          <div className="hidden md:block border-t border-gray-200 dark:border-gray-800 bg-gray-200 dark:bg-slate-950">
             <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
               <NavigationLinks links={navigationLinks} />
             </div>

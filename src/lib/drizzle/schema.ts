@@ -27,8 +27,6 @@ export const users = sqliteTable("users", {
   phone: text("phone").notNull().unique(),
   password: text("password").notNull(),
   passwordText: text("password_text"),
-  deposit: integer("deposit").default(0),
-  balance: integer("balance").default(0),
   priceList: text("price_list", { mode: "json" }).$type<PriceList[]>(),
   role: text("role", {
     enum: ["CUSTOMER_SINGULAR", "CUSTOMER_DEALER", "MODERATOR", "ACCOUNTANT", "ADMIN"],
@@ -45,6 +43,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   ownedCars: many(cars),
   userPricingConfig: many(userPricingConfig),
   csvUploads: many(csvDataVersions),
+  customerNotes: many(customerNotes, { relationName: "customer_note" }),
+  adminNotes: many(customerNotes, { relationName: "admin_note" }),
 }));
 
 export const insertUserSchema = createInsertSchema(users, {
@@ -54,8 +54,6 @@ export const insertUserSchema = createInsertSchema(users, {
       "\\+(9[976]\\d|8[987530]\\d|6[987]\\d|5[90]\\d|42\\d|3[875]\\d|2[98654321]\\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)(\\W*\\d){9,10}$"
     )
   ),
-  deposit: (schema) => schema.deposit.gte(0),
-  balance: (schema) => schema.balance.gte(0),
 });
 export const selectUserSchema = createSelectSchema(users);
 
@@ -74,19 +72,24 @@ export const cars = sqliteTable("cars", {
   auctionLocation: text("auction_location"),
   trackingLink: text("tracking_link"),
   destinationPort: text("destination_port").default("Poti"),
-  // Purchase/Auction Fees
+  // Purchase/Auction Fees (Initial/Display values)
   purchaseFee: integer("purchase_fee").notNull(),
   auctionFee: integer("auction_fee"),
   gateFee: integer("gate_fee"),
   titleFee: integer("title_fee"),
   environmentalFee: integer("environmental_fee"),
   virtualBidFee: integer("virtual_bid_fee"),
-  // Shipping Fees
+  // Shipping Fees (Initial/Display values)
   shippingFee: integer("shipping_fee"),
   groundFee: integer("ground_fee"),
   oceanFee: integer("ocean_fee"),
-  // Total Fee
+  // Total Fee (Initial/Display value)
   totalFee: integer("total_fee"),
+  // Payment Due Fields (Calculated values for payments)
+  purchaseDue: integer("purchase_due"),
+  shippingDue: integer("shipping_due"),
+  totalDue: integer("total_due"),
+  paidAmount: integer("paid_amount").default(0),
   // Dates
   arrivalDate: integer("arrival_date", { mode: "timestamp" }),
   departureDate: integer("departure_date", { mode: "timestamp" }),
@@ -116,17 +119,84 @@ export const cars = sqliteTable("cars", {
   fuelType: text("fuel_type", {
     enum: ["GASOLINE", "HYBRID_ELECTRIC"],
   }).notNull(),
+  dueDate: integer("due_date", { mode: "timestamp" }),
 }, (table) => {
   return {
     vinIdx: uniqueIndex("vin_idx").on(table.vin),
     ownerIdx: index("owner_idx").on(table.ownerId),
     purchaseDateIdx: index("purchase_date_idx").on(table.purchaseDate),
+    dueDateIdx: index("cars_due_date_idx").on(table.dueDate),
   }
 });
 
-export const carsRelations = relations(cars, ({ one }) => ({
+export const carsRelations = relations(cars, ({ one, many }) => ({
   owner: one(users, {
     fields: [cars.ownerId],
+    references: [users.id],
+  }),
+  payments: many(payments),
+  invoices: many(invoices),
+}));
+
+// Payments table for tracking payment history
+export const payments = sqliteTable("payments", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  carVin: text("car_vin").notNull().references(() => cars.vin, { onDelete: "cascade" }),
+  adminId: text("admin_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  amount: integer("amount").notNull(),
+  paymentType: text("payment_type", {
+    enum: ["PURCHASE", "SHIPPING"],
+  }).notNull(),
+  description: text("description"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+}, (table) => {
+  return {
+    carVinIdx: index("payments_car_vin_idx").on(table.carVin),
+    adminIdIdx: index("payments_admin_id_idx").on(table.adminId),
+    createdAtIdx: index("payments_created_at_idx").on(table.createdAt),
+    paymentTypeIdx: index("payments_payment_type_idx").on(table.paymentType),
+  }
+});
+
+// Invoices table for storing invoice files
+export const invoices = sqliteTable("invoices", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  carVin: text("car_vin").notNull().references(() => cars.vin, { onDelete: "cascade" }),
+  invoiceType: text("invoice_type", {
+    enum: ["PURCHASE", "SHIPPING", "TOTAL"],
+  }).notNull(),
+  fileKey: text("file_key").notNull(),
+  fileName: text("file_name").notNull(),
+  fileSize: integer("file_size").notNull(),
+  uploadedBy: text("uploaded_by").notNull().references(() => users.id, { onDelete: "cascade" }),
+  uploadedAt: integer("uploaded_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+}, (table) => {
+  return {
+    carVinIdx: index("invoices_car_vin_idx").on(table.carVin),
+    invoiceTypeIdx: index("invoices_invoice_type_idx").on(table.invoiceType),
+    uploadedByIdx: index("invoices_uploaded_by_idx").on(table.uploadedBy),
+    uploadedAtIdx: index("invoices_uploaded_at_idx").on(table.uploadedAt),
+  }
+});
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  car: one(cars, {
+    fields: [payments.carVin],
+    references: [cars.vin],
+  }),
+  admin: one(users, {
+    fields: [payments.adminId],
+    references: [users.id],
+  }),
+}));
+
+export const invoicesRelations = relations(invoices, ({ one }) => ({
+  car: one(cars, {
+    fields: [invoices.carVin],
+    references: [cars.vin],
+  }),
+  uploadedByUser: one(users, {
+    fields: [invoices.uploadedBy],
     references: [users.id],
   }),
 }));
@@ -135,6 +205,7 @@ export const insertCarSchema = createInsertSchema(cars, {
   departureDate: z.date().optional(),
   arrivalDate: z.date().optional(),
   purchaseDate: z.date(),
+  dueDate: z.date().optional(),
   ownerId: (schema) => schema.ownerId
     .optional()
     .nullable()
@@ -147,47 +218,6 @@ export const insertCarSchema = createInsertSchema(cars, {
     }),
 });
 export const selectCarSchema = createSelectSchema(cars);
-
-export const payments = sqliteTable("payments", {
-  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-  customerId: text("customer_id").notNull().references(() => users.id),
-  paymentDate: integer("payment_date", { mode: "timestamp" }).notNull().default(sql`(CURRENT_DATE)`),
-  memo: text("memo").notNull(),
-  payee: text("payee").notNull(),
-  receivedAmount: integer("received_amount").notNull(),
-  usedAmount: integer("used_amount").notNull().default(0),
-  paymentBalance: integer("payment_balance").notNull().default(0),
-  paymentType: text("payment_type", {
-    enum: ["WIRE", "CASH"],
-  }).notNull(),
-  paymentStatus: text("payment_status", {
-    enum: ["COMPLETE", "ACTIVE", "CLOSED"],
-  }).notNull(),
-});
-
-export const paymentsRelations = relations(payments, ({ one }) => ({
-  customer: one(users, { fields: [payments.customerId], references: [users.id], relationName: "customer_payment" }),
-}));
-
-export const insertPaymentSchema = createInsertSchema(payments);
-export const selectPaymentSchema = createSelectSchema(payments);
-
-export const paymentCars = sqliteTable("payment_cars", {
-  paymentId: integer("payment_id").notNull().references(() => payments.id),
-  carId: integer("car_id").notNull().references(() => cars.id),
-}, (table) => {
-  return {
-    pk: primaryKey({ columns: [table.paymentId, table.carId] }),
-  }
-});
-
-export const paymentCarsRelations = relations(paymentCars, ({ one }) => ({
-  payment: one(payments, { fields: [paymentCars.paymentId], references: [payments.id], relationName: "payment_for_car" }),
-  car: one(cars, { fields: [paymentCars.carId], references: [cars.id], relationName: "car_of_payment" }),
-}));
-
-export const insertPaymentCarSchema = createInsertSchema(paymentCars);
-export const selectPaymentCarSchema = createSelectSchema(paymentCars);
 
 export const images = sqliteTable("images", {
   id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
@@ -222,6 +252,73 @@ export const logs = sqliteTable("logs", {
 
 export const insertLogSchema = createInsertSchema(logs);
 export const selectLogSchema = createSelectSchema(logs);
+
+// Customer notes table for admin notes about customers
+export const customerNotes = sqliteTable("customer_notes", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  customerId: text("customer_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  adminId: text("admin_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  note: text("note").notNull(),
+  isImportant: integer("is_important", { mode: "boolean" }).notNull().default(false),
+  hasAttachments: integer("has_attachments", { mode: "boolean" }).notNull().default(false),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+}, (table) => {
+  return {
+    customerIdIdx: index("customer_notes_customer_id_idx").on(table.customerId),
+    adminIdIdx: index("customer_notes_admin_id_idx").on(table.adminId),
+    createdAtIdx: index("customer_notes_created_at_idx").on(table.createdAt),
+    isImportantIdx: index("customer_notes_is_important_idx").on(table.isImportant),
+    hasAttachmentsIdx: index("customer_notes_has_attachments_idx").on(table.hasAttachments),
+  }
+});
+
+// Note attachments table for storing files related to notes
+export const noteAttachments = sqliteTable("note_attachments", {
+  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  noteId: integer("note_id").notNull().references(() => customerNotes.id, { onDelete: "cascade" }),
+  fileName: text("file_name").notNull(),
+  fileKey: text("file_key").notNull(),
+  fileSize: integer("file_size").notNull(),
+  fileType: text("file_type").notNull(), // MIME type
+  uploadedBy: text("uploaded_by").notNull().references(() => users.id, { onDelete: "cascade" }),
+  uploadedAt: integer("uploaded_at", { mode: "timestamp" }).notNull().default(sql`(unixepoch())`),
+}, (table) => {
+  return {
+    noteIdIdx: index("note_attachments_note_id_idx").on(table.noteId),
+    fileKeyIdx: uniqueIndex("note_attachments_file_key_idx").on(table.fileKey),
+    uploadedByIdx: index("note_attachments_uploaded_by_idx").on(table.uploadedBy),
+    uploadedAtIdx: index("note_attachments_uploaded_at_idx").on(table.uploadedAt),
+  }
+});
+
+export const customerNotesRelations = relations(customerNotes, ({ one, many }) => ({
+  customer: one(users, {
+    fields: [customerNotes.customerId],
+    references: [users.id],
+    relationName: "customer_note",
+  }),
+  admin: one(users, {
+    fields: [customerNotes.adminId],
+    references: [users.id],
+    relationName: "admin_note",
+  }),
+  attachments: many(noteAttachments),
+}));
+
+export const noteAttachmentsRelations = relations(noteAttachments, ({ one }) => ({
+  note: one(customerNotes, {
+    fields: [noteAttachments.noteId],
+    references: [customerNotes.id],
+  }),
+  uploadedByUser: one(users, {
+    fields: [noteAttachments.uploadedBy],
+    references: [users.id],
+  }),
+}));
+
+export const insertCustomerNoteSchema = createInsertSchema(customerNotes);
+export const selectCustomerNoteSchema = createSelectSchema(customerNotes);
 
 // New tables for user-based pricing system
 export const userPricingConfig = sqliteTable("user_pricing_config", {
@@ -315,3 +412,14 @@ export const selectCsvDataVersionSchema = createSelectSchema(csvDataVersions);
 
 export const insertOceanShippingRatesSchema = createInsertSchema(oceanShippingRates);
 export const selectOceanShippingRatesSchema = createSelectSchema(oceanShippingRates);
+
+// Schemas for payments and invoices
+export const insertPaymentSchema = createInsertSchema(payments);
+export const selectPaymentSchema = createSelectSchema(payments);
+
+export const insertInvoiceSchema = createInsertSchema(invoices);
+export const selectInvoiceSchema = createSelectSchema(invoices);
+
+// Schemas for note attachments
+export const insertNoteAttachmentSchema = createInsertSchema(noteAttachments);
+export const selectNoteAttachmentSchema = createSelectSchema(noteAttachments);

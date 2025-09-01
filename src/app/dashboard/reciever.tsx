@@ -3,8 +3,10 @@
 import { Input } from "@/components/ui/input";
 import { assignRecieverAction } from "@/lib/actions/carActions";
 import { useServerActionMutation } from "@/lib/hooks/server-action-hooks";
-import { useQueryClient } from "@tanstack/react-query";
-import { Edit2, Loader2, Save } from "lucide-react";
+import { useCacheInvalidation } from "@/lib/services/cache-invalidation-service";
+import { useServerActionLoading } from "@/lib/services/loading-state-service";
+import { InlineLoading } from "@/components/ui/loading-components";
+import { Edit2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -16,7 +18,7 @@ export const Reciever = ({
   reciever: string | null;
   vin: string;
 }) => {
-  const queryClient = useQueryClient();
+  const { invalidateOnCarChange } = useCacheInvalidation();
   const [localReciever, setLocalReciever] = useState<string | null>(reciever);
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(reciever || "");
@@ -34,12 +36,21 @@ export const Reciever = ({
       setLocalReciever(data?.reciever || localReciever);
       setIsEditing(false);
 
-      await queryClient.invalidateQueries({
-        queryKey: ["getCars"],
-        refetchType: "active",
-      });
+      // Use smart cache invalidation for receiver changes
+      await invalidateOnCarChange({
+        vin: vin,
+        changeType: 'update'
+      }, { refetch: true, activeOnly: true });
     },
   });
+
+  // Unified loading state management
+  const { isLoading: isReceiverLoading } = useServerActionLoading(
+    'assignReceiver',
+    isPending,
+    null,
+    { minLoadingTime: 300 }
+  );
 
   const handleSave = () => {
     if (inputValue.trim() && inputValue !== localReciever) {
@@ -62,7 +73,7 @@ export const Reciever = ({
   if (isPending) {
     return (
       <div className="flex items-center justify-center h-full min-h-[40px]">
-        <Loader2 className="animate-spin w-5 h-5 text-primary" />
+        <InlineLoading message="Updating receiver..." size="sm" />
       </div>
     );
   }

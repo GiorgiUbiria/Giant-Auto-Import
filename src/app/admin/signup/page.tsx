@@ -12,9 +12,10 @@ export default async function Page() {
   }
 
   return (
-    <div className="w-full grid place-items-center">
-      <h1 className="text-3xl text-primary my-4"> Register User </h1>
-      <RegisterForm />
+    <div className="w-full min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        <RegisterForm />
+      </div>
     </div>
   );
 }

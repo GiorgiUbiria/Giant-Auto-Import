@@ -31,47 +31,40 @@ const Avatar = ({ user }: AvatarProps) => {
 		<>
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
-					<div className="flex justify-center items-center cursor-pointer">
-						<Button variant="outline" size="icon" className="w-14 h-14 rounded-full bg-gray-800 dark:bg-gray-600 text-white border-gray-300 dark:border-gray-600">
-							<CircleUser className="h-[2rem] w-[2rem]" />
-							<span className="sr-only">Toggle user menu</span>
-						</Button>
-						{!isMobile && (
-							<>
-								<p className="text-gray-900 dark:text-white text-lg font-bold ml-4 max-w-40 truncate">
-									{user ? user.fullName : "My Account"}
-								</p>
-								<ChevronDown className="size-4 ml-1 mt-1 text-gray-900 dark:text-white font-bold" />
-							</>
-						)}
-					</div>
+					<Button
+						size="sm"
+						className="hidden md:inline-flex bg-orange-500 hover:bg-orange-600 text-white border-0 font-medium px-4 py-2 gap-2"
+					>
+						<CircleUser className="w-4 h-4" />
+						{user ? user.fullName : "My Account"}
+					</Button>
 				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end">
-					<DropdownMenuLabel className="text-lg max-w-48 truncate"> {user ? user.fullName : t("myAccount")} </DropdownMenuLabel>
-					<DropdownMenuSeparator />
+				<DropdownMenuContent align="end" className="w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
 					{user ? (
-						<>
-							{" "}
-							<DropdownMenuSeparator />
-							<DropdownMenuItem className="text-md">
-								<Button
-									disabled={isPending}
-									variant="link"
-									onClick={async () => {
-										const [_, error] = await execute();
+						<DropdownMenuItem className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors">
+							<Button
+								disabled={isPending}
+								variant="ghost"
+								size="sm"
+								className="w-full justify-start h-auto p-0 text-inherit hover:bg-transparent"
+								onClick={async () => {
+									const [_, error] = await execute();
 
-										if (error) {
-											toast.error(error.message)
-										}
-									}}
-								>
-									{t("logout")} <LogOut className="size-4 ml-2" />
-								</Button>
-							</DropdownMenuItem>
-						</>
+									if (error) {
+										toast.error(error.message)
+									}
+								}}
+							>
+								<LogOut className="w-4 h-4 mr-2" />
+								{t("logout")}
+							</Button>
+						</DropdownMenuItem>
 					) : (
-						<DropdownMenuItem className="text-md">
-							<Link href="/login"> {t("login")} </Link>
+						<DropdownMenuItem className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors">
+							<Link href="/login" className="flex items-center w-full">
+								<CircleUser className="w-4 h-4 mr-2" />
+								{t("login")}
+							</Link>
 						</DropdownMenuItem>
 					)}
 				</DropdownMenuContent>

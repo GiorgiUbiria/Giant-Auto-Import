@@ -127,6 +127,27 @@
       "when": 1754303388622,
       "tag": "0017_stale_scrambler",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1754481275560,
+      "tag": "0018_kind_golden_guardian",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1756071376690,
+      "tag": "0019_needy_liz_osborn",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1756131946601,
+      "tag": "0020_fantastic_red_skull",
+      "breakpoints": true
     }
   ]
 }

@@ -43,7 +43,7 @@ const useAuctionData = () => {
     const loadAuctionData = async () => {
       try {
         setIsLoading(true);
-        
+
         // Check if we're in the browser environment
         if (typeof window === 'undefined') {
           // SSR: Use fallback data
@@ -53,20 +53,20 @@ const useAuctionData = () => {
           }
           return;
         }
-        
+
         // Client-side: Load dynamic data
         const calculatorUtils = await import("@/lib/calculator-utils");
         const dynamicData = await calculatorUtils.getActiveCsvData();
-        
+
         // Ensure data is valid and filter out any invalid entries
-        const validData = Array.isArray(dynamicData) ? dynamicData.filter(item => 
-          item && 
-          typeof item === 'object' && 
-          item.auctionLocation && 
+        const validData = Array.isArray(dynamicData) ? dynamicData.filter(item =>
+          item &&
+          typeof item === 'object' &&
+          item.auctionLocation &&
           item.auction &&
           item.port
         ) : [];
-        
+
         if (isMounted) {
           setAuctionData(validData);
         }
@@ -105,8 +105,8 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
 
     // Find all unique ports for the selected auction location
     const locationPorts = auctionData
-      .filter((data: AuctionData) => 
-        data.auctionLocation === selectedAuctionLocation && 
+      .filter((data: AuctionData) =>
+        data.auctionLocation === selectedAuctionLocation &&
         data.auction === selectedAuction
       )
       .map((data: AuctionData) => data.port);
@@ -150,17 +150,17 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
   }, [form]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Auction Information</CardTitle>
+    <Card className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow-md">
+      <CardHeader className="bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+        <CardTitle className="text-gray-900 dark:text-gray-100">Auction Information</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="bg-white dark:bg-gray-800 p-6 space-y-4">
         <FormField
           control={form.control}
           name="auction"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Auction</FormLabel>
+              <FormLabel className="text-gray-900 dark:text-gray-100 font-semibold">Auction</FormLabel>
               <Select
                 onValueChange={(value) => {
                   field.onChange(value);
@@ -170,7 +170,7 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
                 disabled={isLoading}
               >
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                     <SelectValue placeholder="Select auction" />
                   </SelectTrigger>
                 </FormControl>
@@ -189,7 +189,7 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
           name="auctionLocation"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Auction Location</FormLabel>
+              <FormLabel className="text-gray-900 dark:text-gray-100 font-semibold">Auction Location</FormLabel>
               <Select
                 onValueChange={(value) => {
                   field.onChange(value);
@@ -199,7 +199,7 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
                 disabled={!selectedAuction || isLoading}
               >
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                     <SelectValue placeholder={!selectedAuction ? "Select auction first" : auctionLocations.length === 0 ? "No locations available" : "Select auction location"} />
                   </SelectTrigger>
                 </FormControl>
@@ -221,7 +221,7 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
           name="originPort"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Origin Port</FormLabel>
+              <FormLabel className="text-gray-900 dark:text-gray-100 font-semibold">Origin Port</FormLabel>
               <Select
                 onValueChange={(value) => {
                   field.onChange(value);
@@ -231,7 +231,7 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
                 disabled={!selectedAuctionLocation || availablePorts.length === 0}
               >
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                     <SelectValue placeholder={!selectedAuctionLocation ? "Select auction location first" : availablePorts.length === 0 ? "No ports available" : "Select origin port"} />
                   </SelectTrigger>
                 </FormControl>
@@ -253,9 +253,13 @@ export function AuctionInfoSection({ form }: AuctionInfoSectionProps) {
           name="trackingLink"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tracking Link</FormLabel>
+              <FormLabel className="text-gray-900 dark:text-gray-100 font-semibold">Tracking Link</FormLabel>
               <FormControl>
-                <Input placeholder="Enter tracking link" {...field} />
+                <Input
+                  placeholder="Enter tracking link"
+                  className="border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

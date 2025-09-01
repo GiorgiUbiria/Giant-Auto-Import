@@ -75,6 +75,7 @@ export async function GET(req: Request) {
     const vin = searchParams.get("vin") || undefined;
     const vinLot = searchParams.get("vinLot") || undefined; // Add support for vinLot filter
     const ownerId = searchParams.get("ownerId") || undefined;
+    const includeDetails = searchParams.get("includeDetails") === "true";
 
     // Validate sortBy
     const sortBy: SortKey = (sortByParam in sortColumnMap ? sortByParam : "purchaseDate") as SortKey;
@@ -97,19 +98,63 @@ export async function GET(req: Request) {
 
     const count = countResult[0]?.count ?? 0;
     
+    // If includeDetails is true, fetch payment and invoice data for each car
+    let carsWithDetails = data;
+    if (includeDetails) {
+      carsWithDetails = await Promise.all(
+        data.map(async (car) => {
+          // Import the payment and invoice actions here to avoid circular dependencies
+          const { getPaymentHistoryAction } = await import("@/lib/actions/paymentActions");
+          const { checkInvoiceExistsAction } = await import("@/lib/actions/invoiceActions");
+          
+          try {
+            // Get payment history for this car
+            const paymentHistory = await getPaymentHistoryAction({ carVin: car.vin });
+            
+            // Check invoice status for all types
+            const [purchaseInvoice, shippingInvoice, totalInvoice] = await Promise.all([
+              checkInvoiceExistsAction({ carVin: car.vin, invoiceType: "PURCHASE" }),
+              checkInvoiceExistsAction({ carVin: car.vin, invoiceType: "SHIPPING" }),
+              checkInvoiceExistsAction({ carVin: car.vin, invoiceType: "TOTAL" }),
+            ]);
+            
+            return {
+              ...car,
+              paymentHistory: paymentHistory?.[0] || [],
+              hasInvoice: {
+                PURCHASE: purchaseInvoice?.[0]?.exists || false,
+                SHIPPING: shippingInvoice?.[0]?.exists || false,
+                TOTAL: totalInvoice?.[0]?.exists || false,
+              }
+            };
+          } catch (error) {
+            console.error(`Error fetching details for car ${car.vin}:`, error);
+            return {
+              ...car,
+              paymentHistory: [],
+              hasInvoice: {
+                PURCHASE: false,
+                SHIPPING: false,
+                TOTAL: false,
+              }
+            };
+          }
+        })
+      );
+    }
+    
     // Create response without caching headers to allow React Query to manage caching
-    const response = NextResponse.json({ cars: data, count });
-    
-    // Add headers to prevent caching and ensure fresh data
-    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    response.headers.set('Pragma', 'no-cache');
-    response.headers.set('Expires', '0');
-    
-    return response;
+    return NextResponse.json({
+      cars: carsWithDetails,
+      count,
+      page,
+      pageSize,
+      totalPages: Math.ceil(count / pageSize),
+    });
   } catch (error) {
-    console.error("Error fetching cars:", error);
+    console.error("Error in cars API:", error);
     return NextResponse.json(
-      { error: "Failed to fetch cars" },
+      { error: "Failed to fetch cars", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
   }

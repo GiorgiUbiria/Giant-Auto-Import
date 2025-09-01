@@ -20,9 +20,18 @@ import { PurchaseFeeDetails } from "./purchase-fee-details";
 import { ShippingFeeDetails } from "./shipping-fee-details";
 
 const SelectSchema = selectCarSchema;
-type SelectSchemaType = z.infer<typeof SelectSchema>;
+export type SelectSchemaType = z.infer<typeof SelectSchema>;
 
-export const columns: ColumnDef<SelectSchemaType>[] = [
+// Add type for car with invoice data
+export type CarWithInvoiceData = SelectSchemaType & {
+  hasInvoice?: {
+    PURCHASE: boolean;
+    SHIPPING: boolean;
+    TOTAL: boolean;
+  };
+};
+
+export const columns: ColumnDef<CarWithInvoiceData>[] = [
   {
     accessorKey: "purchaseDate",
     header: () => <div className="text-center font-semibold">Purchase Date</div>,
@@ -69,9 +78,10 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       const auction = row.original.auction as SelectSchemaType["auction"];
 
       return (
-        <div className="flex items-center justify-between min-w-[120px]">
+        <div className="flex flex-col items-center space-y-2 min-w-[80px]">
+          <p className="font-medium">{year}</p>
           <p className="font-medium">
-            {year} {make} {model}
+            {make} {model}
           </p>
           <div className="shrink-0">
             {auction !== "Copart" ? (
@@ -135,7 +145,31 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     header: () => <div className="text-center font-semibold">Fuel</div>,
     cell: ({ row }) => {
       const fuelType = row.getValue("fuelType") as string;
-      return <div className="text-center font-medium">{fuelType || "-"}</div>;
+
+      if (!fuelType) return <div className="text-center text-muted-foreground">-</div>;
+
+      const getFuelInitials = (type: string) => {
+        switch (type.toUpperCase()) {
+          case 'GASOLINE':
+            return 'GAS';
+          case 'HYBRID_ELECTRIC':
+            return 'HYB';
+          case 'DIESEL':
+            return 'DIE';
+          case 'ELECTRIC':
+            return 'ELE';
+          case 'HYDROGEN':
+            return 'HYD';
+          default:
+            return type.substring(0, 3).toUpperCase();
+        }
+      };
+
+      return (
+        <div className="text-center flex items-center justify-center">
+          <span className="text-sm font-medium">{getFuelInitials(fuelType)}</span>
+        </div>
+      );
     }
   },
   {
@@ -149,15 +183,9 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       return (
         <div className="text-center flex items-center justify-center">
           {hasTitle ? (
-            <div className="flex items-center gap-1 bg-green-600 text-white px-2 py-1 rounded-md">
-              <Check className="h-4 w-4" />
-              <span className="font-medium">Yes</span>
-            </div>
+            <span className="text-green-600 text-xl font-bold">✓</span>
           ) : noTitle ? (
-            <div className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-md">
-              <X className="h-4 w-4" />
-              <span className="font-medium">No</span>
-            </div>
+            <span className="text-red-600 text-xl font-bold">✗</span>
           ) : (
             <span className="text-muted-foreground font-medium">{title || "-"}</span>
           )}
@@ -176,15 +204,9 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
       return (
         <div className="text-center flex items-center justify-center">
           {hasKeys ? (
-            <div className="flex items-center gap-1 bg-green-600 text-white px-2 py-1 rounded-md">
-              <Check className="h-4 w-4" />
-              <span className="font-medium">Yes</span>
-            </div>
+            <span className="text-green-600 text-xl font-bold">✓</span>
           ) : noKeys ? (
-            <div className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded-md">
-              <X className="h-4 w-4" />
-              <span className="font-medium">No</span>
-            </div>
+            <span className="text-red-600 text-xl font-bold">✗</span>
           ) : (
             <span className="text-muted-foreground font-medium">{keys || "-"}</span>
           )}
@@ -210,9 +232,39 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
     },
   },
   {
-    accessorKey: "purchaseFee",
+    accessorKey: "dueDate",
+    header: "Due Date",
+    cell: ({ row }) => {
+      const dueDate = row.original.dueDate as SelectSchemaType["dueDate"];
+
+      if (!dueDate) {
+        return <div className="text-center text-muted-foreground">-</div>;
+      }
+
+      const dateObj = new Date(dueDate);
+      const formattedDate = dateObj.toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+      });
+
+      const isOverdue = new Date() > dateObj;
+      const isDueSoon = new Date() > new Date(dateObj.getTime() - 7 * 24 * 60 * 60 * 1000); // 7 days before
+
+      return (
+        <div className="text-center space-y-1">
+          <div className={`font-medium ${isOverdue ? 'text-red-600' : isDueSoon ? 'text-yellow-600' : 'text-green-600'}`}>
+            {formattedDate}
+          </div>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "purchaseDue",
     header: "Purchase Due",
     cell: ({ row }) => {
+      const purchaseDue = row.original.purchaseDue as SelectSchemaType["purchaseDue"];
       const purchaseFee = row.original.purchaseFee as SelectSchemaType["purchaseFee"];
       const auctionFee = row.original.auctionFee as SelectSchemaType["auctionFee"];
       const gateFee = row.original.gateFee as SelectSchemaType["gateFee"];
@@ -229,27 +281,19 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             titleFee={titleFee || 0}
             environmentalFee={environmentalFee || 0}
             virtualBidFee={virtualBidFee || 0}
+            currentDue={purchaseDue || 0}
+            carVin={row.original.vin}
+            hasInvoice={row.original.hasInvoice?.PURCHASE}
           />
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-6 px-2 text-xs"
-            onClick={() => {
-              // TODO: Implement download functionality
-              console.log("Download purchase invoice");
-            }}
-          >
-            <Download className="h-3 w-3 mr-1" />
-            Invoice
-          </Button>
         </div>
       );
     },
   },
   {
-    accessorKey: "shippingFee",
+    accessorKey: "shippingDue",
     header: "Shipping Due",
     cell: ({ row }) => {
+      const shippingDue = row.original.shippingDue as SelectSchemaType["shippingDue"];
       const shippingFee = row.original.shippingFee as SelectSchemaType["shippingFee"];
       const groundFee = row.original.groundFee as SelectSchemaType["groundFee"];
       const oceanFee = row.original.oceanFee as SelectSchemaType["oceanFee"];
@@ -260,27 +304,20 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             shippingFee={shippingFee || 0}
             groundFee={groundFee || 0}
             oceanFee={oceanFee || 0}
+            currentDue={shippingDue || 0}
+            carVin={row.original.vin}
+            hasInvoice={row.original.hasInvoice?.SHIPPING}
           />
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-6 px-2 text-xs"
-            onClick={() => {
-              // TODO: Implement download functionality
-              console.log("Download shipping invoice");
-            }}
-          >
-            <Download className="h-3 w-3 mr-1" />
-            Invoice
-          </Button>
         </div>
       );
     },
   },
   {
-    accessorKey: "totalFee",
+    accessorKey: "totalDue",
     header: "Total Due",
     cell: ({ row }) => {
+      const totalDue = row.original.totalDue as SelectSchemaType["totalDue"];
+      const paidAmount = row.original.paidAmount as SelectSchemaType["paidAmount"];
       const purchaseFee = row.original
         .purchaseFee as SelectSchemaType["purchaseFee"];
       const auctionFee = row.original
@@ -312,34 +349,13 @@ export const columns: ColumnDef<SelectSchemaType>[] = [
             oceanFee={oceanFee || 0}
             totalFee={Math.round(totalFee || 0)}
             insurance={insurance}
+            currentDue={totalDue || 0}
+            paidAmount={paidAmount || 0}
+            carVin={row.original.vin}
+            hasInvoice={row.original.hasInvoice?.TOTAL}
           />
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-6 px-2 text-xs"
-            onClick={() => {
-              // TODO: Implement download functionality
-              console.log("Download total invoice");
-            }}
-          >
-            <Download className="h-3 w-3 mr-1" />
-            Invoice
-          </Button>
         </div>
       );
     },
-  },
-  {
-    id: "paidAmount",
-    header: "Paid Amount",
-    cell: ({ row }) => {
-      // Currently empty/disabled as requested
-      return (
-        <div className="text-center text-muted-foreground">
-          <span className="italic">Coming soon</span>
-        </div>
-      );
-    },
-    enableColumnFilter: false,
   },
 ];

@@ -128,7 +128,7 @@ export default function LandingFeaturesComponent({ translations }: LandingFeatur
           return (
             <motion.div
               key={feature.key}
-              className="group relative p-8 rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:shadow-2xl transition-all duration-300"
+              className="group relative p-8 rounded-2xl bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 shadow-lg hover:shadow-2xl transition-all duration-300"
               initial={{ opacity: 0, y: 40 }}
               animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
               transition={{ duration: 0.5, delay: 0.8 + (index * 0.1) }}

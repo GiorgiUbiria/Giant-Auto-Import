@@ -6,7 +6,12 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { cn, formatCurrency } from "@/lib/utils";
+import { useServerAction } from "zsa-react";
+import { getInvoiceDownloadUrlAction } from "@/lib/actions/invoiceActions";
+import { toast } from "sonner";
 
 type Props = {
   purchaseFee: number;
@@ -20,6 +25,10 @@ type Props = {
   oceanFee: number;
   totalFee: number;
   insurance?: "YES" | "NO";
+  currentDue: number;
+  paidAmount: number;
+  carVin: string;
+  hasInvoice?: boolean;
 };
 
 type FeeItemProps = {
@@ -31,7 +40,7 @@ type FeeItemProps = {
 const FeeItem = ({ label, amount, className }: FeeItemProps) => (
   <div className={cn("flex justify-between items-center py-0.5", className)}>
     <span className="text-muted-foreground">{label}:</span>
-    <span className="font-medium">${amount.toLocaleString()}</span>
+    <span className="font-medium">{formatCurrency(amount)}</span>
   </div>
 );
 
@@ -47,6 +56,10 @@ export const TotalFeeDetails = ({
   oceanFee,
   totalFee,
   insurance,
+  currentDue,
+  paidAmount,
+  carVin,
+  hasInvoice,
 }: Props) => {
   const totalPurchaseFee =
     purchaseFee +
@@ -56,12 +69,39 @@ export const TotalFeeDetails = ({
     environmentalFee +
     virtualBidFee;
 
+  const totalShippingFee = shippingFee + groundFee + oceanFee;
+  const isFullyPaid = currentDue <= 0;
+
+  const handleDownloadInvoice = async () => {
+    try {
+      const [result, error] = await getInvoiceDownloadUrlAction({
+        carVin,
+        invoiceType: "TOTAL",
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Open in new tab instead of downloading
+      window.open(result.downloadUrl, '_blank');
+    } catch (error) {
+      console.error("Download failed:", error);
+      toast.error("Failed to download invoice");
+    }
+  };
+
+
+
   return (
     <div className="relative group">
       <HoverCard>
         <HoverCardTrigger asChild>
-          <button className="font-medium hover:text-primary/80 transition-colors">
-            ${totalFee.toLocaleString()}
+          <button className={cn(
+            "font-medium hover:text-primary/80 transition-colors",
+            isFullyPaid ? "text-green-600" : "text-red-600"
+          )}>
+            {formatCurrency(currentDue)}
           </button>
         </HoverCardTrigger>
         <HoverCardContent className="w-80 p-4" align="end">
@@ -92,33 +132,91 @@ export const TotalFeeDetails = ({
                 <Separator className="my-2" />
                 <FeeItem
                   label="Total Shipping Fee"
-                  amount={shippingFee}
+                  amount={totalShippingFee}
                   className="font-semibold text-primary"
                 />
               </div>
             </div>
 
-            <Separator />
-
-            {insurance === "YES" && (
+            <div>
+              <h3 className="font-semibold text-lg mb-2">Payment Summary</h3>
               <div className="space-y-1">
                 <FeeItem
-                  label="Insurance Fee (1.5%)"
-                  amount={Math.round((totalPurchaseFee + shippingFee) * 0.015)}
+                  label="Total Fee"
+                  amount={totalFee}
                   className="font-semibold text-primary"
                 />
+                <FeeItem
+                  label="Total Paid"
+                  amount={paidAmount}
+                  className="text-green-600 font-medium"
+                />
                 <Separator className="my-2" />
+                <FeeItem
+                  label="Remaining Due"
+                  amount={currentDue}
+                  className={cn(
+                    "font-semibold",
+                    isFullyPaid ? "text-green-600" : "text-red-600"
+                  )}
+                />
+              </div>
+            </div>
+
+            {insurance && (
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Insurance</h3>
+                <div className="space-y-1">
+                  <FeeItem
+                    label="Insurance Status"
+                    amount={0}
+                    className="font-medium"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {insurance === "YES" ? "Insurance Included" : "No Insurance"}
+                  </span>
+                </div>
               </div>
             )}
 
-            <FeeItem
-              label="Total Fee"
-              amount={totalFee}
-              className="text-lg font-bold text-primary"
-            />
+            {hasInvoice && (
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Invoice</h3>
+                <div className="space-y-1">
+                  <FeeItem
+                    label="Invoice Available"
+                    amount={0}
+                    className="font-medium"
+                  />
+                  <Button
+                    onClick={handleDownloadInvoice}
+                    className="flex items-center gap-2"
+                    disabled={false} // No loading state for this action
+                  >
+                    <Download size={16} />
+                    Download Invoice
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </HoverCardContent>
       </HoverCard>
+
+      {/* Download button displayed under the price when invoice exists */}
+      {hasInvoice && (
+        <div className="flex justify-center">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleDownloadInvoice}
+            className="text-xs px-2 py-1 h-6"
+          >
+            <Download className="h-3 w-3 mr-1" />
+            Download Total Invoice
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

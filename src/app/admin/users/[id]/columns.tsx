@@ -22,7 +22,17 @@ import { PaymentInput } from "@/components/payment-input";
 const SelectSchema = selectCarSchema;
 type SelectSchemaType = z.infer<typeof SelectSchema>;
 
-export const columns = (onRefresh?: () => void): ColumnDef<SelectSchemaType>[] => [
+// Extended type to include API-added properties
+type CarWithDetails = SelectSchemaType & {
+  paymentHistory?: any[];
+  hasInvoice?: {
+    PURCHASE: boolean;
+    SHIPPING: boolean;
+    TOTAL: boolean;
+  };
+};
+
+export const columns = (onRefresh?: () => void): ColumnDef<CarWithDetails>[] => [
   {
     accessorKey: "purchaseDate",
     header: "PD",

@@ -138,7 +138,7 @@ export const UnifiedClient = ({ translations }: UnifiedClientProps) => {
     const [rowSelection, setRowSelection] = React.useState({});
 
     // Unified state management
-    const { cars, loading, error, setLoading, setError, setData } = useCarState();
+    const { car, loading, error, setLoading, setError, setData } = useCarState();
 
     // React Query for data fetching
     const { isLoading, data, error: queryError, refetch } = useQuery<CarsApiResponse>({
@@ -156,7 +156,7 @@ export const UnifiedClient = ({ translations }: UnifiedClientProps) => {
     // Unified query integration
     useUnifiedQuery(
         'admin_cars',
-        ["getCars", pageIndex, pageSize, sorting, filters],
+        ["getCars", pageIndex.toString(), pageSize.toString(), JSON.stringify(sorting), JSON.stringify(filters)],
         data,
         isLoading,
         queryError
@@ -174,6 +174,62 @@ export const UnifiedClient = ({ translations }: UnifiedClientProps) => {
     // Provide default values
     const tableData = data?.cars || [];
     const totalCount = data?.totalCount || 0;
+
+    // Default translations for unified client
+    const defaultTranslations = {
+        columns: {
+            owner: "Owner",
+            purchaseDate: "Purchase Date",
+            photo: "Photo",
+            vehicle: "Vehicle",
+            lotVin: "Lot/VIN",
+            receiver: "Receiver",
+            fuel: "Fuel",
+            title: "Title",
+            keys: "Keys",
+            usPort: "US Port",
+            destinationPort: "Destination Port",
+            actions: "Actions"
+        },
+        actions: {
+            edit: "Edit",
+            delete: "Delete",
+            deleteConfirmDescription: "Are you sure you want to delete this car?",
+            cancel: "Cancel",
+            deleteAction: "Delete",
+            deleting: "Deleting...",
+            deleteSuccess: "Car deleted successfully",
+            deleteError: "Failed to delete car"
+        },
+        receiver: {
+            noReceiver: "No receiver assigned",
+            assignSuccess: "Receiver assigned successfully",
+            assignError: "Failed to assign receiver"
+        },
+        owner: {
+            loadError: "Failed to load owner information"
+        },
+        totalFee: {
+            totalPurchaseFee: "Total Purchase Fee",
+            basePurchaseFee: "Base Purchase Fee",
+            auctionFee: "Auction Fee",
+            gateFee: "Gate Fee",
+            titleFee: "Title Fee",
+            environmentalFee: "Environmental Fee",
+            virtualBidFee: "Virtual Bid Fee",
+            totalPurchaseFeeResult: "Total Purchase Fee",
+            shippingFee: "Shipping Fee",
+            groundFee: "Ground Fee",
+            oceanFee: "Ocean Fee"
+        },
+        buttons: {
+            comingSoon: "Coming Soon"
+        },
+        status: {
+            yes: "Yes",
+            no: "No"
+        }
+    };
 
     // Pagination handlers
     const handlePaginationChange = React.useCallback((updaterOrValue: any) => {
@@ -280,7 +336,7 @@ export const UnifiedClient = ({ translations }: UnifiedClientProps) => {
                 errorMessage="Failed to load table data"
             >
                 <DataTable
-                    columns={columns}
+                    columns={columns(defaultTranslations, handleManualRefresh)}
                     data={tableData}
                     filterKey="vinDetails"
                     pageIndex={pageIndex}
@@ -299,16 +355,16 @@ export const UnifiedClient = ({ translations }: UnifiedClientProps) => {
                         searchPlaceholder: "Search by VIN or Lot Number...",
                         columns: "Columns",
                         noResults: "No results found",
-                        noData: translations.noCars,
+                        noData: "No cars found",
                         clearFilter: "Clear filters",
                         pagination: {
-                            showing: "Showing",
-                            of: "of",
-                            results: "results",
+                            showing: "Showing {start} to {end} of {total} entries",
+                            rowsPerPage: "Rows per page",
                             page: "Page",
-                            goToPage: "Go to page",
-                            previous: "Previous",
-                            next: "Next",
+                            goToFirst: "Go to first page",
+                            goToPrevious: "Go to previous page",
+                            goToNext: "Go to next page",
+                            goToLast: "Go to last page",
                         },
                     }}
                 />

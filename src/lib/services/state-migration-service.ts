@@ -63,7 +63,7 @@ export function useJotaiBridge<T>(
     // Sync Jotai atom with unified state
     useEffect(() => {
         if (config?.enableMigration && !isMigrated) {
-            setUnifiedState(atomValue);
+            setUnifiedState(atomValue as T | null);
             setIsMigrated(true);
         }
     }, [atomValue, config?.enableMigration, isMigrated]);

@@ -160,7 +160,7 @@ export function CustomerNotes({ userId, filterImportant }: CustomerNotesProps) {
 
     // Filter notes based on importance if filterImportant is specified
     const displayNotes = filterImportant !== undefined
-        ? allNotes.filter(note => note.isImportant === filterImportant)
+        ? allNotes.filter((note: CustomerNote) => note.isImportant === filterImportant)
         : allNotes;
 
     if (displayNotes.length === 0) {

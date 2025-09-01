@@ -73,7 +73,7 @@ export function UserDataProvider({ userId, children }: UserDataProviderProps) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
-            const response = await fetch(`/api/cars?ownerId=${userId}&pageSize=1000`, {
+            const response = await fetch(`/api/cars?ownerId=${userId}&pageSize=1000&includeDetails=true`, {
                 signal: controller.signal
             });
 

@@ -177,7 +177,7 @@ export function TotalDueDisplay({
                     <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => executeDownloadInvoice({ carVin, invoiceType: "TOTAL" })}
+                        onClick={handleDownloadInvoice}
                         className="text-xs px-2 py-1 h-6"
                     >
                         <Download className="h-3 w-3 mr-1" />

@@ -157,9 +157,9 @@ export function CustomerNotes({ userId, filterImportant }: CustomerNotesProps) {
     }
 
     const allNotes = (notes && notes.length > 0) ? notes : (queryData || []);
-    
+
     // Filter notes based on importance if filterImportant is specified
-    const displayNotes = filterImportant !== undefined 
+    const displayNotes = filterImportant !== undefined
         ? allNotes.filter(note => note.isImportant === filterImportant)
         : allNotes;
 
@@ -169,7 +169,7 @@ export function CustomerNotes({ userId, filterImportant }: CustomerNotesProps) {
             if (filterImportant === false) return "General Notes";
             return "All Admin Notes";
         };
-        
+
         const getEmptyStateMessage = () => {
             if (filterImportant === true) return "No important payment notes available yet";
             if (filterImportant === false) return "No general notes available yet";
@@ -198,9 +198,9 @@ export function CustomerNotes({ userId, filterImportant }: CustomerNotesProps) {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <AlertCircle className="h-5 w-5" />
-                    {filterImportant === true ? "Payment Notes" : 
-                     filterImportant === false ? "General Notes" : 
-                     "All Admin Notes"} ({displayNotes.length})
+                    {filterImportant === true ? "Payment Notes" :
+                        filterImportant === false ? "General Notes" :
+                            "All Admin Notes"} ({displayNotes.length})
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">

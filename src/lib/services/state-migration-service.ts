@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { UnifiedStateService } from './unified-state-service';
@@ -393,7 +393,7 @@ export function withMigration<T extends React.ComponentType<any>>(
             startMigration();
         }, [startMigration]);
 
-        return <Component { ...props } isMigrating = { isMigrating } />;
+        return React.createElement(Component, { ...props, isMigrating });
     }) as T;
 }
 

@@ -8,7 +8,8 @@ import * as React from "react";
 import { SortingState, ColumnFiltersState, VisibilityState } from "@tanstack/react-table";
 import { selectCarSchema } from "@/lib/drizzle/schema";
 import { z } from "zod";
-import { FullPageLoading, TableLoadingBoundary } from "@/components/ui/loading-boundaries";
+import { TableLoadingBoundary } from "@/components/ui/loading-boundaries";
+import { FullPageLoading } from "@/components/ui/loading-components";
 import { useCacheInvalidation } from "@/lib/services/cache-invalidation-service";
 
 // Types

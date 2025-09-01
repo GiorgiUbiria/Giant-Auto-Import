@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Car, CreditCard, FileText, RefreshCw } from "lucide-react";
+import { Car, CreditCard, FileText, RefreshCw, Star } from "lucide-react";
 import { DataTable } from "@/components/data-table";
 import { columns } from "./columns";
 import { SelectSchemaType } from "./columns";
@@ -137,6 +137,8 @@ export function Client({ userId }: DashboardClientProps) {
         return <Car className="h-4 w-4" />;
       case "payments":
         return <CreditCard className="h-4 w-4" />;
+      case "payment-notes":
+        return <Star className="h-4 w-4" />;
       case "notes":
         return <FileText className="h-4 w-4" />;
       default:
@@ -264,14 +266,14 @@ export function Client({ userId }: DashboardClientProps) {
           </div>
         );
 
-      case "notes":
+      case "payment-notes":
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold">Notes & Attachments</h3>
+                <h3 className="text-lg font-semibold">Payment Notes</h3>
                 <p className="text-sm text-muted-foreground">
-                  View important notes and files from our team
+                  View important payment-related notes from our team
                 </p>
               </div>
               <Button onClick={handleRefresh} variant="outline" size="sm">
@@ -279,7 +281,26 @@ export function Client({ userId }: DashboardClientProps) {
                 Refresh
               </Button>
             </div>
-            <CustomerNotes userId={userId} />
+            <CustomerNotes userId={userId} filterImportant={true} />
+          </div>
+        );
+
+      case "notes":
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">General Notes</h3>
+                <p className="text-sm text-muted-foreground">
+                  View general notes and files from our team
+                </p>
+              </div>
+              <Button onClick={handleRefresh} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+            <CustomerNotes userId={userId} filterImportant={false} />
           </div>
         );
 
@@ -291,7 +312,7 @@ export function Client({ userId }: DashboardClientProps) {
   return (
     <div className="px-4 md:px-6 pb-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="cars" className="flex items-center gap-2">
             {getTabIcon("cars")}
             Cars ({cars.length})
@@ -299,6 +320,10 @@ export function Client({ userId }: DashboardClientProps) {
           <TabsTrigger value="payments" className="flex items-center gap-2">
             {getTabIcon("payments")}
             Payment History ({paymentHistory.length})
+          </TabsTrigger>
+          <TabsTrigger value="payment-notes" className="flex items-center gap-2">
+            {getTabIcon("payment-notes")}
+            Payment Notes
           </TabsTrigger>
           <TabsTrigger value="notes" className="flex items-center gap-2">
             {getTabIcon("notes")}

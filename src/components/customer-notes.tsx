@@ -66,9 +66,10 @@ type CustomerNote = CustomerNoteAtom;
 
 interface CustomerNotesProps {
     userId: string;
+    filterImportant?: boolean; // true = only important notes, false = only non-important notes, undefined = all notes
 }
 
-export function CustomerNotes({ userId }: CustomerNotesProps) {
+export function CustomerNotes({ userId, filterImportant }: CustomerNotesProps) {
     // User component: Shows all notes (both important and regular)
     const [notes, setNotesAtom] = useAtom(customerNotesAtomFamily(userId));
     const writeNotes = useSetAtom(customerNotesWriteAtomFamily(userId));
@@ -155,20 +156,37 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
         );
     }
 
-    const displayNotes = (notes && notes.length > 0) ? notes : (queryData || []);
+    const allNotes = (notes && notes.length > 0) ? notes : (queryData || []);
+    
+    // Filter notes based on importance if filterImportant is specified
+    const displayNotes = filterImportant !== undefined 
+        ? allNotes.filter(note => note.isImportant === filterImportant)
+        : allNotes;
 
     if (displayNotes.length === 0) {
+        const getEmptyStateTitle = () => {
+            if (filterImportant === true) return "Payment Notes";
+            if (filterImportant === false) return "General Notes";
+            return "All Admin Notes";
+        };
+        
+        const getEmptyStateMessage = () => {
+            if (filterImportant === true) return "No important payment notes available yet";
+            if (filterImportant === false) return "No general notes available yet";
+            return "No admin notes available yet";
+        };
+
         return (
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <AlertCircle className="h-5 w-5" />
-                        All Admin Notes
+                        {getEmptyStateTitle()}
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <p className="text-muted-foreground text-center py-4">
-                        No admin notes available yet
+                        {getEmptyStateMessage()}
                     </p>
                 </CardContent>
             </Card>
@@ -180,7 +198,9 @@ export function CustomerNotes({ userId }: CustomerNotesProps) {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <AlertCircle className="h-5 w-5" />
-                    All Admin Notes ({displayNotes.length})
+                    {filterImportant === true ? "Payment Notes" : 
+                     filterImportant === false ? "General Notes" : 
+                     "All Admin Notes"} ({displayNotes.length})
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">

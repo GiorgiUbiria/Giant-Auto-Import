@@ -4,6 +4,9 @@ import { images } from "@/lib/drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: Request,
   { params }: { params: { vin: string } }

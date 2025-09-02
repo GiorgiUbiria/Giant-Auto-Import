@@ -3,6 +3,9 @@ import { db } from "@/lib/drizzle/db";
 import { userPricingConfig } from "@/lib/drizzle/schema";
 import { eq, and } from "drizzle-orm";
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: Request,
   { params }: { params: { userId: string } }

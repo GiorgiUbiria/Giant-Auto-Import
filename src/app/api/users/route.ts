@@ -4,6 +4,9 @@ import { users } from "@/lib/drizzle/schema";
 import { getAuth } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const authResult = await getAuth();

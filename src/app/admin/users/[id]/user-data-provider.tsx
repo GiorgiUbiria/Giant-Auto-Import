@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAtom } from 'jotai';
 import { getUserAction } from '@/lib/actions/userActions';
 import { useServerActionQuery } from '@/lib/hooks/server-action-hooks';
@@ -64,7 +64,7 @@ export function UserDataProvider({ userId, children }: UserDataProviderProps) {
     const [carsData, setCarsData] = useState<any>(null);
     const [carsError, setCarsError] = useState<Error | null>(null);
 
-    const fetchCars = async () => {
+    const fetchCars = useCallback(async () => {
         try {
             setCarsLoadingLocal(true);
             setCarsError(null);
@@ -91,11 +91,11 @@ export function UserDataProvider({ userId, children }: UserDataProviderProps) {
         } finally {
             setCarsLoadingLocal(false);
         }
-    };
+    }, [userId]);
 
     useEffect(() => {
         fetchCars();
-    }, [userId, refetchTrigger]);
+    }, [userId, refetchTrigger, fetchCars]);
 
     // Sync user data with Jotai state
     useEffect(() => {

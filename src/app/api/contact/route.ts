@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 // Schema for contact form validation
 const contactSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -11,7 +14,7 @@ const contactSchema = z.object({
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    
+
     // Validate the request body
     const validatedData = contactSchema.parse(body);
 

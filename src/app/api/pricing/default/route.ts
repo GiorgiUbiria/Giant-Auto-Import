@@ -3,6 +3,9 @@ import { db } from "@/lib/drizzle/db";
 import { defaultPricingConfig } from "@/lib/drizzle/schema";
 import { eq } from "drizzle-orm";
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const [config] = await db

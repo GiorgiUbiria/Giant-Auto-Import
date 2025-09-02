@@ -5,6 +5,9 @@ import { customerNotes, users } from "@/lib/drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { insertCustomerNoteSchema } from "@/lib/drizzle/schema";
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 // GET - Fetch notes for a customer or a single note by id
 export async function GET(request: NextRequest) {
     try {

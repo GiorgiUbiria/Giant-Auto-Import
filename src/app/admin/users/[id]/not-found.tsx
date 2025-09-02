@@ -14,9 +14,9 @@ export default function NotFound() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                                         <p className="text-muted-foreground">
-                         The user you&apos;re looking for doesn&apos;t exist or may have been deleted.
-                     </p>
+                    <p className="text-muted-foreground">
+                        The user you&apos;re looking for doesn&apos;t exist or may have been deleted.
+                    </p>
 
                     <div className="flex gap-3">
                         <Link href="/admin/users">

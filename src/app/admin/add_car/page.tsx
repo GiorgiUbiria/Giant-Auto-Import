@@ -1,58 +1,20 @@
-'use client';
-
+import { getAuth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { AddCarForm } from "@/components/add-car-form";
 import ErrorBoundary from "@/components/ui/error-boundary";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
-export default function Page() {
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
+// Force dynamic rendering for authenticated routes
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-  useEffect(() => {
-    // Check authorization on client side to avoid SSR issues
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('/api/auth/check', {
-          method: 'GET',
-          credentials: 'include',
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.user && data.user.role === 'ADMIN') {
-            setIsAuthorized(true);
-          } else {
-            router.push('/');
-          }
-        } else {
-          router.push('/');
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        router.push('/');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, [router]);
-
-  if (isLoading) {
-    return (
-      <div className="w-full grid place-items-center mt-8">
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <span className="ml-2 text-muted-foreground">Loading...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthorized) {
-    return null; // Will redirect via useEffect
+export default async function Page() {
+  const { user } = await getAuth();
+  if (!user || user.role !== "ADMIN") {
+    console.log("Add car page: User not authenticated or not admin", {
+      hasUser: !!user,
+      userRole: user?.role
+    });
+    redirect("/");
   }
 
   return (

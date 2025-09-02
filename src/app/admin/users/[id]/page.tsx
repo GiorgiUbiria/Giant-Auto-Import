@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { getAuth } from "@/lib/auth";
+import { getUserAction } from "@/lib/actions/userActions";
 import { Client } from "./client";
 import { UserDataProvider } from "./user-data-provider";
 
@@ -13,6 +14,18 @@ export default async function Page({ params }: { params: { id: string } }) {
   const { user } = await getAuth();
   if (!user || user.role !== "ADMIN") {
     return redirect("/");
+  }
+
+  // Validate that the user exists before rendering the page
+  try {
+    const [result] = await getUserAction({ id: params.id });
+    if (!result?.success || !result?.user) {
+      console.log("User not found:", params.id);
+      notFound();
+    }
+  } catch (error) {
+    console.error("Error validating user:", error);
+    notFound();
   }
 
   return (

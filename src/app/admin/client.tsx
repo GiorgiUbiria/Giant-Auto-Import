@@ -28,17 +28,6 @@ export const Client = ({ id }: { id: string }) => {
 	const [, resetForm] = useAtom(resetAdminFormAtom);
 	const [, addActivity] = useAtom(addActivityLogAtom);
 
-	// Validate input early
-	if (!id || typeof id !== 'string') {
-		return (
-			<Alert variant="destructive">
-				<AlertDescription>
-					{t("error")}
-				</AlertDescription>
-			</Alert>
-		);
-	}
-
 	// Optimized React Query configuration to prevent excessive calls
 	const { isLoading, data, error: queryError } = useServerActionQuery(getUserAction, {
 		input: {
@@ -84,7 +73,16 @@ export const Client = ({ id }: { id: string }) => {
 		}
 	}, [isLoading, data, queryError, setLoading, setError, setAdminUser, resetForm, addActivity, t]);
 
-
+	// Validate input after hooks
+	if (!id || typeof id !== 'string') {
+		return (
+			<Alert variant="destructive">
+				<AlertDescription>
+					{t("error")}
+				</AlertDescription>
+			</Alert>
+		);
+	}
 
 	const LoadingState = () => {
 		return (

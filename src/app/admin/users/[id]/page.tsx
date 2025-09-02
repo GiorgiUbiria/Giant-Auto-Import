@@ -16,36 +16,39 @@ export default async function Page({ params }: { params: { id: string } }) {
     return redirect("/");
   }
 
-  // Fetch all data server-side
-  const [userDataResult] = await getAdminUserPageDataAction({ id: params.id });
+  try {
+    // Fetch all data server-side with retry logic
+    const [userDataResult] = await getAdminUserPageDataAction({ id: params.id });
 
-  // Handle null result
-  if (!userDataResult) {
-    console.log("Page: No result from server action", params.id);
+    // Handle null result
+    if (!userDataResult) {
+      console.log("Page: No result from server action", params.id);
+      return redirect("/admin/users");
+    }
+
+    // Handle user not found
+    if (!userDataResult.success || !userDataResult.user) {
+      console.log("Page: User not found", params.id);
+      notFound();
+    }
+
+    // Handle errors
+    if (!userDataResult.success) {
+      console.error("Page: Error fetching user data", userDataResult.message);
+      return redirect("/admin/users");
+    }
+
+    return (
+      <UserDataProvider
+        userId={params.id}
+        userData={userDataResult.user}
+        carsData={userDataResult.cars || []}
+      >
+        <Client id={params.id} />
+      </UserDataProvider>
+    );
+  } catch (error) {
+    console.error("Page: Unexpected error in page component", error);
     return redirect("/admin/users");
   }
-
-  // Handle user not found
-  if (!userDataResult.success || !userDataResult.user) {
-    console.log("Page: User not found", params.id);
-    notFound();
-  }
-
-  // Handle errors
-  if (!userDataResult.success) {
-    console.error("Page: Error fetching user data", userDataResult.message);
-    // For now, redirect to users list on error
-    // In a real app, you might want to show an error page
-    return redirect("/admin/users");
-  }
-
-  return (
-    <UserDataProvider
-      userId={params.id}
-      userData={userDataResult.user}
-      carsData={userDataResult.cars || []}
-    >
-      <Client id={params.id} />
-    </UserDataProvider>
-  );
 }

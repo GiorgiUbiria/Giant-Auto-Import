@@ -141,65 +141,87 @@ export const getAdminUserPageDataAction = isAdminProcedure
   .handler(async ({ input }) => {
     const { id } = input;
     const startTime = Date.now();
+    const maxRetries = 3;
+    let lastError: Error | null = null;
 
-    try {
-      console.log("getAdminUserPageDataAction: Fetching complete user data", id);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`getAdminUserPageDataAction: Attempt ${attempt}/${maxRetries} - Fetching user data`, id);
 
-      const db = getDb();
+        const db = getDb();
 
-      if (!db) {
-        console.error("getAdminUserPageDataAction: Database connection not available");
-        return {
-          success: false,
-          user: null,
-          cars: null,
-          message: "Database connection error",
-        };
-      }
+        if (!db) {
+          console.error(`getAdminUserPageDataAction: Attempt ${attempt} - Database connection not available`);
+          if (attempt === maxRetries) {
+            return {
+              success: false,
+              user: null,
+              cars: null,
+              message: "Database connection error",
+            };
+          }
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, 100 * attempt));
+          continue;
+        }
 
-      // Single optimized query to get user with cars
-      const [result] = await db.query.users.findMany({
-        where: eq(users.id, id),
-        with: {
-          ownedCars: {
-            orderBy: (cars, { desc }) => [desc(cars.purchaseDate)],
-            limit: 100, // Limit to prevent memory issues
+        // Single optimized query to get user with cars
+        const [result] = await db.query.users.findMany({
+          where: eq(users.id, id),
+          with: {
+            ownedCars: {
+              orderBy: (cars, { desc }) => [desc(cars.purchaseDate)],
+              limit: 100, // Limit to prevent memory issues
+            },
           },
-        },
-        limit: 1,
-      });
+          limit: 1,
+        });
 
-      if (!result) {
-        console.log("getAdminUserPageDataAction: User not found", id);
+        if (!result) {
+          console.log(`getAdminUserPageDataAction: Attempt ${attempt} - User not found`, id);
+          return {
+            success: false,
+            user: null,
+            cars: null,
+            message: "User not found",
+          };
+        }
+
+        const { ownedCars = [], ...user } = result;
+        const duration = Date.now() - startTime;
+
+        console.log(`getAdminUserPageDataAction: Successfully fetched user ${id} with ${ownedCars.length} cars in ${duration}ms (attempt ${attempt})`);
+
         return {
-          success: false,
-          user: null,
-          cars: null,
-          message: "User not found",
+          success: true,
+          user,
+          cars: ownedCars,
+          message: "User data fetched successfully",
         };
+      } catch (error) {
+        lastError = error as Error;
+        const duration = Date.now() - startTime;
+        console.error(`getAdminUserPageDataAction: Attempt ${attempt}/${maxRetries} failed after ${duration}ms:`, error);
+        
+        if (attempt < maxRetries) {
+          // Wait before retry with exponential backoff
+          const waitTime = 100 * Math.pow(2, attempt - 1);
+          console.log(`getAdminUserPageDataAction: Waiting ${waitTime}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
       }
-
-      const { ownedCars = [], ...user } = result;
-      const duration = Date.now() - startTime;
-
-      console.log(`getAdminUserPageDataAction: Successfully fetched user ${id} with ${ownedCars.length} cars in ${duration}ms`);
-
-      return {
-        success: true,
-        user,
-        cars: ownedCars,
-        message: "User data fetched successfully",
-      };
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      console.error(`getAdminUserPageDataAction: Error after ${duration}ms:`, error);
-      return {
-        success: false,
-        user: null,
-        cars: null,
-        message: "Error fetching user data",
-      };
     }
+
+    // All retries failed
+    const duration = Date.now() - startTime;
+    console.error(`getAdminUserPageDataAction: All ${maxRetries} attempts failed after ${duration}ms. Last error:`, lastError);
+    
+    return {
+      success: false,
+      user: null,
+      cars: null,
+      message: `Error fetching user data after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`,
+    };
   });
 
 export const deleteUserAction = isAdminProcedure

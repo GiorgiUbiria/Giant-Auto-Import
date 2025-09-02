@@ -19,7 +19,7 @@ export function UserOverviewTab() {
   }
 
   const totalCars = cars.length;
-  const activeCars = cars.filter(car => car.status === 'active').length;
+  const activeCars = cars.filter(car => car.shippingStatus !== 'DELIVERED').length;
 
   return (
     <div className="space-y-6">

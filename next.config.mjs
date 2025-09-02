@@ -181,8 +181,7 @@ const nextConfig = {
     maxInactiveAge: 25 * 1000,
     pagesBufferLength: 2,
   },
-  // Disable static optimization for error pages
-  output: 'standalone',
+  // Note: avoid 'standalone' on Vercel to ensure server actions bundle correctly
   // Add performance optimizations
   generateEtags: false, // Disable ETags for better caching
   // Add headers for better caching

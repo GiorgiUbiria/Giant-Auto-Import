@@ -202,7 +202,7 @@ export const getAdminUserPageDataAction = isAdminProcedure
         lastError = error as Error;
         const duration = Date.now() - startTime;
         console.error(`getAdminUserPageDataAction: Attempt ${attempt}/${maxRetries} failed after ${duration}ms:`, error);
-        
+
         if (attempt < maxRetries) {
           // Wait before retry with exponential backoff
           const waitTime = 100 * Math.pow(2, attempt - 1);
@@ -215,7 +215,7 @@ export const getAdminUserPageDataAction = isAdminProcedure
     // All retries failed
     const duration = Date.now() - startTime;
     console.error(`getAdminUserPageDataAction: All ${maxRetries} attempts failed after ${duration}ms. Last error:`, lastError);
-    
+
     return {
       success: false,
       user: null,

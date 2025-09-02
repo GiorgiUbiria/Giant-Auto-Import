@@ -28,6 +28,17 @@ export const Client = ({ id }: { id: string }) => {
 	const [, resetForm] = useAtom(resetAdminFormAtom);
 	const [, addActivity] = useAtom(addActivityLogAtom);
 
+	// Validate input early
+	if (!id || typeof id !== 'string') {
+		return (
+			<Alert variant="destructive">
+				<AlertDescription>
+					{t("error")}
+				</AlertDescription>
+			</Alert>
+		);
+	}
+
 	// Optimized React Query configuration to prevent excessive calls
 	const { isLoading, data, error: queryError } = useServerActionQuery(getUserAction, {
 		input: {
@@ -41,6 +52,7 @@ export const Client = ({ id }: { id: string }) => {
 		refetchOnWindowFocus: false,
 		refetchOnMount: false,
 		refetchOnReconnect: false,
+		enabled: !!id && typeof id === 'string', // Only run if we have a valid ID
 	});
 
 	// Sync React Query state with Jotai atoms
@@ -48,6 +60,7 @@ export const Client = ({ id }: { id: string }) => {
 		setLoading(isLoading);
 
 		if (queryError) {
+			console.error("Admin client: Query error", queryError);
 			setError(queryError.message || t("error"));
 		} else if (data) {
 			setError(null);
@@ -65,21 +78,13 @@ export const Client = ({ id }: { id: string }) => {
 					userId: data.user.id,
 				});
 			} else {
+				console.error("Admin client: Invalid data received", data);
 				setError(data?.message || t("error"));
 			}
 		}
 	}, [isLoading, data, queryError, setLoading, setError, setAdminUser, resetForm, addActivity, t]);
 
-	// Validate input
-	if (!id || typeof id !== 'string') {
-		return (
-			<Alert variant="destructive">
-				<AlertDescription>
-					{t("error")}
-				</AlertDescription>
-			</Alert>
-		);
-	}
+
 
 	const LoadingState = () => {
 		return (

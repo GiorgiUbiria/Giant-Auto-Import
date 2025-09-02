@@ -59,6 +59,11 @@ export function getLucia(): Lucia<typeof AuthSchema> {
           attributes: {
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
+            path: "/",
+            // Add domain restriction for production
+            ...(process.env.NODE_ENV === "production" && process.env.COOKIE_DOMAIN && {
+              domain: process.env.COOKIE_DOMAIN
+            })
           },
         },
         getUserAttributes: (attributes) => {
@@ -110,8 +115,13 @@ export const getAuth = cache(
 
       console.log("getAuth: Validating session", { sessionId: sessionId.substring(0, 10) + "..." });
 
-      // Validate session with better error handling
-      const result = await luciaInstance.validateSession(sessionId);
+      // Validate session with timeout protection
+      const result = await Promise.race([
+        luciaInstance.validateSession(sessionId),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Session validation timeout")), 5000)
+        )
+      ]) as any;
 
       // Safe user role extraction with fallbacks
       const userRole = result.user && typeof result.user === 'object' && 'role' in result.user
@@ -139,10 +149,30 @@ export const getAuth = cache(
     } catch (error) {
       console.error("getAuth: Authentication error:", error);
 
-      // Handle build-time database unavailability
-      if (error instanceof Error && (error.message.includes("build") || error.message.includes("Database connection not available"))) {
-        console.log("getAuth: Database not available during build, returning unauthenticated");
-        return { user: null, session: null };
+      // Handle specific error types with appropriate responses
+      if (error instanceof Error) {
+        if (error.message.includes("build") || error.message.includes("Database connection not available")) {
+          console.log("getAuth: Database not available during build, returning unauthenticated");
+          return { user: null, session: null };
+        }
+
+        if (error.message.includes("Session validation timeout")) {
+          console.warn("getAuth: Session validation timed out, clearing session");
+          // Clear potentially corrupted session
+          try {
+            const luciaInstance = getLucia();
+            const sessionCookie = luciaInstance.createBlankSessionCookie();
+            cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+          } catch (clearError) {
+            console.error("getAuth: Failed to clear timed out session:", clearError);
+          }
+          return { user: null, session: null };
+        }
+
+        if (error.message.includes("Invalid session")) {
+          console.log("getAuth: Invalid session detected, clearing");
+          return { user: null, session: null };
+        }
       }
 
       // Clear invalid session cookie on error

@@ -26,28 +26,53 @@ export const loginAction = createServerAction()
     })
   )
   .handler(async ({ input }) => {
+    const startTime = Date.now();
+
     try {
       const { email, password } = input;
       const normalizedEmail = email.toLowerCase();
+
+      // Add input validation
+      if (!email || !password) {
+        return {
+          success: false,
+          message: "Email and password are required",
+        };
+      }
+
       const db = getDb();
 
-      const [existingUser] = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, normalizedEmail));
+      // Add timeout protection for database query
+      const [existingUser] = await Promise.race([
+        db.select().from(users).where(eq(users.email, normalizedEmail)),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Database query timeout")), 10000)
+        )
+      ]) as any;
 
       if (!existingUser) {
+        // Log failed login attempt for security monitoring
+        console.warn("Login attempt failed: User not found", { email: normalizedEmail });
         return {
           success: false,
           message: "Invalid credentials",
         };
       }
 
-      const validPassword = await new Argon2id().verify(
-        existingUser.password,
-        password
-      );
+      // Add timeout protection for password verification
+      const validPassword = await Promise.race([
+        new Argon2id().verify(existingUser.password, password),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Password verification timeout")), 5000)
+        )
+      ]) as boolean;
+
       if (!validPassword) {
+        // Log failed login attempt for security monitoring
+        console.warn("Login attempt failed: Invalid password", {
+          email: normalizedEmail,
+          userId: existingUser.id
+        });
         return {
           success: false,
           message: "Invalid credentials",
@@ -57,8 +82,15 @@ export const loginAction = createServerAction()
       // Import lucia dynamically to avoid client-side issues
       const { getLucia } = await import("../auth");
       const lucia = getLucia();
-      
-      const session = await lucia.createSession(existingUser.id, {});
+
+      // Create session with timeout protection
+      const session = await Promise.race([
+        lucia.createSession(existingUser.id, {}),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Session creation timeout")), 5000)
+        )
+      ]) as any;
+
       const sessionCookie = lucia.createSessionCookie(session.id);
       cookies().set(
         sessionCookie.name,
@@ -66,12 +98,37 @@ export const loginAction = createServerAction()
         sessionCookie.attributes
       );
 
+      // Log successful login
+      console.log(`Login successful in ${Date.now() - startTime}ms`, {
+        userId: existingUser.id,
+        email: normalizedEmail,
+        role: existingUser.role
+      });
+
       return {
         success: true,
         message: "Login successful",
       };
     } catch (error) {
-      console.error("Login error:", error);
+      const duration = Date.now() - startTime;
+      console.error(`Login error after ${duration}ms:`, error);
+
+      // Provide more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes("timeout")) {
+          return {
+            success: false,
+            message: "Login timeout - please try again",
+          };
+        }
+        if (error.message.includes("Database")) {
+          return {
+            success: false,
+            message: "Service temporarily unavailable",
+          };
+        }
+      }
+
       return {
         success: false,
         message: "An unexpected error occurred. Please try again later.",
@@ -144,7 +201,7 @@ export const logoutAction = authedProcedure
     // Import lucia dynamically to avoid client-side issues
     const { getLucia } = await import("../auth");
     const lucia = getLucia();
-    
+
     await lucia.invalidateSession(session.id);
 
     const sessionCookie = lucia.createBlankSessionCookie();

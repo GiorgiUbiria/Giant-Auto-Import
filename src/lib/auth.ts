@@ -140,7 +140,7 @@ export const getAuth = cache(
       console.error("getAuth: Authentication error:", error);
 
       // Handle build-time database unavailability
-      if (error instanceof Error && error.message.includes("build")) {
+      if (error instanceof Error && (error.message.includes("build") || error.message.includes("Database connection not available"))) {
         console.log("getAuth: Database not available during build, returning unauthenticated");
         return { user: null, session: null };
       }

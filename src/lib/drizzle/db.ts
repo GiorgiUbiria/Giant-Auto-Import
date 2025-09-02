@@ -1,4 +1,4 @@
-import { createClient } from "@libsql/client/web";
+import { createClient } from "@libsql/client";
 import { LibSQLDatabase, drizzle } from "drizzle-orm/libsql";
 import * as schema from "./schema";
 
@@ -21,7 +21,8 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
   // Check if we're in a build environment
   if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE === "phase-production-build") {
     console.log("Database: Skipping connection during build phase");
-    throw new Error("Database connection not available during build");
+    // Return a mock database instance for build time
+    return {} as LibSQLDatabase<typeof schema>;
   }
 
   if (typeof process === "undefined") {
@@ -34,12 +35,14 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
   const url = process.env.TURSO_DATABASE_URL?.trim();
   if (!url) {
     console.error("Database configuration error: TURSO_DATABASE_URL is not defined");
+    console.error("Available env vars:", Object.keys(process.env).filter(key => key.includes('TURSO')));
     throw new Error("TURSO_DATABASE_URL is not defined");
   }
 
   const authToken = process.env.TURSO_AUTH_TOKEN?.trim();
   if (!authToken && !url.includes("file:")) {
     console.error("Database configuration error: TURSO_AUTH_TOKEN is not defined");
+    console.error("Available env vars:", Object.keys(process.env).filter(key => key.includes('TURSO')));
     throw new Error("TURSO_AUTH_TOKEN is not defined");
   }
 

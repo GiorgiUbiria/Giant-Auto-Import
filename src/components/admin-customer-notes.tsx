@@ -103,10 +103,10 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
             return data.notes || [];
         },
         enabled: !!customerId,
-        staleTime: 30_000,
+        staleTime: 0,
     });
 
-    // Handle successful data fetch
+    // Handle successful data fetch (authoritative source)
     React.useEffect(() => {
         if (queryData) {
             setNotesAtom(queryData);
@@ -159,6 +159,12 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
                 }
             }
 
+            // After saving (and attachments upload), fetch the authoritative note from server
+            const confirmResp = await fetch(`/api/customer-notes?id=${savedNote.id}`);
+            if (confirmResp.ok) {
+                const confirmData = await confirmResp.json();
+                return confirmData.note as CustomerNote;
+            }
             return savedNote;
         },
     });
@@ -167,13 +173,13 @@ export function AdminCustomerNotes({ customerId, customerName }: AdminCustomerNo
     React.useEffect(() => {
         if (saveNoteMutation.isSuccess && saveNoteMutation.data) {
             const savedNote = saveNoteMutation.data;
-            // Optimistically update atom
+            // Write the confirmed server note to atom (no dummy data)
             if (editingNote) {
                 writeNotes({ type: 'update', note: savedNote });
             } else {
                 writeNotes({ type: 'add', note: savedNote });
             }
-            // Refetch from server to hydrate adminName and attachment flags
+            // Refetch to ensure server is source of truth and sync flags across tabs/views
             queryClient.invalidateQueries({ queryKey: notesQueryKey });
 
             toast.success(editingNote ? 'Note updated successfully' : 'Note added successfully');

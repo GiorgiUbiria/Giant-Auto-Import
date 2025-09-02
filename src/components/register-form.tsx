@@ -29,6 +29,7 @@ import { z } from "zod";
 import { useServerAction } from "zsa-react";
 import { Checkbox } from "./ui/checkbox";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 const FormSchema = insertUserSchema.omit({ id: true });
 
@@ -46,6 +47,7 @@ export default function RegisterForm() {
   })
 
   const { isPending, execute } = useServerAction(action);
+  const queryClient = useQueryClient();
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
     // Normalize email to lowercase
@@ -60,6 +62,8 @@ export default function RegisterForm() {
       console.error(error)
     } else {
       toast.success(data?.message);
+      // Invalidate users list cache so admin table updates immediately
+      await queryClient.invalidateQueries({ queryKey: ['getUsers'], refetchType: 'active' });
     }
   }
 

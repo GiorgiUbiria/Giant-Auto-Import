@@ -6,6 +6,8 @@ import ErrorBoundary from "@/components/ui/error-boundary";
 
 // Force dynamic rendering for authenticated routes
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 export default async function Page() {
   try {

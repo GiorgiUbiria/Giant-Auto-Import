@@ -5,13 +5,43 @@ import { customerNotes, users } from "@/lib/drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { insertCustomerNoteSchema } from "@/lib/drizzle/schema";
 
-// GET - Fetch notes for a customer
+// GET - Fetch notes for a customer or a single note by id
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
+        const id = searchParams.get("id");
         const customerId = searchParams.get("customerId");
         const importantOnly = searchParams.get("importantOnly") === "true";
 
+        // Fetch single note by id
+        if (id) {
+            const noteId = parseInt(id, 10);
+            if (Number.isNaN(noteId)) {
+                return NextResponse.json({ error: "Invalid note id" }, { status: 400 });
+            }
+
+            const [note] = await db
+                .select({
+                    id: customerNotes.id,
+                    note: customerNotes.note,
+                    isImportant: customerNotes.isImportant,
+                    hasAttachments: customerNotes.hasAttachments,
+                    createdAt: customerNotes.createdAt,
+                    updatedAt: customerNotes.updatedAt,
+                    adminName: users.fullName,
+                })
+                .from(customerNotes)
+                .innerJoin(users, eq(customerNotes.adminId, users.id))
+                .where(eq(customerNotes.id, noteId));
+
+            if (!note) {
+                return NextResponse.json({ error: "Note not found" }, { status: 404 });
+            }
+
+            return NextResponse.json({ note });
+        }
+
+        // Fetch list by customer
         if (!customerId) {
             return NextResponse.json(
                 { error: "Customer ID is required" },

@@ -108,6 +108,9 @@ export const registerAction = isAdminProcedure
         passwordText: password,
       });
 
+      // Revalidate admin users list
+      revalidatePath('/admin/users');
+
       return {
         success: true,
         message: "User registered successfully",

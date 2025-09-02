@@ -5,6 +5,9 @@ import { UserDataProvider } from "./user-data-provider";
 
 // Force dynamic rendering for authenticated routes
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+export const dynamicParams = true;
 
 export default async function Page({ params }: { params: { id: string } }) {
   const { user } = await getAuth();

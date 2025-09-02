@@ -333,11 +333,14 @@ export function useQueryLoading(
     options: LoadingOptions = {}
 ) {
     const { coordinateWithReactQuery } = useLoadingState();
-    const id = `query_${queryKey.join('_')}`;
+    const keyStr = Array.isArray(queryKey) ? queryKey.join('_') : String(queryKey);
+    const id = `query_${keyStr}`;
 
+    // Only react to stable primitives to avoid infinite loops from changing refs
     useEffect(() => {
         coordinateWithReactQuery(queryKey, isLoading, error, options);
-    }, [queryKey, isLoading, error, options, coordinateWithReactQuery]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [keyStr, isLoading, error, coordinateWithReactQuery]);
 
     return {
         id,
@@ -358,9 +361,11 @@ export function useServerActionLoading(
     const { coordinateWithServerAction } = useLoadingState();
     const id = `action_${actionName}`;
 
+    // Only track stable inputs to avoid loops from changing option refs
     useEffect(() => {
         coordinateWithServerAction(actionName, isPending, error, options);
-    }, [actionName, isPending, error, options, coordinateWithServerAction]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [actionName, isPending, error, coordinateWithServerAction]);
 
     return {
         id,

@@ -105,6 +105,9 @@ export function UserDataProvider({ userId, children }: UserDataProviderProps) {
             setError(userError.message || 'Failed to fetch user data');
         } else if (userData?.success && userData?.user) {
             setUserData(userData.user);
+        } else if (userData && !userData.success && userData.message === "User not found") {
+            // Handle case where user doesn't exist
+            setError("User not found");
         }
     }, [userLoading, userData, userError, setLoading, setUserData, setError]);
 

@@ -8,6 +8,7 @@ import { LoadingState } from './components/loading-state';
 import { ErrorState } from './components/error-state';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import { notFound } from 'next/navigation';
 
 export const Client = ({ id }: { id: string }) => {
   const isLoading = useAtomValue(adminUserLoadingAtom);
@@ -36,6 +37,11 @@ export const Client = ({ id }: { id: string }) => {
   }
 
   if (error) {
+    // If the error is "User not found", trigger the not-found page
+    if (error === "User not found") {
+      notFound();
+    }
+    
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">

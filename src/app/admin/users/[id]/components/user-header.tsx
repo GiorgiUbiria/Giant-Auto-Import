@@ -1,7 +1,7 @@
 "use client";
 
 import { useAtomValue } from 'jotai';
-import { adminUserDataAtom } from '@/lib/admin-user-atoms';
+import { adminUserDataAtom } from '@/lib/simplified-admin-user-atoms';
 import { Badge } from '@/components/ui/badge';
 import { User, Shield, Mail, Phone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -51,7 +51,7 @@ export function UserHeader() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <Phone className="h-4 w-4 text-muted-foreground" />
               <div>
@@ -61,7 +61,7 @@ export function UserHeader() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <Shield className="h-4 w-4 text-muted-foreground" />
               <div>

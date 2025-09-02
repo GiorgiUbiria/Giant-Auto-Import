@@ -1,7 +1,7 @@
 "use client";
 
 import { useAtomValue } from 'jotai';
-import { adminUserDataAtom } from '@/lib/admin-user-atoms';
+import { adminUserDataAtom } from '@/lib/simplified-admin-user-atoms';
 import { UserPricingForm } from '../pricing-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, Settings, Info } from 'lucide-react';
@@ -56,9 +56,9 @@ export function UserPricingTab() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <UserPricingForm 
-            userId={user.id} 
-            userName={user.fullName} 
+          <UserPricingForm
+            userId={user.id}
+            userName={user.fullName}
           />
         </CardContent>
       </Card>

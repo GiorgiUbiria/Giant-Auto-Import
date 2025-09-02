@@ -1,7 +1,7 @@
 "use client";
 
 import { useAtomValue } from 'jotai';
-import { adminUserDataAtom, adminUserCarsAtom } from '@/lib/admin-user-atoms';
+import { adminUserDataAtom, adminUserCarsAtom } from '@/lib/simplified-admin-user-atoms';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { User, Car, Calendar, Mail, Phone, DollarSign, Shield } from 'lucide-react';

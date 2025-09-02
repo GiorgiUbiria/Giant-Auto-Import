@@ -15,9 +15,9 @@ export const getUsersAction = isAdminProcedure
   .handler(async () => {
     try {
       console.log("getUsersAction: Fetching users");
-      
+
       const db = getDb();
-      
+
       // Validate database connection
       if (!db) {
         console.error("getUsersAction: Database connection not available");
@@ -68,9 +68,9 @@ export const getUserAction = isAdminProcedure
 
     try {
       console.log("getUserAction: Fetching user", id);
-      
+
       const db = getDb();
-      
+
       // Validate database connection
       if (!db) {
         console.error("getUserAction: Database connection not available");
@@ -81,7 +81,7 @@ export const getUserAction = isAdminProcedure
           message: "Database connection error",
         };
       }
-      
+
       const [result] = await db.query.users.findMany({
         where: eq(users.id, id),
         with: {
@@ -113,6 +113,86 @@ export const getUserAction = isAdminProcedure
       };
     } catch (error) {
       console.error("getUserAction: Error fetching user:", error);
+      return {
+        success: false,
+        user: null,
+        cars: null,
+        message: "Error fetching user data",
+      };
+    }
+  });
+
+// New optimized action for admin user page with all data
+export const getAdminUserPageDataAction = isAdminProcedure
+  .createServerAction()
+  .input(
+    z.object({
+      id: z.string().min(1, "User ID is required"),
+    })
+  )
+  .output(
+    z.object({
+      success: z.boolean(),
+      user: SelectSchema.nullable(),
+      cars: z.array(selectCarSchema).nullable(),
+      message: z.string().optional(),
+    })
+  )
+  .handler(async ({ input }) => {
+    const { id } = input;
+    const startTime = Date.now();
+
+    try {
+      console.log("getAdminUserPageDataAction: Fetching complete user data", id);
+
+      const db = getDb();
+
+      if (!db) {
+        console.error("getAdminUserPageDataAction: Database connection not available");
+        return {
+          success: false,
+          user: null,
+          cars: null,
+          message: "Database connection error",
+        };
+      }
+
+      // Single optimized query to get user with cars
+      const [result] = await db.query.users.findMany({
+        where: eq(users.id, id),
+        with: {
+          ownedCars: {
+            orderBy: (cars, { desc }) => [desc(cars.purchaseDate)],
+            limit: 100, // Limit to prevent memory issues
+          },
+        },
+        limit: 1,
+      });
+
+      if (!result) {
+        console.log("getAdminUserPageDataAction: User not found", id);
+        return {
+          success: false,
+          user: null,
+          cars: null,
+          message: "User not found",
+        };
+      }
+
+      const { ownedCars = [], ...user } = result;
+      const duration = Date.now() - startTime;
+
+      console.log(`getAdminUserPageDataAction: Successfully fetched user ${id} with ${ownedCars.length} cars in ${duration}ms`);
+
+      return {
+        success: true,
+        user,
+        cars: ownedCars,
+        message: "User data fetched successfully",
+      };
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`getAdminUserPageDataAction: Error after ${duration}ms:`, error);
       return {
         success: false,
         user: null,
@@ -183,7 +263,7 @@ export const deleteUserAction = isAdminProcedure
 
       // Revalidate the users list
       revalidatePath('/admin/users');
-      
+
       return {
         success: true,
         message: `User ${isDeleted.fullName || 'Unknown'} was deleted successfully`,

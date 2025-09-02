@@ -1,27 +1,25 @@
 "use client";
 
-import { useAtomValue, useAtom } from 'jotai';
-import { adminUserLoadingAtom, adminUserErrorAtom, resetAdminUserStateAtom } from '@/lib/admin-user-atoms';
+import { useAtomValue } from 'jotai';
+import { adminUserDataAtom, adminUserCarsAtom } from '@/lib/simplified-admin-user-atoms';
 import { UserHeader } from './components/user-header';
 import { UserTabs } from './user-tabs';
 import { LoadingState } from './components/loading-state';
 import { ErrorState } from './components/error-state';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
-import { notFound } from 'next/navigation';
 
 export const Client = ({ id }: { id: string }) => {
-  const isLoading = useAtomValue(adminUserLoadingAtom);
-  const error = useAtomValue(adminUserErrorAtom);
-  const [, resetState] = useAtom(resetAdminUserStateAtom);
+  const userData = useAtomValue(adminUserDataAtom);
+  const carsData = useAtomValue(adminUserCarsAtom);
 
   const handleRefresh = () => {
-    resetState();
     // Force a page reload to reset everything
     window.location.reload();
   };
 
-  if (isLoading) {
+  // Show loading if data is not yet available (should be rare with server-side fetching)
+  if (!userData) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -36,12 +34,8 @@ export const Client = ({ id }: { id: string }) => {
     );
   }
 
-  if (error) {
-    // If the error is "User not found", trigger the not-found page
-    if (error === "User not found") {
-      notFound();
-    }
-    
+  // Show error if user data is invalid (should be rare with server-side validation)
+  if (!userData.id) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -51,7 +45,7 @@ export const Client = ({ id }: { id: string }) => {
             Refresh Page
           </Button>
         </div>
-        <ErrorState message={error} />
+        <ErrorState message="Invalid user data" />
       </div>
     );
   }

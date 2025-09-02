@@ -3,8 +3,8 @@
 import { useAtomValue, useAtom } from 'jotai';
 import { DataTable } from '@/components/data-table';
 import { columns } from '../columns';
-import { adminUserDataAtom, adminUserCarsAtom, adminUserTableStateAtom, triggerAdminUserRefetchAtom } from '@/lib/admin-user-atoms';
-import { setAdminUserTablePageAtom, setAdminUserTableSortingAtom, setAdminUserTableFiltersAtom, setAdminUserTableColumnVisibilityAtom, setAdminUserTableRowSelectionAtom } from '@/lib/admin-user-atoms';
+import { adminUserDataAtom, adminUserCarsAtom, adminUserTableStateAtom, adminUserRefetchTriggerAtom } from '@/lib/simplified-admin-user-atoms';
+import { setAdminUserTablePageAtom, setAdminUserTableSortingAtom, setAdminUserTableFiltersAtom, setAdminUserTableColumnVisibilityAtom, setAdminUserTableRowSelectionAtom, triggerAdminUserRefetchAtom } from '@/lib/simplified-admin-user-atoms';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Car } from 'lucide-react';
 import { SortingState, ColumnFiltersState, VisibilityState } from '@tanstack/react-table';

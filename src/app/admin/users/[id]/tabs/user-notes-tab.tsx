@@ -1,7 +1,7 @@
 "use client";
 
 import { useAtomValue } from 'jotai';
-import { adminUserDataAtom } from '@/lib/admin-user-atoms';
+import { adminUserDataAtom } from '@/lib/simplified-admin-user-atoms';
 import { AdminCustomerNotes } from '@/components/admin-customer-notes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessageSquare } from 'lucide-react';
@@ -49,9 +49,9 @@ export function UserNotesTab() {
       {/* Notes Component */}
       <Card>
         <CardContent className="p-6">
-          <AdminCustomerNotes 
-            customerId={user.id} 
-            customerName={user.fullName} 
+          <AdminCustomerNotes
+            customerId={user.id}
+            customerName={user.fullName}
           />
         </CardContent>
       </Card>

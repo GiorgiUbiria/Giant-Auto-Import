@@ -2,7 +2,7 @@
 
 import { useAtom, useAtomValue } from 'jotai';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { adminUserActiveTabAtom, setAdminUserActiveTabAtom } from '@/lib/admin-user-atoms';
+import { adminUserActiveTabAtom, setAdminUserActiveTabAtom } from '@/lib/simplified-admin-user-atoms';
 import { UserOverviewTab } from './tabs/user-overview-tab';
 import { UserCarsTab } from './tabs/user-cars-tab';
 import { UserPricingTab } from './tabs/user-pricing-tab';

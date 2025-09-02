@@ -26,7 +26,7 @@ const nextConfig = {
       tls: false,
     };
 
-    // Simplified webpack optimization for better production stability
+    // Vercel-optimized webpack configuration
     config.optimization = {
       ...config.optimization,
       splitChunks: {
@@ -73,8 +73,9 @@ const nextConfig = {
           },
         },
       },
-      // Runtime chunk optimization
-      runtimeChunk: 'single',
+      // Vercel-specific runtime optimization
+      runtimeChunk: false, // Disable runtime chunk for Vercel
+      moduleIds: 'deterministic', // Better for Vercel caching
     };
 
     // Optimize for production
@@ -100,9 +101,13 @@ const nextConfig = {
     ],
     serverActions: {
       bodySizeLimit: '20mb',
+      allowedOrigins: ['giantautoimport.com', 'www.giantautoimport.com'],
     },
     // Performance optimizations
     optimizeCss: true,
+    // Vercel-specific optimizations
+    serverMinification: true,
+    serverSourceMaps: false,
   },
   images: {
     // Enable image optimization
@@ -181,6 +186,9 @@ const nextConfig = {
     maxInactiveAge: 25 * 1000,
     pagesBufferLength: 2,
   },
+  // Vercel-specific optimizations
+  trailingSlash: false,
+  skipTrailingSlashRedirect: true,
   // Note: avoid 'standalone' on Vercel to ensure server actions bundle correctly
   // Add performance optimizations
   generateEtags: false, // Disable ETags for better caching

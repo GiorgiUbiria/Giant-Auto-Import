@@ -2,10 +2,8 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 
-// Bundle analyzer configuration
-const withBundleAnalyzer = process.env.ANALYZE === 'true'
-  ? require('@next/bundle-analyzer')({ enabled: true })
-  : (config) => config;
+// Bundle analyzer configuration - simplified to avoid top-level await
+const withBundleAnalyzer = (config) => config;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -30,17 +28,9 @@ const nextConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       // Ensure proper module resolution for server actions
-      '@/lib/auth': require.resolve('./src/lib/auth.ts'),
-      '@/lib/drizzle/db': require.resolve('./src/lib/drizzle/db.ts'),
+      '@/lib/auth': './src/lib/auth.ts',
+      '@/lib/drizzle/db': './src/lib/drizzle/db.ts',
     };
-
-    // Add better error handling for undefined functions
-    config.plugins = config.plugins || [];
-    config.plugins.push(
-      new (require('webpack')).DefinePlugin({
-        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      })
-    );
 
     // Vercel-optimized webpack configuration
     config.optimization = {

@@ -110,12 +110,18 @@ export function getLucia(): Lucia<typeof AuthSchema> {
   return lucia;
 }
 
-// Enhanced caching for authentication with better error handling
+// Simplified authentication with build-time safety
 export const getAuth = cache(
   async (): Promise<
     | { user: AuthenticatedUser; session: Session }
     | { user: null; session: null }
   > => {
+    // Build-time safety - don't attempt auth during build
+    if (process.env.NEXT_PHASE === "phase-production-build") {
+      console.log("getAuth: Skipping authentication during build phase");
+      return { user: null, session: null };
+    }
+
     try {
       const cookieStore = cookies();
       if (!cookieStore) {
@@ -135,37 +141,20 @@ export const getAuth = cache(
 
       if (!sessionId) {
         console.log("getAuth: No session ID found");
-        return {
-          user: null,
-          session: null,
-        };
+        return { user: null, session: null };
       }
 
       console.log("getAuth: Validating session", {
         sessionId: sessionId.substring(0, 10) + "...",
       });
 
-      // Validate session with timeout protection
-      const result = (await Promise.race([
-        luciaInstance.validateSession(sessionId),
-        new Promise((_, reject) =>
-          setTimeout(
-            () => reject(new Error("Session validation timeout")),
-            5000
-          )
-        ),
-      ])) as any;
-
-      // Safe user role extraction with fallbacks
-      const userRole =
-        result.user && typeof result.user === "object" && "role" in result.user
-          ? (result.user as { role: string }).role
-          : "CUSTOMER_SINGULAR";
+      // Simplified session validation without timeout
+      const result = await luciaInstance.validateSession(sessionId);
 
       console.log("getAuth: Session validation result", {
         hasUser: !!result.user,
         hasSession: !!result.session,
-        userRole: userRole,
+        userRole: (result.user as any)?.role,
       });
 
       // Only update cookies if session is fresh or invalid
@@ -207,28 +196,6 @@ export const getAuth = cache(
           return { user: null, session: null };
         }
 
-        if (error.message.includes("Session validation timeout")) {
-          console.warn(
-            "getAuth: Session validation timed out, clearing session"
-          );
-          // Clear potentially corrupted session
-          try {
-            const luciaInstance = getLucia();
-            const sessionCookie = luciaInstance.createBlankSessionCookie();
-            cookies().set(
-              sessionCookie.name,
-              sessionCookie.value,
-              sessionCookie.attributes
-            );
-          } catch (clearError) {
-            console.error(
-              "getAuth: Failed to clear timed out session:",
-              clearError
-            );
-          }
-          return { user: null, session: null };
-        }
-
         if (error.message.includes("Invalid session")) {
           console.log("getAuth: Invalid session detected, clearing");
           return { user: null, session: null };
@@ -251,10 +218,7 @@ export const getAuth = cache(
         console.error("getAuth: Failed to clear session cookie:", cookieError);
       }
 
-      return {
-        user: null,
-        session: null,
-      };
+      return { user: null, session: null };
     }
   }
 );

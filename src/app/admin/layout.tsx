@@ -1,10 +1,8 @@
-import { Provider } from 'jotai';
 import { getAuth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 // Force dynamic rendering for authenticated routes
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 export default async function AdminLayout({
   children,
@@ -24,10 +22,8 @@ export default async function AdminLayout({
   }
 
   return (
-    <Provider>
-      <section className="text-primary w-full suppressHydrationWarning">
-        {children}
-      </section>
-    </Provider>
+    <section className="text-primary w-full suppressHydrationWarning">
+      {children}
+    </section>
   );
 }

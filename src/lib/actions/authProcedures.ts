@@ -1,19 +1,11 @@
 import { createServerActionProcedure } from "zsa";
 import { getAuth } from "@/lib/auth";
 
-// Enhanced authentication procedure with better error handling and performance
+// Simplified authentication procedure
 export const authedProcedure = createServerActionProcedure().handler(
   async () => {
-    const startTime = Date.now();
-
     try {
-      // Add timeout protection for auth calls
-      const authResult = (await Promise.race([
-        getAuth(),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Authentication timeout")), 10000)
-        ),
-      ])) as any;
+      const authResult = await getAuth();
 
       // Validate auth result structure
       if (!authResult || typeof authResult !== "object") {
@@ -40,52 +32,19 @@ export const authedProcedure = createServerActionProcedure().handler(
         throw new Error("Invalid user data");
       }
 
-      // Log performance metrics in development
-      if (process.env.NODE_ENV === "development") {
-        console.log(
-          `authedProcedure: Authentication completed in ${Date.now() - startTime}ms`
-        );
-      }
-
-      return {
-        user,
-        session,
-      };
+      return { user, session };
     } catch (error) {
-      const duration = Date.now() - startTime;
-      console.error(
-        `authedProcedure: Authentication error after ${duration}ms:`,
-        error
-      );
-
-      // Provide more specific error messages based on error type
-      if (error instanceof Error) {
-        if (error.message.includes("timeout")) {
-          throw new Error("Authentication timeout - please try again");
-        }
-        if (error.message.includes("Database")) {
-          throw new Error("Service temporarily unavailable");
-        }
-      }
-
+      console.error("authedProcedure: Authentication error:", error);
       throw new Error("User not authenticated");
     }
   }
 );
 
-// Enhanced admin procedure with comprehensive role validation
+// Simplified admin procedure with role validation
 export const isAdminProcedure = createServerActionProcedure().handler(
   async () => {
-    const startTime = Date.now();
-
     try {
-      // Add timeout protection for auth calls
-      const authResult = (await Promise.race([
-        getAuth(),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Authentication timeout")), 10000)
-        ),
-      ])) as any;
+      const authResult = await getAuth();
 
       // Validate auth result structure
       if (!authResult || typeof authResult !== "object") {
@@ -134,38 +93,9 @@ export const isAdminProcedure = createServerActionProcedure().handler(
         throw new Error("User is not an admin");
       }
 
-      // Log successful admin authentication in development
-      if (process.env.NODE_ENV === "development") {
-        console.log(
-          `isAdminProcedure: Admin access granted in ${Date.now() - startTime}ms`,
-          {
-            userId: user.id,
-            userRole: user.role,
-          }
-        );
-      }
-
-      return {
-        user,
-        session,
-      };
+      return { user, session };
     } catch (error) {
-      const duration = Date.now() - startTime;
-      console.error(
-        `isAdminProcedure: Admin authentication error after ${duration}ms:`,
-        error
-      );
-
-      // Provide more specific error messages
-      if (error instanceof Error) {
-        if (error.message.includes("timeout")) {
-          throw new Error("Authentication timeout - please try again");
-        }
-        if (error.message.includes("Database")) {
-          throw new Error("Service temporarily unavailable");
-        }
-      }
-
+      console.error("isAdminProcedure: Admin authentication error:", error);
       throw new Error("User is not an admin");
     }
   }

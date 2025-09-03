@@ -8,70 +8,22 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTranslations } from "next-intl";
-import { useAtom, useAtomValue } from 'jotai';
-import { useEffect } from 'react';
-import {
-	adminUserAtom,
-	adminLoadingAtom,
-	adminErrorAtom,
-	resetAdminFormAtom,
-	addActivityLogAtom,
-} from '@/lib/admin-atoms';
 
 export const Client = ({ id }: { id: string }) => {
 	const t = useTranslations("AdminPanel");
 
-	// Jotai atoms
-	const [adminUser, setAdminUser] = useAtom(adminUserAtom);
-	const [loading, setLoading] = useAtom(adminLoadingAtom);
-	const [error, setError] = useAtom(adminErrorAtom);
-	const [, resetForm] = useAtom(resetAdminFormAtom);
-	const [, addActivity] = useAtom(addActivityLogAtom);
-
-	// Optimized React Query configuration to prevent excessive calls
+	// Simplified React Query configuration
 	const { isLoading, data, error: queryError } = useServerActionQuery(getUserAction, {
-		input: {
-			id: id,
-		},
+		input: { id },
 		queryKey: ["getUser", id],
-		// Add React Query optimization options
 		staleTime: 5 * 60 * 1000, // 5 minutes
 		gcTime: 10 * 60 * 1000, // 10 minutes
 		retry: 1,
 		refetchOnWindowFocus: false,
 		refetchOnMount: false,
 		refetchOnReconnect: false,
-		enabled: !!id && typeof id === 'string', // Only run if we have a valid ID
+		enabled: !!id && typeof id === 'string',
 	});
-
-	// Sync React Query state with Jotai atoms
-	useEffect(() => {
-		setLoading(isLoading);
-
-		if (queryError) {
-			console.error("Admin client: Query error", queryError);
-			setError(queryError.message || t("error"));
-		} else if (data) {
-			setError(null);
-
-			// Safe data validation with better type checking
-			const isValidData = data && typeof data === 'object' && 'success' in data;
-			const hasValidUser = isValidData && data.success && data.user && typeof data.user === 'object' && 'id' in data.user;
-
-			if (hasValidUser && data.user) {
-				setAdminUser(data.user);
-				resetForm(data.user);
-				addActivity({
-					action: 'Admin panel accessed',
-					details: `Admin user ${data.user.fullName} accessed the admin panel`,
-					userId: data.user.id,
-				});
-			} else {
-				console.error("Admin client: Invalid data received", data);
-				setError(data?.message || t("error"));
-			}
-		}
-	}, [isLoading, data, queryError, setLoading, setError, setAdminUser, resetForm, addActivity, t]);
 
 	// Validate input after hooks
 	if (!id || typeof id !== 'string') {
@@ -94,7 +46,7 @@ export const Client = ({ id }: { id: string }) => {
 
 	const ErrorState = () => {
 		// Safe error message extraction
-		const errorMessage = error || t("error");
+		const errorMessage = queryError?.message || t("error");
 		return (
 			<Alert variant="destructive">
 				<AlertDescription>
@@ -165,9 +117,9 @@ export const Client = ({ id }: { id: string }) => {
 				/>
 			</div>
 
-			{loading ? (
+			{isLoading ? (
 				<LoadingState />
-			) : error || !adminUser ? (
+			) : queryError || !data?.success || !data?.user ? (
 				<ErrorState />
 			) : (
 				<Card className="border-t-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 shadow-lg">
@@ -180,7 +132,7 @@ export const Client = ({ id }: { id: string }) => {
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<UpdateAdminForm user={adminUser} />
+						<UpdateAdminForm user={data.user} />
 					</CardContent>
 				</Card>
 			)}

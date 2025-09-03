@@ -103,7 +103,13 @@ export const getUserAction = isAdminProcedure
       // Safe destructuring with fallbacks
       const { ownedCars = [], ...user } = result;
 
-      console.log("getUserAction: Successfully fetched user", id, "with", ownedCars.length, "cars");
+      console.log(
+        "getUserAction: Successfully fetched user",
+        id,
+        "with",
+        ownedCars.length,
+        "cars"
+      );
 
       return {
         success: true,
@@ -146,12 +152,17 @@ export const getAdminUserPageDataAction = isAdminProcedure
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`getAdminUserPageDataAction: Attempt ${attempt}/${maxRetries} - Fetching user data`, id);
+        console.log(
+          `getAdminUserPageDataAction: Attempt ${attempt}/${maxRetries} - Fetching user data`,
+          id
+        );
 
         const db = getDb();
 
         if (!db) {
-          console.error(`getAdminUserPageDataAction: Attempt ${attempt} - Database connection not available`);
+          console.error(
+            `getAdminUserPageDataAction: Attempt ${attempt} - Database connection not available`
+          );
           if (attempt === maxRetries) {
             return {
               success: false,
@@ -161,7 +172,7 @@ export const getAdminUserPageDataAction = isAdminProcedure
             };
           }
           // Wait before retry
-          await new Promise(resolve => setTimeout(resolve, 100 * attempt));
+          await new Promise((resolve) => setTimeout(resolve, 100 * attempt));
           continue;
         }
 
@@ -178,7 +189,10 @@ export const getAdminUserPageDataAction = isAdminProcedure
         });
 
         if (!result) {
-          console.log(`getAdminUserPageDataAction: Attempt ${attempt} - User not found`, id);
+          console.log(
+            `getAdminUserPageDataAction: Attempt ${attempt} - User not found`,
+            id
+          );
           return {
             success: false,
             user: null,
@@ -190,7 +204,9 @@ export const getAdminUserPageDataAction = isAdminProcedure
         const { ownedCars = [], ...user } = result;
         const duration = Date.now() - startTime;
 
-        console.log(`getAdminUserPageDataAction: Successfully fetched user ${id} with ${ownedCars.length} cars in ${duration}ms (attempt ${attempt})`);
+        console.log(
+          `getAdminUserPageDataAction: Successfully fetched user ${id} with ${ownedCars.length} cars in ${duration}ms (attempt ${attempt})`
+        );
 
         return {
           success: true,
@@ -201,26 +217,34 @@ export const getAdminUserPageDataAction = isAdminProcedure
       } catch (error) {
         lastError = error as Error;
         const duration = Date.now() - startTime;
-        console.error(`getAdminUserPageDataAction: Attempt ${attempt}/${maxRetries} failed after ${duration}ms:`, error);
+        console.error(
+          `getAdminUserPageDataAction: Attempt ${attempt}/${maxRetries} failed after ${duration}ms:`,
+          error
+        );
 
         if (attempt < maxRetries) {
           // Wait before retry with exponential backoff
           const waitTime = 100 * Math.pow(2, attempt - 1);
-          console.log(`getAdminUserPageDataAction: Waiting ${waitTime}ms before retry...`);
-          await new Promise(resolve => setTimeout(resolve, waitTime));
+          console.log(
+            `getAdminUserPageDataAction: Waiting ${waitTime}ms before retry...`
+          );
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
         }
       }
     }
 
     // All retries failed
     const duration = Date.now() - startTime;
-    console.error(`getAdminUserPageDataAction: All ${maxRetries} attempts failed after ${duration}ms. Last error:`, lastError);
+    console.error(
+      `getAdminUserPageDataAction: All ${maxRetries} attempts failed after ${duration}ms. Last error:`,
+      lastError
+    );
 
     return {
       success: false,
       user: null,
       cars: null,
-      message: `Error fetching user data after ${maxRetries} attempts: ${lastError?.message || 'Unknown error'}`,
+      message: `Error fetching user data after ${maxRetries} attempts: ${lastError?.message || "Unknown error"}`,
     };
   });
 
@@ -258,7 +282,15 @@ export const deleteUserAction = isAdminProcedure
         };
       }
 
-      const userExists = await getDb()
+      const db = getDb();
+      if (!db) {
+        return {
+          success: false,
+          message: "Database connection not available",
+        };
+      }
+
+      const userExists = await db
         .select()
         .from(users)
         .where(eq(users.id, id))
@@ -271,7 +303,7 @@ export const deleteUserAction = isAdminProcedure
         };
       }
 
-      const [isDeleted] = await getDb()
+      const [isDeleted] = await db
         .delete(users)
         .where(eq(users.id, id))
         .returning({ fullName: users.fullName });
@@ -284,11 +316,11 @@ export const deleteUserAction = isAdminProcedure
       }
 
       // Revalidate the users list
-      revalidatePath('/admin/users');
+      revalidatePath("/admin/users");
 
       return {
         success: true,
-        message: `User ${isDeleted.fullName || 'Unknown'} was deleted successfully`,
+        message: `User ${isDeleted.fullName || "Unknown"} was deleted successfully`,
       };
     } catch (error) {
       console.error("Error deleting the user:", error);

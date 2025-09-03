@@ -42,6 +42,15 @@ export const loginAction = createServerAction()
 
       const db = getDb();
 
+      // Check if database connection is available
+      if (!db) {
+        console.error("Database connection not available for login");
+        return {
+          success: false,
+          message: "Service temporarily unavailable",
+        };
+      }
+
       // Add timeout protection for database query
       const [existingUser] = (await Promise.race([
         db.select().from(users).where(eq(users.email, normalizedEmail)),
@@ -168,6 +177,15 @@ export const registerAction = isAdminProcedure
     const userId = generateId(15) as string;
     const db = getDb();
 
+    // Check if database connection is available
+    if (!db) {
+      console.error("Database connection not available for user registration");
+      return {
+        success: false,
+        message: "Service temporarily unavailable",
+      };
+    }
+
     try {
       await db.insert(users).values({
         id: userId,
@@ -282,6 +300,16 @@ export const updateUserAction = isAdminProcedure
 
     try {
       const db = getDb();
+
+      // Check if database connection is available
+      if (!db) {
+        console.error("Database connection not available for user update");
+        return {
+          success: false,
+          message: "Service temporarily unavailable",
+        };
+      }
+
       const updatedUser = await db
         .update(users)
         .set(updateData)

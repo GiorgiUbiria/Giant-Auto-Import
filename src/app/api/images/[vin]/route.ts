@@ -5,7 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 
 // Force dynamic rendering for this route
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function GET(
   request: Request,
@@ -20,7 +20,16 @@ export async function GET(
 
     const vin = params.vin;
     const db = getDb();
-    const publicUrl = process.env.NEXT_PUBLIC_BUCKET_URL || '';
+    const publicUrl = process.env.NEXT_PUBLIC_BUCKET_URL || "";
+
+    // Check if database connection is available
+    if (!db) {
+      console.error("Database connection not available for images API");
+      return NextResponse.json(
+        { error: "Database connection not available" },
+        { status: 503 }
+      );
+    }
 
     // Build where clause
     const allowedTypes = ["AUCTION", "WAREHOUSE", "DELIVERED", "PICK_UP"];
@@ -28,7 +37,10 @@ export async function GET(
     if (type && allowedTypes.includes(type)) {
       whereClause = and(
         eq(images.carVin, vin),
-        eq(images.imageType, type as "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP")
+        eq(
+          images.imageType,
+          type as "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP"
+        )
       );
     } else {
       whereClause = eq(images.carVin, vin);
@@ -58,7 +70,7 @@ export async function GET(
     }
 
     // Add URLs to the response
-    const imagesWithUrls = imageKeys.map(img => ({
+    const imagesWithUrls = imageKeys.map((img) => ({
       ...img,
       url: `${publicUrl}/${img.imageKey}`,
     }));
@@ -76,4 +88,4 @@ export async function GET(
       { status: 500 }
     );
   }
-} 
+}

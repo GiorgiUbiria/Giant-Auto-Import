@@ -6,6 +6,11 @@ import CarClientView from "./CarClientView";
 export const ServerClient = async ({ vin }: { vin: string }) => {
   try {
     const db = getDb();
+
+    if (!db) {
+      throw new Error("Database connection not available");
+    }
+
     const [carData] = await db
       .select()
       .from(cars)

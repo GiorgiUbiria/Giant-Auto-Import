@@ -11,26 +11,44 @@ export const fetchCache = 'force-no-store';
 export const dynamicParams = true;
 
 export default async function Page({ params }: { params: { id: string } }) {
-  const { user } = await getAuth();
-  if (!user || user.role !== "ADMIN") {
-    return redirect("/");
-  }
+  try {
+    // Check if we're in a build environment
+    if (process.env.NEXT_PHASE === "phase-production-build") {
+      console.log("Skipping user page during build phase");
+      return redirect("/admin/users");
+    }
 
-  // Fetch all data server-side with retry logic
-  const [userDataResult] = await getAdminUserPageDataAction({ id: params.id });
+    const { user } = await getAuth();
+    if (!user || user.role !== "ADMIN") {
+      return redirect("/");
+    }
 
-  // Handle null result or missing user data
-  if (!userDataResult || !userDataResult.user) {
+    // Fetch all data server-side with retry logic
+    let userDataResult;
+    try {
+      [userDataResult] = await getAdminUserPageDataAction({ id: params.id });
+    } catch (actionError) {
+      console.error("Error calling getAdminUserPageDataAction:", actionError);
+      return redirect("/admin/users");
+    }
+
+    // Handle null result or missing user data
+    if (!userDataResult || !userDataResult.user) {
+      console.log("User not found, redirecting to users list:", params.id);
+      return redirect("/admin/users");
+    }
+
+    return (
+      <UserDataProvider
+        userId={params.id}
+        userData={userDataResult.user}
+        carsData={userDataResult.cars || []}
+      >
+        <Client id={params.id} />
+      </UserDataProvider>
+    );
+  } catch (error) {
+    console.error("Error in admin user page:", error);
     return redirect("/admin/users");
   }
-
-  return (
-    <UserDataProvider
-      userId={params.id}
-      userData={userDataResult.user}
-      carsData={userDataResult.cars || []}
-    >
-      <Client id={params.id} />
-    </UserDataProvider>
-  );
 }

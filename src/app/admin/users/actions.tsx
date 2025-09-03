@@ -60,7 +60,12 @@ export function Actions({ userId, translations }: Props) {
 
 	return (
 		<div className="flex justify-center items-center gap-x-2">
-			<Link href={`/admin/users/${userId}`} className="hover:text-blue-500 hover:underline" title={translations.edit}>
+			<Link 
+				href={`/admin/users/${userId}`} 
+				className="hover:text-blue-500 hover:underline" 
+				title={translations.edit}
+				prefetch={false}
+			>
 				<Pencil className="size-4 hover:opacity-50 transition" />
 			</Link>
 			

@@ -161,7 +161,7 @@ export const getAdminUserPageDataAction = isAdminProcedure
 
         if (!db) {
           console.error(
-            `getAdminUserPageDataAction: Attempt ${attempt} - Database connection not available`
+            `getAdminUserPageDataAction: Attempt ${attempt} - Database connection not available for user ${id}`
           );
           if (attempt === maxRetries) {
             return {

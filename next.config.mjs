@@ -26,6 +26,22 @@ const nextConfig = {
       tls: false,
     };
 
+    // Fix for Vercel-specific module resolution issues
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      // Ensure proper module resolution for server actions
+      '@/lib/auth': require.resolve('./src/lib/auth.ts'),
+      '@/lib/drizzle/db': require.resolve('./src/lib/drizzle/db.ts'),
+    };
+
+    // Add better error handling for undefined functions
+    config.plugins = config.plugins || [];
+    config.plugins.push(
+      new (require('webpack')).DefinePlugin({
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      })
+    );
+
     // Vercel-optimized webpack configuration
     config.optimization = {
       ...config.optimization,

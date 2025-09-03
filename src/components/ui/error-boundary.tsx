@@ -29,6 +29,15 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     if (process.env.NODE_ENV === 'development') {
       console.error('ErrorBoundary caught an error:', error, errorInfo);
     }
+
+    // Log specific "apply" errors for debugging
+    if (error.message.includes('Cannot read properties of undefined (reading \'apply\')')) {
+      console.error('Detected "apply" error - likely module resolution issue:', {
+        error: error.message,
+        stack: error.stack,
+        componentStack: errorInfo.componentStack
+      });
+    }
   }
 
   render() {

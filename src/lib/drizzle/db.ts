@@ -19,7 +19,10 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
   }
 
   // Check if we're in a build environment
-  if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE === "phase-production-build") {
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.NEXT_PHASE === "phase-production-build"
+  ) {
     console.log("Database: Skipping connection during build phase");
     // Return a mock database instance for build time
     return {} as LibSQLDatabase<typeof schema>;
@@ -34,15 +37,25 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
   // Use proper server-side environment variables with better validation
   const url = process.env.TURSO_DATABASE_URL?.trim();
   if (!url) {
-    console.error("Database configuration error: TURSO_DATABASE_URL is not defined");
-    console.error("Available env vars:", Object.keys(process.env).filter(key => key.includes('TURSO')));
+    console.error(
+      "Database configuration error: TURSO_DATABASE_URL is not defined"
+    );
+    console.error(
+      "Available env vars:",
+      Object.keys(process.env).filter((key) => key.includes("TURSO"))
+    );
     throw new Error("TURSO_DATABASE_URL is not defined");
   }
 
   const authToken = process.env.TURSO_AUTH_TOKEN?.trim();
   if (!authToken && !url.includes("file:")) {
-    console.error("Database configuration error: TURSO_AUTH_TOKEN is not defined");
-    console.error("Available env vars:", Object.keys(process.env).filter(key => key.includes('TURSO')));
+    console.error(
+      "Database configuration error: TURSO_AUTH_TOKEN is not defined"
+    );
+    console.error(
+      "Available env vars:",
+      Object.keys(process.env).filter((key) => key.includes("TURSO"))
+    );
     throw new Error("TURSO_AUTH_TOKEN is not defined");
   }
 
@@ -51,13 +64,13 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
     console.log("Database configuration:", {
       url: url ? "SET" : "MISSING",
       authToken: authToken ? "SET" : "MISSING",
-      environment: process.env.NODE_ENV
+      environment: process.env.NODE_ENV,
     });
   }
 
   try {
     // Validate URL format
-    if (!url.startsWith('libsql://') && !url.startsWith('file:')) {
+    if (!url.startsWith("libsql://") && !url.startsWith("file:")) {
       throw new Error("Invalid database URL format");
     }
 
@@ -73,7 +86,7 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
 
     dbInstance = drizzle(client, {
       schema,
-      logger: process.env.NODE_ENV === "development" // Only log in development
+      logger: process.env.NODE_ENV === "development", // Only log in development
     });
 
     if (process.env.NODE_ENV === "production") {
@@ -83,16 +96,25 @@ export function tursoClient(): LibSQLDatabase<typeof schema> {
     return dbInstance;
   } catch (error) {
     console.error("Failed to create database client:", error);
-    throw new Error(`Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Database connection failed: ${error instanceof Error ? error.message : "Unknown error"}`
+    );
   }
 }
 
 // Export a function that safely gets the database instance
-export function getDb(): LibSQLDatabase<typeof schema> {
+export function getDb(): LibSQLDatabase<typeof schema> | null {
   try {
     return tursoClient();
   } catch (error) {
     console.error("Failed to get database instance:", error);
+
+    // In production, return null instead of throwing to prevent app crashes
+    if (process.env.NODE_ENV === "production") {
+      console.warn("Database connection failed, returning null");
+      return null;
+    }
+
     throw new Error("Database connection failed");
   }
 }
@@ -101,6 +123,9 @@ export function getDb(): LibSQLDatabase<typeof schema> {
 export const db = new Proxy({} as LibSQLDatabase<typeof schema>, {
   get(target, prop) {
     const dbInstance = getDb();
+    if (!dbInstance) {
+      throw new Error("Database connection not available");
+    }
     return (dbInstance as any)[prop];
-  }
+  },
 });

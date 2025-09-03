@@ -1,39 +1,15 @@
 {
-    "buildCommand": "npm run build",
-    "devCommand": "npm run dev",
-    "installCommand": "npm ci",
-    "framework": "nextjs",
     "functions": {
         "src/app/api/**/*.ts": {
             "maxDuration": 30
         }
-    },
-    "regions": [
-        "iad1"
-    ],
-    "env": {
-        "NODE_ENV": "production"
     },
     "build": {
         "env": {
             "NODE_ENV": "production"
         }
     },
-    "headers": [
-        {
-            "source": "/api/(.*)",
-            "headers": [
-                {
-                    "key": "Cache-Control",
-                    "value": "no-cache, no-store, must-revalidate"
-                }
-            ]
-        }
-    ],
-    "rewrites": [
-        {
-            "source": "/(.*)",
-            "destination": "/$1"
-        }
-    ]
+    "env": {
+        "NODE_ENV": "production"
+    }
 }

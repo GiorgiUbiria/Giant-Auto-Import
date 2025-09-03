@@ -43,35 +43,17 @@ export const loginAction = createServerAction()
       const db = getDb();
 
       // Add timeout protection for database query
-      const [existingUser] = await Promise.race([
+      const [existingUser] = (await Promise.race([
         db.select().from(users).where(eq(users.email, normalizedEmail)),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error("Database query timeout")), 10000)
-        )
-      ]) as any;
+        ),
+      ])) as any;
 
       if (!existingUser) {
         // Log failed login attempt for security monitoring
-        console.warn("Login attempt failed: User not found", { email: normalizedEmail });
-        return {
-          success: false,
-          message: "Invalid credentials",
-        };
-      }
-
-      // Add timeout protection for password verification
-      const validPassword = await Promise.race([
-        new Argon2id().verify(existingUser.password, password),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Password verification timeout")), 5000)
-        )
-      ]) as boolean;
-
-      if (!validPassword) {
-        // Log failed login attempt for security monitoring
-        console.warn("Login attempt failed: Invalid password", {
+        console.warn("Login attempt failed: User not found", {
           email: normalizedEmail,
-          userId: existingUser.id
         });
         return {
           success: false,
@@ -79,17 +61,49 @@ export const loginAction = createServerAction()
         };
       }
 
-      // Import lucia dynamically to avoid client-side issues
-      const { getLucia } = await import("../auth");
-      const lucia = getLucia();
+      // Add timeout protection for password verification
+      const validPassword = (await Promise.race([
+        new Argon2id().verify(existingUser.password, password),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Password verification timeout")),
+            5000
+          )
+        ),
+      ])) as boolean;
+
+      if (!validPassword) {
+        // Log failed login attempt for security monitoring
+        console.warn("Login attempt failed: Invalid password", {
+          email: normalizedEmail,
+          userId: existingUser.id,
+        });
+        return {
+          success: false,
+          message: "Invalid credentials",
+        };
+      }
+
+      // Import lucia with proper error handling
+      let lucia;
+      try {
+        const { getLucia } = await import("../auth");
+        lucia = getLucia();
+        if (!lucia) {
+          throw new Error("Failed to get Lucia instance");
+        }
+      } catch (importError) {
+        console.error("Failed to import or initialize Lucia:", importError);
+        throw new Error("Authentication service unavailable");
+      }
 
       // Create session with timeout protection
-      const session = await Promise.race([
+      const session = (await Promise.race([
         lucia.createSession(existingUser.id, {}),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error("Session creation timeout")), 5000)
-        )
-      ]) as any;
+        ),
+      ])) as any;
 
       const sessionCookie = lucia.createSessionCookie(session.id);
       cookies().set(
@@ -102,7 +116,7 @@ export const loginAction = createServerAction()
       console.log(`Login successful in ${Date.now() - startTime}ms`, {
         userId: existingUser.id,
         email: normalizedEmail,
-        role: existingUser.role
+        role: existingUser.role,
       });
 
       return {
@@ -166,7 +180,7 @@ export const registerAction = isAdminProcedure
       });
 
       // Revalidate admin users list
-      revalidatePath('/admin/users');
+      revalidatePath("/admin/users");
 
       return {
         success: true,
@@ -199,8 +213,18 @@ export const logoutAction = authedProcedure
     }
 
     // Import lucia dynamically to avoid client-side issues
-    const { getLucia } = await import("../auth");
-    const lucia = getLucia();
+    // Import lucia with proper error handling
+    let lucia;
+    try {
+      const { getLucia } = await import("../auth");
+      lucia = getLucia();
+      if (!lucia) {
+        throw new Error("Failed to get Lucia instance");
+      }
+    } catch (importError) {
+      console.error("Failed to import or initialize Lucia:", importError);
+      throw new Error("Authentication service unavailable");
+    }
 
     await lucia.invalidateSession(session.id);
 

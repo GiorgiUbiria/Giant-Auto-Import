@@ -7,10 +7,16 @@ export const authedProcedure = createServerActionProcedure().handler(
     const startTime = Date.now();
 
     try {
-      const authResult = await getAuth();
+      // Add timeout protection for auth calls
+      const authResult = (await Promise.race([
+        getAuth(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Authentication timeout")), 10000)
+        ),
+      ])) as any;
 
       // Validate auth result structure
-      if (!authResult || typeof authResult !== 'object') {
+      if (!authResult || typeof authResult !== "object") {
         console.error("authedProcedure: Invalid auth result structure");
         throw new Error("Authentication failed");
       }
@@ -18,25 +24,27 @@ export const authedProcedure = createServerActionProcedure().handler(
       const { user, session } = authResult;
 
       // Explicit validation of user and session
-      if (!user || typeof user !== 'object') {
+      if (!user || typeof user !== "object") {
         console.error("authedProcedure: No valid user found");
         throw new Error("User not authenticated");
       }
 
-      if (!session || typeof session !== 'object') {
+      if (!session || typeof session !== "object") {
         console.error("authedProcedure: No valid session found");
         throw new Error("Session not valid");
       }
 
       // Validate required user properties
-      if (!user.id || typeof user.id !== 'string') {
+      if (!user.id || typeof user.id !== "string") {
         console.error("authedProcedure: Invalid user ID");
         throw new Error("Invalid user data");
       }
 
       // Log performance metrics in development
       if (process.env.NODE_ENV === "development") {
-        console.log(`authedProcedure: Authentication completed in ${Date.now() - startTime}ms`);
+        console.log(
+          `authedProcedure: Authentication completed in ${Date.now() - startTime}ms`
+        );
       }
 
       return {
@@ -45,7 +53,10 @@ export const authedProcedure = createServerActionProcedure().handler(
       };
     } catch (error) {
       const duration = Date.now() - startTime;
-      console.error(`authedProcedure: Authentication error after ${duration}ms:`, error);
+      console.error(
+        `authedProcedure: Authentication error after ${duration}ms:`,
+        error
+      );
 
       // Provide more specific error messages based on error type
       if (error instanceof Error) {
@@ -68,10 +79,16 @@ export const isAdminProcedure = createServerActionProcedure().handler(
     const startTime = Date.now();
 
     try {
-      const authResult = await getAuth();
+      // Add timeout protection for auth calls
+      const authResult = (await Promise.race([
+        getAuth(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Authentication timeout")), 10000)
+        ),
+      ])) as any;
 
       // Validate auth result structure
-      if (!authResult || typeof authResult !== 'object') {
+      if (!authResult || typeof authResult !== "object") {
         console.error("isAdminProcedure: Invalid auth result structure");
         throw new Error("Authentication failed");
       }
@@ -79,28 +96,28 @@ export const isAdminProcedure = createServerActionProcedure().handler(
       const { user, session } = authResult;
 
       // Explicit validation of user and session
-      if (!user || typeof user !== 'object') {
+      if (!user || typeof user !== "object") {
         console.error("isAdminProcedure: No valid user found");
         throw new Error("User is not an admin");
       }
 
-      if (!session || typeof session !== 'object') {
+      if (!session || typeof session !== "object") {
         console.error("isAdminProcedure: No valid session found");
         throw new Error("User is not an admin");
       }
 
       // Validate required user properties
-      if (!user.id || typeof user.id !== 'string') {
+      if (!user.id || typeof user.id !== "string") {
         console.error("isAdminProcedure: Invalid user ID");
         throw new Error("Invalid user data");
       }
 
       // Enhanced role validation with logging
-      if (!user.role || typeof user.role !== 'string') {
+      if (!user.role || typeof user.role !== "string") {
         console.error("isAdminProcedure: Invalid user role", {
           userRole: user.role,
           userId: user.id,
-          userEmail: user.email
+          userEmail: user.email,
         });
         throw new Error("User is not an admin");
       }
@@ -112,17 +129,20 @@ export const isAdminProcedure = createServerActionProcedure().handler(
           userRole: user.role,
           userId: user.id,
           userEmail: user.email,
-          validRoles: validAdminRoles
+          validRoles: validAdminRoles,
         });
         throw new Error("User is not an admin");
       }
 
       // Log successful admin authentication in development
       if (process.env.NODE_ENV === "development") {
-        console.log(`isAdminProcedure: Admin access granted in ${Date.now() - startTime}ms`, {
-          userId: user.id,
-          userRole: user.role
-        });
+        console.log(
+          `isAdminProcedure: Admin access granted in ${Date.now() - startTime}ms`,
+          {
+            userId: user.id,
+            userRole: user.role,
+          }
+        );
       }
 
       return {
@@ -131,7 +151,10 @@ export const isAdminProcedure = createServerActionProcedure().handler(
       };
     } catch (error) {
       const duration = Date.now() - startTime;
-      console.error(`isAdminProcedure: Admin authentication error after ${duration}ms:`, error);
+      console.error(
+        `isAdminProcedure: Admin authentication error after ${duration}ms:`,
+        error
+      );
 
       // Provide more specific error messages
       if (error instanceof Error) {

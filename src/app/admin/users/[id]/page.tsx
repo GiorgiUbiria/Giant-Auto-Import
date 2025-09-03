@@ -26,15 +26,15 @@ export default async function Page({ params }: { params: { id: string } }) {
       return redirect("/admin/users");
     }
 
-    // Handle user not found
-    if (!userDataResult.success || !userDataResult.user) {
-      console.log("Page: User not found", params.id);
-      notFound();
-    }
-
-    // Handle errors
+    // Handle errors first (e.g., DB/connectivity/auth) — avoid 404 on failures
     if (!userDataResult.success) {
       console.error("Page: Error fetching user data", userDataResult.message);
+      return redirect("/admin/users");
+    }
+
+    // Handle user not found explicitly
+    if (!userDataResult.user) {
+      console.log("Page: User not found", params.id);
       return redirect("/admin/users");
     }
 

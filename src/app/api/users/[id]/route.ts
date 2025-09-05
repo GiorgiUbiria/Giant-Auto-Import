@@ -5,7 +5,8 @@ import { eq } from "drizzle-orm";
 import { getAuth } from "@/lib/auth";
 
 // Force dynamic rendering for this route
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET(
   request: NextRequest,

@@ -7,6 +7,11 @@ import { z } from "zod";
 import { selectUserSchema, selectCarSchema } from "@/lib/drizzle/schema";
 import logger from "@/lib/logger";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const runtime = 'nodejs';
+export const dynamicParams = true;
+
 type AdminUserPageData = {
   success: boolean;
   user: z.infer<typeof selectUserSchema> | null;

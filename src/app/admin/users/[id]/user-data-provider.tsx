@@ -7,8 +7,7 @@ import {
     adminUserCarsAtom,
     resetAdminUserUIStateAtom,
 } from '@/lib/simplified-admin-user-atoms';
-import { getUserAction } from '@/lib/actions/userActions';
-import { useServerActionQuery } from '@/lib/hooks/server-action-hooks';
+// Replaced server action with direct REST fetch to avoid POSTs on page route
 
 interface UserDataProviderProps {
     userId: string;
@@ -20,21 +19,26 @@ export function UserDataProvider({ userId, children }: UserDataProviderProps) {
     const [, setUserCars] = useAtom(adminUserCarsAtom);
     const [, resetUIState] = useAtom(resetAdminUserUIStateAtom);
 
-    // Fetch user data via server action
-    const {
-        isLoading: userLoading,
-        data: userData,
-        error: userError,
-    } = useServerActionQuery(getUserAction, {
-        input: { id: userId },
-        queryKey: ["getUser", userId],
-        staleTime: 5 * 60 * 1000,
-        gcTime: 10 * 60 * 1000,
-        retry: 1,
-        refetchOnWindowFocus: false,
-        refetchOnMount: false,
-        refetchOnReconnect: false,
-    });
+    // Fetch user data via REST API (avoids server action POSTs to the page route)
+    useEffect(() => {
+        let cancelled = false;
+        const fetchUser = async () => {
+            try {
+                const res = await fetch(`/api/users/${encodeURIComponent(userId)}`, {
+                    cache: 'no-store',
+                });
+                if (!res.ok) throw new Error('Failed to fetch user');
+                const json = await res.json();
+                if (!cancelled && json?.user) {
+                    setUserData(json.user);
+                }
+            } catch (err) {
+                // Silent failure; Client will show Loading/Error states accordingly
+            }
+        };
+        fetchUser();
+        return () => { cancelled = true; };
+    }, [userId, setUserData]);
 
     // Fetch cars via REST API
     const [carsLoading, setCarsLoading] = useState(false);
@@ -62,16 +66,7 @@ export function UserDataProvider({ userId, children }: UserDataProviderProps) {
         return () => { cancelled = true; };
     }, [userId, setUserCars]);
 
-    // Sync user data
-    useEffect(() => {
-        if (userError) {
-            // Leave data as-is; Client will show ErrorState if no user data present
-            return;
-        }
-        if (!userLoading && userData?.success && userData?.user) {
-            setUserData(userData.user);
-        }
-    }, [userLoading, userData, userError, setUserData]);
+    // No additional sync needed; user data is set in fetch effect above
 
     // Reset UI state when userId changes
     useEffect(() => {

@@ -51,6 +51,7 @@ export function PaymentInput({
     const [paymentAmount, setPaymentAmount] = useState("");
     const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>(initialPaymentHistory);
     const [hasInvoice, setHasInvoice] = useState(initialHasInvoice);
+    const [displayAmount, setDisplayAmount] = useState<number>(currentAmount);
     const inputRef = useRef<HTMLInputElement>(null);
     const queryClient = useQueryClient();
     const { invalidateOnPaymentChange } = useCacheInvalidation();
@@ -62,6 +63,11 @@ export function PaymentInput({
         onSuccess: async (response) => {
             console.log("Payment success response:", response);
             toast.success("Payment added successfully");
+            // Optimistically update the displayed due amount
+            const paid = parseFloat(paymentAmount);
+            if (!isNaN(paid) && paid > 0) {
+                setDisplayAmount((prev) => Math.max(prev - paid, 0));
+            }
             setIsEditing(false);
             setPaymentAmount("");
 
@@ -145,7 +151,7 @@ export function PaymentInput({
             return;
         }
 
-        if (amount > currentAmount) {
+        if (amount > displayAmount) {
             toast.error(`Payment amount cannot exceed ${paymentType.toLowerCase()} due amount`);
             return;
         }
@@ -224,7 +230,7 @@ export function PaymentInput({
                         placeholder="0.00"
                         className="pl-7 pr-2 h-8 text-sm font-medium"
                         min="0"
-                        max={currentAmount}
+                        max={displayAmount}
                         step="0.01"
                     />
                 </div>
@@ -292,7 +298,7 @@ export function PaymentInput({
                                         {paymentType}
                                     </div>
                                     <div className="text-base font-bold text-foreground">
-                                        {formatCurrency(currentAmount)}
+                                        {formatCurrency(displayAmount)}
                                     </div>
                                 </div>
                             </div>

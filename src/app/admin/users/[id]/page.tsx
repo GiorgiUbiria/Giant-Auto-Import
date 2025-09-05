@@ -5,6 +5,7 @@ import { Client } from "./client";
 import { UserDataProvider } from "./user-data-provider";
 import { z } from "zod";
 import { selectUserSchema, selectCarSchema } from "@/lib/drizzle/schema";
+import logger from "@/lib/logger";
 
 type AdminUserPageData = {
   success: boolean;
@@ -20,16 +21,16 @@ export const revalidate = 0;
 export const runtime = 'nodejs';
 
 export default async function Page({ params }: { params: { id: string } }) {
-  console.log("Admin user page rendering for ID:", params.id);
+  logger.info("[admin.users.id] render start", { id: params.id });
 
   try {
     const { user } = await getAuth();
     if (!user || user.role !== "ADMIN") {
-      console.log("User not authenticated or not admin, redirecting to home");
+      logger.warn("[admin.users.id] unauthorized access", { id: params.id, hasUser: !!user, role: user?.role });
       return redirect("/");
     }
 
-    console.log("User authenticated, fetching user data for:", params.id);
+    logger.info("[admin.users.id] fetching user data", { id: params.id });
 
     // Fetch all data server-side with retry logic
     let userDataResult: AdminUserPageData | null = null;
@@ -37,37 +38,36 @@ export default async function Page({ params }: { params: { id: string } }) {
       const [result, error] = await getAdminUserPageDataAction({ id: params.id });
 
       if (error) {
-        console.error("Server action returned error:", error);
+        logger.error("[admin.users.id] getAdminUserPageDataAction error", { id: params.id, error });
         notFound();
       }
 
       userDataResult = result as AdminUserPageData;
 
-      console.log("getAdminUserPageDataAction result:", {
+      logger.info("[admin.users.id] data fetched", {
+        id: params.id,
         hasResult: !!userDataResult,
         success: userDataResult?.success,
         hasUser: !!userDataResult?.user,
         userId: userDataResult?.user?.id,
-        message: userDataResult?.message
       });
     } catch (actionError) {
-      console.error("Error calling getAdminUserPageDataAction:", actionError);
+      logger.error("[admin.users.id] action invocation failed", { id: params.id, error: actionError });
       notFound();
     }
 
     // Handle null result or missing user data
     if (!userDataResult || !userDataResult.success || !userDataResult.user) {
-      console.log("User not found, showing not found page:", {
+      logger.warn("[admin.users.id] user not found", {
         id: params.id,
         hasResult: !!userDataResult,
         success: userDataResult?.success,
         hasUser: !!userDataResult?.user,
-        message: userDataResult?.message
       });
       notFound();
     }
 
-    console.log("User data found, rendering page for:", userDataResult.user.id);
+    logger.info("[admin.users.id] render success", { id: params.id, foundId: userDataResult.user.id });
 
     return (
       <UserDataProvider
@@ -79,7 +79,7 @@ export default async function Page({ params }: { params: { id: string } }) {
       </UserDataProvider>
     );
   } catch (error) {
-    console.error("Error in admin user page:", error);
+    logger.error("[admin.users.id] render fatal error", { id: params.id, error });
     notFound();
   }
 }

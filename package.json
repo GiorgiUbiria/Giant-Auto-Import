@@ -106,6 +106,7 @@
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5",
     "vercel": "^43.2.0",
+    "winston": "^3.17.0",
     "yet-another-react-lightbox": "^3.21.3",
     "zod": "^3.23.8",
     "zsa": "^0.5.1",

@@ -6,6 +6,7 @@ import { getDb } from "../drizzle/db";
 import { selectCarSchema, selectUserSchema, users } from "../drizzle/schema";
 import { isAdminProcedure } from "./authProcedures";
 import { revalidatePath } from "next/cache";
+import logger from "@/lib/logger";
 
 const SelectSchema = selectUserSchema;
 
@@ -14,13 +15,13 @@ export const getUsersAction = isAdminProcedure
   .output(z.array(SelectSchema))
   .handler(async () => {
     try {
-      console.log("getUsersAction: Fetching users");
+      logger.debug("[userActions.getUsers] start");
 
       const db = getDb();
 
       // Validate database connection
       if (!db) {
-        console.error("getUsersAction: Database connection not available");
+        logger.error("[userActions.getUsers] no db connection");
         return [];
       }
 
@@ -30,10 +31,12 @@ export const getUsersAction = isAdminProcedure
         .where(ne(users.role, "ADMIN"))
         .orderBy(users.role);
 
-      console.log("getUsersAction: Found", userQuery.length, "users");
+      logger.info("[userActions.getUsers] success", {
+        count: userQuery.length,
+      });
       return userQuery || [];
     } catch (error) {
-      console.error("getUsersAction: Error fetching users:", error);
+      logger.error("[userActions.getUsers] error", { error });
       return [];
     }
   });
@@ -57,7 +60,7 @@ export const getUserAction = isAdminProcedure
     const { id } = input;
 
     if (!id || typeof id !== "string") {
-      console.log("getUserAction: Invalid user ID provided", { id });
+      logger.warn("[userActions.getUser] invalid id", { id });
       return {
         success: false,
         user: null,
@@ -67,13 +70,13 @@ export const getUserAction = isAdminProcedure
     }
 
     try {
-      console.log("getUserAction: Fetching user", id);
+      logger.debug("[userActions.getUser] start", { id });
 
       const db = getDb();
 
       // Validate database connection
       if (!db) {
-        console.error("getUserAction: Database connection not available");
+        logger.error("[userActions.getUser] no db connection");
         return {
           success: false,
           user: null,
@@ -91,7 +94,7 @@ export const getUserAction = isAdminProcedure
       });
 
       if (!result) {
-        console.log("getUserAction: User not found", id);
+        logger.warn("[userActions.getUser] not found", { id });
         return {
           success: false,
           user: null,
@@ -103,13 +106,10 @@ export const getUserAction = isAdminProcedure
       // Safe destructuring with fallbacks
       const { ownedCars = [], ...user } = result;
 
-      console.log(
-        "getUserAction: Successfully fetched user",
+      logger.info("[userActions.getUser] success", {
         id,
-        "with",
-        ownedCars.length,
-        "cars"
-      );
+        cars: ownedCars.length,
+      });
 
       return {
         success: true,
@@ -118,7 +118,7 @@ export const getUserAction = isAdminProcedure
         message: "User fetched successfully",
       };
     } catch (error) {
-      console.error("getUserAction: Error fetching user:", error);
+      logger.error("[userActions.getUser] error", { id, error });
       return {
         success: false,
         user: null,
@@ -152,17 +152,19 @@ export const getAdminUserPageDataAction = isAdminProcedure
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(
-          `getAdminUserPageDataAction: Attempt ${attempt}/${maxRetries} - Fetching user data`,
-          id
-        );
+        logger.debug("[userActions.getAdminUserPageData] attempt", {
+          id,
+          attempt,
+          maxRetries,
+        });
 
         const db = getDb();
 
         if (!db) {
-          console.error(
-            `getAdminUserPageDataAction: Attempt ${attempt} - Database connection not available for user ${id}`
-          );
+          logger.error("[userActions.getAdminUserPageData] no db", {
+            id,
+            attempt,
+          });
           if (attempt === maxRetries) {
             return {
               success: false,
@@ -189,10 +191,10 @@ export const getAdminUserPageDataAction = isAdminProcedure
         });
 
         if (!result) {
-          console.log(
-            `getAdminUserPageDataAction: Attempt ${attempt} - User not found`,
-            id
-          );
+          logger.warn("[userActions.getAdminUserPageData] not found", {
+            id,
+            attempt,
+          });
           return {
             success: false,
             user: null,
@@ -204,9 +206,12 @@ export const getAdminUserPageDataAction = isAdminProcedure
         const { ownedCars = [], ...user } = result;
         const duration = Date.now() - startTime;
 
-        console.log(
-          `getAdminUserPageDataAction: Successfully fetched user ${id} with ${ownedCars.length} cars in ${duration}ms (attempt ${attempt})`
-        );
+        logger.info("[userActions.getAdminUserPageData] success", {
+          id,
+          cars: ownedCars.length,
+          duration,
+          attempt,
+        });
 
         return {
           success: true,
@@ -217,17 +222,21 @@ export const getAdminUserPageDataAction = isAdminProcedure
       } catch (error) {
         lastError = error as Error;
         const duration = Date.now() - startTime;
-        console.error(
-          `getAdminUserPageDataAction: Attempt ${attempt}/${maxRetries} failed after ${duration}ms:`,
-          error
-        );
+        logger.error("[userActions.getAdminUserPageData] attempt failed", {
+          id,
+          attempt,
+          duration,
+          error,
+        });
 
         if (attempt < maxRetries) {
           // Wait before retry with exponential backoff
           const waitTime = 100 * Math.pow(2, attempt - 1);
-          console.log(
-            `getAdminUserPageDataAction: Waiting ${waitTime}ms before retry...`
-          );
+          logger.debug("[userActions.getAdminUserPageData] backoff", {
+            id,
+            waitTime,
+            nextAttempt: attempt + 1,
+          });
           await new Promise((resolve) => setTimeout(resolve, waitTime));
         }
       }
@@ -235,10 +244,12 @@ export const getAdminUserPageDataAction = isAdminProcedure
 
     // All retries failed
     const duration = Date.now() - startTime;
-    console.error(
-      `getAdminUserPageDataAction: All ${maxRetries} attempts failed after ${duration}ms. Last error:`,
-      lastError
-    );
+    logger.error("[userActions.getAdminUserPageData] all attempts failed", {
+      id,
+      maxRetries,
+      duration,
+      error: lastError,
+    });
 
     return {
       success: false,

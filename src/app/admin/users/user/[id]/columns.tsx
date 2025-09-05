@@ -1,8 +1,8 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import IAAILogo from "../../../../../public/iaai-logo.png";
-import CopartLogo from "../../../../../public/copart-logo.png";
+import IAAILogo from "../../../../../../public/iaai-logo.png";
+import CopartLogo from "../../../../../../public/copart-logo.png";
 
 import Link from "next/link";
 import Image from "next/image";

@@ -5,7 +5,7 @@ import { getImageAction } from "@/lib/actions/imageActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
-import NoImage from "../../../../../public/no-car-image.webp";
+import NoImage from "../../../../../../public/no-car-image.webp";
 import { preconnect, preload } from 'react-dom';
 
 export const TableImage = ({ vin }: { vin: string }) => {

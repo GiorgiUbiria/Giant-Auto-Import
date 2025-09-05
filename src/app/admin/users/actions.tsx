@@ -1,15 +1,15 @@
 "use client";
 
 import {
-    AlertDialog,
-    AlertDialogCancel,
-		AlertDialogAction,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
+	AlertDialog,
+	AlertDialogCancel,
+	AlertDialogAction,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { deleteUserAction } from "@/lib/actions/userActions";
@@ -39,12 +39,12 @@ export function Actions({ userId, translations }: Props) {
 	const t = useTranslations("AdminUsers.actions");
 
 	const { isPending, mutate } = useServerActionMutation(deleteUserAction, {
-		onError: (error) => {
-			const errorMessage = error?.data || translations.deleteError;
+		onError: (error: unknown) => {
+			const errorMessage = (error as any)?.data || translations.deleteError;
 			toast.error(errorMessage);
 		},
-		onSuccess: async ({ data }) => {
-			const successMessage = data?.message || translations.deleteSuccess;
+		onSuccess: async (response: { success: boolean; message?: string; data?: any }) => {
+			const successMessage = response.message || translations.deleteSuccess;
 			toast.success(successMessage);
 
 			await queryClient.invalidateQueries({
@@ -60,15 +60,15 @@ export function Actions({ userId, translations }: Props) {
 
 	return (
 		<div className="flex justify-center items-center gap-x-2">
-			<Link 
-				href={`/admin/users/${userId}`} 
-				className="hover:text-blue-500 hover:underline" 
+			<Link
+				href={`/admin/users/${encodeURIComponent(userId)}`}
+				className="hover:text-blue-500 hover:underline"
 				title={translations.edit}
 				prefetch={false}
 			>
 				<Pencil className="size-4 hover:opacity-50 transition" />
 			</Link>
-			
+
 			<AlertDialog>
 				<AlertDialogTrigger asChild>
 					<Button variant="link" size="icon" title={translations.delete}>

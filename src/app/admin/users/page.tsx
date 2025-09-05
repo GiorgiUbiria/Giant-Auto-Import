@@ -4,8 +4,11 @@ import { Client } from "./client";
 import { getTranslations } from "next-intl/server";
 import ErrorBoundary from "@/components/ui/error-boundary";
 
-// Force dynamic rendering for authenticated routes
+export const revalidate = 0;
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+// Force dynamic rendering for authenticated routes
 
 export default async function Page() {
   const authResult = await getAuth();

@@ -3,21 +3,26 @@ import { getAuth } from "@/lib/auth";
 import { getAdminUserPageDataAction } from "@/lib/actions/userActions";
 import { Client } from "./client";
 import { UserDataProvider } from "./user-data-provider";
+import { z } from "zod";
+import { selectUserSchema, selectCarSchema } from "@/lib/drizzle/schema";
+
+type AdminUserPageData = {
+  success: boolean;
+  user: z.infer<typeof selectUserSchema> | null;
+  cars: z.infer<typeof selectCarSchema>[] | null;
+  message?: string;
+};
 
 // Force dynamic rendering for authenticated routes
 export const dynamic = 'force-dynamic';
 export const dynamicParams = true;
+export const revalidate = 0;
+export const runtime = 'nodejs';
 
 export default async function Page({ params }: { params: { id: string } }) {
   console.log("Admin user page rendering for ID:", params.id);
 
   try {
-    // Check if we're in a build environment
-    if (process.env.NEXT_PHASE === "phase-production-build") {
-      console.log("Skipping user page during build phase");
-      notFound();
-    }
-
     const { user } = await getAuth();
     if (!user || user.role !== "ADMIN") {
       console.log("User not authenticated or not admin, redirecting to home");
@@ -27,7 +32,7 @@ export default async function Page({ params }: { params: { id: string } }) {
     console.log("User authenticated, fetching user data for:", params.id);
 
     // Fetch all data server-side with retry logic
-    let userDataResult;
+    let userDataResult: AdminUserPageData | null = null;
     try {
       const [result, error] = await getAdminUserPageDataAction({ id: params.id });
 
@@ -36,7 +41,7 @@ export default async function Page({ params }: { params: { id: string } }) {
         notFound();
       }
 
-      userDataResult = result;
+      userDataResult = result as AdminUserPageData;
 
       console.log("getAdminUserPageDataAction result:", {
         hasResult: !!userDataResult,

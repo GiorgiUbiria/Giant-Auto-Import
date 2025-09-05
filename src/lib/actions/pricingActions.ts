@@ -310,7 +310,7 @@ export const updateUserPricingAction = isAdminProcedure
         });
       }
 
-      revalidatePath(`/admin/users/user/${input.userId}`);
+      revalidatePath(`/admin/users/profile/${input.userId}`);
       revalidatePath("/admin/pricing");
 
       return {
@@ -743,7 +743,7 @@ export const recalculateUserCarFeesAction = isAdminProcedure
         }
       }
 
-      revalidatePath(`/admin/users/user/${input.userId}`);
+      revalidatePath(`/admin/users/profile/${input.userId}`);
       revalidatePath("/admin/cars");
       revalidatePath("/dashboard");
 

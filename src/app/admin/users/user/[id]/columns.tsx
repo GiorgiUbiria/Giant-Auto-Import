@@ -14,9 +14,9 @@ import { z } from "zod";
 import { Actions } from "./actions";
 import { TableImage } from "./table-image";
 import { AdminReciever } from "./admin-reciever";
-import { TotalFeeDetails } from "../../../dashboard/total-fee-details";
-import { PurchaseFeeDetails } from "../../../dashboard/purchase-fee-details";
-import { ShippingFeeDetails } from "../../../dashboard/shipping-fee-details";
+import { TotalFeeDetails } from "../../../../dashboard/total-fee-details";
+import { PurchaseFeeDetails } from "../../../../dashboard/purchase-fee-details";
+import { ShippingFeeDetails } from "../../../../dashboard/shipping-fee-details";
 import { PaymentInput } from "@/components/payment-input";
 
 const SelectSchema = selectCarSchema;

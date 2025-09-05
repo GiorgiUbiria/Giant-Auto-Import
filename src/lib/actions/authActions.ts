@@ -323,7 +323,7 @@ export const updateUserAction = isAdminProcedure
         };
       }
 
-      revalidatePath(`/admin/users/${id}`);
+      revalidatePath(`/admin/users/user/${id}`);
 
       return {
         success: true,

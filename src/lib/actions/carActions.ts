@@ -90,7 +90,10 @@ export const addCarAction = createServerAction()
   )
   .handler(async ({ input }) => {
     try {
-      console.log("addCarAction: Starting car addition", { vin: input.vin, auction: input.auction });
+      console.log("addCarAction: Starting car addition", {
+        vin: input.vin,
+        auction: input.auction,
+      });
 
       // Manual authentication check
       const { user } = await getAuth();
@@ -104,7 +107,9 @@ export const addCarAction = createServerAction()
       }
 
       if ((user as any).role !== "ADMIN") {
-        console.error("addCarAction: User is not admin", { role: (user as any).role });
+        console.error("addCarAction: User is not admin", {
+          role: (user as any).role,
+        });
         return {
           success: false,
           message: "Admin access required",
@@ -113,7 +118,11 @@ export const addCarAction = createServerAction()
 
       // Validate required fields
       if (!input.vin || !input.auction || !input.originPort) {
-        console.log("addCarAction: Missing required fields", { vin: input.vin, auction: input.auction, originPort: input.originPort });
+        console.log("addCarAction: Missing required fields", {
+          vin: input.vin,
+          auction: input.auction,
+          originPort: input.originPort,
+        });
         return {
           success: false,
           message: "Missing required fields: VIN, auction, or origin port",
@@ -180,18 +189,23 @@ export const addCarAction = createServerAction()
         if (errorStr.includes("SQLITE_CONSTRAINT")) {
           if (errorStr.includes("FOREIGN KEY constraint failed")) {
             if (errorStr.includes("owner_id")) {
-              errorMessage = "Invalid owner ID provided. Please select a valid user or leave owner field empty.";
+              errorMessage =
+                "Invalid owner ID provided. Please select a valid user or leave owner field empty.";
             } else {
-              errorMessage = "Database constraint violation. Please check all required fields and relationships.";
+              errorMessage =
+                "Database constraint violation. Please check all required fields and relationships.";
             }
           } else if (errorStr.includes("UNIQUE constraint failed")) {
             if (errorStr.includes("vin")) {
-              errorMessage = "A car with this VIN already exists in the database.";
+              errorMessage =
+                "A car with this VIN already exists in the database.";
             } else {
-              errorMessage = "Duplicate entry detected. Please check for duplicate values.";
+              errorMessage =
+                "Duplicate entry detected. Please check for duplicate values.";
             }
           } else if (errorStr.includes("NOT NULL constraint failed")) {
-            errorMessage = "Required field is missing. Please fill in all required fields.";
+            errorMessage =
+              "Required field is missing. Please fill in all required fields.";
           } else {
             errorMessage = "Database constraint violation: " + errorStr;
           }
@@ -220,7 +234,9 @@ export const getCarsAction = createServerAction()
       }
 
       if ((user as any).role !== "ADMIN") {
-        console.error("getCarsAction: User is not admin", { role: (user as any).role });
+        console.error("getCarsAction: User is not admin", {
+          role: (user as any).role,
+        });
         return [];
       }
 
@@ -294,14 +310,17 @@ export const getCarPublicAction = createServerAction()
         .from(cars)
         .where(or(...whereClause));
 
-      console.log("getCarPublicAction: Query completed", { found: !!carQuery, vin: carQuery?.vin });
+      console.log("getCarPublicAction: Query completed", {
+        found: !!carQuery,
+        vin: carQuery?.vin,
+      });
       return carQuery ?? null;
     } catch (error) {
       console.error("getCarPublicAction: Database error", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         vin,
-        id
+        id,
       });
 
       // Instead of throwing, return null to prevent 500 errors
@@ -328,7 +347,11 @@ export const getCarAction = authedProcedure
 
     try {
       // Log the input for debugging
-      console.log("getCarAction: Input received", { vin, id, userId: ctx.user?.id });
+      console.log("getCarAction: Input received", {
+        vin,
+        id,
+        userId: ctx.user?.id,
+      });
 
       const whereClause = [];
       if (id !== undefined) {
@@ -344,7 +367,10 @@ export const getCarAction = authedProcedure
         .from(cars)
         .where(or(...whereClause));
 
-      console.log("getCarAction: Query completed", { found: !!carQuery, vin: carQuery?.vin });
+      console.log("getCarAction: Query completed", {
+        found: !!carQuery,
+        vin: carQuery?.vin,
+      });
       return carQuery ?? null;
     } catch (error) {
       console.error("getCarAction: Database error", {
@@ -352,7 +378,7 @@ export const getCarAction = authedProcedure
         stack: error instanceof Error ? error.stack : undefined,
         vin,
         id,
-        userId: ctx.user?.id
+        userId: ctx.user?.id,
       });
 
       // Instead of throwing, return null to prevent 500 errors
@@ -391,7 +417,9 @@ export const deleteCarAction = createServerAction()
       }
 
       if (user.role !== "ADMIN") {
-        console.error("deleteCarAction: User is not admin", { role: user.role });
+        console.error("deleteCarAction: User is not admin", {
+          role: user.role,
+        });
         return {
           success: false,
           message: "Admin access required",
@@ -435,18 +463,25 @@ export const deleteCarAction = createServerAction()
         .returning({ vin: cars.vin });
 
       if (!isDeleted) {
-        console.error("deleteCarAction: Failed to delete car from database", { vin });
+        console.error("deleteCarAction: Failed to delete car from database", {
+          vin,
+        });
         return {
           success: false,
           message: "Could not delete the car",
         };
       }
 
-      console.log("deleteCarAction: Car deleted successfully, revalidating paths", { vin });
+      console.log(
+        "deleteCarAction: Car deleted successfully, revalidating paths",
+        { vin }
+      );
       revalidatePath("/admin/cars");
       revalidatePath("/dashboard");
 
-      console.log("deleteCarAction: Deletion process completed successfully", { vin });
+      console.log("deleteCarAction: Deletion process completed successfully", {
+        vin,
+      });
       return {
         success: true,
         message: `Car with vin code ${isDeleted.vin} was deleted successfully`,
@@ -455,7 +490,7 @@ export const deleteCarAction = createServerAction()
       console.error("deleteCarAction: Error during deletion process", {
         vin,
         error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
+        stack: error instanceof Error ? error.stack : undefined,
       });
       return {
         success: false,
@@ -496,8 +531,11 @@ export const assignOwnerAction = isAdminProcedure
         .select({ imageKey: images.imageKey, priority: images.priority })
         .from(images)
         .where(eq(images.carVin, vin));
-      
-      console.log("Image priorities before ownership change:", { vin, currentImages });
+
+      console.log("Image priorities before ownership change:", {
+        vin,
+        currentImages,
+      });
 
       const whereClause = [];
       if (carId !== undefined) {
@@ -540,27 +578,33 @@ export const assignOwnerAction = isAdminProcedure
         .select({ imageKey: images.imageKey, priority: images.priority })
         .from(images)
         .where(eq(images.carVin, vin));
-      
-      console.log("Image priorities after ownership change:", { vin, updatedImages });
+
+      console.log("Image priorities after ownership change:", {
+        vin,
+        updatedImages,
+      });
 
       // Check if any image priorities changed unexpectedly
-      const priorityChanged = currentImages.some((img, index) => 
-        img.priority !== updatedImages[index]?.priority
+      const priorityChanged = currentImages.some(
+        (img, index) => img.priority !== updatedImages[index]?.priority
       );
-      
+
       if (priorityChanged) {
-        console.warn("WARNING: Image priorities changed during ownership assignment!", {
-          vin,
-          before: currentImages,
-          after: updatedImages
-        });
+        console.warn(
+          "WARNING: Image priorities changed during ownership assignment!",
+          {
+            vin,
+            before: currentImages,
+            after: updatedImages,
+          }
+        );
       }
 
       // Comprehensive revalidation to ensure all views update
       // Note: The main cars table uses React Query with keys like ["getCars", pageIndex, pageSize, sorting, filters]
       // The revalidatePath calls will trigger server-side revalidation, but React Query cache invalidation
       // should also be handled in the components that call this action
-      revalidatePath(`/admin/users/${ownerId}`);
+      revalidatePath(`/admin/users/user/${ownerId}`);
       revalidatePath(`/admin/cars`);
       revalidatePath(`/dashboard`);
       revalidatePath(`/car/${vin}`);
@@ -584,12 +628,15 @@ export const assignOwnerAction = isAdminProcedure
         if (errorStr.includes("SQLITE_CONSTRAINT")) {
           if (errorStr.includes("FOREIGN KEY constraint failed")) {
             if (errorStr.includes("owner_id")) {
-              errorMessage = "Invalid owner ID provided. The specified user does not exist in the database.";
+              errorMessage =
+                "Invalid owner ID provided. The specified user does not exist in the database.";
             } else {
-              errorMessage = "Database constraint violation. Please check all required fields and relationships.";
+              errorMessage =
+                "Database constraint violation. Please check all required fields and relationships.";
             }
           } else if (errorStr.includes("NOT NULL constraint failed")) {
-            errorMessage = "Required field is missing. Please fill in all required fields.";
+            errorMessage =
+              "Required field is missing. Please fill in all required fields.";
           } else {
             errorMessage = "Database constraint violation: " + errorStr;
           }
@@ -734,7 +781,7 @@ export const updateCarAction = isAdminProcedure
       revalidatePath(`/dashboard`);
       revalidatePath(`/car/${input.vin}`);
       if (input.ownerId) {
-        revalidatePath(`/admin/users/${input.ownerId}`);
+        revalidatePath(`/admin/users/user/${input.ownerId}`);
       }
 
       return {
@@ -753,18 +800,23 @@ export const updateCarAction = isAdminProcedure
         if (errorStr.includes("SQLITE_CONSTRAINT")) {
           if (errorStr.includes("FOREIGN KEY constraint failed")) {
             if (errorStr.includes("owner_id")) {
-              errorMessage = "Invalid owner ID provided. Please select a valid user or leave owner field empty.";
+              errorMessage =
+                "Invalid owner ID provided. Please select a valid user or leave owner field empty.";
             } else {
-              errorMessage = "Database constraint violation. Please check all required fields and relationships.";
+              errorMessage =
+                "Database constraint violation. Please check all required fields and relationships.";
             }
           } else if (errorStr.includes("UNIQUE constraint failed")) {
             if (errorStr.includes("vin")) {
-              errorMessage = "A car with this VIN already exists in the database.";
+              errorMessage =
+                "A car with this VIN already exists in the database.";
             } else {
-              errorMessage = "Duplicate entry detected. Please check for duplicate values.";
+              errorMessage =
+                "Duplicate entry detected. Please check for duplicate values.";
             }
           } else if (errorStr.includes("NOT NULL constraint failed")) {
-            errorMessage = "Required field is missing. Please fill in all required fields.";
+            errorMessage =
+              "Required field is missing. Please fill in all required fields.";
           } else {
             errorMessage = "Database constraint violation: " + errorStr;
           }

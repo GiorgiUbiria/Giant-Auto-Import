@@ -141,12 +141,14 @@ export const addOceanShippingRateAction = isAdminProcedure
  */
 export const updateOceanShippingRateAction = isAdminProcedure
   .createServerAction()
-  .input(z.object({
-    id: z.number(),
-    state: z.string(),
-    shorthand: z.string(),
-    rate: z.number().min(0),
-  }))
+  .input(
+    z.object({
+      id: z.number(),
+      state: z.string(),
+      shorthand: z.string(),
+      rate: z.number().min(0),
+    })
+  )
   .output(
     z.object({
       success: z.boolean(),
@@ -231,13 +233,20 @@ export const getUserPricingAction = isAdminProcedure
       const [config] = await db
         .select()
         .from(userPricingConfig)
-        .where(and(eq(userPricingConfig.userId, input.userId), eq(userPricingConfig.isActive, true)))
+        .where(
+          and(
+            eq(userPricingConfig.userId, input.userId),
+            eq(userPricingConfig.isActive, true)
+          )
+        )
         .limit(1);
 
       return {
         success: true,
         data: config || null,
-        message: config ? "User pricing configuration found" : "No user pricing configuration found",
+        message: config
+          ? "User pricing configuration found"
+          : "No user pricing configuration found",
       };
     } catch (error) {
       console.error("Error fetching user pricing:", error);
@@ -280,7 +289,9 @@ export const updateUserPricingAction = isAdminProcedure
             pickupSurcharge: input.pickupSurcharge,
             serviceFee: input.serviceFee,
             hybridSurcharge: input.hybridSurcharge,
-            ...(typeof input.isActive === 'boolean' ? { isActive: input.isActive } : {}),
+            ...(typeof input.isActive === "boolean"
+              ? { isActive: input.isActive }
+              : {}),
             updatedAt: new Date(),
           })
           .where(eq(userPricingConfig.id, existingConfig.id));
@@ -293,11 +304,13 @@ export const updateUserPricingAction = isAdminProcedure
           pickupSurcharge: input.pickupSurcharge,
           serviceFee: input.serviceFee,
           hybridSurcharge: input.hybridSurcharge,
-          ...(typeof input.isActive === 'boolean' ? { isActive: input.isActive } : {}),
+          ...(typeof input.isActive === "boolean"
+            ? { isActive: input.isActive }
+            : {}),
         });
       }
 
-      revalidatePath(`/admin/users/${input.userId}`);
+      revalidatePath(`/admin/users/user/${input.userId}`);
       revalidatePath("/admin/pricing");
 
       return {
@@ -336,7 +349,9 @@ export const getDefaultPricingAction = isAdminProcedure
       return {
         success: true,
         data: config || null,
-        message: config ? "Default pricing configuration found" : "No default pricing configuration found",
+        message: config
+          ? "Default pricing configuration found"
+          : "No default pricing configuration found",
       };
     } catch (error) {
       console.error("Error fetching default pricing:", error);
@@ -456,7 +471,8 @@ export const uploadCsvAction = isAdminProcedure
 
       return {
         success: true,
-        message: "CSV data uploaded and activated successfully. Note: You may need to recalculate fees for existing cars manually.",
+        message:
+          "CSV data uploaded and activated successfully. Note: You may need to recalculate fees for existing cars manually.",
       };
     } catch (error) {
       console.error("Error uploading CSV:", error);
@@ -573,7 +589,8 @@ export const deleteCsvVersionAction = isAdminProcedure
       if (version.isActive) {
         return {
           success: false,
-          message: "Cannot delete active CSV version. Please activate another version first.",
+          message:
+            "Cannot delete active CSV version. Please activate another version first.",
         };
       }
 
@@ -642,7 +659,10 @@ export const recalculateAllCarFeesAction = isAdminProcedure
 
           updatedCount++;
         } catch (error) {
-          console.error(`Failed to recalculate fees for car ${car.vin}:`, error);
+          console.error(
+            `Failed to recalculate fees for car ${car.vin}:`,
+            error
+          );
           // Continue with other cars even if one fails
         }
       }
@@ -715,12 +735,15 @@ export const recalculateUserCarFeesAction = isAdminProcedure
 
           updatedCount++;
         } catch (error) {
-          console.error(`Failed to recalculate fees for car ${car.vin}:`, error);
+          console.error(
+            `Failed to recalculate fees for car ${car.vin}:`,
+            error
+          );
           // Continue with other cars even if one fails
         }
       }
 
-      revalidatePath(`/admin/users/${input.userId}`);
+      revalidatePath(`/admin/users/user/${input.userId}`);
       revalidatePath("/admin/cars");
       revalidatePath("/dashboard");
 
@@ -792,4 +815,4 @@ export const seedOceanShippingRatesAction = isAdminProcedure
         seededCount: 0,
       };
     }
-  }); 
+  });

@@ -243,7 +243,7 @@ export const UserPricingList = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <Button asChild size="sm" variant="outline">
-                        <Link href={`/admin/users/${user.id}`}>
+                        <Link href={`/admin/users/user/${user.id}`}>
                           <Settings className="h-3 w-3 mr-1" />
                           Configure
                         </Link>

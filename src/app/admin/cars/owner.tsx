@@ -39,8 +39,8 @@ export const Owner = ({ id, translations }: { id: string; translations: { loadEr
 
   return (
     <div className="py-10 text-primary">
-      <Link 
-        href={`/admin/users/${data.user.id}`} 
+      <Link
+        href={`/admin/users/user/${data.user.id}`}
         className="font-semibold hover:underline"
       >
         {data.user.fullName}

@@ -61,7 +61,7 @@ export function Actions({ userId, translations }: Props) {
 	return (
 		<div className="flex justify-center items-center gap-x-2">
 			<Link
-				href={`/admin/users/profile/${encodeURIComponent(userId)}`}
+				href={`/admin/users/${encodeURIComponent(userId)}`}
 				className="hover:text-blue-500 hover:underline"
 				title={translations.edit}
 				prefetch={false}

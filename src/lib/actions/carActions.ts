@@ -604,7 +604,7 @@ export const assignOwnerAction = isAdminProcedure
       // Note: The main cars table uses React Query with keys like ["getCars", pageIndex, pageSize, sorting, filters]
       // The revalidatePath calls will trigger server-side revalidation, but React Query cache invalidation
       // should also be handled in the components that call this action
-      revalidatePath(`/admin/users/profile/${ownerId}`);
+      revalidatePath(`/admin/users/${ownerId}`);
       revalidatePath(`/admin/cars`);
       revalidatePath(`/dashboard`);
       revalidatePath(`/car/${vin}`);
@@ -781,7 +781,7 @@ export const updateCarAction = isAdminProcedure
       revalidatePath(`/dashboard`);
       revalidatePath(`/car/${input.vin}`);
       if (input.ownerId) {
-        revalidatePath(`/admin/users/profile/${input.ownerId}`);
+        revalidatePath(`/admin/users/${input.ownerId}`);
       }
 
       return {

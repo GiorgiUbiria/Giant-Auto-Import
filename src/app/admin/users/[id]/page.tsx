@@ -5,7 +5,7 @@ import { Client } from "./client";
 import { UserDataProvider } from "./user-data-provider";
 
 // Force dynamic rendering for authenticated routes
-export const fetchCache = 'force-no-store';
+export const dynamic = 'force-dynamic';
 export const dynamicParams = true;
 
 export default async function Page({ params }: { params: { id: string } }) {

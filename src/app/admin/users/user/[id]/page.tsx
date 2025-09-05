@@ -14,12 +14,6 @@ type AdminUserPageData = {
   message?: string;
 };
 
-// Force dynamic rendering for authenticated routes
-export const dynamic = 'force-dynamic';
-export const dynamicParams = true;
-export const revalidate = 0;
-export const runtime = 'nodejs';
-
 export default async function Page({ params }: { params: { id: string } }) {
   logger.info("[admin.users.id] render start", { id: params.id });
 

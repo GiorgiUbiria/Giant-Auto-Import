@@ -1,22 +1,36 @@
 "use client";
 
 import React from "react";
-import { getImageAction } from "@/lib/actions/imageActions";
-import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
+// Switched to REST fetch to avoid server action POSTs to page route in prod
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import NoImage from "../../../../../public/no-car-image.webp";
 import { preconnect, preload } from 'react-dom';
 
 export const TableImage = ({ vin }: { vin: string }) => {
-  const { isLoading, data, error } = useServerActionQuery(getImageAction, {
-    input: {
-      vin: vin,
-    },
-    queryKey: ["getImage", vin],
-    retry: 1,
-    staleTime: 5 * 60 * 1000,
-  });
+  const [data, setData] = React.useState<{ url: string } | null>(null);
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<Error | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/images/${encodeURIComponent(vin)}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('Failed to fetch image');
+        const json = await res.json();
+        if (!cancelled) setData(json?.data || null);
+      } catch (e: any) {
+        if (!cancelled) setError(e);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [vin]);
 
   function getCdnBase(url?: string): string | null {
     if (!url) return null;

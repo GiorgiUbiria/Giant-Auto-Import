@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from 'next-intl';
 import { useServerAction } from "zsa-react";
-import { getUserPricingAction, updateUserPricingAction, getDefaultPricingAction, getOceanShippingRatesAction } from "@/lib/actions/pricingActions";
+import { updateUserPricingAction } from "@/lib/actions/pricingActions";
 import { recalculateUserCarFeesAction } from "@/lib/actions/pricingActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,38 +60,23 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
     }
   };
 
-  const { execute: getUserPricing } = useServerAction(getUserPricingAction);
   const { execute: updateUserPricing } = useServerAction(updateUserPricingAction);
-  const { execute: getDefaultPricing } = useServerAction(getDefaultPricingAction);
   const { execute: recalculateUserFees } = useServerAction(recalculateUserCarFeesAction);
-  const { execute: getOceanShippingRates } = useServerAction(getOceanShippingRatesAction);
 
   const loadPricingData = useCallback(async () => {
     if (!userId) return;
 
     try {
       setLoading(true);
-      const [userPricingResult, userPricingError] = await getUserPricing({ userId });
-      const [defaultPricingResult, defaultPricingError] = await getDefaultPricing();
-      const [oceanRatesResult, oceanRatesError] = await getOceanShippingRates();
+      const userPricingRes = await fetch(`/api/pricing/user/${encodeURIComponent(userId)}`, { cache: 'no-store' });
+      const userPricingResult = userPricingRes.ok ? await userPricingRes.json() : null;
+      const defaultPricingRes = await fetch(`/api/pricing/default`, { cache: 'no-store' });
+      const defaultPricingResult = defaultPricingRes.ok ? await defaultPricingRes.json() : null;
+      const oceanRatesRes = await fetch(`/api/pricing/ocean`, { cache: 'no-store' });
+      const oceanRatesJson = oceanRatesRes.ok ? await oceanRatesRes.json() : { data: [] };
 
-      if (defaultPricingError) {
-        toast.error("Failed to load default pricing");
-        return;
-      }
-
-      if (oceanRatesError) {
-        toast.error("Failed to load ocean shipping rates");
-        return;
-      }
-
-      if (userPricingError) {
-        toast.error("Failed to load user pricing");
-        return;
-      }
-
-      if (userPricingResult.success && userPricingResult.data) {
-        const userData = userPricingResult.data;
+      if (userPricingResult) {
+        const userData = userPricingResult;
         setPricing({
           oceanRates: Array.isArray(userData.oceanRates) ? userData.oceanRates as Array<{ state: string; shorthand: string; rate: number }> : [],
           groundFeeAdjustment: userData.groundFeeAdjustment,
@@ -101,7 +86,7 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
         });
         setUseCustomPricing(userData.isActive);
       } else {
-        const defaultData = defaultPricingResult.data;
+        const defaultData = defaultPricingResult;
         if (defaultData) {
           setPricing({
             oceanRates: Array.isArray(defaultData.oceanRates) ? defaultData.oceanRates as Array<{ state: string; shorthand: string; rate: number }> : [],
@@ -114,15 +99,13 @@ export const UserPricingForm = ({ userId, userName }: UserPricingFormProps) => {
         setUseCustomPricing(false);
       }
 
-      if (oceanRatesResult.success && oceanRatesResult.data) {
-        setBaseOceanRates(oceanRatesResult.data);
-      }
+      setBaseOceanRates(Array.isArray(oceanRatesJson.data) ? oceanRatesJson.data : []);
     } catch (error) {
       toast.error("Failed to load pricing data");
     } finally {
       setLoading(false);
     }
-  }, [userId, getUserPricing, getDefaultPricing, getOceanShippingRates]);
+  }, [userId]);
 
   useEffect(() => {
     loadPricingData();

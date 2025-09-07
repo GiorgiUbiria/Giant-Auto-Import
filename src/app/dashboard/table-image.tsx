@@ -1,23 +1,34 @@
 "use client";
 
-import { getImageAction } from "@/lib/actions/imageActions";
-import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
+import React from "react";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import NoImage from "../../../public/no-car-image.webp";
 
 export const TableImage = ({ vin }: { vin: string }) => {
-  const { isLoading, data, error } = useServerActionQuery(getImageAction, {
-    input: {
-      vin: vin,
-    },
-    queryKey: ["getImage", vin],
-    retry: 2, // Allow 2 retry attempts for better reliability
-    staleTime: 5 * 60 * 1000, // 5 minutes - reduced for better responsiveness
-    gcTime: 15 * 60 * 1000, // 15 minutes cache
-    refetchOnWindowFocus: false, // Prevent refetch on focus
-    refetchOnMount: true, // Always refetch on mount to get latest priority
-  });
+  const [data, setData] = React.useState<{ url: string } | null>(null);
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<Error | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/images/${encodeURIComponent(vin)}?mode=single`, { cache: 'no-store' });
+        if (!res.ok) throw new Error('Failed to fetch image');
+        const json = await res.json();
+        if (!cancelled) setData(json?.data || null);
+      } catch (e: any) {
+        if (!cancelled) setError(e);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [vin]);
 
   if (error || (!data && !isLoading)) {
     return (

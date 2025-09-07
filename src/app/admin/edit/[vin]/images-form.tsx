@@ -11,7 +11,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { handleUploadImagesAction } from "@/lib/actions/bucketActions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -19,7 +18,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { useServerAction } from "zsa-react";
 import imageCompression from "browser-image-compression";
 import Image from "next/image";
 
@@ -108,12 +106,19 @@ export function ImagesForm({ vin }: { vin: string }) {
   const deliveryInputRef = useRef<HTMLInputElement>(null);
   const pickupInputRef = useRef<HTMLInputElement>(null);
 
-  const { execute: executeImageUpload } = useServerAction(handleUploadImagesAction, {
-    onError: (err) => {
-      console.error("Image upload error:", err);
-      throw new Error("Failed to upload images");
-    },
-  });
+  // Upload helper via API route
+  const executeImageUpload = async (payload: { vin: string; images: Array<{ buffer: number[]; size: number; name: string; type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP" }> }) => {
+    const resp = await fetch(`/api/images/${payload.vin}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ images: payload.images }),
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err?.error || 'Failed to upload images');
+    }
+    return resp.json();
+  };
 
   // Compression options
   const options = {
@@ -121,18 +126,8 @@ export function ImagesForm({ vin }: { vin: string }) {
     maxWidthOrHeight: 1920,
     useWebWorker: true,
     initialQuality: 0.6,
+    fileType: 'image/png',
   };
-
-  // Helper: create a thumbnail using browser-image-compression
-  async function createThumbnail(file: File): Promise<File> {
-    return imageCompression(file, {
-      maxWidthOrHeight: 300,
-      maxSizeMB: 0.1,
-      initialQuality: 0.4,
-      fileType: 'image/webp',
-      useWebWorker: true,
-    });
-  }
 
   // Helper: upload all images with proper progress tracking
   async function uploadAllImages(allFiles: Array<{ file: File; type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP" }>) {
@@ -149,47 +144,41 @@ export function ImagesForm({ vin }: { vin: string }) {
           compressedFile = file;
         }
 
-        // Generate thumbnail
-        let thumbFile: File | null = null;
+        // Generate small thumbnail (even index partner)
+        let thumbFile: File = compressedFile;
         try {
-          thumbFile = await createThumbnail(file);
+          thumbFile = await imageCompression(file, {
+            maxWidthOrHeight: 480,
+            maxSizeMB: 0.25,
+            initialQuality: 0.5,
+            useWebWorker: true,
+            fileType: 'image/png',
+          });
         } catch (err) {
-          console.warn("Thumbnail generation failed, skipping thumbnail:", err);
+          console.warn("Thumbnail compression failed, using main compressed file:", err);
+          thumbFile = compressedFile;
         }
 
-        // Upload original
-        const arrayBuffer = await compressedFile.arrayBuffer();
+        // Upload original (odd) + thumbnail (even) in a single request to keep indices paired
+        const originalBuffer = await compressedFile.arrayBuffer();
+        const thumbBuffer = await thumbFile.arrayBuffer();
         await executeImageUpload({
           vin,
           images: [
             {
-              buffer: Array.from(new Uint8Array(arrayBuffer)),
+              buffer: Array.from(new Uint8Array(originalBuffer)),
               size: compressedFile.size,
               name: compressedFile.name,
               type: type,
             },
+            {
+              buffer: Array.from(new Uint8Array(thumbBuffer)),
+              size: thumbFile.size,
+              name: `thumb_${compressedFile.name}`,
+              type: type,
+            },
           ],
         });
-
-        // Upload thumbnail (with -thumb before extension)
-        if (thumbFile) {
-          const extIdx = compressedFile.name.lastIndexOf('.');
-          const thumbName = extIdx !== -1
-            ? compressedFile.name.slice(0, extIdx) + '-thumb.webp'
-            : compressedFile.name + '-thumb.webp';
-          const thumbBuffer = await thumbFile.arrayBuffer();
-          await executeImageUpload({
-            vin,
-            images: [
-              {
-                buffer: Array.from(new Uint8Array(thumbBuffer)),
-                size: thumbFile.size,
-                name: thumbName,
-                type: type,
-              },
-            ],
-          });
-        }
 
         uploaded++;
         setUploadProgress({ total: allFiles.length, uploaded });
@@ -257,7 +246,7 @@ export function ImagesForm({ vin }: { vin: string }) {
 
       // Gather all files with their types
       const allFiles: Array<{ file: File; type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP" }> = [];
-      
+
       if (warehouse_images) {
         Array.from(warehouse_images).forEach(file => {
           allFiles.push({ file, type: "WAREHOUSE" as const });
@@ -288,7 +277,7 @@ export function ImagesForm({ vin }: { vin: string }) {
       await uploadAllImages(allFiles);
       setIsPending(false);
       setUploadProgress({ total: 0, uploaded: 0 });
-      
+
       queryClient.invalidateQueries({ queryKey: ["getImagesForCar", vin] });
       toast.success(`Successfully uploaded ${allFiles.length} images`);
     } catch (error) {

@@ -18,7 +18,7 @@ export const TableImage = ({ vin }: { vin: string }) => {
       setIsLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/images/${encodeURIComponent(vin)}`, { cache: 'no-store' });
+        const res = await fetch(`/api/images/${encodeURIComponent(vin)}?mode=single`, { cache: 'no-store' });
         if (!res.ok) throw new Error('Failed to fetch image');
         const json = await res.json();
         if (!cancelled) setData(json?.data || null);

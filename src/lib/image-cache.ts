@@ -29,14 +29,17 @@ interface FetchOptions {
 
 class ImageCacheService {
   private cache = new Map<string, CacheEntry>();
-  private publicUrl = process.env.NEXT_PUBLIC_BUCKET_URL || '';
+  private publicUrl = process.env.NEXT_PUBLIC_BUCKET_URL || "";
 
   private generateCacheKey(options: FetchOptions): string {
     const { vin, type, page = 1, pageSize = 12 } = options;
-    return `${vin}:${type || 'all'}:${page}:${pageSize}`;
+    return `${vin}:${type || "all"}:${page}:${pageSize}`;
   }
 
-  private isCacheValid(entry: CacheEntry, revalidateTime: number = CACHE_DURATION): boolean {
+  private isCacheValid(
+    entry: CacheEntry,
+    revalidateTime: number = CACHE_DURATION
+  ): boolean {
     return Date.now() - entry.timestamp < revalidateTime;
   }
 
@@ -50,18 +53,29 @@ class ImageCacheService {
 
     // Build query parameters
     const params = new URLSearchParams();
-    if (type) params.append('type', type);
-    params.append('page', page.toString());
-    params.append('pageSize', pageSize.toString());
+    if (type) params.append("type", type);
+    params.append("page", page.toString());
+    params.append("pageSize", pageSize.toString());
 
     const response = await fetch(`/api/images/${vin}?${params.toString()}`);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch images: ${response.statusText}`);
     }
 
     const data = await response.json();
-    return data;
+    // Ensure shape conforms
+    return {
+      images: Array.isArray(data.images) ? data.images : [],
+      count:
+        typeof data.count === "number"
+          ? data.count
+          : Array.isArray(data.images)
+            ? data.images.length
+            : 0,
+      totalPages: typeof data.totalPages === "number" ? data.totalPages : 1,
+      currentPage: typeof data.currentPage === "number" ? data.currentPage : 1,
+    };
   }
 
   async getImageList(options: FetchOptions): Promise<{
@@ -107,7 +121,7 @@ class ImageCacheService {
         keysToDelete.push(key);
       }
     }
-    keysToDelete.forEach(key => this.cache.delete(key));
+    keysToDelete.forEach((key) => this.cache.delete(key));
   }
 
   // Clear all cache
@@ -127,7 +141,10 @@ class ImageCacheService {
   }
 
   // Preload images for better UX
-  async preloadImages(imageUrls: string[], concurrency: number = 3): Promise<void> {
+  async preloadImages(
+    imageUrls: string[],
+    concurrency: number = 3
+  ): Promise<void> {
     const chunks = [];
     for (let i = 0; i < imageUrls.length; i += concurrency) {
       chunks.push(imageUrls.slice(i, i + concurrency));
@@ -135,7 +152,7 @@ class ImageCacheService {
 
     for (const chunk of chunks) {
       await Promise.all(
-        chunk.map(url => {
+        chunk.map((url) => {
           return new Promise<void>((resolve) => {
             const img = new Image();
             img.onload = () => resolve();
@@ -148,15 +165,18 @@ class ImageCacheService {
   }
 
   // Get optimized image URL with parameters
-  getOptimizedUrl(imageKey: string, options: {
-    width?: number;
-    height?: number;
-    quality?: number;
-    format?: 'webp' | 'jpeg' | 'png';
-  } = {}): string {
-    const { width, height, quality = 80, format = 'webp' } = options;
+  getOptimizedUrl(
+    imageKey: string,
+    options: {
+      width?: number;
+      height?: number;
+      quality?: number;
+      format?: "webp" | "jpeg" | "png";
+    } = {}
+  ): string {
+    const { width, height, quality = 80, format = "webp" } = options;
     const baseUrl = `${this.publicUrl}/${imageKey}`;
-    
+
     // If no optimization parameters, return base URL
     if (!width && !height) {
       return baseUrl;
@@ -164,10 +184,10 @@ class ImageCacheService {
 
     // Add optimization parameters
     const params = new URLSearchParams();
-    if (width) params.append('w', width.toString());
-    if (height) params.append('h', height.toString());
-    params.append('q', quality.toString());
-    params.append('f', format);
+    if (width) params.append("w", width.toString());
+    if (height) params.append("h", height.toString());
+    params.append("q", quality.toString());
+    params.append("f", format);
 
     return `${baseUrl}?${params.toString()}`;
   }
@@ -177,10 +197,11 @@ class ImageCacheService {
 export const imageCacheService = new ImageCacheService();
 
 // Export utility functions
-export const clearImageCache = (vin: string) => imageCacheService.clearCacheForVin(vin);
+export const clearImageCache = (vin: string) =>
+  imageCacheService.clearCacheForVin(vin);
 export const clearAllImageCache = () => imageCacheService.clearAllCache();
 export const getImageCacheStats = () => imageCacheService.getCacheStats();
-export const preloadImages = (urls: string[], concurrency?: number) => 
+export const preloadImages = (urls: string[], concurrency?: number) =>
   imageCacheService.preloadImages(urls, concurrency);
-export const getOptimizedImageUrl = (imageKey: string, options?: any) => 
-  imageCacheService.getOptimizedUrl(imageKey, options); 
+export const getOptimizedImageUrl = (imageKey: string, options?: any) =>
+  imageCacheService.getOptimizedUrl(imageKey, options);

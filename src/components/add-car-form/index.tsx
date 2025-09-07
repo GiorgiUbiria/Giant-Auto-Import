@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useServerAction } from "zsa-react";
 import { useState, useEffect } from "react";
-import { handleUploadImagesAction } from "@/lib/actions/bucketActions";
+// Upload via API helper
 import { ImageUploadSection } from "./image-upload-section";
 import { BasicInfoSection } from "../shared-form-sections/basic-info-section";
 import { AuctionInfoSection } from "../shared-form-sections/auction-info-section";
@@ -88,7 +88,18 @@ export function AddCarForm() {
   }, []);
 
   const { isPending, execute } = useServerAction(addCarAction);
-  const { execute: executeImageUpload } = useServerAction(handleUploadImagesAction);
+  const executeImageUpload = async (payload: { vin: string; images: Array<{ buffer: number[]; size: number; name: string; type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP" }> }) => {
+    const resp = await fetch(`/api/images/${payload.vin}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ images: payload.images }),
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err?.error || 'Failed to upload images');
+    }
+    return resp.json();
+  };
 
   // Compression options
   const compressionOptions = {
@@ -96,6 +107,7 @@ export function AddCarForm() {
     maxWidthOrHeight: 1920,
     useWebWorker: true,
     initialQuality: 0.6,
+    fileType: 'image/png',
   };
 
   // Check if imageCompression is available
@@ -128,14 +140,38 @@ export function AddCarForm() {
           }
         }
 
-        // Prepare upload data for single image
+        // Prepare thumbnail version (even partner)
+        let thumbFile: File = compressedFile;
+        try {
+          thumbFile = await imageCompression(file, {
+            maxWidthOrHeight: 480,
+            maxSizeMB: 0.25,
+            initialQuality: 0.5,
+            useWebWorker: true,
+            fileType: 'image/png',
+          });
+        } catch (err) {
+          console.warn('Thumbnail compression failed, using main compressed file:', err);
+          thumbFile = compressedFile;
+        }
+
+        // Prepare upload data for original + thumbnail
         const arrayBuffer = await compressedFile.arrayBuffer();
-        const uploadData = [{
-          buffer: Array.from(new Uint8Array(arrayBuffer)),
-          size: compressedFile.size,
-          name: compressedFile.name,
-          type: type,
-        }];
+        const thumbBuffer = await thumbFile.arrayBuffer();
+        const uploadData = [
+          {
+            buffer: Array.from(new Uint8Array(arrayBuffer)),
+            size: compressedFile.size,
+            name: compressedFile.name,
+            type: type,
+          },
+          {
+            buffer: Array.from(new Uint8Array(thumbBuffer)),
+            size: thumbFile.size,
+            name: `thumb_${compressedFile.name}`,
+            type: type,
+          }
+        ];
 
         // Upload single image with retry logic
         let uploadSuccess = false;

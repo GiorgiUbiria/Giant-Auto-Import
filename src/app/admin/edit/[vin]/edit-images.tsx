@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  deleteImageAction,
-  getImageKeys,
-  makeImageMainAction,
-  removeAllImagesAction,
-} from "@/lib/actions/imageActions";
-import {
-  useServerActionMutation,
-  useServerActionQuery,
-} from "@/lib/hooks/server-action-hooks";
+import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
 import { Loader2, Stamp, Trash } from "lucide-react";
 import Image from "next/image";
 import { ImagesForm } from "./images-form";
@@ -78,115 +69,77 @@ export const EditImages = ({ vin }: { vin: string }) => {
     fetchImages();
   }, [vin, selectedType, page]);
 
-  const { isPending: deletePending, mutate: deleteMutate } =
-    useServerActionMutation(deleteImageAction, {
-      onError: (error) => {
-        const errorMessage = error?.data || "Failed to delete the image";
-        toast.error(errorMessage);
-      },
-      onSuccess: async (data, variables) => {
-        const successMessage = "Image deleted successfully!";
-        toast.success(successMessage);
+  const [deletePending, setDeletePending] = useState(false);
+  const deleteMutate = async ({ imageKey }: { imageKey: string }) => {
+    setDeletePending(true);
+    try {
+      const resp = await fetch(`/api/images/${vin}?imageKey=${encodeURIComponent(imageKey)}`, {
+        method: 'DELETE',
+      });
+      if (!resp.ok) throw new Error('Failed to delete image');
 
-        // Clear image cache for this VIN
-        clearImageCache(vin);
+      toast.success('Image deleted successfully!');
+      clearImageCache(vin);
+      setImagesData(prev => prev.filter(img => img.imageKey !== imageKey));
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["getImagesForCar", vin], refetchType: "active" }),
+        queryClient.invalidateQueries({ queryKey: ["getImage", vin], refetchType: "active" }),
+        queryClient.invalidateQueries({ queryKey: ["getImages"], refetchType: "active" }),
+      ]);
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to delete the image');
+    } finally {
+      setDeletePending(false);
+    }
+  };
 
-        // Update local state immediately for better UX
-        setImagesData(prevImages =>
-          prevImages.filter(img => img.imageKey !== variables.imageKey)
-        );
+  const [makeMainPending, setMakeMainPending] = useState(false);
+  const makeMainMutate = async ({ imageKey }: { imageKey: string }) => {
+    setMakeMainPending(true);
+    try {
+      const resp = await fetch(`/api/images/${vin}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'makeMain', imageKey }),
+      });
+      if (!resp.ok) throw new Error('Failed to make the image main');
 
-        // Invalidate all related queries
-        await Promise.all([
-          queryClient.invalidateQueries({
-            queryKey: ["getImagesForCar", vin],
-            refetchType: "active",
-          }),
-          queryClient.invalidateQueries({
-            queryKey: ["getImage", vin],
-            refetchType: "active",
-          }),
-          queryClient.invalidateQueries({
-            queryKey: ["getImages"],
-            refetchType: "active",
-          }),
-        ]);
-      },
-    });
+      toast.success('Image prioritized successfully!');
+      clearImageCache(vin);
+      setImagesData(prev => prev.map(img => ({ ...img, priority: img.imageKey === imageKey })));
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["getImagesForCar", vin], refetchType: "active" }),
+        queryClient.invalidateQueries({ queryKey: ["getImage", vin], refetchType: "active" }),
+        queryClient.invalidateQueries({ queryKey: ["getImages"], refetchType: "active" }),
+      ]);
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to make the image main');
+    } finally {
+      setMakeMainPending(false);
+    }
+  };
 
-  const { isPending: makeMainPending, mutate: makeMainMutate } =
-    useServerActionMutation(makeImageMainAction, {
-      onError: (error) => {
-        const errorMessage = error?.data || "Failed to make the image main";
-        toast.error(errorMessage);
-      },
-      onSuccess: async (data, variables) => {
-        const successMessage = "Image prioritized successfully!";
-        toast.success(successMessage);
-
-        // Clear image cache for this VIN
-        clearImageCache(vin);
-
-        // Update local state immediately for better UX
-        setImagesData(prevImages =>
-          prevImages.map(img => ({
-            ...img,
-            priority: img.imageKey === variables.imageKey
-          }))
-        );
-
-        // Invalidate all related queries
-        await Promise.all([
-          queryClient.invalidateQueries({
-            queryKey: ["getImagesForCar", vin],
-            refetchType: "active",
-          }),
-          queryClient.invalidateQueries({
-            queryKey: ["getImage", vin],
-            refetchType: "active",
-          }),
-          queryClient.invalidateQueries({
-            queryKey: ["getImages"],
-            refetchType: "active",
-          }),
-        ]);
-      },
-    });
-
-  const { isPending: removeAllPending, mutate: removeAllMutate } =
-    useServerActionMutation(removeAllImagesAction, {
-      onError: (error) => {
-        const errorMessage = error?.data || "Failed to remove all images";
-        toast.error(errorMessage);
-      },
-      onSuccess: async () => {
-        const successMessage = "All images removed successfully!";
-        toast.success(successMessage);
-
-        // Clear image cache for this VIN
-        clearImageCache(vin);
-
-        // Update local state immediately for better UX
-        setImagesData([]);
-        setTotalCount(0);
-
-        // Invalidate all related queries
-        await Promise.all([
-          queryClient.invalidateQueries({
-            queryKey: ["getImagesForCar", vin],
-            refetchType: "active",
-          }),
-          queryClient.invalidateQueries({
-            queryKey: ["getImage", vin],
-            refetchType: "active",
-          }),
-          queryClient.invalidateQueries({
-            queryKey: ["getImages"],
-            refetchType: "active",
-          }),
-        ]);
-      },
-    });
+  const [removeAllPending, setRemoveAllPending] = useState(false);
+  const removeAllMutate = async () => {
+    setRemoveAllPending(true);
+    try {
+      const resp = await fetch(`/api/images/${vin}`, { method: 'DELETE' });
+      if (!resp.ok) throw new Error('Failed to remove all images');
+      toast.success('All images removed successfully!');
+      clearImageCache(vin);
+      setImagesData([]);
+      setTotalCount(0);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["getImagesForCar", vin], refetchType: "active" }),
+        queryClient.invalidateQueries({ queryKey: ["getImage", vin], refetchType: "active" }),
+        queryClient.invalidateQueries({ queryKey: ["getImages"], refetchType: "active" }),
+      ]);
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to remove all images');
+    } finally {
+      setRemoveAllPending(false);
+    }
+  };
 
   const LoadingState = () => {
     return (
@@ -241,9 +194,7 @@ export const EditImages = ({ vin }: { vin: string }) => {
                 variant="link"
                 size="icon"
                 disabled={makeMainPending || deletePending}
-                onClick={() => {
-                  deleteMutate({ imageKey: image.imageKey });
-                }}
+                onClick={() => { void deleteMutate({ imageKey: image.imageKey }); }}
               >
                 <Trash className="w-4 h-4 hover:opacity-50 hover:text-red-500 transition" />
               </Button>
@@ -251,9 +202,7 @@ export const EditImages = ({ vin }: { vin: string }) => {
                 variant="link"
                 size="icon"
                 disabled={makeMainPending || deletePending || image.priority}
-                onClick={() => {
-                  makeMainMutate({ imageKey: image.imageKey });
-                }}
+                onClick={() => { void makeMainMutate({ imageKey: image.imageKey }); }}
               >
                 <Stamp className={`w-4 h-4 transition ${image.priority
                   ? 'text-green-500'

@@ -3,7 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getImageKeys } from "@/lib/actions/imageActions";
 import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Lightbox from "yet-another-react-lightbox";
 import Download from "yet-another-react-lightbox/plugins/download";
 import Inline from "yet-another-react-lightbox/plugins/inline";
@@ -65,28 +65,38 @@ export const ImageGallery = ({ vin }: { vin: string }) => {
     }
   }, [publicUrl]);
 
-  // Preload first few images for better perceived performance
+  // Keep only odd-numbered originals (filenames like .../1.png, 3.png, ...)
+  const oddOnlyData = useMemo(() => {
+    if (!data) return [] as typeof data;
+    return data.filter((img) => {
+      const m = img.imageKey.match(/^(.*\/)\s*(\d+)\.png$/);
+      if (!m) return true; // keep non-numeric keys
+      const n = parseInt(m[2], 10);
+      return n % 2 === 1;
+    });
+  }, [data]);
+
+  // Preload first few odd images for better perceived performance
   useEffect(() => {
-    if (data && data.length > 0 && publicUrl) {
-      // Preload first 3 images of current type
-      const currentTypeImages = data.filter(img => img.imageType === selectedType);
+    if (oddOnlyData && oddOnlyData.length > 0 && publicUrl) {
+      const currentTypeImages = oddOnlyData.filter(img => img.imageType === selectedType);
       const imagesToPreload = currentTypeImages.slice(0, 3);
       imagesToPreload.forEach(img => {
         preload(`${publicUrl}/${img.imageKey}`, { as: 'image' });
       });
     }
-  }, [data, selectedType, publicUrl]);
+  }, [oddOnlyData, selectedType, publicUrl]);
 
   const handleImageLoad = useCallback((imageKey: string) => {
     setLoadedImages(prev => new Set(prev).add(imageKey));
   }, []);
 
-  console.log("ImageGallery: Render state", { 
-    vin, 
-    isLoading, 
-    hasError: !!error, 
+  console.log("ImageGallery: Render state", {
+    vin,
+    isLoading,
+    hasError: !!error,
     dataLength: data?.length || 0,
-    publicUrl: !!publicUrl 
+    publicUrl: !!publicUrl
   });
 
   if (isLoading) return <LoadingState />;
@@ -94,7 +104,7 @@ export const ImageGallery = ({ vin }: { vin: string }) => {
     console.error("ImageGallery: Error state", error);
     return <ErrorState />;
   }
-  if (!data || data.length === 0) {
+  if (!oddOnlyData || oddOnlyData.length === 0) {
     console.log("ImageGallery: No data available for VIN", vin);
     return <EmptyState />;
   }
@@ -132,7 +142,7 @@ export const ImageGallery = ({ vin }: { vin: string }) => {
 
         <div className="mt-32 sm:mt-0">
           {imageTypes.map((type) => {
-            const filteredData = filterImagesByType(data, type);
+            const filteredData = filterImagesByType(oddOnlyData, type);
             const slides = getSlides(filteredData);
 
             if (slides.length === 0) {
@@ -185,13 +195,13 @@ export const ImageGallery = ({ vin }: { vin: string }) => {
         <Lightbox
           open={open}
           close={() => setOpen(false)}
-          slides={getSlides(data)}
+          slides={getSlides(oddOnlyData)}
           index={startIndex}
           render={{ slide: NextJsImage, thumbnail: NextJsImage }}
           plugins={[...(isMobile ? [] : [Thumbnails]), Download]}
         />
       )}
-      <DownloadButton content={data} vin={vin} />
+      <DownloadButton content={oddOnlyData} vin={vin} />
     </div>
   );
 };

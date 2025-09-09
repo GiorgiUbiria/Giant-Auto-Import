@@ -30,12 +30,7 @@ export async function GET(
     const pageSize = Number.isNaN(pageSizeParam) ? 12 : pageSizeParam;
     const mode = searchParams.get("mode");
 
-    const isListMode =
-      mode === "list" ||
-      searchParams.has("page") ||
-      searchParams.has("pageSize") ||
-      searchParams.has("type");
-    const isSingleMode = !isListMode || mode === "single";
+    const isSingleMode = mode === "single";
 
     if (isSingleMode) {
       // Return a single prioritized image (thumbnail even-index URL)
@@ -242,11 +237,32 @@ export async function POST(
     const client = getS3Client();
     const bucket = getBucketName();
 
+    // Pre-compute next odd-aligned index per type to guarantee originals are odd and thumbnails even
+    const nextIndexByType = new Map<string, number>();
+    const getNextOddIndex = async (prefix: string): Promise<number> => {
+      const cmd = new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix });
+      let count = 0;
+      let truncated = true;
+      while (truncated) {
+        const res: any = await client.send(cmd);
+        count += res.Contents?.length || 0;
+        truncated = res.IsTruncated as boolean;
+        if (truncated) cmd.input.ContinuationToken = res.NextContinuationToken;
+      }
+      // Align to next odd index (1-based)
+      if (count % 2 === 0) return count + 1; // 0->1,2->3,4->5
+      return count + 2; // 1->3,3->5
+    };
+
     const uploaded: string[] = [];
     for (const file of imagesPayload) {
       const prefix = `${vin}/${file.type}/`;
-      const nextIndex = await getNextIndexForPrefix(client, bucket, prefix);
-      const key = `${prefix}${nextIndex}.png`;
+      if (!nextIndexByType.has(file.type)) {
+        const nextOdd = await getNextOddIndex(prefix);
+        nextIndexByType.set(file.type, nextOdd);
+      }
+      const currentIndex = nextIndexByType.get(file.type)!;
+      const key = `${prefix}${currentIndex}.png`;
 
       const put = new PutObjectCommand({
         Bucket: bucket,
@@ -268,6 +284,9 @@ export async function POST(
         priority: false,
       });
       uploaded.push(key);
+
+      // Increment for the next file of the same type
+      nextIndexByType.set(file.type, currentIndex + 1);
     }
 
     return NextResponse.json({ success: true, uploaded });

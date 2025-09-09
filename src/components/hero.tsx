@@ -57,8 +57,8 @@ export default function Hero({ translations }: HeroProps) {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
       >
-        <div className="w-full max-w-4xl">
-          <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-8xl mb-4 text-white font-bold leading-tight">
+        <div className="w-full max-w-6xl">
+          <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-8xl mb-4 text-white font-bold leading-tight sm:whitespace-nowrap">
             <span className="inline-block bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
               {displayText}
               {showCursor && <span className="text-white animate-pulse">|</span>}

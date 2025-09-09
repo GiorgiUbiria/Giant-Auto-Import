@@ -21,7 +21,7 @@ import Avatar from "./avatar";
 import NavigationLinks, { ICON_MAP, NavigationLink } from "./navigation-links";
 
 // Client component for mobile menu
-const MobileMenu = ({ links }: { links: NavigationLink[] }) => {
+const MobileMenu = ({ links, user }: { links: NavigationLink[]; user: any }) => {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -36,7 +36,7 @@ const MobileMenu = ({ links }: { links: NavigationLink[] }) => {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 w-72">
-        <div className="flex flex-col gap-6 pt-6">
+        <div className="flex flex-col gap-6 pt-6 h-full">
           <Link href="/" className="flex justify-center mb-4">
             <div className="relative w-20 h-20">
               <Image
@@ -59,7 +59,7 @@ const MobileMenu = ({ links }: { links: NavigationLink[] }) => {
               />
             </div>
           </Link>
-          <nav className="flex flex-col space-y-1">
+          <nav className="flex flex-col space-y-1 flex-grow">
             {links.map((link) => {
               const IconComponent = link.icon;
               return (
@@ -77,7 +77,10 @@ const MobileMenu = ({ links }: { links: NavigationLink[] }) => {
               );
             })}
           </nav>
-          <div className="mt-auto pt-6 border-t border-gray-200 dark:border-gray-800">
+          <div className="mt-auto space-y-4 pt-6 border-t border-gray-200 dark:border-gray-800">
+            <div className="flex justify-center">
+              <Avatar user={user} />
+            </div>
             <div className="flex justify-center">
               <LocaleSwitcher />
             </div>
@@ -174,7 +177,7 @@ const Navbar = ({ user, translations }: NavbarProps) => {
           <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16 sm:h-20">
               <div className="flex items-center gap-4">
-                <MobileMenu links={navigationLinks} />
+                <MobileMenu links={navigationLinks} user={user} />
                 <Link href="/" className="flex items-center" prefetch>
                   <div className="relative w-24 h-24 sm:w-24 sm:h-24 lg:w-40 lg:h-40">
                     <Image
@@ -231,7 +234,9 @@ const Navbar = ({ user, translations }: NavbarProps) => {
 
               <div className="flex items-center gap-3 sm:gap-4">
                 <LocaleSwitcher />
-                <Avatar user={user} />
+                <div className="hidden">
+                  <Avatar user={user} />
+                </div>
               </div>
             </div>
           </div>

@@ -33,7 +33,7 @@ const Avatar = ({ user }: AvatarProps) => {
 				<DropdownMenuTrigger asChild>
 					<Button
 						size="sm"
-						className="hidden md:inline-flex bg-orange-500 hover:bg-orange-600 text-white border-0 font-medium px-4 py-2 gap-2"
+						className="bg-orange-500 hover:bg-orange-600 text-white border-0 font-medium px-4 py-2 gap-2"
 					>
 						<CircleUser className="w-4 h-4" />
 						{user ? user.fullName : "My Account"}

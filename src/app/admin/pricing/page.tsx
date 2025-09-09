@@ -20,16 +20,18 @@ export default async function Page() {
 
   return (
     <Provider>
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto space-y-8">
-          <header className="border-b pb-6">
-            <h1 className="text-4xl font-bold tracking-tight text-primary">Pricing Management</h1>
-            <p className="text-muted-foreground mt-2">
-              Configure default pricing and manage user-specific pricing overrides
-            </p>
-          </header>
+      <main className="w-full overflow-x-hidden">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+          <div className="max-w-7xl mx-auto space-y-4 sm:space-y-8">
+            <header className="border-b pb-4 sm:pb-6">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-primary">Pricing Management</h1>
+              <p className="text-muted-foreground mt-2 text-sm sm:text-base">
+                Configure default pricing and manage user-specific pricing overrides
+              </p>
+            </header>
 
-          <PricingManagementClient />
+            <PricingManagementClient />
+          </div>
         </div>
       </main>
     </Provider>

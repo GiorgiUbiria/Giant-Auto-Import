@@ -136,21 +136,21 @@ export const UserPricingList = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">User Pricing Configurations</h3>
-          <p className="text-sm text-muted-foreground">
+    <div className="w-full space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base sm:text-lg font-semibold truncate">User Pricing Configurations</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             {users.length} total users, {Object.keys(userPricing).filter(id => userPricing[id]?.isActive).length} with custom pricing
           </p>
         </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="relative flex-shrink-0 w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           <Input
             placeholder="Search users..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-64"
+            className="pl-8 sm:pl-10 w-full text-sm"
           />
         </div>
       </div>
@@ -163,98 +163,190 @@ export const UserPricingList = () => {
           </AlertDescription>
         </Alert>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Pricing Status</TableHead>
-                <TableHead>Ocean Rates</TableHead>
-                <TableHead>Ground Adjustment</TableHead>
-                <TableHead>Pickup Surcharge</TableHead>
-                <TableHead>Service Fee</TableHead>
-                <TableHead>Hybrid Surcharge</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => {
-                const pricing = userPricing[user.id];
-                const status = getPricingStatus(user.id);
+        <>
+          {/* Mobile Card Layout */}
+          <div className="block lg:hidden space-y-3 sm:space-y-4 w-full">
+            {filteredUsers.map((user) => {
+              const pricing = userPricing[user.id];
+              const status = getPricingStatus(user.id);
 
-                return (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex flex-col">
-                          <span className="font-medium">{user.fullName}</span>
-                          <span className="text-sm text-muted-foreground">{user.email}</span>
+              return (
+                <Card key={user.id} className="p-3 sm:p-4 w-full">
+                  <div className="space-y-3 w-full">
+                    {/* User Info */}
+                    <div className="flex items-start justify-between gap-2 w-full">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm truncate">{user.fullName}</h4>
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <Badge variant="outline" className="text-xs flex-shrink-0">{user.role}</Badge>
+                          {getPricingStatusBadge(status)}
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{user.role}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {getPricingStatusBadge(status)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1" title={getOceanRatesTooltip(pricing?.oceanRates)}>
-                        <MapPin className="h-3 w-3 text-muted-foreground" />
-                        <span className="font-mono text-sm">
-                          {formatOceanRates(pricing?.oceanRates)}
-                        </span>
-                        {pricing?.oceanRates && pricing.oceanRates.length > 1 && (
-                          <Badge variant="outline" className="ml-1 text-xs">
-                            {pricing.oceanRates.length}
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className={`font-mono ${pricing?.groundFeeAdjustment > 0 ? 'text-green-600' : pricing?.groundFeeAdjustment < 0 ? 'text-red-600' : 'text-muted-foreground'}`}>
-                        {pricing?.groundFeeAdjustment ? (pricing.groundFeeAdjustment > 0 ? '+' : '') + pricing.groundFeeAdjustment : "Default"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="h-3 w-3 text-muted-foreground" />
-                        <span className="font-mono">
-                          {pricing?.pickupSurcharge || "Default"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="h-3 w-3 text-muted-foreground" />
-                        <span className="font-mono">
-                          {pricing?.serviceFee || "Default"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="h-3 w-3 text-muted-foreground" />
-                        <span className="font-mono">
-                          {pricing?.hybridSurcharge || "Default"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button asChild size="sm" variant="outline">
+                      <Button asChild size="sm" variant="outline" className="text-xs flex-shrink-0">
                         <Link href={`/admin/users/${user.id}`}>
                           <Settings className="h-3 w-3 mr-1" />
-                          Configure
+                          Edit
                         </Link>
                       </Button>
-                    </TableCell>
+                    </div>
+
+                    {/* Pricing Details Grid */}
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-2 border-t w-full">
+                      <div className="space-y-1 min-w-0">
+                        <p className="text-xs font-medium text-muted-foreground">Ocean Rates</p>
+                        <div className="flex items-center gap-1 min-w-0" title={getOceanRatesTooltip(pricing?.oceanRates)}>
+                          <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                          <span className="font-mono text-xs truncate">
+                            {formatOceanRates(pricing?.oceanRates)}
+                          </span>
+                          {pricing?.oceanRates && pricing.oceanRates.length > 1 && (
+                            <Badge variant="outline" className="ml-1 text-xs flex-shrink-0">
+                              {pricing.oceanRates.length}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 min-w-0">
+                        <p className="text-xs font-medium text-muted-foreground">Ground Adj.</p>
+                        <span className={`font-mono text-xs block truncate ${pricing?.groundFeeAdjustment > 0 ? 'text-green-600' : pricing?.groundFeeAdjustment < 0 ? 'text-red-600' : 'text-muted-foreground'}`}>
+                          {pricing?.groundFeeAdjustment ? (pricing.groundFeeAdjustment > 0 ? '+' : '') + pricing.groundFeeAdjustment : "Default"}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1 min-w-0">
+                        <p className="text-xs font-medium text-muted-foreground">Pickup</p>
+                        <div className="flex items-center gap-1 min-w-0">
+                          <DollarSign className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                          <span className="font-mono text-xs truncate">
+                            {pricing?.pickupSurcharge || "Default"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 min-w-0">
+                        <p className="text-xs font-medium text-muted-foreground">Service</p>
+                        <div className="flex items-center gap-1 min-w-0">
+                          <DollarSign className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                          <span className="font-mono text-xs truncate">
+                            {pricing?.serviceFee || "Default"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 col-span-2 min-w-0">
+                        <p className="text-xs font-medium text-muted-foreground">Hybrid Surcharge</p>
+                        <div className="flex items-center gap-1 min-w-0">
+                          <DollarSign className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                          <span className="font-mono text-xs truncate">
+                            {pricing?.hybridSurcharge || "Default"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Desktop Table Layout */}
+          <div className="hidden lg:block w-full">
+            <div className="rounded-md border overflow-x-auto">
+              <Table className="w-full">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[180px]">User</TableHead>
+                    <TableHead className="w-20">Role</TableHead>
+                    <TableHead className="w-24">Status</TableHead>
+                    <TableHead className="min-w-[120px]">Ocean Rates</TableHead>
+                    <TableHead className="w-20">Ground</TableHead>
+                    <TableHead className="w-20">Pickup</TableHead>
+                    <TableHead className="w-20">Service</TableHead>
+                    <TableHead className="w-20">Hybrid</TableHead>
+                    <TableHead className="text-right w-28">Actions</TableHead>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.map((user) => {
+                    const pricing = userPricing[user.id];
+                    const status = getPricingStatus(user.id);
+
+                    return (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-medium text-sm truncate">{user.fullName}</span>
+                              <span className="text-xs text-muted-foreground truncate">{user.email}</span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">{user.role}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          {getPricingStatusBadge(status)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1" title={getOceanRatesTooltip(pricing?.oceanRates)}>
+                            <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            <span className="font-mono text-sm truncate">
+                              {formatOceanRates(pricing?.oceanRates)}
+                            </span>
+                            {pricing?.oceanRates && pricing.oceanRates.length > 1 && (
+                              <Badge variant="outline" className="ml-1 text-xs flex-shrink-0">
+                                {pricing.oceanRates.length}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className={`font-mono text-sm ${pricing?.groundFeeAdjustment > 0 ? 'text-green-600' : pricing?.groundFeeAdjustment < 0 ? 'text-red-600' : 'text-muted-foreground'}`}>
+                            {pricing?.groundFeeAdjustment ? (pricing.groundFeeAdjustment > 0 ? '+' : '') + pricing.groundFeeAdjustment : "Default"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            <span className="font-mono text-sm">
+                              {pricing?.pickupSurcharge || "Default"}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            <span className="font-mono text-sm">
+                              {pricing?.serviceFee || "Default"}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            <span className="font-mono text-sm">
+                              {pricing?.hybridSurcharge || "Default"}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button asChild size="sm" variant="outline">
+                            <Link href={`/admin/users/${user.id}`}>
+                              <Settings className="h-3 w-3 mr-1" />
+                              Configure
+                            </Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </>
       )}
 
       <div className="text-sm text-muted-foreground">

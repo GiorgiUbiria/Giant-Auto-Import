@@ -297,27 +297,29 @@ export function DefaultPricingForm() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Add New Rate */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg bg-muted/50">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg bg-muted/50">
             <div>
-              <Label htmlFor="newState">State/Location</Label>
+              <Label htmlFor="newState" className="text-sm">State/Location</Label>
               <Input
                 id="newState"
                 placeholder="e.g., Los Angeles, CA"
                 value={newRate.state}
                 onChange={(e) => updateNewRateField('state', e.target.value)}
+                className="text-sm"
               />
             </div>
             <div>
-              <Label htmlFor="newShorthand">Shorthand</Label>
+              <Label htmlFor="newShorthand" className="text-sm">Shorthand</Label>
               <Input
                 id="newShorthand"
                 placeholder="e.g., CA"
                 value={newRate.shorthand}
                 onChange={(e) => updateNewRateField('shorthand', e.target.value)}
+                className="text-sm"
               />
             </div>
             <div>
-              <Label htmlFor="newRate">Rate ($)</Label>
+              <Label htmlFor="newRate" className="text-sm">Rate ($)</Label>
               <Input
                 id="newRate"
                 type="number"
@@ -326,29 +328,32 @@ export function DefaultPricingForm() {
                 onFocus={handleNumericInputFocus}
                 onChange={(e) => handleNumericInputChange(e, (value) => updateNewRateField('rate', value))}
                 min="0"
+                className="text-sm"
               />
             </div>
-            <div className="flex items-end">
+            <div className="flex items-end sm:col-span-2 lg:col-span-1">
               <Button
                 type="button"
                 onClick={handleAddOceanRate}
-                className="w-full"
+                className="w-full text-sm"
+                size="sm"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Rate
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden xs:inline">Add Rate</span>
+                <span className="xs:hidden">Add</span>
               </Button>
             </div>
           </div>
 
           {/* Ocean Rates Table */}
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>State/Location</TableHead>
-                  <TableHead>Shorthand</TableHead>
-                  <TableHead>Rate</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-xs sm:text-sm">State/Location</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Shorthand</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Rate</TableHead>
+                  <TableHead className="text-right text-xs sm:text-sm">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -392,12 +397,13 @@ export function DefaultPricingForm() {
                     </TableCell>
                     <TableCell className="text-right">
                       {editingRate?.id === rate.id ? (
-                        <div className="flex gap-2 justify-end">
+                        <div className="flex gap-1 sm:gap-2 justify-end">
                           <Button
                             type="button"
                             size="sm"
                             variant="outline"
                             onClick={handleUpdateOceanRate}
+                            className="h-7 w-7 p-0 sm:h-8 sm:w-8"
                           >
                             <Check className="h-3 w-3" />
                           </Button>
@@ -406,17 +412,19 @@ export function DefaultPricingForm() {
                             size="sm"
                             variant="outline"
                             onClick={() => setEditing(null)}
+                            className="h-7 w-7 p-0 sm:h-8 sm:w-8"
                           >
                             <X className="h-3 w-3" />
                           </Button>
                         </div>
                       ) : (
-                        <div className="flex gap-2 justify-end">
+                        <div className="flex gap-1 sm:gap-2 justify-end">
                           <Button
                             type="button"
                             size="sm"
                             variant="outline"
                             onClick={() => setEditing(rate)}
+                            className="h-7 w-7 p-0 sm:h-8 sm:w-8"
                           >
                             <Edit className="h-3 w-3" />
                           </Button>
@@ -425,6 +433,7 @@ export function DefaultPricingForm() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleDeleteOceanRate(rate.id!)}
+                            className="h-7 w-7 p-0 sm:h-8 sm:w-8"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -456,7 +465,7 @@ export function DefaultPricingForm() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Ground Fee Adjustment */}
         <Card>
           <CardHeader className="pb-3">

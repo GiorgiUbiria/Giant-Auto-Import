@@ -56,25 +56,42 @@ export const Client = ({ id }: { id: string }) => {
 		)
 	}
 
-	const QuickAccessCard = ({ title, description, icon: Icon, href }: { title: string; description: string; icon: any; href: string }) => (
-		<Link href={href}>
-			<Card className="hover:bg-accent/80 dark:hover:bg-accent/60 transition-all duration-200 cursor-pointer group h-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 hover:border-primary/50 shadow-lg hover:shadow-xl">
+	const QuickAccessCard = ({ title, description, icon: Icon, href, disabled = false }: { title: string; description: string; icon: any; href: string; disabled?: boolean }) => {
+		const cardContent = (
+			<Card className={`transition-all duration-200 h-full border-2 shadow-lg ${disabled
+				? 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 opacity-60 cursor-not-allowed'
+				: 'hover:bg-accent/80 dark:hover:bg-accent/60 cursor-pointer group bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:border-primary/50 hover:shadow-xl'
+				}`}>
 				<CardHeader className="space-y-2 h-full flex flex-col">
 					<div className="flex items-center gap-3">
-						<div className="p-2 bg-primary/20 dark:bg-primary/30 rounded-lg group-hover:bg-primary/30 dark:group-hover:bg-primary/40 transition-colors flex-shrink-0">
-							<Icon className="h-5 w-5 text-primary" />
+						<div className={`p-2 rounded-lg transition-colors flex-shrink-0 ${disabled
+							? 'bg-gray-300 dark:bg-gray-600'
+							: 'bg-primary/20 dark:bg-primary/30 group-hover:bg-primary/30 dark:group-hover:bg-primary/40'
+							}`}>
+							<Icon className={`h-5 w-5 ${disabled ? 'text-gray-500 dark:text-gray-400' : 'text-primary'}`} />
 						</div>
-						<CardTitle className="text-lg leading-tight min-h-[1.5rem] flex items-center text-gray-900 dark:text-white font-bold">
-							{title}
-						</CardTitle>
+						<div className="flex flex-col">
+							<CardTitle className={`text-lg leading-tight min-h-[1.5rem] flex items-center font-bold ${disabled ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'
+								}`}>
+								{title}
+							</CardTitle>
+							{disabled && (
+								<span className="text-xs font-medium text-red-500 dark:text-red-400 uppercase tracking-wide">
+									Disabled
+								</span>
+							)}
+						</div>
 					</div>
-					<CardDescription className="text-sm leading-relaxed flex-grow text-gray-700 dark:text-gray-300 font-medium">
+					<CardDescription className={`text-sm leading-relaxed flex-grow font-medium ${disabled ? 'text-gray-500 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'
+						}`}>
 						{description}
 					</CardDescription>
 				</CardHeader>
 			</Card>
-		</Link>
-	);
+		);
+
+		return disabled ? cardContent : <Link href={href}>{cardContent}</Link>;
+	};
 
 	return (
 		<div className="space-y-8">
@@ -114,6 +131,7 @@ export const Client = ({ id }: { id: string }) => {
 					description={t("quickAccess.csvManagement.description")}
 					icon={FileText}
 					href="/admin/csv-management"
+					disabled={true}
 				/>
 			</div>
 

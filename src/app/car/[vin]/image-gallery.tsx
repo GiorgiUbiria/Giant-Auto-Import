@@ -67,8 +67,8 @@ export const ImageGallery = ({ vin }: { vin: string }) => {
 
   // Keep only odd-numbered originals (filenames like .../1.png, 3.png, ...)
   const oddOnlyData = useMemo(() => {
-    if (!data) return [] as typeof data;
-    return data.filter((img) => {
+    const list = Array.isArray(data) ? data : [];
+    return list.filter((img) => {
       const m = img.imageKey.match(/^(.*\/)\s*(\d+)\.png$/);
       if (!m) return true; // keep non-numeric keys
       const n = parseInt(m[2], 10);
@@ -112,12 +112,11 @@ export const ImageGallery = ({ vin }: { vin: string }) => {
     console.error("ImageGallery: Public URL not configured");
     return <div>Error: Public URL not configured.</div>;
   }
-
   const filterImagesByType = (images: typeof data, imageType: string) =>
-    images.filter((image) => image.imageType === imageType);
+    (Array.isArray(images) ? images : []).filter((image) => image.imageType === imageType);
 
   const getSlides = (filteredData: typeof data) =>
-    filteredData.map(({ imageKey }) => ({
+    (Array.isArray(filteredData) ? filteredData : []).map(({ imageKey }) => ({
       src: `${publicUrl}/${imageKey}`,
       width: 3840,
       height: 2560,
@@ -145,7 +144,7 @@ export const ImageGallery = ({ vin }: { vin: string }) => {
             const filteredData = filterImagesByType(oddOnlyData, type);
             const slides = getSlides(filteredData);
 
-            if (slides.length === 0) {
+            if (!slides || slides.length === 0) {
               return (
                 <TabsContent key={type} value={type} className="text-center p-4">
                   <div className="text-sm sm:text-base">No images available for {type}</div>

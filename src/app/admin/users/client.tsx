@@ -90,15 +90,6 @@ export const Client = React.memo(({ translations }: ClientProps) => {
     refetchInterval: false, // Disable automatic refetching
   });
 
-  // Validate translations prop after hooks
-  if (!translations || typeof translations !== 'object') {
-    return (
-      <div className="container mx-auto py-10 text-primary">
-        <p>Configuration error</p>
-      </div>
-    );
-  }
-
   // Memoized data processing for better performance
   const processedData = React.useMemo(() => {
     // Safe data validation
@@ -155,6 +146,15 @@ export const Client = React.memo(({ translations }: ClientProps) => {
   const handleRowSelectionChange = (updaterOrValue: any | ((old: any) => any)) => {
     setRowSelection(typeof updaterOrValue === "function" ? updaterOrValue(rowSelection) : updaterOrValue);
   };
+
+  // Validate translations prop after all hooks are called
+  if (!translations || typeof translations !== 'object') {
+    return (
+      <div className="container mx-auto py-10 text-primary">
+        <p>Configuration error</p>
+      </div>
+    );
+  }
 
   const LoadingState = () => (
     <div className="space-y-4">

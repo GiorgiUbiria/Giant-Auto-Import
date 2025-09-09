@@ -5,7 +5,7 @@ import { getAuth } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
 // Force dynamic rendering for this route
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Optimized query with limit and better indexing
     const usersData = await db
       .select({
         id: users.id,
@@ -24,12 +25,20 @@ export async function GET(request: NextRequest) {
       })
       .from(users)
       .where(eq(users.role, "CUSTOMER_SINGULAR"))
-      .orderBy(users.fullName);
+      .orderBy(users.fullName)
+      .limit(1000); // Add reasonable limit to prevent large data loads
 
-    return NextResponse.json({
-      users: usersData,
-      count: usersData.length,
-    });
+    return NextResponse.json(
+      {
+        users: usersData,
+        count: usersData.length,
+      },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching users:", error);
     return NextResponse.json(

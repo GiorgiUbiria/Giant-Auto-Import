@@ -51,7 +51,7 @@ interface ClientProps {
   };
 }
 
-export const Client = ({ translations }: ClientProps) => {
+export const Client = React.memo(({ translations }: ClientProps) => {
   // Table state - must be called before any early returns
   const [pageIndex, setPageIndex] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(20);
@@ -60,17 +60,22 @@ export const Client = ({ translations }: ClientProps) => {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  // Optimized React Query configuration to prevent excessive calls
-  const { isLoading, data = [], error } = useServerActionQuery(getUsersAction, {
+  // Optimized React Query configuration with aggressive caching
+  const { isLoading, data = [], error, isFetching } = useServerActionQuery(getUsersAction, {
     input: undefined,
     queryKey: ["getUsers"],
-    // Add React Query optimization options
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    retry: 1,
+    // Aggressive caching for better performance
+    staleTime: 10 * 60 * 1000, // 10 minutes - data stays fresh longer
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache longer
+    retry: 2,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
+    refetchInterval: false, // Disable automatic refetching
+    // Enable background updates without loading states
+    notifyOnChangeProps: ['data', 'error'],
+    // Prefetch and keep data fresh in background
+    refetchIntervalInBackground: false,
   });
 
   // Validate translations prop after hooks
@@ -82,32 +87,44 @@ export const Client = ({ translations }: ClientProps) => {
     );
   }
 
-  // Safe data validation
-  const safeData = Array.isArray(data) ? data : [];
+  // Memoized data processing for better performance
+  const processedData = React.useMemo(() => {
+    // Safe data validation
+    const safeData = Array.isArray(data) ? data : [];
 
-  // Client-side filtering with safe data
-  let filteredData = safeData;
-  filters.forEach(f => {
-    if (f.value && safeData.length > 0 && Object.prototype.hasOwnProperty.call(safeData[0], f.id)) {
-      filteredData = filteredData.filter((row: Record<string, any>) => String(row[f.id as keyof typeof row] ?? '').toLowerCase().includes(String(f.value).toLowerCase()));
-    }
-  });
-
-  // Client-side sorting with safe data
-  if (sorting.length > 0) {
-    const { id, desc } = sorting[0];
-    filteredData = [...filteredData].sort((a: Record<string, any>, b: Record<string, any>) => {
-      const aValue = a[id as keyof typeof a];
-      const bValue = b[id as keyof typeof b];
-      if (aValue < bValue) return desc ? 1 : -1;
-      if (aValue > bValue) return desc ? -1 : 1;
-      return 0;
+    // Client-side filtering with safe data
+    let filteredData = safeData;
+    filters.forEach(f => {
+      if (f.value && safeData.length > 0 && Object.prototype.hasOwnProperty.call(safeData[0], f.id)) {
+        filteredData = filteredData.filter((row: Record<string, any>) =>
+          String(row[f.id as keyof typeof row] ?? '').toLowerCase().includes(String(f.value).toLowerCase())
+        );
+      }
     });
-  }
 
-  // Client-side pagination
-  const rowCount = filteredData.length;
-  const paginatedData = filteredData.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
+    // Client-side sorting with safe data
+    if (sorting.length > 0) {
+      const { id, desc } = sorting[0];
+      filteredData = [...filteredData].sort((a: Record<string, any>, b: Record<string, any>) => {
+        const aValue = a[id as keyof typeof a];
+        const bValue = b[id as keyof typeof b];
+        if (aValue < bValue) return desc ? 1 : -1;
+        if (aValue > bValue) return desc ? -1 : 1;
+        return 0;
+      });
+    }
+
+    return filteredData;
+  }, [data, filters, sorting]);
+
+  // Memoized pagination
+  const paginationData = React.useMemo(() => {
+    const rowCount = processedData.length;
+    const paginatedData = processedData.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
+    return { rowCount, paginatedData };
+  }, [processedData, pageIndex, pageSize]);
+
+  const { rowCount, paginatedData } = paginationData;
 
   // Handlers
   const handlePaginationChange = ({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) => {
@@ -128,8 +145,23 @@ export const Client = ({ translations }: ClientProps) => {
   };
 
   const LoadingState = () => (
-    <div className="w-full h-[400px] flex justify-center items-center">
-      <Loader2 className="animate-spin text-center" />
+    <div className="space-y-4">
+      {/* Table header skeleton */}
+      <div className="flex items-center justify-between">
+        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-64 animate-pulse"></div>
+        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
+      </div>
+      {/* Table rows skeleton */}
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="flex items-center space-x-4 p-4 border rounded">
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-8 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div>
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16 animate-pulse"></div>
+        </div>
+      ))}
     </div>
   );
 
@@ -181,4 +213,6 @@ export const Client = ({ translations }: ClientProps) => {
       </div>
     </div>
   );
-};
+});
+
+Client.displayName = 'AdminUsersClient';

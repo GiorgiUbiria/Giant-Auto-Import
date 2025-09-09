@@ -4,7 +4,7 @@ import { Client } from "./client";
 import { getTranslations } from "next-intl/server";
 import ErrorBoundary from "@/components/ui/error-boundary";
 
-export const revalidate = 0;
+export const revalidate = 60; // Cache for 60 seconds
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 

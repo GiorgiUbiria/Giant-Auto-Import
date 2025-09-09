@@ -24,16 +24,25 @@ export default async function Page() {
               <div className="space-y-4">
                 <div>
                   <p className="font-medium leading-relaxed">{t('address')}</p>
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">123 Business Street</p>
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">City, Country</p>
+                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{t('companyAddress')}</p>
                 </div>
                 <div>
                   <p className="font-medium leading-relaxed">{t('email')}</p>
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed break-all">contact@giantautoimport.com</p>
+                  <a
+                    href="mailto:giant.autoimporti@gmail.com"
+                    className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors leading-relaxed break-all"
+                  >
+                    giant.autoimporti@gmail.com
+                  </a>
                 </div>
                 <div>
                   <p className="font-medium leading-relaxed">{t('phone')}</p>
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">+1 234 567 8900</p>
+                  <a
+                    href="tel:+995555550553"
+                    className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors leading-relaxed"
+                  >
+                    +995 555 550 553
+                  </a>
                 </div>
               </div>
             </div>

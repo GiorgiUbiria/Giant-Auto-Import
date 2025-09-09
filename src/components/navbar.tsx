@@ -43,15 +43,19 @@ const MobileMenu = ({ links }: { links: NavigationLink[] }) => {
                 src={NavbarLogoDark}
                 alt="Company logo"
                 fill
+                sizes="80px"
                 className="object-contain dark:hidden"
-                priority
+                priority={true}
+                loading="eager"
               />
               <Image
                 src={NavbarLogoWhite}
                 alt="Company logo"
                 fill
+                sizes="80px"
                 className="object-contain hidden dark:block"
-                priority
+                priority={true}
+                loading="eager"
               />
             </div>
           </Link>
@@ -177,15 +181,19 @@ const Navbar = ({ user, translations }: NavbarProps) => {
                       src={NavbarLogoDark}
                       alt="Company logo"
                       fill
+                      sizes="(max-width: 640px) 96px, (max-width: 1024px) 96px, 160px"
                       className="object-contain dark:hidden"
-                      priority
+                      priority={true}
+                      loading="eager"
                     />
                     <Image
                       src={NavbarLogoWhite}
                       alt="Company logo"
                       fill
+                      sizes="(max-width: 640px) 96px, (max-width: 1024px) 96px, 160px"
                       className="object-contain hidden dark:block"
-                      priority
+                      priority={true}
+                      loading="eager"
                     />
                   </div>
 

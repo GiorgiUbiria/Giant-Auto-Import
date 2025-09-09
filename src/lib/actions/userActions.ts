@@ -5,23 +5,22 @@ import { z } from "zod";
 import { getDb } from "../drizzle/db";
 import { selectCarSchema, selectUserSchema, users } from "../drizzle/schema";
 import { isAdminProcedure } from "./authProcedures";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import logger from "@/lib/logger";
 
 const SelectSchema = selectUserSchema;
 
-export const getUsersAction = isAdminProcedure
-  .createServerAction()
-  .output(z.array(SelectSchema))
-  .handler(async () => {
+// Cached function for users data
+const getCachedUsers = unstable_cache(
+  async () => {
     try {
-      logger.debug("[userActions.getUsers] start");
+      logger.debug("[userActions.getCachedUsers] start");
 
       const db = getDb();
 
       // Validate database connection
       if (!db) {
-        logger.error("[userActions.getUsers] no db connection");
+        logger.error("[userActions.getCachedUsers] no db connection");
         return [];
       }
 
@@ -31,14 +30,27 @@ export const getUsersAction = isAdminProcedure
         .where(ne(users.role, "ADMIN"))
         .orderBy(users.role);
 
-      logger.info("[userActions.getUsers] success", {
+      logger.info("[userActions.getCachedUsers] success", {
         count: userQuery.length,
       });
       return userQuery || [];
     } catch (error) {
-      logger.error("[userActions.getUsers] error", { error });
+      logger.error("[userActions.getCachedUsers] error", { error });
       return [];
     }
+  },
+  ["users-list"],
+  {
+    tags: ["users-list"],
+    revalidate: 60, // Cache for 60 seconds
+  }
+);
+
+export const getUsersAction = isAdminProcedure
+  .createServerAction()
+  .output(z.array(SelectSchema))
+  .handler(async () => {
+    return await getCachedUsers();
   });
 
 export const getUserAction = isAdminProcedure

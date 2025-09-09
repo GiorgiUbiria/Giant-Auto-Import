@@ -4,8 +4,7 @@ import * as React from "react";
 import { DataTable } from "@/components/data-table";
 import { Loader2 } from "lucide-react";
 import { columns } from "./columns";
-import { getUsersAction } from "@/lib/actions/userActions";
-import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
+import { useQuery } from "@tanstack/react-query";
 import { SortingState, ColumnFiltersState, VisibilityState } from "@tanstack/react-table";
 
 interface ClientProps {
@@ -60,22 +59,35 @@ export const Client = React.memo(({ translations }: ClientProps) => {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  // Optimized React Query configuration with aggressive caching
-  const { isLoading, data = [], error, isFetching } = useServerActionQuery(getUsersAction, {
-    input: undefined,
+  // Fetch users from API route
+  const fetchUsers = async () => {
+    const response = await fetch('/api/users', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch users');
+    }
+
+    const data = await response.json();
+    return data.users || [];
+  };
+
+  // React Query for API calls
+  const { isLoading, data = [], error, isFetching } = useQuery({
     queryKey: ["getUsers"],
-    // Aggressive caching for better performance
-    staleTime: 10 * 60 * 1000, // 10 minutes - data stays fresh longer
-    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache longer
+    queryFn: fetchUsers,
+    // Optimized caching for better performance
+    staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache
     retry: 2,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    refetchOnMount: true, // Refetch when component mounts
+    refetchOnReconnect: true, // Refetch when reconnecting
     refetchInterval: false, // Disable automatic refetching
-    // Enable background updates without loading states
-    notifyOnChangeProps: ['data', 'error'],
-    // Prefetch and keep data fresh in background
-    refetchIntervalInBackground: false,
   });
 
   // Validate translations prop after hooks

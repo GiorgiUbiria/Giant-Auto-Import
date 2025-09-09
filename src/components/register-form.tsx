@@ -19,22 +19,22 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { registerAction as action } from "@/lib/actions/authActions";
 import { insertUserSchema } from "@/lib/drizzle/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, UserPlus, Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { useServerAction } from "zsa-react";
 import { Checkbox } from "./ui/checkbox";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 const FormSchema = insertUserSchema.omit({ id: true });
 
 export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [isPending, setIsPending] = useState(false);
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -46,24 +46,55 @@ export default function RegisterForm() {
     },
   })
 
-  const { isPending, execute } = useServerAction(action);
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
-    // Normalize email to lowercase
-    const normalizedValues = {
-      ...values,
-      email: values.email.toLowerCase()
-    };
-    const [data, error] = await execute(normalizedValues);
+    setIsPending(true);
+    try {
+      // Normalize email to lowercase
+      const normalizedValues = {
+        ...values,
+        email: values.email.toLowerCase()
+      };
 
-    if (data?.success === false) {
-      toast.error(data?.message);
-      console.error(error)
-    } else {
-      toast.success(data?.message);
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(normalizedValues),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || 'Failed to create user');
+        return;
+      }
+
+      toast.success(data.message || 'User created successfully!');
+
+      // Reset form
+      form.reset();
+
       // Invalidate users list cache so admin table updates immediately
-      await queryClient.invalidateQueries({ queryKey: ['getUsers'], refetchType: 'active' });
+      await queryClient.invalidateQueries({
+        queryKey: ['getUsers'],
+        refetchType: 'active'
+      });
+
+      // Small delay to ensure cache invalidation completes
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Redirect to users list
+      router.push('/admin/users');
+
+    } catch (error) {
+      console.error('Error creating user:', error);
+      toast.error('Failed to create user. Please try again.');
+    } finally {
+      setIsPending(false);
     }
   }
 

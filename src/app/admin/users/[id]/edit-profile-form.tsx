@@ -19,9 +19,7 @@ import {
 	SelectTrigger,
 	SelectValue
 } from "@/components/ui/select";
-import { updateUserAction } from "@/lib/actions/authActions";
 import { selectUserSchema } from "@/lib/drizzle/schema";
-import { useServerActionMutation } from "@/lib/hooks/server-action-hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -45,6 +43,7 @@ type Props = {
 
 export function UpdateProfileForm({ user }: Props) {
 	const [showPassword, setShowPassword] = useState(false);
+	const [isPending, setIsPending] = useState(false);
 	const form = useForm<z.infer<typeof FormSchema>>({
 		resolver: zodResolver(FormSchema),
 		defaultValues: {
@@ -58,42 +57,58 @@ export function UpdateProfileForm({ user }: Props) {
 	})
 
 	const queryClient = useQueryClient();
-	
-	// Optimized mutation configuration to prevent excessive calls
-	const { isPending, mutate } = useServerActionMutation(updateUserAction, {
-		onError: (error) => {
-			const errorMessage = error?.data || "Failed to update the user";
-			toast.error(errorMessage);
-		},
-		onSuccess: async ({ data }) => {
-			const successMessage = data?.message || "User updated successfully!";
-			toast.success(successMessage);
 
-			// Invalidate specific queries instead of all
+	const onSubmit = async (values: z.infer<typeof FormSchema>) => {
+		setIsPending(true);
+		try {
+			// Normalize email to lowercase if provided
+			const normalizedValues = {
+				...values,
+				email: values.email ? values.email.toLowerCase() : values.email
+			};
+
+			const response = await fetch('/api/users', {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(normalizedValues),
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				toast.error(data.error || 'Failed to update user');
+				return;
+			}
+
+			toast.success(data.message || 'User updated successfully!');
+
+			// Invalidate users list to reflect changes
+			await queryClient.invalidateQueries({
+				queryKey: ["getUsers"],
+				refetchType: "active",
+			});
+
+			// Invalidate specific user query if it exists
 			await queryClient.invalidateQueries({
 				queryKey: ["getUser", user.id],
 				refetchType: "active",
 			});
-		},
-		// Add mutation optimization options
-		retry: 1,
-		retryDelay: 1000,
-	});
 
-	const onSubmit = (values: z.infer<typeof FormSchema>) => {
-		// Normalize email to lowercase if provided
-		const normalizedValues = {
-			...values,
-			email: values.email ? values.email.toLowerCase() : values.email
-		};
-		mutate(normalizedValues)
+		} catch (error) {
+			console.error('Error updating user:', error);
+			toast.error('Failed to update user. Please try again.');
+		} finally {
+			setIsPending(false);
+		}
 	}
 
 	const handleSubmit = form.handleSubmit(onSubmit)
 
 	return (
 		<Form {...form}>
-      <form onSubmit={handleSubmit} className="w-full space-y-6 my-8 bg-gray-700 p-3 rounded-md">
+			<form onSubmit={handleSubmit} className="w-full space-y-6 my-8 bg-gray-700 p-3 rounded-md">
 				<FormField
 					control={form.control}
 					name="fullName"
@@ -195,11 +210,11 @@ export function UpdateProfileForm({ user }: Props) {
 						</FormItem>
 					)}
 				/>
-        <Button type="submit" className="w-full" disabled={isPending}>
-          {
-            isPending ? <Loader2 className="animate-spin" /> : "Update User"
-          }
-        </Button>
+				<Button type="submit" className="w-full" disabled={isPending}>
+					{
+						isPending ? <Loader2 className="animate-spin" /> : "Update User"
+					}
+				</Button>
 			</form>
 		</Form>
 	)

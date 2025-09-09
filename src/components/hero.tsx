@@ -43,24 +43,22 @@ export default function Hero({ translations }: HeroProps) {
 
   return (
     <motion.div
-      className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 dark:from-slate-950 dark:via-blue-950 dark:to-blue-900 min-h-[800px] text-white overflow-hidden"
+      className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 dark:from-slate-950 dark:via-blue-950 dark:to-blue-900 min-h-screen text-white overflow-hidden"
       style={{
         y: heroY,
         opacity: heroOpacity,
-        aspectRatio: '16/9', // Standard aspect ratio
-        minHeight: '100vh', // Full viewport height
       }}
     >
       <HeroImageComponent />
 
       <motion.div
-        className="relative flex flex-col justify-start items-center h-full text-center px-4 pt-16 sm:pt-20 z-10"
+        className="relative flex flex-col justify-center items-center min-h-screen text-center px-4 py-8 sm:py-16 z-10"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
       >
-        <div className="w-max mt-8">
-          <h1 className="md:text-6xl lg:text-8xl text-4xl mb-4 text-white font-bold">
+        <div className="w-full max-w-4xl">
+          <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-8xl mb-4 text-white font-bold leading-tight">
             <span className="inline-block bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
               {displayText}
               {showCursor && <span className="text-white animate-pulse">|</span>}
@@ -69,8 +67,8 @@ export default function Hero({ translations }: HeroProps) {
         </div>
 
         <motion.p
-          className="text-xl text-gray-100 mb-8 max-w-2xl leading-relaxed"
-          initial={{ opacity: 0, y: 20 }}
+          className="text-lg sm:text-xl text-gray-100 mb-6 sm:mb-8 max-w-2xl leading-relaxed px-2"
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
@@ -78,16 +76,16 @@ export default function Hero({ translations }: HeroProps) {
         </motion.p>
 
         {/* Text Cards */}
-        <div className="mt-8 w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
+        <div className="mt-6 sm:mt-8 w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 px-2 sm:px-4">
           {/* Card 1: Deposit */}
           <motion.div
-            className="bg-blue-900/80 dark:bg-blue-950/90 backdrop-blur-sm rounded-lg p-6 shadow-xl border border-blue-800/50"
-            initial={{ opacity: 0, y: 30 }}
+            className="bg-blue-900/80 dark:bg-blue-950/90 backdrop-blur-sm rounded-lg p-4 sm:p-6 shadow-xl border border-blue-800/50"
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
             <div className="text-center">
-              <h3 className="text-2xl font-bold text-orange-400 mb-2">1. Deposit</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-orange-400 mb-2">1. Deposit</h3>
               <div className="space-y-2 text-orange-300">
                 <p className="font-semibold">Copart 10% min 600$</p>
                 <p className="font-semibold">IAAI 15% min 1,000$</p>
@@ -97,13 +95,13 @@ export default function Hero({ translations }: HeroProps) {
 
           {/* Card 2: Find your Car */}
           <motion.div
-            className="bg-blue-900/80 dark:bg-blue-950/90 backdrop-blur-sm rounded-lg p-6 shadow-xl border border-blue-800/50"
-            initial={{ opacity: 0, y: 30 }}
+            className="bg-blue-900/80 dark:bg-blue-950/90 backdrop-blur-sm rounded-lg p-4 sm:p-6 shadow-xl border border-blue-800/50"
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
           >
             <div className="text-center">
-              <h3 className="text-2xl font-bold text-orange-400 mb-2">2. Find your Car</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-orange-400 mb-2">2. Find your Car</h3>
               <p className="text-orange-300">
                 Search our inventory of more than 500,000 used & repairable vehicles
               </p>
@@ -112,13 +110,13 @@ export default function Hero({ translations }: HeroProps) {
 
           {/* Card 3: Start Bidding */}
           <motion.div
-            className="bg-blue-900/80 dark:bg-blue-950/90 backdrop-blur-sm rounded-lg p-6 shadow-xl border border-blue-800/50"
-            initial={{ opacity: 0, y: 30 }}
+            className="bg-blue-900/80 dark:bg-blue-950/90 backdrop-blur-sm rounded-lg p-4 sm:p-6 shadow-xl border border-blue-800/50"
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.0 }}
           >
             <div className="text-center">
-              <h3 className="text-2xl font-bold text-orange-400 mb-2">3. Start Bidding</h3>
+              <h3 className="text-xl sm:text-2xl font-bold text-orange-400 mb-2">3. Start Bidding</h3>
               <p className="text-orange-300">
                 Bid on daily auto auctions Monday-Friday
               </p>

@@ -1,0 +1,17 @@
+node_modules
+.next
+.vercel
+out
+build
+dist
+public
+*.config.js
+*.config.mjs
+*.config.ts
+.env*
+migrations/
+drizzle.config.ts
+next-env.d.ts
+tailwind.config.ts
+postcss.config.mjs
+components.json

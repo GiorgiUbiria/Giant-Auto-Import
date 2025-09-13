@@ -1,21 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import CopartLogo from "../../public/copart-logo.png";
-import IAAILogo from "../../public/iaai-logo.png";
 import NavbarLogoDark from "../../public/giant_logo_dark.png";
 import NavbarLogoWhite from "../../public/giant_logo_white.png";
+import IAAILogo from "../../public/iaai-logo.png";
 import LocaleSwitcher from "./LocaleSwitcher";
 import Avatar from "./avatar";
 import NavigationLinks, { ICON_MAP, NavigationLink } from "./navigation-links";
@@ -35,7 +30,10 @@ const MobileMenu = ({ links, user }: { links: NavigationLink[]; user: any }) => 
           <span className="sr-only">Toggle navigation menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 w-72">
+      <SheetContent
+        side="left"
+        className="bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 w-72"
+      >
         <div className="flex flex-col gap-6 pt-6 h-full">
           <Link href="/" className="flex justify-center mb-4">
             <div className="relative w-20 h-20">
@@ -153,13 +151,14 @@ const Navbar = ({ user, translations }: NavbarProps) => {
     { href: "/how-to", label: tHowTo("navbar"), icon: ICON_MAP.extension },
   ];
 
-  const adminLinks: NavigationLink[] = user?.role === "ADMIN" ? [
-    { href: "/admin", label: t("admin_panel"), icon: ICON_MAP.admin }
-  ] : [];
+  const adminLinks: NavigationLink[] =
+    user?.role === "ADMIN"
+      ? [{ href: "/admin", label: t("admin_panel"), icon: ICON_MAP.admin }]
+      : [];
 
-  const customerLinks: NavigationLink[] = user?.role?.includes("CUSTOMER") ? [
-    { href: "/dashboard", label: t("dashboard"), icon: ICON_MAP.dashboard }
-  ] : [];
+  const customerLinks: NavigationLink[] = user?.role?.includes("CUSTOMER")
+    ? [{ href: "/dashboard", label: t("dashboard"), icon: ICON_MAP.dashboard }]
+    : [];
 
   const navigationLinks = [...baseLinks, ...adminLinks, ...customerLinks];
 
@@ -199,7 +198,6 @@ const Navbar = ({ user, translations }: NavbarProps) => {
                       loading="eager"
                     />
                   </div>
-
                 </Link>
               </div>
 
@@ -234,7 +232,7 @@ const Navbar = ({ user, translations }: NavbarProps) => {
 
               <div className="flex items-center gap-3 sm:gap-4">
                 <LocaleSwitcher />
-                <div className="hidden">
+                <div className="hidden md:block">
                   <Avatar user={user} />
                 </div>
               </div>

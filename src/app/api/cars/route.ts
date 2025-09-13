@@ -1,205 +1,281 @@
-import { NextResponse } from "next/server";
-import { db } from "@/lib/drizzle/db";
-import { cars } from "@/lib/drizzle/schema";
-import { desc, asc, eq, sql, and, like } from "drizzle-orm";
+import { getAuth } from "@/lib/auth";
+import { calculateCarFeesWithUserPricing } from "@/lib/calculator-utils";
+import { getDb } from "@/lib/drizzle/db";
+import { cars, insertCarSchema } from "@/lib/drizzle/schema";
+import { desc, sql } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
-// Force dynamic rendering for this route
-export const dynamic = "force-dynamic";
+// Extended schema to include image fields
+const CarWithImagesSchema = insertCarSchema.extend({
+  auction_images: z.array(z.any()).optional(),
+  pick_up_images: z.array(z.any()).optional(),
+  warehouse_images: z.array(z.any()).optional(),
+  delivery_images: z.array(z.any()).optional(),
+});
 
-// Map allowed sort keys to columns
-const sortColumnMap = {
-  id: cars.id,
-  ownerId: cars.ownerId,
-  vin: cars.vin,
-  year: cars.year,
-  make: cars.make,
-  model: cars.model,
-  reciever: cars.reciever,
-  lotNumber: cars.lotNumber,
-  purchaseFee: cars.purchaseFee,
-  auctionFee: cars.auctionFee,
-  gateFee: cars.gateFee,
-  titleFee: cars.titleFee,
-  environmentalFee: cars.environmentalFee,
-  virtualBidFee: cars.virtualBidFee,
-  shippingFee: cars.shippingFee,
-  groundFee: cars.groundFee,
-  oceanFee: cars.oceanFee,
-  totalFee: cars.totalFee,
-  arrivalDate: cars.arrivalDate,
-  departureDate: cars.departureDate,
-  purchaseDate: cars.purchaseDate,
-  auction: cars.auction,
-  originPort: cars.originPort,
-  keys: cars.keys,
-  title: cars.title,
-  insurance: cars.insurance,
-  shippingStatus: cars.shippingStatus,
-  bodyType: cars.bodyType,
-  fuelType: cars.fuelType,
-};
-
-type SortKey = keyof typeof sortColumnMap;
-
-// Updated: Use like for partial VIN filtering (case-insensitive for ASCII in SQLite)
-function buildWhereClause(vin?: string, vinLot?: string, ownerId?: string) {
-  const conditions = [];
-
-  // Handle VIN filtering (either from vin or vinLot parameter)
-  const vinFilter = vin || vinLot;
-  if (vinFilter) {
-    conditions.push(like(cars.vin, `%${vinFilter}%`));
-  }
-
-  // Handle owner filtering
-  if (ownerId) {
-    conditions.push(eq(cars.ownerId, ownerId));
-  }
-
-  if (conditions.length === 0) {
-    return undefined;
-  } else if (conditions.length === 1) {
-    return conditions[0];
-  } else {
-    return and(...conditions);
-  }
-}
-
-export async function GET(req: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const page = Number(searchParams.get("page") ?? 1);
-    const pageSize = Number(searchParams.get("pageSize") ?? 20);
-    const sortByParam = searchParams.get("sortBy") ?? "purchaseDate";
-    const sortOrder = searchParams.get("sortOrder") === "asc" ? asc : desc;
-    const vin = searchParams.get("vin") || undefined;
-    const vinLot = searchParams.get("vinLot") || undefined; // Add support for vinLot filter
-    const ownerId = searchParams.get("ownerId") || undefined;
-    const includeDetails = searchParams.get("includeDetails") === "true";
-
-    // Validate sortBy
-    const sortBy: SortKey = (
-      sortByParam in sortColumnMap ? sortByParam : "purchaseDate"
-    ) as SortKey;
-    const sortColumn = sortColumnMap[sortBy];
-
-    const whereClause = buildWhereClause(vin, vinLot, ownerId);
-
-    // Fetch paginated data with optimized query
-    const [data, countResult] = await Promise.all([
-      db.query.cars.findMany({
-        where: whereClause,
-        orderBy: sortOrder(sortColumn),
-        limit: pageSize,
-        offset: (page - 1) * pageSize,
-      }),
-      db
-        .select({ count: sql<number>`cast(count(${cars.id}) as integer)` })
-        .from(cars)
-        .where(whereClause),
-    ]);
-
-    const count = countResult[0]?.count ?? 0;
-
-    // If includeDetails is true, fetch payment and invoice data for each car
-    let carsWithDetails = data;
-    if (includeDetails) {
-      carsWithDetails = await Promise.all(
-        data.map(async (car) => {
-          // Import the payment and invoice actions here to avoid circular dependencies
-          let getPaymentHistoryAction, checkInvoiceExistsAction;
-          try {
-            const paymentModule = await import("@/lib/actions/paymentActions");
-            const invoiceModule = await import("@/lib/actions/invoiceActions");
-            getPaymentHistoryAction = paymentModule.getPaymentHistoryAction;
-            checkInvoiceExistsAction = invoiceModule.checkInvoiceExistsAction;
-
-            if (!getPaymentHistoryAction || !checkInvoiceExistsAction) {
-              throw new Error(
-                "Required functions not found in imported modules"
-              );
-            }
-          } catch (importError) {
-            console.error(
-              "Failed to import payment/invoice actions:",
-              importError
-            );
-            // Return car without details if imports fail
-            return {
-              ...car,
-              paymentHistory: [],
-              invoiceStatus: {
-                purchaseInvoice: false,
-                shippingInvoice: false,
-                totalInvoice: false,
-              },
-            };
-          }
-
-          try {
-            // Get payment history for this car
-            const paymentHistory = await getPaymentHistoryAction({
-              carVin: car.vin,
-            });
-
-            // Check invoice status for all types
-            const [purchaseInvoice, shippingInvoice, totalInvoice] =
-              await Promise.all([
-                checkInvoiceExistsAction({
-                  carVin: car.vin,
-                  invoiceType: "PURCHASE",
-                }),
-                checkInvoiceExistsAction({
-                  carVin: car.vin,
-                  invoiceType: "SHIPPING",
-                }),
-                checkInvoiceExistsAction({
-                  carVin: car.vin,
-                  invoiceType: "TOTAL",
-                }),
-              ]);
-
-            return {
-              ...car,
-              paymentHistory: paymentHistory?.[0] || [],
-              hasInvoice: {
-                PURCHASE: purchaseInvoice?.[0]?.exists || false,
-                SHIPPING: shippingInvoice?.[0]?.exists || false,
-                TOTAL: totalInvoice?.[0]?.exists || false,
-              },
-            };
-          } catch (error) {
-            console.error(`Error fetching details for car ${car.vin}:`, error);
-            return {
-              ...car,
-              paymentHistory: [],
-              hasInvoice: {
-                PURCHASE: false,
-                SHIPPING: false,
-                TOTAL: false,
-              },
-            };
-          }
-        })
+    // Authentication check
+    const { user } = await getAuth();
+    if (!user || (user as any).role !== "ADMIN") {
+      return NextResponse.json(
+        { success: false, message: "Admin access required" },
+        { status: 403 }
       );
     }
 
-    // Create response without caching headers to allow React Query to manage caching
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const pageSize = parseInt(searchParams.get("pageSize") || "20");
+    const includeDetails = searchParams.get("includeDetails") === "true";
+
+    const db = getDb();
+    if (!db) {
+      return NextResponse.json(
+        { success: false, message: "Database connection not available" },
+        { status: 500 }
+      );
+    }
+
+    // Calculate offset for pagination
+    const offset = (page - 1) * pageSize;
+
+    // Get total count
+    const totalCountResult = await db.select({ count: sql<number>`count(*)` }).from(cars);
+    const totalCount = totalCountResult[0]?.count || 0;
+
+    // Get cars with pagination
+    const carsData = await db
+      .select()
+      .from(cars)
+      .orderBy(desc(cars.purchaseDate))
+      .limit(pageSize)
+      .offset(offset);
+
+    // If includeDetails is true, fetch additional data
+    let carsWithDetails = carsData;
+    if (includeDetails) {
+      // You can add additional data fetching here if needed
+      // For now, just return the cars data
+      carsWithDetails = carsData;
+    }
+
     return NextResponse.json({
+      success: true,
       cars: carsWithDetails,
-      count,
+      count: totalCount,
       page,
       pageSize,
-      totalPages: Math.ceil(count / pageSize),
+      totalPages: Math.ceil(totalCount / pageSize),
     });
   } catch (error) {
-    console.error("Error in cars API:", error);
-    return NextResponse.json(
-      {
-        error: "Failed to fetch cars",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
+    console.error("API: Error fetching cars:", error);
+    return NextResponse.json({ success: false, message: "Failed to fetch cars" }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Authentication check
+    const { user } = await getAuth();
+    if (!user || (user as any).role !== "ADMIN") {
+      return NextResponse.json(
+        { success: false, message: "Admin access required" },
+        { status: 403 }
+      );
+    }
+
+    const formData = await request.formData();
+
+    // Extract car data
+    const carData = {
+      vin: formData.get("vin") as string,
+      year: parseInt(formData.get("year") as string),
+      make: formData.get("make") as string,
+      model: formData.get("model") as string,
+      auction: formData.get("auction") as string,
+      originPort: formData.get("originPort") as string,
+      keys: formData.get("keys") as string,
+      auctionLocation: formData.get("auctionLocation") as string,
+      title: formData.get("title") as string,
+      shippingStatus: formData.get("shippingStatus") as string,
+      bodyType: formData.get("bodyType") as string,
+      fuelType: formData.get("fuelType") as string,
+      bookingNumber: formData.get("bookingNumber") as string,
+      containerNumber: formData.get("containerNumber") as string,
+      lotNumber: formData.get("lotNumber") as string,
+      trackingLink: formData.get("trackingLink") as string,
+      purchaseFee: parseFloat(formData.get("purchaseFee") as string),
+      departureDate: formData.get("departureDate")
+        ? new Date(formData.get("departureDate") as string)
+        : null,
+      arrivalDate: formData.get("arrivalDate")
+        ? new Date(formData.get("arrivalDate") as string)
+        : null,
+      purchaseDate: formData.get("purchaseDate")
+        ? new Date(formData.get("purchaseDate") as string)
+        : new Date(),
+      ownerId: (formData.get("ownerId") as string) || null,
+      insurance: formData.get("insurance") as string,
+    };
+
+    // Validate required fields
+    if (!carData.vin || !carData.auction || !carData.originPort) {
+      return NextResponse.json(
+        { success: false, message: "Missing required fields: VIN, auction, or origin port" },
+        { status: 400 }
+      );
+    }
+
+    // Handle empty ownerId
+    if (carData.ownerId === "" || carData.ownerId === "none") {
+      carData.ownerId = null;
+    }
+
+    console.log("API: Calculating fees for car:", { vin: carData.vin, auction: carData.auction });
+
+    // Calculate fees
+    const calculation = await calculateCarFeesWithUserPricing(
+      carData.auction,
+      carData.auctionLocation!,
+      carData.originPort,
+      carData.bodyType,
+      carData.fuelType,
+      carData.purchaseFee,
+      carData.insurance as "YES" | "NO",
+      carData.ownerId || undefined
     );
+
+    const db = getDb();
+    if (!db) {
+      return NextResponse.json(
+        { success: false, message: "Database connection not available" },
+        { status: 500 }
+      );
+    }
+
+    // Insert car into database
+    const result = await db.transaction(async (tx) => {
+      const carInsertData = {
+        ...carData,
+        ...calculation,
+        id: undefined, // Let database generate ID
+        auction: carData.auction as "Copart" | "IAAI",
+        keys: carData.keys as "YES" | "NO" | "UNKNOWN",
+        insurance: carData.insurance as "YES" | "NO",
+        originPort: carData.originPort as "NJ" | "TX" | "GA" | "CA",
+        bodyType: carData.bodyType as "SEDAN" | "ATV" | "SUV" | "PICKUP" | "BIKE",
+        fuelType: carData.fuelType as "GASOLINE" | "HYBRID_ELECTRIC",
+        title: carData.title as "YES" | "NO" | "PENDING",
+        shippingStatus: carData.shippingStatus as
+          | "AUCTION"
+          | "INNER_TRANSIT"
+          | "WAREHOUSE"
+          | "LOADED"
+          | "SAILING"
+          | "DELIVERED",
+      };
+
+      const [insertedCar] = await tx
+        .insert(cars)
+        .values(carInsertData)
+        .returning({ vin: cars.vin });
+      return insertedCar.vin;
+    });
+
+    console.log("API: Car added successfully", { vin: result });
+
+    // Handle image uploads
+    const imageTypes = ["auction_images", "pick_up_images", "warehouse_images", "delivery_images"];
+    const uploadedImages = [];
+
+    for (const imageType of imageTypes) {
+      const files = formData.getAll(`${imageType}[]`) as File[];
+
+      for (const file of files) {
+        if (file && file.size > 0) {
+          try {
+            // Convert file to buffer
+            const buffer = await file.arrayBuffer();
+            const imageData = {
+              vin: result,
+              buffer: Array.from(new Uint8Array(buffer)),
+              size: file.size,
+              name: file.name,
+              type: imageType.replace("_images", "").toUpperCase() as
+                | "AUCTION"
+                | "WAREHOUSE"
+                | "DELIVERED"
+                | "PICK_UP",
+            };
+
+            // Upload to image API
+            const imageResponse = await fetch(`${request.nextUrl.origin}/api/images/${result}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ images: [imageData] }),
+            });
+
+            if (imageResponse.ok) {
+              uploadedImages.push({ type: imageType, name: file.name, success: true });
+            } else {
+              console.error(`Failed to upload ${file.name} (${imageType})`);
+              uploadedImages.push({ type: imageType, name: file.name, success: false });
+            }
+          } catch (error) {
+            console.error(`Error uploading ${file.name} (${imageType}):`, error);
+            uploadedImages.push({ type: imageType, name: file.name, success: false });
+          }
+        }
+      }
+    }
+
+    // Revalidate relevant paths
+    revalidatePath("/admin/cars");
+    revalidatePath("/dashboard");
+
+    return NextResponse.json({
+      success: true,
+      message: `Car with VIN code ${result} was added successfully`,
+      data: {
+        vin: result,
+        uploadedImages: uploadedImages.filter((img) => img.success).length,
+        failedImages: uploadedImages.filter((img) => !img.success).length,
+      },
+    });
+  } catch (error) {
+    console.error("API: Car creation error:", error);
+
+    let errorMessage = "An error occurred while adding the car";
+
+    if (error instanceof Error) {
+      const errorStr = error.message;
+
+      if (errorStr.includes("SQLITE_CONSTRAINT")) {
+        if (errorStr.includes("FOREIGN KEY constraint failed")) {
+          if (errorStr.includes("owner_id")) {
+            errorMessage =
+              "Invalid owner ID provided. Please select a valid user or leave owner field empty.";
+          } else {
+            errorMessage =
+              "Database constraint violation. Please check all required fields and relationships.";
+          }
+        } else if (errorStr.includes("UNIQUE constraint failed")) {
+          if (errorStr.includes("vin")) {
+            errorMessage = "A car with this VIN already exists in the database.";
+          } else {
+            errorMessage = "Duplicate entry detected. Please check for duplicate values.";
+          }
+        } else if (errorStr.includes("NOT NULL constraint failed")) {
+          errorMessage = "Required field is missing. Please fill in all required fields.";
+        }
+      } else if (errorStr.includes("Validation error")) {
+        errorMessage = "Invalid data provided. Please check all field values.";
+      }
+    }
+
+    return NextResponse.json({ success: false, message: errorMessage }, { status: 500 });
   }
 }

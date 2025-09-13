@@ -11,22 +11,17 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { showUploadResult, uploadImagesWithProgress } from "@/lib/utils/imageUpload";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import imageCompression from "browser-image-compression";
-import Image from "next/image";
 
-const ACCEPTED_IMAGE_TYPES = [
-  "image/png",
-  "image/jpg",
-  "image/jpeg",
-  "image/webp",
-];
+const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpg", "image/jpeg", "image/webp"];
 const MAX_IMAGE_SIZE = 4;
 
 let prevPreviews: Record<string, string[]> = {};
@@ -40,53 +35,37 @@ const ImageSchema = z.object({
   auction_images: z
     .custom<FileList>()
     .refine((files) => {
-      return Array.from(files ?? []).every(
-        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE
-      );
+      return Array.from(files ?? []).every((file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE);
     }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
     .refine((files) => {
-      return Array.from(files ?? []).every((file) =>
-        ACCEPTED_IMAGE_TYPES.includes(file.type)
-      );
+      return Array.from(files ?? []).every((file) => ACCEPTED_IMAGE_TYPES.includes(file.type));
     }, "File type is not supported")
     .optional(),
   pick_up_images: z
     .custom<FileList>()
     .refine((files) => {
-      return Array.from(files ?? []).every(
-        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE
-      );
+      return Array.from(files ?? []).every((file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE);
     }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
     .refine((files) => {
-      return Array.from(files ?? []).every((file) =>
-        ACCEPTED_IMAGE_TYPES.includes(file.type)
-      );
+      return Array.from(files ?? []).every((file) => ACCEPTED_IMAGE_TYPES.includes(file.type));
     }, "File type is not supported")
     .optional(),
   warehouse_images: z
     .custom<FileList>()
     .refine((files) => {
-      return Array.from(files ?? []).every(
-        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE
-      );
+      return Array.from(files ?? []).every((file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE);
     }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
     .refine((files) => {
-      return Array.from(files ?? []).every((file) =>
-        ACCEPTED_IMAGE_TYPES.includes(file.type)
-      );
+      return Array.from(files ?? []).every((file) => ACCEPTED_IMAGE_TYPES.includes(file.type));
     }, "File type is not supported")
     .optional(),
   delivery_images: z
     .custom<FileList>()
     .refine((files) => {
-      return Array.from(files ?? []).every(
-        (file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE
-      );
+      return Array.from(files ?? []).every((file) => sizeInMB(file.size) <= MAX_IMAGE_SIZE);
     }, `The maximum image size is ${MAX_IMAGE_SIZE}MB`)
     .refine((files) => {
-      return Array.from(files ?? []).every((file) =>
-        ACCEPTED_IMAGE_TYPES.includes(file.type)
-      );
+      return Array.from(files ?? []).every((file) => ACCEPTED_IMAGE_TYPES.includes(file.type));
     }, "File type is not supported")
     .optional(),
 });
@@ -106,185 +85,59 @@ export function ImagesForm({ vin }: { vin: string }) {
   const deliveryInputRef = useRef<HTMLInputElement>(null);
   const pickupInputRef = useRef<HTMLInputElement>(null);
 
-  // Upload helper via API route
-  const executeImageUpload = async (payload: { vin: string; images: Array<{ buffer: number[]; size: number; name: string; type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP" }> }) => {
-    const resp = await fetch(`/api/images/${payload.vin}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ images: payload.images }),
-    });
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      throw new Error(err?.error || 'Failed to upload images');
-    }
-    return resp.json();
-  };
+  // Helper: prepare image files for upload
+  function prepareImageFiles(values: z.infer<typeof ImageSchema>) {
+    const imageTypes = ["auction_images", "pick_up_images", "warehouse_images", "delivery_images"];
+    const imageFiles: Record<string, FileList | undefined> = {};
 
-  // Compression options
-  const options = {
-    maxSizeMB: 1.5,
-    maxWidthOrHeight: 1920,
-    useWebWorker: true,
-    initialQuality: 0.6,
-    fileType: 'image/png',
-  };
-
-  // Helper: upload all images with proper progress tracking
-  async function uploadAllImages(allFiles: Array<{ file: File; type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP" }>) {
-    let uploaded = 0;
-    setUploadProgress({ total: allFiles.length, uploaded: 0 });
-
-    for (const { file, type } of allFiles) {
-      try {
-        let compressedFile: File = file;
-        try {
-          compressedFile = await imageCompression(file, options);
-        } catch (err) {
-          console.warn("Compression failed, using original file:", err);
-          compressedFile = file;
-        }
-
-        // Generate small thumbnail (even index partner)
-        let thumbFile: File = compressedFile;
-        try {
-          thumbFile = await imageCompression(file, {
-            maxWidthOrHeight: 480,
-            maxSizeMB: 0.25,
-            initialQuality: 0.5,
-            useWebWorker: true,
-            fileType: 'image/png',
-          });
-        } catch (err) {
-          console.warn("Thumbnail compression failed, using main compressed file:", err);
-          thumbFile = compressedFile;
-        }
-
-        // Upload original (odd) + thumbnail (even) in a single request to keep indices paired
-        const originalBuffer = await compressedFile.arrayBuffer();
-        const thumbBuffer = await thumbFile.arrayBuffer();
-        await executeImageUpload({
-          vin,
-          images: [
-            {
-              buffer: Array.from(new Uint8Array(originalBuffer)),
-              size: compressedFile.size,
-              name: compressedFile.name,
-              type: type,
-            },
-            {
-              buffer: Array.from(new Uint8Array(thumbBuffer)),
-              size: thumbFile.size,
-              name: `thumb_${compressedFile.name}`,
-              type: type,
-            },
-          ],
-        });
-
-        uploaded++;
-        setUploadProgress({ total: allFiles.length, uploaded });
-        console.log(`Uploaded ${uploaded}/${allFiles.length}: ${compressedFile.name}`);
-      } catch (error) {
-        console.error(`Failed to upload ${file.name}:`, error);
-        // Continue with next file instead of stopping
-        uploaded++;
-        setUploadProgress({ total: allFiles.length, uploaded });
+    imageTypes.forEach((type) => {
+      const files = values[type as keyof typeof values] as FileList | undefined;
+      if (files && files.length > 0) {
+        imageFiles[type] = files;
       }
-    }
-  }
-
-  const processImages = async (
-    images: FileList | undefined,
-    type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP",
-    vin: string
-  ) => {
-    if (!images || images.length === 0) return;
-
-    // Compression options: target ~1.5MB per image, 10-15x compression
-    const options = {
-      maxSizeMB: 1.5,
-      maxWidthOrHeight: 1920,
-      useWebWorker: true,
-      initialQuality: 0.6, // start with moderate quality
-    };
-
-    const imageData = await Promise.all(
-      Array.from(images).map(async (file: File) => {
-        let compressedFile = file;
-        try {
-          compressedFile = await imageCompression(file, options);
-        } catch (err) {
-          // fallback to original file if compression fails
-          compressedFile = file;
-        }
-        const arrayBuffer = await compressedFile.arrayBuffer();
-        return {
-          buffer: Array.from(new Uint8Array(arrayBuffer)),
-          size: compressedFile.size,
-          name: compressedFile.name,
-          type: type,
-        };
-      })
-    );
-
-    // Use the server action to handle the upload
-    const result = await executeImageUpload({
-      vin,
-      images: imageData,
     });
 
-    return result;
-  };
+    return imageFiles;
+  }
 
   const onSubmit = async (values: z.infer<typeof ImageSchema>) => {
     try {
-      const {
-        warehouse_images,
-        pick_up_images,
-        auction_images,
-        delivery_images,
-      } = values;
+      const imageFiles = prepareImageFiles(values);
 
-      // Gather all files with their types
-      const allFiles: Array<{ file: File; type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP" }> = [];
-
-      if (warehouse_images) {
-        Array.from(warehouse_images).forEach(file => {
-          allFiles.push({ file, type: "WAREHOUSE" as const });
-        });
-      }
-      if (auction_images) {
-        Array.from(auction_images).forEach(file => {
-          allFiles.push({ file, type: "AUCTION" as const });
-        });
-      }
-      if (pick_up_images) {
-        Array.from(pick_up_images).forEach(file => {
-          allFiles.push({ file, type: "PICK_UP" as const });
-        });
-      }
-      if (delivery_images) {
-        Array.from(delivery_images).forEach(file => {
-          allFiles.push({ file, type: "DELIVERED" as const });
-        });
-      }
-
-      if (allFiles.length === 0) {
+      // Check if there are any images to upload
+      const hasImages = Object.values(imageFiles).some((files) => files && files.length > 0);
+      if (!hasImages) {
         toast.error("No images selected");
         return;
       }
 
       setIsPending(true);
-      await uploadAllImages(allFiles);
-      setIsPending(false);
       setUploadProgress({ total: 0, uploaded: 0 });
 
+      const result = await uploadImagesWithProgress(vin, imageFiles, (uploaded, total) => {
+        setUploadProgress({ total, uploaded });
+      });
+
+      // Show results using standardized display
+      showUploadResult(result);
+
+      // Invalidate queries to refresh the image list
       queryClient.invalidateQueries({ queryKey: ["getImagesForCar", vin] });
-      toast.success(`Successfully uploaded ${allFiles.length} images`);
+
+      // Reset form if upload was successful
+      if (result.success) {
+        form.reset();
+        // Clear file inputs
+        [auctionInputRef, warehouseInputRef, deliveryInputRef, pickupInputRef].forEach((ref) => {
+          if (ref.current) ref.current.value = "";
+        });
+      }
     } catch (error) {
       console.error("Upload error:", error);
+      toast.error("An error occurred while uploading images");
+    } finally {
       setIsPending(false);
       setUploadProgress({ total: 0, uploaded: 0 });
-      toast.error("An error occurred while uploading images");
     }
   };
 
@@ -292,12 +145,7 @@ export function ImagesForm({ vin }: { vin: string }) {
 
   // Generate previews when files are selected
   useEffect(() => {
-    const fields = [
-      "auction_images",
-      "warehouse_images",
-      "delivery_images",
-      "pick_up_images",
-    ];
+    const fields = ["auction_images", "warehouse_images", "delivery_images", "pick_up_images"];
     const updatePreviews = () => {
       const newPreviews: Record<string, string[]> = {};
       fields.forEach((field) => {
@@ -309,7 +157,9 @@ export function ImagesForm({ vin }: { vin: string }) {
         }
       });
       // Revoke old URLs
-      Object.values(prevPreviews).flat().forEach((url) => URL.revokeObjectURL(url));
+      Object.values(prevPreviews)
+        .flat()
+        .forEach((url) => URL.revokeObjectURL(url));
       prevPreviews = newPreviews;
       setPreviews(newPreviews);
     };
@@ -319,7 +169,9 @@ export function ImagesForm({ vin }: { vin: string }) {
     });
     return () => {
       subscription.unsubscribe();
-      Object.values(prevPreviews).flat().forEach((url) => URL.revokeObjectURL(url));
+      Object.values(prevPreviews)
+        .flat()
+        .forEach((url) => URL.revokeObjectURL(url));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -334,12 +186,18 @@ export function ImagesForm({ vin }: { vin: string }) {
         {uploadProgress.total > 0 && (
           <div className="mb-4">
             <div className="flex justify-between text-sm mb-1">
-              <span>Uploaded {uploadProgress.uploaded} of {uploadProgress.total}</span>
+              <span>
+                Uploaded {uploadProgress.uploaded} of {uploadProgress.total}
+              </span>
               <span>{uploadProgress.total - uploadProgress.uploaded} left</span>
             </div>
             <progress
               className="w-full h-2"
-              value={uploadProgress.total === 0 ? 0 : (uploadProgress.uploaded / uploadProgress.total) * 100}
+              value={
+                uploadProgress.total === 0
+                  ? 0
+                  : (uploadProgress.uploaded / uploadProgress.total) * 100
+              }
               max={100}
             />
           </div>

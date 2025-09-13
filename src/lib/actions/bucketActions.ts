@@ -9,28 +9,24 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import "dotenv/config";
-import { desc, eq, and } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../drizzle/db";
-import {
-  images,
-  insertImageSchema,
-  selectImageSchema,
-} from "../drizzle/schema";
+import { images, insertImageSchema, selectImageSchema } from "../drizzle/schema";
 import { isAdminProcedure } from "./authProcedures";
 
 const validateEnvironment = () => {
   const required = [
-    'CLOUDFLARE_API_ENDPOINT',
-    'CLOUDFLARE_ACCESS_KEY_ID',
-    'CLOUDFLARE_SECRET_ACCESS_KEY',
-    'CLOUDFLARE_BUCKET_NAME'
+    "CLOUDFLARE_API_ENDPOINT",
+    "CLOUDFLARE_ACCESS_KEY_ID",
+    "CLOUDFLARE_SECRET_ACCESS_KEY",
+    "CLOUDFLARE_BUCKET_NAME",
   ];
 
-  const missing = required.filter(key => !process.env[key]);
+  const missing = required.filter((key) => !process.env[key]);
 
   if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+    throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
   }
 };
 
@@ -70,9 +66,7 @@ const SelectImageSchema = selectImageSchema.omit({ id: true }).merge(
 );
 type SelectImageType = z.infer<typeof SelectImageSchema>;
 
-const Uint8ArraySchema = z
-  .array(z.number())
-  .transform((arr) => new Uint8Array(arr));
+const Uint8ArraySchema = z.array(z.number()).transform((arr) => new Uint8Array(arr));
 
 async function getFileCount(prefix: string): Promise<number> {
   try {
@@ -113,7 +107,7 @@ export const handleUploadImagesAction = isAdminProcedure
           buffer: Uint8ArraySchema,
           size: z.number(),
           name: z.string(),
-          type: z.enum(["AUCTION", "WAREHOUSE", "DELIVERED", "PICK_UP"]),
+          type: z.enum(["AUCTION", "WAREHOUSE", "DELIVERY", "PICK_UP"]),
         })
       ),
     })
@@ -135,7 +129,9 @@ export const handleUploadImagesAction = isAdminProcedure
           const existingFileCount = await getFileCount(prefix);
           const key = `${prefix}${existingFileCount + 1}.png`;
 
-          console.log(`handleUploadImagesAction: Uploading ${file.name} (${file.size} bytes) to ${key}`);
+          console.log(
+            `handleUploadImagesAction: Uploading ${file.name} (${file.size} bytes) to ${key}`
+          );
 
           const command = new PutObjectCommand({
             Bucket: bucketName,
@@ -145,16 +141,16 @@ export const handleUploadImagesAction = isAdminProcedure
             ContentType: "image/png",
             // Add metadata for better tracking
             Metadata: {
-              'original-name': file.name,
-              'upload-timestamp': new Date().toISOString(),
-              'file-size': file.size.toString(),
+              "original-name": file.name,
+              "upload-timestamp": new Date().toISOString(),
+              "file-size": file.size.toString(),
             },
           });
 
           // Upload with timeout to prevent hanging
           const uploadPromise = S3Client.send(command);
           const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Upload timeout')), 30000)
+            setTimeout(() => reject(new Error("Upload timeout")), 30000)
           );
 
           await Promise.race([uploadPromise, timeoutPromise]);
@@ -178,7 +174,9 @@ export const handleUploadImagesAction = isAdminProcedure
         }
       }
 
-      console.log(`handleUploadImagesAction: Completed. Uploaded ${uploadedImages.length}/${imageData.length} images`);
+      console.log(
+        `handleUploadImagesAction: Completed. Uploaded ${uploadedImages.length}/${imageData.length} images`
+      );
       return uploadedImages;
     } catch (error) {
       console.error("Error in handleUploadImagesAction:", error);
@@ -186,11 +184,7 @@ export const handleUploadImagesAction = isAdminProcedure
     }
   });
 
-export async function handleImages(
-  type: string,
-  vin: string,
-  sizes: number[]
-): Promise<string[]> {
+export async function handleImages(type: string, vin: string, sizes: number[]): Promise<string[]> {
   try {
     const S3Client = getS3Client();
     const bucketName = getBucketName();
@@ -222,7 +216,7 @@ export async function handleImages(
 
     const insertUrls = keys.map((key, index) => ({
       carVin: vin,
-      imageType: type as "WAREHOUSE" | "AUCTION" | "DELIVERED" | "PICK_UP",
+      imageType: type as "WAREHOUSE" | "AUCTION" | "DELIVERY" | "PICK_UP",
       imageKey: key,
       imageUrl: urls[index],
     }));
@@ -290,7 +284,7 @@ export async function deleteObjectFromBucket(key: string): Promise<void> {
   } catch (error) {
     console.error(`deleteObjectFromBucket: Error deleting ${key} from bucket:`, {
       error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     });
   }
 }
@@ -320,15 +314,13 @@ export async function getSignedUrlForKey(key: string): Promise<string> {
 export async function getPublicUrlForKey(key: string): Promise<string> {
   const publicBaseUrl = process.env.NEXT_PUBLIC_BUCKET_URL;
   if (!publicBaseUrl) {
-    throw new Error('NEXT_PUBLIC_BUCKET_URL not configured');
+    throw new Error("NEXT_PUBLIC_BUCKET_URL not configured");
   }
 
   return `${publicBaseUrl}/${key}`;
 }
 
-export async function fetchImageForDisplay(
-  vin: string
-): Promise<SelectImageType | null> {
+export async function fetchImageForDisplay(vin: string): Promise<SelectImageType | null> {
   try {
     console.log(`fetchImageForDisplay: Starting fetch for VIN ${vin}`);
 
@@ -336,17 +328,14 @@ export async function fetchImageForDisplay(
     let imageRecord = await db
       .select()
       .from(images)
-      .where(
-        and(
-          eq(images.carVin, vin),
-          eq(images.priority, true)
-        )
-      )
+      .where(and(eq(images.carVin, vin), eq(images.priority, true)))
       .limit(1);
 
     // If no prioritized image, get the first available image
     if (!imageRecord || imageRecord.length === 0) {
-      console.log(`fetchImageForDisplay: No prioritized image found for VIN ${vin}, getting first available`);
+      console.log(
+        `fetchImageForDisplay: No prioritized image found for VIN ${vin}, getting first available`
+      );
       imageRecord = await db
         .select()
         .from(images)
@@ -364,7 +353,7 @@ export async function fetchImageForDisplay(
     console.log(`fetchImageForDisplay: Found image record for VIN ${vin}:`, {
       imageKey: record.imageKey,
       imageType: record.imageType,
-      priority: record.priority
+      priority: record.priority,
     });
 
     let url: string;
@@ -378,7 +367,10 @@ export async function fetchImageForDisplay(
         console.log(`fetchImageForDisplay: Using presigned URL for key: ${record.imageKey}`);
       }
     } catch (urlError) {
-      console.error(`fetchImageForDisplay: Error generating URL for key ${record.imageKey}:`, urlError);
+      console.error(
+        `fetchImageForDisplay: Error generating URL for key ${record.imageKey}:`,
+        urlError
+      );
       return null;
     }
 
@@ -395,15 +387,13 @@ export async function fetchImageForDisplay(
   } catch (error) {
     console.error(`fetchImageForDisplay: Error fetching image for VIN ${vin}:`, {
       error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     });
     return null;
   }
 }
 
-export async function fetchImagesForDisplay(
-  vin: string
-): Promise<SelectImageType[]> {
+export async function fetchImagesForDisplay(vin: string): Promise<SelectImageType[]> {
   try {
     const imageRecords = await db
       .select()
@@ -475,7 +465,9 @@ export async function cleanUpBucketForVin(vin: string): Promise<void> {
       const listedObjects: any = await S3Client.send(listCommand);
 
       if (listedObjects.Contents && listedObjects.Contents.length > 0) {
-        console.log(`cleanUpBucketForVin: Found ${listedObjects.Contents.length} objects to delete for VIN ${vin}`);
+        console.log(
+          `cleanUpBucketForVin: Found ${listedObjects.Contents.length} objects to delete for VIN ${vin}`
+        );
 
         for (const item of listedObjects.Contents) {
           if (item.Key) {
@@ -491,7 +483,9 @@ export async function cleanUpBucketForVin(vin: string): Promise<void> {
       continuationToken = listedObjects.NextContinuationToken;
     } while (continuationToken);
 
-    console.log(`cleanUpBucketForVin: Cleanup completed for VIN ${vin}. Total objects deleted: ${totalDeleted}`);
+    console.log(
+      `cleanUpBucketForVin: Cleanup completed for VIN ${vin}. Total objects deleted: ${totalDeleted}`
+    );
 
     // Also clean up invoice files from database
     try {
@@ -505,7 +499,7 @@ export async function cleanUpBucketForVin(vin: string): Promise<void> {
   } catch (error) {
     console.error(`cleanUpBucketForVin: Error cleaning up the bucket for VIN ${vin}:`, {
       error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     });
   }
 }
@@ -515,9 +509,9 @@ export async function testR2Connection(): Promise<boolean> {
     const S3Client = getS3Client();
     const bucketName = getBucketName();
 
-    console.log('Testing R2 connection with configuration:');
-    console.log('Endpoint:', process.env.CLOUDFLARE_API_ENDPOINT);
-    console.log('Bucket:', bucketName);
+    console.log("Testing R2 connection with configuration:");
+    console.log("Endpoint:", process.env.CLOUDFLARE_API_ENDPOINT);
+    console.log("Bucket:", bucketName);
 
     const command = new ListObjectsV2Command({
       Bucket: bucketName,
@@ -525,15 +519,15 @@ export async function testR2Connection(): Promise<boolean> {
     });
 
     const result = await S3Client.send(command);
-    console.log('R2 connection successful. Found objects:', result.KeyCount || 0);
+    console.log("R2 connection successful. Found objects:", result.KeyCount || 0);
     return true;
   } catch (error) {
-    console.error('R2 connection failed:', error);
+    console.error("R2 connection failed:", error);
     if (error instanceof Error) {
-      console.error('Error details:', {
+      console.error("Error details:", {
         name: error.name,
         message: error.message,
-        stack: error.stack?.split('\n')[0], // First line of stack trace
+        stack: error.stack?.split("\n")[0], // First line of stack trace
       });
     }
     return false;

@@ -5,7 +5,7 @@ const ISR_REVALIDATE_TIME = 60; // 60 seconds for ISR
 interface ImageData {
   id: number;
   imageKey: string;
-  imageType: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP";
+  imageType: "AUCTION" | "WAREHOUSE" | "DELIVERY" | "PICK_UP";
   carVin: string;
   priority: boolean | null;
   url: string;
@@ -36,10 +36,7 @@ class ImageCacheService {
     return `${vin}:${type || "all"}:${page}:${pageSize}`;
   }
 
-  private isCacheValid(
-    entry: CacheEntry,
-    revalidateTime: number = CACHE_DURATION
-  ): boolean {
+  private isCacheValid(entry: CacheEntry, revalidateTime: number = CACHE_DURATION): boolean {
     return Date.now() - entry.timestamp < revalidateTime;
   }
 
@@ -57,7 +54,8 @@ class ImageCacheService {
     params.append("page", page.toString());
     params.append("pageSize", pageSize.toString());
 
-    const response = await fetch(`/api/images/${vin}?${params.toString()}`);
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const response = await fetch(`${baseUrl}/api/images/${vin}?${params.toString()}`);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch images: ${response.statusText}`);
@@ -141,10 +139,7 @@ class ImageCacheService {
   }
 
   // Preload images for better UX
-  async preloadImages(
-    imageUrls: string[],
-    concurrency: number = 3
-  ): Promise<void> {
+  async preloadImages(imageUrls: string[], concurrency: number = 3): Promise<void> {
     const chunks = [];
     for (let i = 0; i < imageUrls.length; i += concurrency) {
       chunks.push(imageUrls.slice(i, i + concurrency));
@@ -197,8 +192,7 @@ class ImageCacheService {
 export const imageCacheService = new ImageCacheService();
 
 // Export utility functions
-export const clearImageCache = (vin: string) =>
-  imageCacheService.clearCacheForVin(vin);
+export const clearImageCache = (vin: string) => imageCacheService.clearCacheForVin(vin);
 export const clearAllImageCache = () => imageCacheService.clearAllCache();
 export const getImageCacheStats = () => imageCacheService.getCacheStats();
 export const preloadImages = (urls: string[], concurrency?: number) =>

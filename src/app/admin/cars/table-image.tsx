@@ -1,27 +1,42 @@
 "use client";
 
-import { getImageAction } from "@/lib/actions/imageActions";
-import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
+import { OptimizedImage } from "@/components/ui/optimized-image";
+import { imageCacheService } from "@/lib/services/imageCache";
 import { Loader2 } from "lucide-react";
-import Image from "next/image";
+import React, { useEffect, useState } from "react";
 import NoImage from "../../../../public/no-car-image.webp";
-import React from "react";
 // Enhancement: Preconnect and preload for CDN image domain
 // If you haven't installed 'react-dom' for preconnect/preload, run: npm install react-dom
-import { preconnect, preload } from 'react-dom';
+import { preconnect, preload } from "react-dom";
 
 export const TableImage = ({ vin }: { vin: string }) => {
-  const { isLoading, data, error } = useServerActionQuery(getImageAction, {
-    input: {
-      vin: vin,
-    },
-    queryKey: ["getImage", vin],
-    retry: 2, // Allow 2 retry attempts for better reliability
-    staleTime: 5 * 60 * 1000, // 5 minutes - reduced for better responsiveness
-    gcTime: 15 * 60 * 1000, // 15 minutes cache
-    refetchOnWindowFocus: false, // Prevent refetch on focus
-    refetchOnMount: true, // Always refetch on mount to get latest priority
-  });
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const fetchImage = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const result = await imageCacheService.getImage({
+          vin,
+          revalidate: 5 * 60 * 1000, // 5 minutes cache for admin table
+        });
+
+        setData(result.data);
+      } catch (err) {
+        console.error("Error fetching image:", err);
+        setError(err instanceof Error ? err : new Error("Failed to fetch image"));
+        setData(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchImage();
+  }, [vin]);
 
   // Utility to extract CDN base from a URL
   function getCdnBase(url?: string): string | null {
@@ -39,7 +54,7 @@ export const TableImage = ({ vin }: { vin: string }) => {
     if (data?.url) {
       const cdnBase = getCdnBase(data.url);
       if (cdnBase) preconnect(cdnBase);
-      preload(data.url, { as: 'image' });
+      preload(data.url, { as: "image" });
     }
   }, [data?.url]);
 
@@ -47,16 +62,13 @@ export const TableImage = ({ vin }: { vin: string }) => {
   if (error || (!data && !isLoading)) {
     return (
       <div className="absolute inset-0 w-full h-full">
-        <Image
+        <OptimizedImage
           alt="Car Image"
-          className="object-cover"
           fill
           src={NoImage}
-          placeholder="blur"
-          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R7/2Q=="
-          loading="lazy"
+          objectFit="cover"
           sizes="(max-width: 640px) 100px, 150px"
-          style={{ objectFit: 'cover' }}
+          showLoader={false}
         />
       </div>
     );
@@ -70,34 +82,27 @@ export const TableImage = ({ vin }: { vin: string }) => {
         </div>
       ) : data?.url ? (
         <div className="absolute inset-0 w-full h-full">
-          <Image
+          <OptimizedImage
             alt="Car Image"
-            className="object-cover"
             fill
             src={data.url}
-            placeholder="blur"
-            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECIgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R7/2Q=="
-            loading="lazy"
+            objectFit="cover"
             sizes="(max-width: 640px) 100px, 150px"
-            onError={(e) => {
-              console.error('Image failed to load:', data.url);
-              e.currentTarget.src = NoImage.src;
+            fallbackSrc={NoImage}
+            onError={() => {
+              console.error("Image failed to load:", data.url);
             }}
-            style={{ objectFit: 'cover' }}
           />
         </div>
       ) : (
         <div className="absolute inset-0 w-full h-full">
-          <Image
+          <OptimizedImage
             alt="Car Image"
-            className="object-cover"
             fill
             src={NoImage}
-            placeholder="blur"
-            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECIgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R7/2Q=="
-            loading="lazy"
+            objectFit="cover"
             sizes="(max-width: 640px) 100px, 150px"
-            style={{ objectFit: 'cover' }}
+            showLoader={false}
           />
         </div>
       )}

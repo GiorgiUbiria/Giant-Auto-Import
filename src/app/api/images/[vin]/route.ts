@@ -1,24 +1,18 @@
-import { NextResponse } from "next/server";
+import { getPublicUrlForKey, getSignedUrlForKey } from "@/lib/actions/bucketActions";
 import { db } from "@/lib/drizzle/db";
 import { images } from "@/lib/drizzle/schema";
-import { and, desc, eq, sql } from "drizzle-orm";
 import {
-  getPublicUrlForKey,
-  getSignedUrlForKey,
-} from "@/lib/actions/bucketActions";
-import {
-  S3,
+  DeleteObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
-  DeleteObjectCommand,
+  S3,
 } from "@aws-sdk/client-s3";
+import { and, desc, eq } from "drizzle-orm";
+import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(
-  request: Request,
-  { params }: { params: { vin: string } }
-) {
+export async function GET(request: Request, { params }: { params: { vin: string } }) {
   try {
     const url = new URL(request.url);
     const searchParams = url.searchParams;
@@ -56,33 +50,15 @@ export async function GET(
 
       const selected = record[0];
       const key = selected.imageKey!;
-      // compute even neighbor
-      const match = key.match(/^(.*\/)\s*(\d+)\.png$/);
-      let preferredKey = key;
-      if (match) {
-        const base = match[1];
-        const n = parseInt(match[2], 10);
-        const even = n % 2 === 0 ? n : n + 1;
-        const evenKey = `${base}${even}.png`;
-        // prefer even if exists, else fallback
-        const exists = await db
-          .select({ k: images.imageKey })
-          .from(images)
-          .where(eq(images.imageKey, evenKey))
-          .limit(1);
-        preferredKey = exists.length > 0 ? evenKey : key;
-      }
 
       const usePublic = !!process.env.NEXT_PUBLIC_BUCKET_URL;
-      const imageUrl = usePublic
-        ? await getPublicUrlForKey(preferredKey)
-        : await getSignedUrlForKey(preferredKey);
+      const imageUrl = usePublic ? await getPublicUrlForKey(key) : await getSignedUrlForKey(key);
 
       return NextResponse.json({
         data: {
           url: imageUrl,
           carVin: vin,
-          imageKey: preferredKey,
+          imageKey: key,
           imageType: selected.imageType,
           priority: selected.priority ?? false,
         },
@@ -93,30 +69,21 @@ export async function GET(
       ? and(eq(images.carVin, vin), eq(images.imageType, type as any))
       : eq(images.carVin, vin);
 
-    // Fetch all, filter odd-numbered originals, apply pagination in memory
+    // Fetch all images, apply pagination in memory
     let allRecords = await db
       .select()
       .from(images)
       .where(whereClause as any)
       .orderBy(desc(images.priority), desc(images.id));
 
-    // Keep only odd-numbered originals based on numeric filename
-    const oddRecords = allRecords.filter((rec) => {
-      const key = rec.imageKey || "";
-      const m = key.match(/^(.*\/)\s*(\d+)\.png$/);
-      if (!m) return true; // if not numeric, keep
-      const n = parseInt(m[2], 10);
-      return n % 2 === 1;
-    });
-
-    const count = oddRecords.length;
+    // Use all records since we don't create separate thumbnails anymore
+    const count = allRecords.length;
     const effectivePageSize = pageSize === 0 ? Math.max(1, count) : pageSize;
-    const totalPages =
-      pageSize === 0 ? 1 : Math.max(1, Math.ceil(count / effectivePageSize));
+    const totalPages = pageSize === 0 ? 1 : Math.max(1, Math.ceil(count / effectivePageSize));
     const currentPage = pageSize === 0 ? 1 : Math.min(page, totalPages);
     const start = pageSize === 0 ? 0 : (currentPage - 1) * effectivePageSize;
     const end = pageSize === 0 ? count : start + effectivePageSize;
-    const records = oddRecords.slice(start, end);
+    const records = allRecords.slice(start, end);
 
     const usePublic = !!process.env.NEXT_PUBLIC_BUCKET_URL;
     const items = await Promise.all(
@@ -127,11 +94,7 @@ export async function GET(
         return {
           id: rec.id,
           imageKey: rec.imageKey!,
-          imageType: rec.imageType as
-            | "AUCTION"
-            | "WAREHOUSE"
-            | "DELIVERED"
-            | "PICK_UP",
+          imageType: rec.imageType as "AUCTION" | "WAREHOUSE" | "DELIVERY" | "PICK_UP",
           carVin: rec.carVin!,
           priority: rec.priority ?? false,
           url,
@@ -147,10 +110,7 @@ export async function GET(
     });
 
     // Add cache headers
-    response.headers.set(
-      "Cache-Control",
-      "public, s-maxage=60, stale-while-revalidate=300"
-    );
+    response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
     response.headers.set("CDN-Cache-Control", "public, s-maxage=60");
     response.headers.set("Vercel-CDN-Cache-Control", "public, s-maxage=60");
     return response;
@@ -160,6 +120,148 @@ export async function GET(
       {
         error: "Failed to fetch images",
         details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request, { params }: { params: { vin: string } }) {
+  try {
+    const vin = params.vin;
+
+    // Validate VIN format (allow shorter VINs for testing)
+    if (!vin || vin.length < 3) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid VIN format",
+        },
+        { status: 400 }
+      );
+    }
+
+    const body = await request.json();
+    const { images: imageData } = body;
+
+    if (!imageData || !Array.isArray(imageData) || imageData.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No images provided",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate image data structure
+    const validImageTypes = ["AUCTION", "WAREHOUSE", "DELIVERY", "PICK_UP"];
+    for (const image of imageData) {
+      if (
+        !image.buffer ||
+        !Array.isArray(image.buffer) ||
+        !image.size ||
+        !image.name ||
+        !image.type ||
+        !validImageTypes.includes(image.type)
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid image data structure",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    const S3Client = getS3Client();
+    const bucketName = getBucketName();
+    const uploadedImages: string[] = [];
+    const failedImages: string[] = [];
+
+    console.log(`POST /api/images/${vin}: Processing ${imageData.length} images`);
+
+    // Process each image individually for better reliability
+    for (const file of imageData) {
+      try {
+        const prefix = `${vin}/${file.type}/`;
+
+        // Get existing file count for this type
+        const listCommand = new ListObjectsV2Command({
+          Bucket: bucketName,
+          Prefix: prefix,
+        });
+        const listResult = await S3Client.send(listCommand);
+        const existingFileCount = listResult.Contents?.length || 0;
+
+        const key = `${prefix}${existingFileCount + 1}.png`;
+
+        console.log(`Uploading ${file.name} (${file.size} bytes) to ${key}`);
+
+        const command = new PutObjectCommand({
+          Bucket: bucketName,
+          Key: key,
+          Body: new Uint8Array(file.buffer),
+          ContentLength: file.size,
+          ContentType: "image/png",
+          Metadata: {
+            "original-name": file.name,
+            "upload-timestamp": new Date().toISOString(),
+            "file-size": file.size.toString(),
+            vin: vin,
+          },
+        });
+
+        await S3Client.send(command);
+
+        // Insert database record with transaction
+        await db.transaction(async (tx) => {
+          const insertValues = {
+            carVin: vin,
+            imageType: file.type,
+            imageKey: key,
+            priority: false, // Default to false, can be set to main later
+          };
+
+          await tx.insert(images).values(insertValues);
+        });
+
+        uploadedImages.push(key);
+        console.log(`Successfully uploaded ${file.name} to ${key}`);
+      } catch (error) {
+        console.error(`Error uploading image ${file.name} for VIN ${vin}:`, error);
+        failedImages.push(file.name);
+        // Continue with next file instead of stopping
+      }
+    }
+
+    console.log(
+      `POST /api/images/${vin}: Completed. Uploaded ${uploadedImages.length}/${imageData.length} images`
+    );
+
+    const response = {
+      success: uploadedImages.length > 0,
+      message:
+        uploadedImages.length === imageData.length
+          ? `All ${uploadedImages.length} images uploaded successfully`
+          : `Uploaded ${uploadedImages.length}/${imageData.length} images successfully`,
+      uploadedCount: uploadedImages.length,
+      totalCount: imageData.length,
+      failedCount: failedImages.length,
+      failedImages: failedImages,
+    };
+
+    return NextResponse.json(response, {
+      status: uploadedImages.length > 0 ? 200 : 400,
+    });
+  } catch (error) {
+    console.error(`POST /api/images/${params.vin} error:`, error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to upload images",
+        error: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );
@@ -189,11 +291,7 @@ function getBucketName() {
   return bucket;
 }
 
-async function getNextIndexForPrefix(
-  client: S3,
-  bucket: string,
-  prefix: string
-) {
+async function getNextIndexForPrefix(client: S3, bucket: string, prefix: string) {
   const command = new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix });
   let maxIndex = 0;
   let truncated = true;
@@ -214,22 +312,83 @@ async function getNextIndexForPrefix(
   return maxIndex + 1;
 }
 
-export async function POST(
-  request: Request,
-  { params }: { params: { vin: string } }
-) {
+export async function PATCH(request: Request, { params }: { params: { vin: string } }) {
   try {
     const vin = params.vin;
-    const body = await request.json();
-    const imagesPayload: Array<{
-      buffer: number[];
-      size: number;
-      name: string;
-      type: "AUCTION" | "WAREHOUSE" | "DELIVERED" | "PICK_UP";
-    }> = body?.images || [];
-    if (!vin || !Array.isArray(imagesPayload) || imagesPayload.length === 0) {
+    const { action, imageKey } = await request.json();
+
+    if (action !== "makeMain" || !imageKey) {
       return NextResponse.json(
-        { error: "No images provided" },
+        {
+          success: false,
+          error: "Invalid request. Action must be 'makeMain' and imageKey is required",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate VIN format (allow shorter VINs for testing)
+    if (!vin || vin.length < 3) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid VIN format",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Use transaction to ensure atomicity
+    await db.transaction(async (tx) => {
+      // First, verify the image exists and belongs to this VIN
+      const imageRecord = await tx
+        .select()
+        .from(images)
+        .where(and(eq(images.imageKey, imageKey), eq(images.carVin, vin)))
+        .limit(1);
+
+      if (imageRecord.length === 0) {
+        throw new Error("Image not found or does not belong to this VIN");
+      }
+
+      // Reset all priorities for this car to false
+      await tx.update(images).set({ priority: false }).where(eq(images.carVin, vin));
+
+      // Set the selected image as priority
+      await tx.update(images).set({ priority: true }).where(eq(images.imageKey, imageKey));
+    });
+
+    console.log(`Successfully set image ${imageKey} as main for VIN ${vin}`);
+
+    return NextResponse.json({
+      success: true,
+      message: "Image set as main successfully",
+    });
+  } catch (error) {
+    console.error("/api/images/[vin] PATCH error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to update image",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request, { params }: { params: { vin: string } }) {
+  try {
+    const vin = params.vin;
+    const url = new URL(request.url);
+    const imageKey = url.searchParams.get("imageKey");
+
+    // Validate VIN format (allow shorter VINs for testing)
+    if (!vin || vin.length < 3) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid VIN format",
+        },
         { status: 400 }
       );
     }
@@ -237,144 +396,106 @@ export async function POST(
     const client = getS3Client();
     const bucket = getBucketName();
 
-    // Pre-compute next odd-aligned index per type to guarantee originals are odd and thumbnails even
-    const nextIndexByType = new Map<string, number>();
-    const getNextOddIndex = async (prefix: string): Promise<number> => {
-      const cmd = new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix });
-      let count = 0;
-      let truncated = true;
-      while (truncated) {
-        const res: any = await client.send(cmd);
-        count += res.Contents?.length || 0;
-        truncated = res.IsTruncated as boolean;
-        if (truncated) cmd.input.ContinuationToken = res.NextContinuationToken;
-      }
-      // Align to next odd index (1-based)
-      if (count % 2 === 0) return count + 1; // 0->1,2->3,4->5
-      return count + 2; // 1->3,3->5
-    };
-
-    const uploaded: string[] = [];
-    for (const file of imagesPayload) {
-      const prefix = `${vin}/${file.type}/`;
-      if (!nextIndexByType.has(file.type)) {
-        const nextOdd = await getNextOddIndex(prefix);
-        nextIndexByType.set(file.type, nextOdd);
-      }
-      const currentIndex = nextIndexByType.get(file.type)!;
-      const key = `${prefix}${currentIndex}.png`;
-
-      const put = new PutObjectCommand({
-        Bucket: bucket,
-        Key: key,
-        Body: new Uint8Array(file.buffer),
-        ContentLength: file.size,
-        ContentType: "image/png",
-        Metadata: {
-          "original-name": file.name,
-          "upload-timestamp": new Date().toISOString(),
-        },
-      });
-      await client.send(put);
-
-      await db.insert(images).values({
-        carVin: vin,
-        imageType: file.type,
-        imageKey: key,
-        priority: false,
-      });
-      uploaded.push(key);
-
-      // Increment for the next file of the same type
-      nextIndexByType.set(file.type, currentIndex + 1);
-    }
-
-    return NextResponse.json({ success: true, uploaded });
-  } catch (error) {
-    console.error("/api/images/[vin] POST error:", error);
-    return NextResponse.json(
-      { error: "Failed to upload images" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PATCH(
-  request: Request,
-  { params }: { params: { vin: string } }
-) {
-  try {
-    const vin = params.vin;
-    const { action, imageKey } = await request.json();
-    if (action !== "makeMain" || !imageKey) {
-      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-    }
-
-    await db
-      .update(images)
-      .set({ priority: false })
-      .where(eq(images.carVin, vin));
-    await db
-      .update(images)
-      .set({ priority: true })
-      .where(eq(images.imageKey, imageKey));
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("/api/images/[vin] PATCH error:", error);
-    return NextResponse.json(
-      { error: "Failed to update image" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: { vin: string } }
-) {
-  try {
-    const vin = params.vin;
-    const url = new URL(request.url);
-    const imageKey = url.searchParams.get("imageKey");
-
-    const client = getS3Client();
-    const bucket = getBucketName();
-
     if (imageKey) {
-      await client.send(
-        new DeleteObjectCommand({ Bucket: bucket, Key: imageKey })
-      );
-      await db.delete(images).where(eq(images.imageKey, imageKey));
-      return NextResponse.json({ success: true });
-    }
+      // Delete specific image
+      try {
+        // Verify image exists and belongs to this VIN
+        const imageRecord = await db
+          .select()
+          .from(images)
+          .where(and(eq(images.imageKey, imageKey), eq(images.carVin, vin)))
+          .limit(1);
 
-    const prefix = `${vin}/`;
-    const listCmd = new ListObjectsV2Command({
-      Bucket: bucket,
-      Prefix: prefix,
-    });
-    let truncated = true;
-    while (truncated) {
-      const res: any = await client.send(listCmd);
-      const contents = res.Contents || [];
-      for (const obj of contents) {
-        if (obj.Key) {
-          await client.send(
-            new DeleteObjectCommand({ Bucket: bucket, Key: obj.Key })
+        if (imageRecord.length === 0) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: "Image not found or does not belong to this VIN",
+            },
+            { status: 404 }
           );
         }
+
+        // Delete from S3
+        await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: imageKey }));
+
+        // Delete from database
+        await db.delete(images).where(eq(images.imageKey, imageKey));
+
+        console.log(`Successfully deleted image ${imageKey} for VIN ${vin}`);
+
+        return NextResponse.json({
+          success: true,
+          message: "Image deleted successfully",
+        });
+      } catch (error) {
+        console.error(`Error deleting image ${imageKey}:`, error);
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Failed to delete image",
+          },
+          { status: 500 }
+        );
       }
-      truncated = res.IsTruncated as boolean;
-      if (truncated)
-        listCmd.input.ContinuationToken = res.NextContinuationToken;
     }
-    await db.delete(images).where(eq(images.carVin, vin));
-    return NextResponse.json({ success: true });
+
+    // Delete all images for this VIN
+    try {
+      const prefix = `${vin}/`;
+      const listCmd = new ListObjectsV2Command({
+        Bucket: bucket,
+        Prefix: prefix,
+      });
+
+      let deletedCount = 0;
+      let truncated = true;
+
+      while (truncated) {
+        const res: any = await client.send(listCmd);
+        const contents = res.Contents || [];
+
+        for (const obj of contents) {
+          if (obj.Key) {
+            try {
+              await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: obj.Key }));
+              deletedCount++;
+            } catch (error) {
+              console.error(`Error deleting object ${obj.Key}:`, error);
+            }
+          }
+        }
+
+        truncated = res.IsTruncated as boolean;
+        if (truncated) listCmd.input.ContinuationToken = res.NextContinuationToken;
+      }
+
+      // Delete all database records for this VIN
+      await db.delete(images).where(eq(images.carVin, vin));
+
+      console.log(`Successfully deleted ${deletedCount} images for VIN ${vin}`);
+
+      return NextResponse.json({
+        success: true,
+        message: `Deleted ${deletedCount} images successfully`,
+      });
+    } catch (error) {
+      console.error(`Error deleting all images for VIN ${vin}:`, error);
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Failed to delete images",
+        },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error("/api/images/[vin] DELETE error:", error);
     return NextResponse.json(
-      { error: "Failed to delete images" },
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to delete images",
+      },
       { status: 500 }
     );
   }

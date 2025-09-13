@@ -191,12 +191,17 @@ export async function POST(request: NextRequest) {
     const imageTypes = ["auction_images", "pick_up_images", "warehouse_images", "delivery_images"];
     const uploadedImages = [];
 
+    console.log("API: Starting image upload process");
+
     for (const imageType of imageTypes) {
       const files = formData.getAll(`${imageType}[]`) as File[];
+      console.log(`API: Found ${files.length} files for ${imageType}`);
 
       for (const file of files) {
         if (file && file.size > 0) {
           try {
+            console.log(`API: Processing ${file.name} (${file.size} bytes) for ${imageType}`);
+
             // Convert file to buffer
             const buffer = await file.arrayBuffer();
             const imageData = {
@@ -211,6 +216,12 @@ export async function POST(request: NextRequest) {
                 | "PICK_UP",
             };
 
+            console.log(`API: Uploading to /api/images/${result}`, {
+              type: imageData.type,
+              size: imageData.size,
+              name: imageData.name,
+            });
+
             // Upload to image API
             const imageResponse = await fetch(`${request.nextUrl.origin}/api/images/${result}`, {
               method: "POST",
@@ -218,19 +229,29 @@ export async function POST(request: NextRequest) {
               body: JSON.stringify({ images: [imageData] }),
             });
 
+            const imageResult = await imageResponse.json();
+            console.log(`API: Image upload response:`, imageResult);
+
             if (imageResponse.ok) {
               uploadedImages.push({ type: imageType, name: file.name, success: true });
+              console.log(`API: Successfully uploaded ${file.name} (${imageType})`);
             } else {
-              console.error(`Failed to upload ${file.name} (${imageType})`);
+              console.error(`API: Failed to upload ${file.name} (${imageType}):`, imageResult);
               uploadedImages.push({ type: imageType, name: file.name, success: false });
             }
           } catch (error) {
-            console.error(`Error uploading ${file.name} (${imageType}):`, error);
+            console.error(`API: Error uploading ${file.name} (${imageType}):`, error);
             uploadedImages.push({ type: imageType, name: file.name, success: false });
           }
+        } else {
+          console.log(`API: Skipping empty file ${file.name} for ${imageType}`);
         }
       }
     }
+
+    console.log(
+      `API: Image upload completed. Success: ${uploadedImages.filter((img) => img.success).length}, Failed: ${uploadedImages.filter((img) => !img.success).length}`
+    );
 
     // Revalidate relevant paths
     revalidatePath("/admin/cars");

@@ -1,16 +1,16 @@
 "use server";
 
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { createServerAction } from "zsa";
 import { db } from "../drizzle/db";
 import { images } from "../drizzle/schema";
 import { isAdminProcedure } from "./authProcedures";
 import {
+  cleanUpBucketForVin,
   deleteObjectFromBucket,
   fetchImageForDisplay,
   fetchImagesForDisplay,
-  cleanUpBucketForVin,
 } from "./bucketActions";
 
 export const getImagesAction = createServerAction()
@@ -23,7 +23,7 @@ export const getImagesAction = createServerAction()
     z.array(
       z.object({
         carVin: z.string(),
-        imageType: z.enum(["WAREHOUSE", "PICK_UP", "DELIVERED", "AUCTION"]),
+        imageType: z.enum(["WAREHOUSE", "PICK_UP", "DELIVERY", "AUCTION"]),
         priority: z.boolean().nullable(),
         imageKey: z.string(),
         url: z.string(),
@@ -44,7 +44,7 @@ export const getImagesAction = createServerAction()
       console.error("getImagesAction: Error fetching images", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
-        vin
+        vin,
       });
       return [];
     }
@@ -60,7 +60,7 @@ export const getImageKeys = createServerAction()
     z.array(
       z.object({
         imageKey: z.string(),
-        imageType: z.enum(["WAREHOUSE", "PICK_UP", "DELIVERED", "AUCTION"]),
+        imageType: z.enum(["WAREHOUSE", "PICK_UP", "DELIVERY", "AUCTION"]),
       })
     )
   )
@@ -85,7 +85,7 @@ export const getImageKeys = createServerAction()
       console.error("getImageKeys: Error fetching image keys", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
-        vin
+        vin,
       });
       // Return empty array instead of throwing to prevent 500 errors
       return [];
@@ -102,7 +102,7 @@ export const getImageAction = createServerAction()
     z
       .object({
         carVin: z.string(),
-        imageType: z.enum(["WAREHOUSE", "PICK_UP", "DELIVERED", "AUCTION"]),
+        imageType: z.enum(["WAREHOUSE", "PICK_UP", "DELIVERY", "AUCTION"]),
         priority: z.boolean().nullable(),
         imageKey: z.string(),
         url: z.string(),
@@ -114,15 +114,17 @@ export const getImageAction = createServerAction()
 
     console.log("getImageAction: Input received", { vin });
 
-    if (!process.env.CLOUDFLARE_API_ENDPOINT ||
+    if (
+      !process.env.CLOUDFLARE_API_ENDPOINT ||
       !process.env.CLOUDFLARE_ACCESS_KEY_ID ||
       !process.env.CLOUDFLARE_SECRET_ACCESS_KEY ||
-      !process.env.CLOUDFLARE_BUCKET_NAME) {
+      !process.env.CLOUDFLARE_BUCKET_NAME
+    ) {
       console.error("getImageAction: Missing Cloudflare R2 environment variables", {
         endpoint: !!process.env.CLOUDFLARE_API_ENDPOINT,
         accessKey: !!process.env.CLOUDFLARE_ACCESS_KEY_ID,
         secretKey: !!process.env.CLOUDFLARE_SECRET_ACCESS_KEY,
-        bucket: !!process.env.CLOUDFLARE_BUCKET_NAME
+        bucket: !!process.env.CLOUDFLARE_BUCKET_NAME,
       });
       return null; // Return null instead of throwing
     }
@@ -136,7 +138,7 @@ export const getImageAction = createServerAction()
       console.error("getImageAction: Error fetching image", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
-        vin
+        vin,
       });
       return null;
     }
@@ -188,23 +190,20 @@ export const makeImageMainAction = isAdminProcedure
       // Use transaction to ensure atomicity
       await db.transaction(async (tx) => {
         // First, reset all priorities for this car to false
-        await tx
-          .update(images)
-          .set({ priority: false })
-          .where(eq(images.carVin, carVin));
+        await tx.update(images).set({ priority: false }).where(eq(images.carVin, carVin));
 
         // Then set the selected image as priority
-        await tx
-          .update(images)
-          .set({ priority: true })
-          .where(eq(images.imageKey, imageKey));
+        await tx.update(images).set({ priority: true }).where(eq(images.imageKey, imageKey));
       });
 
-      console.log("makeImageMainAction: Priority update completed successfully", { imageKey, carVin });
+      console.log("makeImageMainAction: Priority update completed successfully", {
+        imageKey,
+        carVin,
+      });
     } catch (error) {
       console.error("makeImageMainAction: Error updating priority", {
         imageKey,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
       throw error;
     }

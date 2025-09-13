@@ -1,30 +1,14 @@
 "use client";
 
-import { useServerActionQuery } from "@/lib/hooks/server-action-hooks";
-import { Loader2, Stamp, Trash } from "lucide-react";
-import Image from "next/image";
-import { ImagesForm } from "./images-form";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { toast } from "sonner";
+import { OptimizedImage } from "@/components/ui/optimized-image";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { imageCacheService } from "@/lib/services/imageCache";
 import { useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState, useEffect } from "react";
-import { imageCacheService, clearImageCache } from "@/lib/image-cache";
+import { Loader2, Stamp, Trash } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { ImagesForm } from "./images-form";
 
 export const EditImages = ({ vin }: { vin: string }) => {
   const queryClient = useQueryClient();
@@ -33,7 +17,7 @@ export const EditImages = ({ vin }: { vin: string }) => {
   const imageTypes = [
     { label: "Warehouse", value: "WAREHOUSE" },
     { label: "Auction", value: "AUCTION" },
-    { label: "Delivered", value: "DELIVERED" },
+    { label: "Delivered", value: "DELIVERY" },
     { label: "Pick Up", value: "PICK_UP" },
   ];
   const [selectedType, setSelectedType] = useState<string>(imageTypes[0].value);
@@ -59,10 +43,10 @@ export const EditImages = ({ vin }: { vin: string }) => {
         setImagesData(data.images || []);
         setTotalCount(data.count || 0);
       } catch (err) {
-        console.error('Failed to fetch images:', err);
+        console.error("Failed to fetch images:", err);
         setImagesData([]);
         setTotalCount(0);
-        toast.error('Failed to load images. Please try again.');
+        toast.error("Failed to load images. Please try again.");
       }
       setIsLoading(false);
     }
@@ -74,20 +58,23 @@ export const EditImages = ({ vin }: { vin: string }) => {
     setDeletePending(true);
     try {
       const resp = await fetch(`/api/images/${vin}?imageKey=${encodeURIComponent(imageKey)}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
-      if (!resp.ok) throw new Error('Failed to delete image');
+      if (!resp.ok) throw new Error("Failed to delete image");
 
-      toast.success('Image deleted successfully!');
-      clearImageCache(vin);
-      setImagesData(prev => prev.filter(img => img.imageKey !== imageKey));
+      toast.success("Image deleted successfully!");
+      imageCacheService.clear(vin);
+      setImagesData((prev) => prev.filter((img) => img.imageKey !== imageKey));
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["getImagesForCar", vin], refetchType: "active" }),
+        queryClient.invalidateQueries({
+          queryKey: ["getImagesForCar", vin],
+          refetchType: "active",
+        }),
         queryClient.invalidateQueries({ queryKey: ["getImage", vin], refetchType: "active" }),
         queryClient.invalidateQueries({ queryKey: ["getImages"], refetchType: "active" }),
       ]);
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to delete the image');
+      toast.error(err?.message || "Failed to delete the image");
     } finally {
       setDeletePending(false);
     }
@@ -98,22 +85,25 @@ export const EditImages = ({ vin }: { vin: string }) => {
     setMakeMainPending(true);
     try {
       const resp = await fetch(`/api/images/${vin}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'makeMain', imageKey }),
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "makeMain", imageKey }),
       });
-      if (!resp.ok) throw new Error('Failed to make the image main');
+      if (!resp.ok) throw new Error("Failed to make the image main");
 
-      toast.success('Image prioritized successfully!');
-      clearImageCache(vin);
-      setImagesData(prev => prev.map(img => ({ ...img, priority: img.imageKey === imageKey })));
+      toast.success("Image prioritized successfully!");
+      imageCacheService.clear(vin);
+      setImagesData((prev) => prev.map((img) => ({ ...img, priority: img.imageKey === imageKey })));
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["getImagesForCar", vin], refetchType: "active" }),
+        queryClient.invalidateQueries({
+          queryKey: ["getImagesForCar", vin],
+          refetchType: "active",
+        }),
         queryClient.invalidateQueries({ queryKey: ["getImage", vin], refetchType: "active" }),
         queryClient.invalidateQueries({ queryKey: ["getImages"], refetchType: "active" }),
       ]);
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to make the image main');
+      toast.error(err?.message || "Failed to make the image main");
     } finally {
       setMakeMainPending(false);
     }
@@ -123,19 +113,22 @@ export const EditImages = ({ vin }: { vin: string }) => {
   const removeAllMutate = async () => {
     setRemoveAllPending(true);
     try {
-      const resp = await fetch(`/api/images/${vin}`, { method: 'DELETE' });
-      if (!resp.ok) throw new Error('Failed to remove all images');
-      toast.success('All images removed successfully!');
-      clearImageCache(vin);
+      const resp = await fetch(`/api/images/${vin}`, { method: "DELETE" });
+      if (!resp.ok) throw new Error("Failed to remove all images");
+      toast.success("All images removed successfully!");
+      imageCacheService.clear(vin);
       setImagesData([]);
       setTotalCount(0);
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["getImagesForCar", vin], refetchType: "active" }),
+        queryClient.invalidateQueries({
+          queryKey: ["getImagesForCar", vin],
+          refetchType: "active",
+        }),
         queryClient.invalidateQueries({ queryKey: ["getImage", vin], refetchType: "active" }),
         queryClient.invalidateQueries({ queryKey: ["getImages"], refetchType: "active" }),
       ]);
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to remove all images');
+      toast.error(err?.message || "Failed to remove all images");
     } finally {
       setRemoveAllPending(false);
     }
@@ -157,27 +150,14 @@ export const EditImages = ({ vin }: { vin: string }) => {
         <Tooltip>
           <TooltipTrigger className="w-full">
             <div className="w-full aspect-[3/2] relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-              <Image
+              <OptimizedImage
                 src={image.url}
                 alt={image.imageKey || "Image"}
                 fill
-                style={{ objectFit: "cover" }}
-                loading="lazy"
+                objectFit="cover"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                onError={(e) => {
-                  // Fallback to placeholder if image fails to load
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const parent = target.parentElement;
-                  if (parent) {
-                    parent.innerHTML = `
-                      <div class="flex items-center justify-center w-full h-full text-gray-500">
-                        <div class="text-center">
-                          <div class="text-sm">Image not available</div>
-                        </div>
-                      </div>
-                    `;
-                  }
+                onError={() => {
+                  console.warn(`Failed to load image: ${image.imageKey}`);
                 }}
               />
               {/* Priority indicator */}
@@ -194,7 +174,9 @@ export const EditImages = ({ vin }: { vin: string }) => {
                 variant="link"
                 size="icon"
                 disabled={makeMainPending || deletePending}
-                onClick={() => { void deleteMutate({ imageKey: image.imageKey }); }}
+                onClick={() => {
+                  void deleteMutate({ imageKey: image.imageKey });
+                }}
               >
                 <Trash className="w-4 h-4 hover:opacity-50 hover:text-red-500 transition" />
               </Button>
@@ -202,12 +184,15 @@ export const EditImages = ({ vin }: { vin: string }) => {
                 variant="link"
                 size="icon"
                 disabled={makeMainPending || deletePending || image.priority}
-                onClick={() => { void makeMainMutate({ imageKey: image.imageKey }); }}
+                onClick={() => {
+                  void makeMainMutate({ imageKey: image.imageKey });
+                }}
               >
-                <Stamp className={`w-4 h-4 transition ${image.priority
-                  ? 'text-green-500'
-                  : 'hover:opacity-50 hover:text-blue-500'
-                  }`} />
+                <Stamp
+                  className={`w-4 h-4 transition ${
+                    image.priority ? "text-green-500" : "hover:opacity-50 hover:text-blue-500"
+                  }`}
+                />
               </Button>
             </div>
           </TooltipContent>
@@ -228,7 +213,10 @@ export const EditImages = ({ vin }: { vin: string }) => {
           <Button
             key={type.value}
             variant={selectedType === type.value ? "default" : "outline"}
-            onClick={() => { setSelectedType(type.value); setPage(1); }}
+            onClick={() => {
+              setSelectedType(type.value);
+              setPage(1);
+            }}
           >
             {type.label}
           </Button>
@@ -244,7 +232,9 @@ export const EditImages = ({ vin }: { vin: string }) => {
         >
           Previous
         </Button>
-        <span>Page {page} of {totalPages || 1}</span>
+        <span>
+          Page {page} of {totalPages || 1}
+        </span>
         <Button
           variant="outline"
           size="sm"

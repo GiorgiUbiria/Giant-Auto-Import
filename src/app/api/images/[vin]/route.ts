@@ -1,4 +1,5 @@
 import { getPublicUrlForKey, getSignedUrlForKey } from "@/lib/actions/bucketActions";
+import { addCorsHeaders, createCorsResponse, handleCorsPreflight } from "@/lib/cors";
 import { db } from "@/lib/drizzle/db";
 import { images } from "@/lib/drizzle/schema";
 import {
@@ -8,9 +9,15 @@ import {
   S3,
 } from "@aws-sdk/client-s3";
 import { and, desc, eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
+
+// Handle CORS preflight requests
+export async function OPTIONS() {
+  return handleCorsPreflight();
+}
 
 export async function GET(request: Request, { params }: { params: { vin: string } }) {
   try {
@@ -21,7 +28,7 @@ export async function GET(request: Request, { params }: { params: { vin: string 
     const type = searchParams.get("type") || undefined;
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const pageSizeParam = parseInt(searchParams.get("pageSize") || "12", 10);
-    const pageSize = Number.isNaN(pageSizeParam) ? 12 : pageSizeParam;
+    const pageSize = Number.isNaN(pageSizeParam) ? 12 : pageSizeParam === 0 ? 1000 : pageSizeParam;
     const mode = searchParams.get("mode");
 
     const isSingleMode = mode === "single";
@@ -45,7 +52,7 @@ export async function GET(request: Request, { params }: { params: { vin: string 
       }
 
       if (!record || record.length === 0) {
-        return NextResponse.json({ data: null });
+        return createCorsResponse({ data: null });
       }
 
       const selected = record[0];
@@ -54,7 +61,7 @@ export async function GET(request: Request, { params }: { params: { vin: string 
       const usePublic = !!process.env.NEXT_PUBLIC_BUCKET_URL;
       const imageUrl = usePublic ? await getPublicUrlForKey(key) : await getSignedUrlForKey(key);
 
-      return NextResponse.json({
+      return createCorsResponse({
         data: {
           url: imageUrl,
           carVin: vin,
@@ -102,7 +109,7 @@ export async function GET(request: Request, { params }: { params: { vin: string 
       })
     );
 
-    const response = NextResponse.json({
+    const response = createCorsResponse({
       images: items,
       count,
       totalPages,
@@ -116,12 +123,12 @@ export async function GET(request: Request, { params }: { params: { vin: string 
     return response;
   } catch (error) {
     console.error("/api/images/[vin] GET error:", error);
-    return NextResponse.json(
+    return createCorsResponse(
       {
         error: "Failed to fetch images",
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      500
     );
   }
 }
@@ -132,12 +139,12 @@ export async function POST(request: Request, { params }: { params: { vin: string
 
     // Validate VIN format (allow shorter VINs for testing)
     if (!vin || vin.length < 3) {
-      return NextResponse.json(
+      return createCorsResponse(
         {
           success: false,
           message: "Invalid VIN format",
         },
-        { status: 400 }
+        400
       );
     }
 
@@ -145,12 +152,12 @@ export async function POST(request: Request, { params }: { params: { vin: string
     const { images: imageData } = body;
 
     if (!imageData || !Array.isArray(imageData) || imageData.length === 0) {
-      return NextResponse.json(
+      return createCorsResponse(
         {
           success: false,
           message: "No images provided",
         },
-        { status: 400 }
+        400
       );
     }
 
@@ -165,12 +172,12 @@ export async function POST(request: Request, { params }: { params: { vin: string
         !image.type ||
         !validImageTypes.includes(image.type)
       ) {
-        return NextResponse.json(
+        return createCorsResponse(
           {
             success: false,
             message: "Invalid image data structure",
           },
-          { status: 400 }
+          400
         );
       }
     }
@@ -252,18 +259,27 @@ export async function POST(request: Request, { params }: { params: { vin: string
       failedImages: failedImages,
     };
 
-    return NextResponse.json(response, {
-      status: uploadedImages.length > 0 ? 200 : 400,
-    });
+    // Revalidate relevant paths after successful upload
+    if (uploadedImages.length > 0) {
+      revalidatePath(`/admin/cars`);
+      revalidatePath(`/car/${vin}`);
+      revalidatePath(`/admin/edit/${vin}`);
+    }
+
+    return addCorsHeaders(
+      NextResponse.json(response, {
+        status: uploadedImages.length > 0 ? 200 : 400,
+      })
+    );
   } catch (error) {
     console.error(`POST /api/images/${params.vin} error:`, error);
-    return NextResponse.json(
+    return createCorsResponse(
       {
         success: false,
         message: "Failed to upload images",
         error: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      500
     );
   }
 }
@@ -318,23 +334,23 @@ export async function PATCH(request: Request, { params }: { params: { vin: strin
     const { action, imageKey } = await request.json();
 
     if (action !== "makeMain" || !imageKey) {
-      return NextResponse.json(
+      return createCorsResponse(
         {
           success: false,
           error: "Invalid request. Action must be 'makeMain' and imageKey is required",
         },
-        { status: 400 }
+        400
       );
     }
 
     // Validate VIN format (allow shorter VINs for testing)
     if (!vin || vin.length < 3) {
-      return NextResponse.json(
+      return createCorsResponse(
         {
           success: false,
           error: "Invalid VIN format",
         },
-        { status: 400 }
+        400
       );
     }
 
@@ -360,18 +376,23 @@ export async function PATCH(request: Request, { params }: { params: { vin: strin
 
     console.log(`Successfully set image ${imageKey} as main for VIN ${vin}`);
 
-    return NextResponse.json({
+    // Revalidate relevant paths after successful update
+    revalidatePath(`/admin/cars`);
+    revalidatePath(`/car/${vin}`);
+    revalidatePath(`/admin/edit/${vin}`);
+
+    return createCorsResponse({
       success: true,
       message: "Image set as main successfully",
     });
   } catch (error) {
     console.error("/api/images/[vin] PATCH error:", error);
-    return NextResponse.json(
+    return createCorsResponse(
       {
         success: false,
         error: error instanceof Error ? error.message : "Failed to update image",
       },
-      { status: 500 }
+      500
     );
   }
 }
@@ -384,12 +405,12 @@ export async function DELETE(request: Request, { params }: { params: { vin: stri
 
     // Validate VIN format (allow shorter VINs for testing)
     if (!vin || vin.length < 3) {
-      return NextResponse.json(
+      return createCorsResponse(
         {
           success: false,
           error: "Invalid VIN format",
         },
-        { status: 400 }
+        400
       );
     }
 
@@ -407,12 +428,12 @@ export async function DELETE(request: Request, { params }: { params: { vin: stri
           .limit(1);
 
         if (imageRecord.length === 0) {
-          return NextResponse.json(
+          return createCorsResponse(
             {
               success: false,
               error: "Image not found or does not belong to this VIN",
             },
-            { status: 404 }
+            404
           );
         }
 
@@ -424,18 +445,23 @@ export async function DELETE(request: Request, { params }: { params: { vin: stri
 
         console.log(`Successfully deleted image ${imageKey} for VIN ${vin}`);
 
-        return NextResponse.json({
+        // Revalidate relevant paths after successful deletion
+        revalidatePath(`/admin/cars`);
+        revalidatePath(`/car/${vin}`);
+        revalidatePath(`/admin/edit/${vin}`);
+
+        return createCorsResponse({
           success: true,
           message: "Image deleted successfully",
         });
       } catch (error) {
         console.error(`Error deleting image ${imageKey}:`, error);
-        return NextResponse.json(
+        return createCorsResponse(
           {
             success: false,
             error: "Failed to delete image",
           },
-          { status: 500 }
+          500
         );
       }
     }
@@ -475,28 +501,33 @@ export async function DELETE(request: Request, { params }: { params: { vin: stri
 
       console.log(`Successfully deleted ${deletedCount} images for VIN ${vin}`);
 
-      return NextResponse.json({
+      // Revalidate relevant paths after successful bulk deletion
+      revalidatePath(`/admin/cars`);
+      revalidatePath(`/car/${vin}`);
+      revalidatePath(`/admin/edit/${vin}`);
+
+      return createCorsResponse({
         success: true,
         message: `Deleted ${deletedCount} images successfully`,
       });
     } catch (error) {
       console.error(`Error deleting all images for VIN ${vin}:`, error);
-      return NextResponse.json(
+      return createCorsResponse(
         {
           success: false,
           error: "Failed to delete images",
         },
-        { status: 500 }
+        500
       );
     }
   } catch (error) {
     console.error("/api/images/[vin] DELETE error:", error);
-    return NextResponse.json(
+    return createCorsResponse(
       {
         success: false,
         error: error instanceof Error ? error.message : "Failed to delete images",
       },
-      { status: 500 }
+      500
     );
   }
 }

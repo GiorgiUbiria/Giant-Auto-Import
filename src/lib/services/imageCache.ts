@@ -91,7 +91,8 @@ class ImageCacheService {
     }
 
     try {
-      const url = new URL("/api/images/" + vin, window.location.origin);
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      const url = new URL("/api/images/" + vin, baseUrl);
       if (type) url.searchParams.set("type", type);
       url.searchParams.set("page", page.toString());
       url.searchParams.set("pageSize", pageSize.toString());
@@ -123,7 +124,8 @@ class ImageCacheService {
     }
 
     try {
-      const url = new URL("/api/images/" + vin, window.location.origin);
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      const url = new URL("/api/images/" + vin, baseUrl);
       url.searchParams.set("mode", "single");
 
       const response = await fetch(url.toString());

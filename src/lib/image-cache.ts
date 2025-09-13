@@ -54,8 +54,13 @@ class ImageCacheService {
     params.append("page", page.toString());
     params.append("pageSize", pageSize.toString());
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const response = await fetch(`${baseUrl}/api/images/${vin}?${params.toString()}`);
+    // Use environment variable if available, fallback to relative URL
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+    const url = baseUrl
+      ? `${baseUrl}/api/images/${vin}?${params.toString()}`
+      : `/api/images/${vin}?${params.toString()}`;
+    console.log(`ImageCache (legacy): Using baseUrl: ${baseUrl}, final URL: ${url}`);
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch images: ${response.statusText}`);

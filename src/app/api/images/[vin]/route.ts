@@ -59,7 +59,11 @@ export async function GET(request: Request, { params }: { params: { vin: string 
       const key = selected.imageKey!;
 
       const usePublic = !!process.env.NEXT_PUBLIC_BUCKET_URL;
+      console.log(
+        `API: Single image mode - usePublic = ${usePublic}, NEXT_PUBLIC_BUCKET_URL = ${process.env.NEXT_PUBLIC_BUCKET_URL}`
+      );
       const imageUrl = usePublic ? await getPublicUrlForKey(key) : await getSignedUrlForKey(key);
+      console.log(`API: Single image URL for ${key}: ${imageUrl}`);
 
       return createCorsResponse({
         data: {
@@ -93,19 +97,29 @@ export async function GET(request: Request, { params }: { params: { vin: string 
     const records = allRecords.slice(start, end);
 
     const usePublic = !!process.env.NEXT_PUBLIC_BUCKET_URL;
+    console.log(
+      `API: usePublic = ${usePublic}, NEXT_PUBLIC_BUCKET_URL = ${process.env.NEXT_PUBLIC_BUCKET_URL}`
+    );
+
     const items = await Promise.all(
       records.map(async (rec) => {
-        const url = usePublic
-          ? await getPublicUrlForKey(rec.imageKey!)
-          : await getSignedUrlForKey(rec.imageKey!);
-        return {
-          id: rec.id,
-          imageKey: rec.imageKey!,
-          imageType: rec.imageType as "AUCTION" | "WAREHOUSE" | "DELIVERY" | "PICK_UP",
-          carVin: rec.carVin!,
-          priority: rec.priority ?? false,
-          url,
-        };
+        try {
+          const url = usePublic
+            ? await getPublicUrlForKey(rec.imageKey!)
+            : await getSignedUrlForKey(rec.imageKey!);
+          console.log(`API: Generated URL for ${rec.imageKey}: ${url}`);
+          return {
+            id: rec.id,
+            imageKey: rec.imageKey!,
+            imageType: rec.imageType as "AUCTION" | "WAREHOUSE" | "DELIVERY" | "PICK_UP",
+            carVin: rec.carVin!,
+            priority: rec.priority ?? false,
+            url,
+          };
+        } catch (error) {
+          console.error(`API: Error generating URL for ${rec.imageKey}:`, error);
+          throw error;
+        }
       })
     );
 

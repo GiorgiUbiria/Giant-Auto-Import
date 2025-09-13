@@ -1,7 +1,7 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { imageCacheService } from "@/lib/image-cache";
+import { imageCacheService } from "@/lib/services/imageCache";
 import { Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Suspense, useCallback, useEffect, useState } from "react";
@@ -106,6 +106,9 @@ export const FallbackImageGallery = ({
         setIsLoading(true);
         setError(null);
 
+        console.log(
+          `FallbackGallery: Fetching images for VIN ${vin}, type: ${fetchByType ? selectedType : "all"}`
+        );
         const result = await imageCacheService.getImageList({
           vin,
           type: fetchByType ? selectedType : undefined,
@@ -113,8 +116,10 @@ export const FallbackImageGallery = ({
           revalidate: 60 * 1000, // 1 minute cache for public gallery
         });
 
+        console.log(`FallbackGallery: Got result for VIN ${vin}:`, result);
         setData(result.images || []);
       } catch (err) {
+        console.error(`FallbackGallery: Error fetching images for VIN ${vin}:`, err);
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         setIsLoading(false);

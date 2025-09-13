@@ -20,14 +20,16 @@ export const TableImage = ({ vin }: { vin: string }) => {
         setIsLoading(true);
         setError(null);
 
+        console.log(`TableImage: Fetching image for VIN ${vin}`);
         const result = await imageCacheService.getImage({
           vin,
           revalidate: 5 * 60 * 1000, // 5 minutes cache for admin table
         });
 
+        console.log(`TableImage: Got result for VIN ${vin}:`, result);
         setData(result.data);
       } catch (err) {
-        console.error("Error fetching image:", err);
+        console.error(`TableImage: Error fetching image for VIN ${vin}:`, err);
         setError(err instanceof Error ? err : new Error("Failed to fetch image"));
         setData(null);
       } finally {

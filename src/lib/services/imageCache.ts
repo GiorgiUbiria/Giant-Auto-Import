@@ -91,14 +91,20 @@ class ImageCacheService {
     }
 
     try {
+      // Use environment variable if available, fallback to window.location.origin
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      console.log(`ImageCache: Using baseUrl: ${baseUrl}`);
       const url = new URL("/api/images/" + vin, baseUrl);
       if (type) url.searchParams.set("type", type);
       url.searchParams.set("page", page.toString());
       url.searchParams.set("pageSize", pageSize.toString());
 
+      console.log(`ImageCache: Fetching images from ${url.toString()}`);
       const response = await fetch(url.toString());
       if (!response.ok) {
+        console.error(
+          `ImageCache: Failed to fetch images: ${response.status} ${response.statusText}`
+        );
         throw new Error(`Failed to fetch images: ${response.statusText}`);
       }
 
@@ -124,12 +130,18 @@ class ImageCacheService {
     }
 
     try {
+      // Use environment variable if available, fallback to window.location.origin
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      console.log(`ImageCache: Using baseUrl for single image: ${baseUrl}`);
       const url = new URL("/api/images/" + vin, baseUrl);
       url.searchParams.set("mode", "single");
 
+      console.log(`ImageCache: Fetching single image from ${url.toString()}`);
       const response = await fetch(url.toString());
       if (!response.ok) {
+        console.error(
+          `ImageCache: Failed to fetch single image: ${response.status} ${response.statusText}`
+        );
         throw new Error(`Failed to fetch image: ${response.statusText}`);
       }
 

@@ -54,12 +54,9 @@ class ImageCacheService {
     params.append("page", page.toString());
     params.append("pageSize", pageSize.toString());
 
-    // Use environment variable if available, fallback to relative URL
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "";
-    const url = baseUrl
-      ? `${baseUrl}/api/images/${vin}?${params.toString()}`
-      : `/api/images/${vin}?${params.toString()}`;
-    console.log(`ImageCache (legacy): Using baseUrl: ${baseUrl}, final URL: ${url}`);
+    // Use relative URL to ensure we use the correct domain (with or without www)
+    const url = `/api/images/${vin}?${params.toString()}`;
+    console.log(`ImageCache (legacy): Using relative URL: ${url}`);
     const response = await fetch(url);
 
     if (!response.ok) {

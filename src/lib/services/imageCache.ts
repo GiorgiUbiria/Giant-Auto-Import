@@ -91,8 +91,8 @@ class ImageCacheService {
     }
 
     try {
-      // Use environment variable if available, fallback to window.location.origin
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      // Use window.location.origin to ensure we use the correct domain (with or without www)
+      const baseUrl = window.location.origin;
       console.log(`ImageCache: Using baseUrl: ${baseUrl}`);
       const url = new URL("/api/images/" + vin, baseUrl);
       if (type) url.searchParams.set("type", type);
@@ -130,8 +130,8 @@ class ImageCacheService {
     }
 
     try {
-      // Use environment variable if available, fallback to window.location.origin
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      // Use window.location.origin to ensure we use the correct domain (with or without www)
+      const baseUrl = window.location.origin;
       console.log(`ImageCache: Using baseUrl for single image: ${baseUrl}`);
       const url = new URL("/api/images/" + vin, baseUrl);
       url.searchParams.set("mode", "single");
